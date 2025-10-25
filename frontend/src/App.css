@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+*{
+  box-sizing: border-box;
+  padding: 0px;
+  margin: 0px;
+}
+
+body {
+  font-family: "SF Pro Display", sans-serif;
+  background-color: #f6f8fa;
+  margin: 0;
+  padding: 0;
+}
+
+.app {
+  max-width: 900px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  padding: 30px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e90ff;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: #555;
+  margin-top: 5px;
+}
+
+.upload-section {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.upload-label {
+  background-color: #1e90ff;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.upload-label:hover {
+  background-color: #187bcd;
+}
+
+.file-input {
+  display: none;
+}
+
+.chart-section {
+  margin-top: 20px;
+}
+
+.section-title {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.chart-container {
+  background: #f9f9f9;
+  border-radius: 12px;
+  padding: 15px;
+}
+
+.analysis-section {
+  margin-top: 30px;
+  background: #f0f8ff;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.analysis-text {
+  font-size: 16px;
+  color: #333;
+  line-height: 1.6;
+}

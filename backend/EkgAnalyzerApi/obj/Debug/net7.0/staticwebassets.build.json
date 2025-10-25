@@ -1,0 +1,71 @@
+{
+  "Version": 1,
+  "Hash": "gOr5tRPzyIAtKcBfnLZK1O0qtV+dqebiwFtcBN0a4WM=",
+  "Source": "EkgAnalyzerApi",
+  "BasePath": "_content/EkgAnalyzerApi",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "EkgAnalyzerApi\\wwwroot",
+      "Source": "EkgAnalyzerApi",
+      "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
+      "BasePath": "_content/EkgAnalyzerApi",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\36e3474ea93e477bb19fa515afb3e7a6.jpg",
+      "SourceId": "EkgAnalyzerApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
+      "BasePath": "_content/EkgAnalyzerApi",
+      "RelativePath": "uploads/36e3474ea93e477bb19fa515afb3e7a6.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\36e3474ea93e477bb19fa515afb3e7a6.jpg"
+    },
+    {
+      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\c89672bb1f734923ba9f87e12283f8be.jpg",
+      "SourceId": "EkgAnalyzerApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
+      "BasePath": "_content/EkgAnalyzerApi",
+      "RelativePath": "uploads/c89672bb1f734923ba9f87e12283f8be.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\c89672bb1f734923ba9f87e12283f8be.jpg"
+    },
+    {
+      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\d2585d9630df417f8b9a37018771a92e.jpg",
+      "SourceId": "EkgAnalyzerApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
+      "BasePath": "_content/EkgAnalyzerApi",
+      "RelativePath": "uploads/d2585d9630df417f8b9a37018771a92e.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\d2585d9630df417f8b9a37018771a92e.jpg"
+    }
+  ]
+}

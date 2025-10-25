@@ -1,0 +1,33 @@
+{
+  "Files": [
+    {
+      "Id": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\36e3474ea93e477bb19fa515afb3e7a6.jpg",
+      "PackagePath": "staticwebassets\\uploads\\36e3474ea93e477bb19fa515afb3e7a6.jpg"
+    },
+    {
+      "Id": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\c89672bb1f734923ba9f87e12283f8be.jpg",
+      "PackagePath": "staticwebassets\\uploads\\c89672bb1f734923ba9f87e12283f8be.jpg"
+    },
+    {
+      "Id": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\d2585d9630df417f8b9a37018771a92e.jpg",
+      "PackagePath": "staticwebassets\\uploads\\d2585d9630df417f8b9a37018771a92e.jpg"
+    },
+    {
+      "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.EkgAnalyzerApi.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.build.EkgAnalyzerApi.props",
+      "PackagePath": "build\\EkgAnalyzerApi.props"
+    },
+    {
+      "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.buildMultiTargeting.EkgAnalyzerApi.props",
+      "PackagePath": "buildMultiTargeting\\EkgAnalyzerApi.props"
+    },
+    {
+      "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.buildTransitive.EkgAnalyzerApi.props",
+      "PackagePath": "buildTransitive\\EkgAnalyzerApi.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
