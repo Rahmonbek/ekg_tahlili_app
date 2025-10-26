@@ -22,12 +22,8 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 1,
           "Children": [
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
-            },
             {
               "$type": "Document",
               "DocumentIndex": 2,
@@ -48,7 +44,7 @@
               "RelativeDocumentMoniker": "Controllers\\EkgController.cs",
               "ToolTip": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Controllers\\EkgController.cs",
               "RelativeToolTip": "Controllers\\EkgController.cs",
-              "ViewState": "AgIAAE4AAAAAAAAAAAAiwGgAAAA+AAAAAAAAAA==",
+              "ViewState": "AgIAAFcAAAAAAAAAAAAIwF0AAAB1AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-10-25T09:38:48.275Z",
               "EditorCaption": ""

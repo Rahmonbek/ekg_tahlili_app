@@ -91,7 +91,26 @@ namespace EkgAnalyzerApi.Controllers
 
                 // Prompt
                 var prompt = @"
-Siz tajribali kardiolog shifokorsiz. Quyidagi EKG faylni tahlil qiling va quyidagi JSON formatda natija yozing.
+Siz tajribali kardiolog shifokorsiz. Quyidagi EKG grafigini tahlil qiling va natijani quyidagi JSON formatida yozing.
+
+Tahlilda yurak ritmi, o‘tkazuvchanlik, elektr o‘qi, interval va komplekslar (PR, QRS, QT, QTc, ST-T), ishemik belgilar, aritmiyalar va boshqa klinik o‘zgarishlar tibbiy asos bilan izohlanishi shart.
+
+“automatic_analysis” bo‘limida:
+
+Yurak ritmini va asosiy elektrofiziologik xulosalarni to‘liq tahlil qiling;
+
+“digital_measurements” dagi barcha parametrlarning (HR, PR, QRS, QT, QTc, QRS_axis) normal yoki patologik ekanligini izohlang;
+
+Har bir aniqlangan o‘zgarishning klinik ahamiyatini tibbiy tilda tushuntiring.
+
+“final_summary” bo‘limida:
+
+EKG asosida yakuniy tibbiy tashxisni yozing (masalan: sinus bradikardiya, AV-blokada I daraja, o‘ng o‘q og‘ishi, ST–T o‘zgarishlari va h.k.);
+
+Qisqa, lekin aniq va klinik jihatdan to‘liq tahlil natijasini bering.
+
+Natijani faqat JSON formatida yozing. Barcha matnlar o‘zbek tilida bo‘lsin. Hech qanday izoh yoki qo‘shimcha so‘zlar yozmang.
+
 {
   ""digital_measurements"": {
     ""HR"": ""Yurak urish tezligi (bpm) va qisqa izoh"",
@@ -101,12 +120,11 @@ Siz tajribali kardiolog shifokorsiz. Quyidagi EKG faylni tahlil qiling va quyida
     ""QTc_Bazett"": ""QTc (Bazett) (ms)"",
     ""QRS_axis"": ""QRS o‘qi (gradus bilan)""
   },
-  ""automatic_analysis"": ""EKG signali asosida aniqlangan yurak ritmi, ishemik o‘zgarishlar yoki boshqa muhim klinik belgilar haqida qisqa tibbiy xulosa"",
+  ""automatic_analysis"": ""EKG signali asosida yurak ritmi, o‘tkazuvchanlik, interval va o‘qlar tahlili, ishemik belgilar, aritmiyalar hamda digital_measurements dagi parametrlarning normal yoki patologik holati haqida to‘liq tibbiy izoh"",
   ""automatic_analysis_bool"": ""xulosaning jiddiylik darajasi (1 = yengil, 2 = o‘rtacha, 3 = og‘ir)"",
-  ""AI_recommendations"": ""Oddiy tilda bemor uchun tavsiya: tekshiruv zarurati, yuklamani kamaytirish, yoki shifokor ko‘rigiga murojaat qilish haqida"",
-  ""final_summary"": ""Tibbiy asosli yakuniy xulosa, qisqa tahlil natijasi""
+  ""AI_recommendations"": ""Oddiy tilda bemor uchun tavsiya: tekshiruv zarurati, dam olish, jismoniy yuklamani kamaytirish, yoki shifokor ko‘rigiga murojaat qilish haqida"",
+  ""final_summary"": ""Tibbiy asosli yakuniy tashxis va qisqa tahlil natijasi, asosiy klinik xulosa bilan""
 }
-Faqat JSON formatida javob qaytaring, boshqa izoh yozmang. (Barcha ma'lumotlar o'zbek tilida bo'lsin)
 ";
 
                 // /v1/responses ga so‘rov

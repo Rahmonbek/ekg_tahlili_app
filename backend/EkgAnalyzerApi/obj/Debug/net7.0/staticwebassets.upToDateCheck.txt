@@ -1,0 +1,5 @@
+wwwroot\uploads\.picasa.ini
+wwwroot\uploads\ekg.jpg
+wwwroot\uploads\ekg2.jpg
+wwwroot\uploads\ekg3.jpg
+wwwroot\uploads\ekg4.JPG

@@ -33,3 +33,8 @@ D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\EkgAnalyzerApi.ge
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\ref\EkgAnalyzerApi.dll
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\EkgAnalyzerApi.staticwebassets.runtime.json
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\System.Drawing.Common.dll
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\EkgAnalyzerApi.staticwebassets.endpoints.json
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\EkgAnalyzerApi.sourcelink.json
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\staticwebassets.build.endpoints.json
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\staticwebassets\msbuild.EkgAnalyzerApi.Microsoft.AspNetCore.StaticWebAssetEndpoints.props
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\staticwebassets.upToDateCheck.txt
