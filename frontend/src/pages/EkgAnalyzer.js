@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -35,7 +34,7 @@ const EkgAnalyzer = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) return;
+    if (!file) return alert("Iltimos, EKG faylni yuklang!");
 
     setLoading(true);
     setResult(null);
@@ -44,13 +43,28 @@ const EkgAnalyzer = () => {
     try {
       const data = await analyzeEkgFile(file);
 
-      setResult(data.result || data); // backend JSON natija
+      // JSON tozalash
+      let cleanText = (data.result || JSON.stringify(data))
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
 
-      // Agar EKG numeric ma’lumot CSV bo‘lsa, chartga o‘tkazish
+      try {
+        const parsed = JSON.parse(cleanText);
+        setResult(parsed);
+        console.log("Parsed JSON:", parsed);
+      } catch {
+        setResult(cleanText);
+         console.log("Parsed JSON:", cleanText);
+      }
+
+      // Agar CSV bo‘lsa, signalni chizish
       if (file.name.endsWith(".csv") && data.csv_data) {
-        const lines = data.csv_data.split("\n").map(l => l.split(",").map(Number));
+        const lines = data.csv_data
+          .split("\n")
+          .map((l) => l.split(",").map(Number));
         const labels = lines.map((_, i) => i + 1);
-        const values = lines.map(row => row[1]); // masalan ikkinchi ustun
+        const values = lines.map((row) => row[1]);
         setChartData({
           labels,
           datasets: [
@@ -58,40 +72,129 @@ const EkgAnalyzer = () => {
               label: "EKG Signal",
               data: values,
               borderColor: "rgb(75, 192, 192)",
-              tension: 0.3,
+              tension: 0.3
             }
           ]
         });
       }
-
     } catch (err) {
-      alert(err.message);
+      alert("Xatolik: " + err.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: "700px", margin: "auto", padding: "20px" }}>
-      <h2>EKG Analyzer</h2>
-      <form onSubmit={handleSubmit}>
-        <input type="file" onChange={handleFileChange} />
-        <button type="submit" disabled={loading}>
+    <div
+      style={{
+        maxWidth: "800px",
+        margin: "auto",
+        padding: "25px",
+        fontFamily: "Segoe UI, sans-serif"
+      }}
+    >
+      <h2 style={{ textAlign: "center", color: "#007bff" }}>
+        🫀 EKG Analyzer
+      </h2>
+
+      {/* Fayl yuklash */}
+      <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
+        <input
+          type="file"
+          onChange={handleFileChange}
+          accept=".jpg,.jpeg,.png,.bmp,.pdf,.csv"
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            marginLeft: "10px",
+            padding: "8px 16px",
+            background: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer"
+          }}
+        >
           {loading ? "Tahlil qilinmoqda..." : "Tahlil qilish"}
         </button>
       </form>
 
+      {/* EKG chizig‘i */}
       {chartData && (
         <div style={{ marginTop: "30px" }}>
           <Line data={chartData} />
         </div>
       )}
 
-      {result && (
-        <div style={{ marginTop: "30px" }}>
-          <h3>Natija:</h3>
-          <pre>{JSON.stringify(result, null, 2)}</pre>
+      {/* JSON natijani chiqarish */}
+      {result && typeof result === "object" && (
+        <div
+          style={{
+            marginTop: "30px",
+            background: "#f8f9fa",
+            borderRadius: "8px",
+            padding: "15px",
+            boxShadow: "0 0 6px rgba(0,0,0,0.1)"
+          }}
+        >
+          <h3 style={{ borderBottom: "2px solid #007bff", paddingBottom: "5px" }}>
+            🧠 EKG Tahlil Natijasi
+          </h3>
+
+          {/* Digital o‘lchovlar */}
+          {result.digital_measurements && (
+            <div style={{ marginTop: "15px" }}>
+              <h4 style={{ color: "#007bff" }}>📊 Raqamli o‘lchovlar:</h4>
+              <ul>
+                {Object.entries(result.digital_measurements).map(([k, v]) => (
+                  <li key={k}>
+                    <strong>{k.replaceAll("_", " ")}:</strong> {v}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Avtomatik tahlil */}
+          {result.automatic_analysis && (
+            <div style={{ marginTop: "15px" }}>
+              <h4 style={{ color: "#007bff" }}>🩺 Avtomatik tahlil:</h4>
+              <p>{result.automatic_analysis}</p>
+            </div>
+          )}
+
+          {/* Tavsiya */}
+          {result.AI_recommendations && (
+            <div style={{ marginTop: "15px" }}>
+              <h4 style={{ color: "#007bff" }}>💡 AI tavsiyasi:</h4>
+              <p>{result.AI_recommendations}</p>
+            </div>
+          )}
+
+          {/* Yakuniy xulosa */}
+          {result.final_summary && (
+            <div style={{ marginTop: "15px" }}>
+              <h4 style={{ color: "#007bff" }}>🧾 Yakuniy xulosa:</h4>
+              <p>{result.final_summary}</p>
+            </div>
+          )}
         </div>
+      )}
+
+      {/* Agar JSON parse bo‘lmasa */}
+      {result && typeof result !== "object" && (
+        <pre
+          style={{
+            marginTop: "30px",
+            background: "#f1f3f4",
+            padding: "15px",
+            borderRadius: "8px"
+          }}
+        >
+          {result}
+        </pre>
       )}
     </div>
   );

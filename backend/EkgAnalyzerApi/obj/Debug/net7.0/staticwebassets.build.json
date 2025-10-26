@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "gOr5tRPzyIAtKcBfnLZK1O0qtV+dqebiwFtcBN0a4WM=",
+  "Hash": "wTa0K2WyinP9TZX4Qe/umBSRaa3UVR4+3kyjA3TBWtU=",
   "Source": "EkgAnalyzerApi",
   "BasePath": "_content/EkgAnalyzerApi",
   "Mode": "Default",
@@ -17,12 +17,12 @@
   ],
   "Assets": [
     {
-      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\36e3474ea93e477bb19fa515afb3e7a6.jpg",
+      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\.picasa.ini",
       "SourceId": "EkgAnalyzerApi",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
       "BasePath": "_content/EkgAnalyzerApi",
-      "RelativePath": "uploads/36e3474ea93e477bb19fa515afb3e7a6.jpg",
+      "RelativePath": "uploads/.picasa.ini",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -31,15 +31,15 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\uploads\\36e3474ea93e477bb19fa515afb3e7a6.jpg"
+      "OriginalItemSpec": "wwwroot\\uploads\\.picasa.ini"
     },
     {
-      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\c89672bb1f734923ba9f87e12283f8be.jpg",
+      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg.jpg",
       "SourceId": "EkgAnalyzerApi",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
       "BasePath": "_content/EkgAnalyzerApi",
-      "RelativePath": "uploads/c89672bb1f734923ba9f87e12283f8be.jpg",
+      "RelativePath": "uploads/ekg.jpg",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -48,15 +48,15 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\uploads\\c89672bb1f734923ba9f87e12283f8be.jpg"
+      "OriginalItemSpec": "wwwroot\\uploads\\ekg.jpg"
     },
     {
-      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\d2585d9630df417f8b9a37018771a92e.jpg",
+      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg2.jpg",
       "SourceId": "EkgAnalyzerApi",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
       "BasePath": "_content/EkgAnalyzerApi",
-      "RelativePath": "uploads/d2585d9630df417f8b9a37018771a92e.jpg",
+      "RelativePath": "uploads/ekg2.jpg",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -65,7 +65,41 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\uploads\\d2585d9630df417f8b9a37018771a92e.jpg"
+      "OriginalItemSpec": "wwwroot\\uploads\\ekg2.jpg"
+    },
+    {
+      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg3.jpg",
+      "SourceId": "EkgAnalyzerApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
+      "BasePath": "_content/EkgAnalyzerApi",
+      "RelativePath": "uploads/ekg3.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\ekg3.jpg"
+    },
+    {
+      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg4.JPG",
+      "SourceId": "EkgAnalyzerApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
+      "BasePath": "_content/EkgAnalyzerApi",
+      "RelativePath": "uploads/ekg4.JPG",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\ekg4.JPG"
     }
   ]
 }

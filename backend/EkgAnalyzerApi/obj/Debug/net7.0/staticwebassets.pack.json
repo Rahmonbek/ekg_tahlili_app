@@ -1,16 +1,24 @@
 {
   "Files": [
     {
-      "Id": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\36e3474ea93e477bb19fa515afb3e7a6.jpg",
-      "PackagePath": "staticwebassets\\uploads\\36e3474ea93e477bb19fa515afb3e7a6.jpg"
+      "Id": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\.picasa.ini",
+      "PackagePath": "staticwebassets\\uploads\\.picasa.ini"
     },
     {
-      "Id": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\c89672bb1f734923ba9f87e12283f8be.jpg",
-      "PackagePath": "staticwebassets\\uploads\\c89672bb1f734923ba9f87e12283f8be.jpg"
+      "Id": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg.jpg",
+      "PackagePath": "staticwebassets\\uploads\\ekg.jpg"
     },
     {
-      "Id": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\d2585d9630df417f8b9a37018771a92e.jpg",
-      "PackagePath": "staticwebassets\\uploads\\d2585d9630df417f8b9a37018771a92e.jpg"
+      "Id": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg2.jpg",
+      "PackagePath": "staticwebassets\\uploads\\ekg2.jpg"
+    },
+    {
+      "Id": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg3.jpg",
+      "PackagePath": "staticwebassets\\uploads\\ekg3.jpg"
+    },
+    {
+      "Id": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg4.JPG",
+      "PackagePath": "staticwebassets\\uploads\\ekg4.JPG"
     },
     {
       "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.EkgAnalyzerApi.Microsoft.AspNetCore.StaticWebAssets.props",

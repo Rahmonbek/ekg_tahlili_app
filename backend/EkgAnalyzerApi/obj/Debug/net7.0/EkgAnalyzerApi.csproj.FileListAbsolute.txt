@@ -32,3 +32,4 @@ D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\EkgAnalyzerApi.pd
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\EkgAnalyzerApi.genruntimeconfig.cache
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\ref\EkgAnalyzerApi.dll
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\EkgAnalyzerApi.staticwebassets.runtime.json
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\System.Drawing.Common.dll
