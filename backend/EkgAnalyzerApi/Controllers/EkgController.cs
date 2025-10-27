@@ -105,7 +105,7 @@ Har bir aniqlangan o‘zgarishning klinik ahamiyatini tibbiy tilda tushuntiring.
 
 “final_summary” bo‘limida:
 
-EKG asosida yakuniy tibbiy tashxisni yozing (masalan: sinus bradikardiya, AV-blokada I daraja, o‘ng o‘q og‘ishi, ST–T o‘zgarishlari va h.k.);
+EKG asosida yakuniy tibbiy tashxisni yozing (masalan: infarkt, sinus bradikardiya, AV-blokada I daraja, o‘ng o‘q og‘ishi, ST–T o‘zgarishlari va h.k.);
 
 Qisqa, lekin aniq va klinik jihatdan to‘liq tahlil natijasini bering.
 

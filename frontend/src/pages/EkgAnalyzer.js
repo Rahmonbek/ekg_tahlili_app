@@ -22,6 +22,9 @@ ChartJS.register(
   Legend
 );
 
+// Rasmdan signalni chiqarish funksiyasi
+
+
 const EkgAnalyzer = () => {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -48,28 +51,24 @@ const EkgAnalyzer = () => {
         .replace(/```json/g, "")
         .replace(/```/g, "")
         .trim();
-
+      let parsed;
       try {
-        const parsed = JSON.parse(cleanText);
+        parsed = JSON.parse(cleanText);
         setResult(parsed);
-        console.log("Parsed JSON:", parsed);
       } catch {
         setResult(cleanText);
-         console.log("Parsed JSON:", cleanText);
       }
 
-      // Agar CSV bo‘lsa, signalni chizish
-      if (file.name.endsWith(".csv") && data.csv_data) {
-        const lines = data.csv_data
-          .split("\n")
-          .map((l) => l.split(",").map(Number));
+      // CSV bo'lsa signalni olish
+      if (file.name.endsWith(".csv") && parsed?.chart_data) {
+        const lines = parsed.chart_data.split("\n").map((l) => l.split(",").map(Number));
         const labels = lines.map((_, i) => i + 1);
         const values = lines.map((row) => row[1]);
         setChartData({
           labels,
           datasets: [
             {
-              label: "EKG Signal",
+              label: "EKG Signal (CSV)",
               data: values,
               borderColor: "rgb(75, 192, 192)",
               tension: 0.3
@@ -77,6 +76,9 @@ const EkgAnalyzer = () => {
           ]
         });
       }
+
+      
+     
     } catch (err) {
       alert("Xatolik: " + err.message);
     } finally {
@@ -85,19 +87,9 @@ const EkgAnalyzer = () => {
   };
 
   return (
-    <div
-      style={{
-        maxWidth: "800px",
-        margin: "auto",
-        padding: "25px",
-        fontFamily: "Segoe UI, sans-serif"
-      }}
-    >
-      <h2 style={{ textAlign: "center", color: "#007bff" }}>
-        🫀 EKG Analyzer
-      </h2>
+    <div style={{ maxWidth: "900px", margin: "auto", padding: "25px", fontFamily: "Segoe UI, sans-serif" }}>
+      <h2 style={{ textAlign: "center", color: "#007bff" }}>🫀 EKG Analyzer</h2>
 
-      {/* Fayl yuklash */}
       <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
         <input
           type="file"
@@ -130,20 +122,9 @@ const EkgAnalyzer = () => {
 
       {/* JSON natijani chiqarish */}
       {result && typeof result === "object" && (
-        <div
-          style={{
-            marginTop: "30px",
-            background: "#f8f9fa",
-            borderRadius: "8px",
-            padding: "15px",
-            boxShadow: "0 0 6px rgba(0,0,0,0.1)"
-          }}
-        >
-          <h3 style={{ borderBottom: "2px solid #007bff", paddingBottom: "5px" }}>
-            🧠 EKG Tahlil Natijasi
-          </h3>
+        <div style={{ marginTop: "30px", background: "#f8f9fa", borderRadius: "8px", padding: "15px", boxShadow: "0 0 6px rgba(0,0,0,0.1)" }}>
+          <h3 style={{ borderBottom: "2px solid #007bff", paddingBottom: "5px" }}>🧠 EKG Tahlil Natijasi</h3>
 
-          {/* Digital o‘lchovlar */}
           {result.digital_measurements && (
             <div style={{ marginTop: "15px" }}>
               <h4 style={{ color: "#007bff" }}>📊 Raqamli o‘lchovlar:</h4>
@@ -157,7 +138,6 @@ const EkgAnalyzer = () => {
             </div>
           )}
 
-          {/* Avtomatik tahlil */}
           {result.automatic_analysis && (
             <div style={{ marginTop: "15px" }}>
               <h4 style={{ color: "#007bff" }}>🩺 Avtomatik tahlil:</h4>
@@ -165,7 +145,6 @@ const EkgAnalyzer = () => {
             </div>
           )}
 
-          {/* Tavsiya */}
           {result.AI_recommendations && (
             <div style={{ marginTop: "15px" }}>
               <h4 style={{ color: "#007bff" }}>💡 AI tavsiyasi:</h4>
@@ -173,7 +152,6 @@ const EkgAnalyzer = () => {
             </div>
           )}
 
-          {/* Yakuniy xulosa */}
           {result.final_summary && (
             <div style={{ marginTop: "15px" }}>
               <h4 style={{ color: "#007bff" }}>🧾 Yakuniy xulosa:</h4>
@@ -183,16 +161,8 @@ const EkgAnalyzer = () => {
         </div>
       )}
 
-      {/* Agar JSON parse bo‘lmasa */}
       {result && typeof result !== "object" && (
-        <pre
-          style={{
-            marginTop: "30px",
-            background: "#f1f3f4",
-            padding: "15px",
-            borderRadius: "8px"
-          }}
-        >
+        <pre style={{ marginTop: "30px", background: "#f1f3f4", padding: "15px", borderRadius: "8px" }}>
           {result}
         </pre>
       )}
