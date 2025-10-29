@@ -33,3 +33,10 @@ D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\EkgAnalyzerApi.ge
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\ref\EkgAnalyzerApi.dll
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\EkgAnalyzerApi.staticwebassets.runtime.json
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\System.Drawing.Common.dll
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\BouncyCastle.Cryptography.dll
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\iTextSharp.LGPLv2.Core.dll
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\SkiaSharp.dll
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\runtimes\osx\native\libSkiaSharp.dylib
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\runtimes\win-arm64\native\libSkiaSharp.dll
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\runtimes\win-x64\native\libSkiaSharp.dll
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\runtimes\win-x86\native\libSkiaSharp.dll
