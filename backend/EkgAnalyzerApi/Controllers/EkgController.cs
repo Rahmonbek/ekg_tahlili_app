@@ -91,26 +91,9 @@ namespace EkgAnalyzerApi.Controllers
 
                 // Prompt
                 var prompt = @"
-Siz tajribali kardiolog shifokorsiz. Quyidagi EKG grafigini tahlil qiling va natijani quyidagi JSON formatida yozing.
+Siz tajribali kardiolog shifokorsiz. Quyidagi EKG grafigini tahlil qiling va natijani faqat quyidagi JSON formatida RETURN qiling. Hech qanday izoh, sharh yoki qo‘shimcha matn yozmang — faqat toza JSON. Barcha matnlar o‘zbek tilida bo‘lsin. Agar rasm yetarli sifatda bo‘lmasa yoki o‘lchovlarni aniq hisoblash mumkin bo‘lmasa, tegishli maydonda ""not measurable"" yoki ""estimate"" deb qaytaring.
 
-Tahlilda yurak ritmi, o‘tkazuvchanlik, elektr o‘qi, interval va komplekslar (PR, QRS, QT, QTc, ST-T), ishemik belgilar, aritmiyalar va boshqa klinik o‘zgarishlar tibbiy asos bilan izohlanishi shart.
-
-“automatic_analysis” bo‘limida:
-
-Yurak ritmini va asosiy elektrofiziologik xulosalarni to‘liq tahlil qiling;
-
-“digital_measurements” dagi barcha parametrlarning (HR, PR, QRS, QT, QTc, QRS_axis) normal yoki patologik ekanligini izohlang;
-
-Har bir aniqlangan o‘zgarishning klinik ahamiyatini tibbiy tilda tushuntiring.
-
-“final_summary” bo‘limida:
-
-EKG asosida yakuniy tibbiy tashxisni yozing (masalan: infarkt, sinus bradikardiya, AV-blokada I daraja, o‘ng o‘q og‘ishi, ST–T o‘zgarishlari va h.k.);
-
-Qisqa, lekin aniq va klinik jihatdan to‘liq tahlil natijasini bering.
-
-Natijani faqat JSON formatida yozing. Barcha matnlar o‘zbek tilida bo‘lsin. Hech qanday izoh yoki qo‘shimcha so‘zlar yozmang.
-
+JSON shabloni:
 {
   ""digital_measurements"": {
     ""HR"": ""Yurak urish tezligi (bpm) va qisqa izoh"",
@@ -120,10 +103,18 @@ Natijani faqat JSON formatida yozing. Barcha matnlar o‘zbek tilida bo‘lsin. 
     ""QTc_Bazett"": ""QTc (Bazett) (ms)"",
     ""QRS_axis"": ""QRS o‘qi (gradus bilan)""
   },
-  ""automatic_analysis"": ""EKG signali asosida yurak ritmi, o‘tkazuvchanlik, interval va o‘qlar tahlili, ishemik belgilar, aritmiyalar hamda digital_measurements dagi parametrlarning normal yoki patologik holati haqida to‘liq tibbiy izoh"",
+  ""automatic_analysis"": ""EKG signali asosida yurak ritmi, o‘tkazuvchanlik, interval va o‘qlar tahlili, ishemik belgilar, aritmiyalar hamda digital_measurements dagi parametrlarning normal yoki patologik holati haqida to‘liq tibbiy izoh. Agar aniqlansa, quyidagi klinik holatlar haqida ham batafsil ma’lumot bering:\n\n• Giperkalemiya (Kaliy ortiq) – T to‘lqinlar baland va o‘tkir shaklda\n• Gipokalemiya (Kaliy kam) – T to‘lqin tekis, U to‘lqin paydo bo‘ladi\n• Gipokaltsemiya (Kaltsiy kam) – QT oralig‘i uzayadi\n• Giperkaltsemiya (Kaltsiy ko‘p) – QT oralig‘i qisqaradi\n• Perikardit – yurak atrofidagi qop yallig‘lanadi (ST ko‘tarilishi, PR pastlash)\n• Perikard effuziyasi – yurak atrofida suyuqlik to‘planadi (voltaj pasayadi)\n• Digoksin ta’siri – ST segment “kupa” shaklida pastga egilgan\n• Antiaritmiklar (amiodaron va h.k.) – QT oralig‘i uzayadi\n• Intoksikatsiyalar (alkogol, kokain) – ritm buzilishi yoki ST o‘zgarishlar\n• Stress, charchoq, vegetativ disfunktsiyada sinus taxikardiya yoki ritm o‘zgarishlari\n• Sinus taxikardiya – yurak urishi >100/min\n• Sinus bradikardiya – yurak urishi <60/min\n• Ekstrasistoliyalar – “qo‘shimcha” urishlar\n• Atrial fibrillyatsiya (AFib) – yuqori bo‘lmachalar notekis uradi\n• Atrial flutter – arrali ritm\n• Ventrikulyar taxikardiya (VT) – xavfli tez ritm\n• Ventrikulyar fibrillyatsiya (VF) – yurak mushaklari tartibsiz “qaltiraydi”\n• Miokard ishemiyasi – ST pastlash yoki T inversiyasi\n• O‘tkir miokard infarkti – ST ko‘tarilishi (yangi infarkt)\n• Eski infarkt (Q to‘lqinli) – avvalgi zararlanish izi\n• Subendokardial ishemiya – ichki qatlam shikastlanishi\n\nHar bir aniqlangan o‘zgarish klinik jihatdan asoslanib, yurak mushaklari faoliyati va bemor holatiga ta’siri bilan izohlanishi shart."",
   ""automatic_analysis_bool"": ""xulosaning jiddiylik darajasi (1 = yengil, 2 = o‘rtacha, 3 = og‘ir)"",
-  ""AI_recommendations"": ""Oddiy tilda bemor uchun tavsiya: tekshiruv zarurati, dam olish, jismoniy yuklamani kamaytirish, yoki shifokor ko‘rigiga murojaat qilish haqida"",
-  ""final_summary"": ""Tibbiy asosli yakuniy tashxis va qisqa tahlil natijasi, asosiy klinik xulosa bilan""
+  ""AI_recommendations"": ""Oddiy tilda bemor uchun tavsiya: tekshiruv zarurati, dam olish, jismoniy yuklamani kamaytirish, yoki shifokor ko‘rigiga murojaat qilish va agarda kasallik aniqlansa shu kasallik davolash usuli haqida."",
+  ""final_summary"": ""Tibbiy asosli yakuniy tashxis va qisqa tahlil natijasi, asosiy klinik xulosa bilan.""
+}
+
+Qo‘shimcha talablar:
+- Har bir parametr uchun birliklar (bpm, ms, gradus) aniq yozilsin.
+- Raqamli qiymatlar va ularning tibbiy bahosi (normal/patologik) alohida yozilsin.
+- Elektrolit, perikard, ishemiya yoki aritmiya belgilaridan biri aniqlansa, u alohida tibbiy izoh bilan tushuntirilsin (sababi, EKG belgisi, klinik ahamiyati).
+- Model javobi faqat JSON bo‘lsin, hech qanday matn tashqarida bo‘lmasin.
+
 }
 ";
 
