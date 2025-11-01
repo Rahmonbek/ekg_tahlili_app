@@ -34,6 +34,7 @@ D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\ref\EkgAnalyzerAp
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\EkgAnalyzerApi.staticwebassets.runtime.json
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\System.Drawing.Common.dll
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\BouncyCastle.Cryptography.dll
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\iTextSharp.LGPLv2.Core.dll
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\SkiaSharp.dll
@@ -42,9 +43,14 @@ D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\runtimes\win-arm6
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\runtimes\win-x64\native\libSkiaSharp.dll
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\runtimes\win-x86\native\libSkiaSharp.dll
 =======
+=======
+>>>>>>> Stashed changes
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\EkgAnalyzerApi.staticwebassets.endpoints.json
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\EkgAnalyzerApi.sourcelink.json
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\staticwebassets.build.endpoints.json
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\staticwebassets\msbuild.EkgAnalyzerApi.Microsoft.AspNetCore.StaticWebAssetEndpoints.props
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\staticwebassets.upToDateCheck.txt
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
