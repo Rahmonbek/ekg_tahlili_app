@@ -1,13 +1,8 @@
-export const analyzeEkgFile = async (file) => {
-  const response = await fetch("https://localhost:7020/api/Ekg/analyze", {
-    method: "POST",
-    body: file
+import axios from "axios";
+
+export const analyzeEkgFile = async (formData) => {
+  const res = await axios.post("http://127.0.0.1:8000/api/analyze", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
   });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || "Server error");
-  }
-
-  return response.json();
+  return res.data;
 };

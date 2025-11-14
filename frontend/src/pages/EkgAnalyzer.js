@@ -21,10 +21,10 @@ const EkgAnalyzer = () => {
 
     try {
       const formData = new FormData();
-      files.forEach((f) => formData.append("files", f));
+      files.forEach((f) => formData.append("file", f));
 
       const res = await analyzeEkgFile(formData);
-      let text = res.result || JSON.stringify(res);
+      let text = res.raw_result || JSON.stringify(res);
       text = text.replace(/```json/g, "").replace(/```/g, "").trim();
 
       try {
