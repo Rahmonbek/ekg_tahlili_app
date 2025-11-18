@@ -89,3 +89,86 @@ body {
   color: #333;
   line-height: 1.6;
 }
+.ekg-container {
+  max-width: 900px;
+  margin: auto;
+  padding: 30px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.ekg-title {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #2b2d42;
+}
+
+.ekg-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.flex-row {
+  flex-direction: row;
+  align-items: center;
+}
+
+.form-group input {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  outline: none;
+  transition: 0.2s;
+}
+
+.form-group input:focus {
+  border-color: #6c63ff;
+  box-shadow: 0 0 5px rgba(108, 99, 255, 0.4);
+}
+
+.ekg-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  background-color: #6c63ff;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.ekg-button:hover {
+  background-color: #5751d1;
+}
+
+.file-list {
+  margin-top: 15px;
+  list-style: disc;
+  padding-left: 20px;
+}
+
+.ekg-error {
+  color: #e63946;
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+.ekg-result {
+  margin-top: 20px;
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  font-size: 14px;
+}
