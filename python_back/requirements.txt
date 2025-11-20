@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+numpy
+pandas
+matplotlib
+Pillow
+neurokit2
+openai
