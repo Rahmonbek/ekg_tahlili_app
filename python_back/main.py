@@ -218,7 +218,7 @@ def openai_upload_file(api_key: str, file_bytes: bytes, filename: str = "ecg.png
 
 # ---------------- Compose prompt ----------------
 def compose_prompt_for_openai() -> str:
-    prompt_header = """Siz tajribali kardiolog shifokor yordamchisisiz. Quyidagi EKG grafigini faqat texnik va morfologik nuqtai nazardan tahlil qiling. EKG signali asosida o‘lchash mumkin bo‘lgan raqamli parametrlarni hisoblang, ritm va to‘lqin shakllarini baholang. Hech qanday klinik tashxisni to‘g‘ridan-to‘g‘ri qo‘ymang — faqat rasmda ko‘rinadigan EKG o‘zgarishlarini texnik tarzda tasvirlab bering.
+    prompt_header = """Siz tajribali kardiolog shifokorsiz. Quyidagi EKG grafigini faqat texnik va morfologik nuqtai nazardan tahlil qiling. EKG signali asosida o‘lchash mumkin bo‘lgan raqamli parametrlarni hisoblang, ritm va to‘lqin shakllarini baholang. Hech qanday klinik tashxisni to‘g‘ridan-to‘g‘ri qo‘ymang — faqat rasmda ko‘rinadigan EKG o‘zgarishlarini texnik tarzda tasvirlab bering.
 
 Natijani faqat quyidagi JSON formatida RETURN qiling. Hech qanday qo‘shimcha matn, sharh yoki izoh yozmang. Barcha matnlar o‘zbek tilida bo‘lsin.
 
@@ -265,15 +265,7 @@ Qo‘shimcha talablar:
 
 # ---------------- ECG Process Wrapper ----------------
 def ecg_process_wrapper(signal: np.ndarray, sampling_rate: float = 500.0):
-    """
-    Robust replacement for nk.ecg_process where function may not exist.
-    Returns dict with:
-        - ecg_clean: cleaned signal
-        - rpeaks: R peak indices
-        - peaks: peaks dict
-        - delineate: delineation dict
-        - hr: instantaneous HR series
-    """
+    
     out = {
         'ecg_clean': None,
         'rpeaks': np.array([], dtype=int),
