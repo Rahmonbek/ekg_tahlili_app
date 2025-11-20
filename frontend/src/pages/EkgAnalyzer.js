@@ -6,6 +6,7 @@ const EkgAnalyzer = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [image, setimage] = useState(null);
 
   const [paperSpeed, setPaperSpeed] = useState(25); // mm/s
   const [amplitude, setAmplitude] = useState(10);   // mm/mV
@@ -33,7 +34,7 @@ const EkgAnalyzer = () => {
       const res = await analyzeEkgFile(formData);
       let text = res.raw_result || JSON.stringify(res);
       text = text.replace(/```json/g, "").replace(/```/g, "").trim();
-
+      setimage(res.ecg_png_base64)
       try {
         setResult(JSON.parse(text));
       } catch {
@@ -97,7 +98,7 @@ const EkgAnalyzer = () => {
       )}
 
       {error && <div className="ekg-error">❌ Xatolik: {error}</div>}
-
+       <img style={{height:'2000px'}} src={`data:image/png;base64,${image}`}/>
       {result && (
         <pre className="ekg-result">
           {typeof result === "object"

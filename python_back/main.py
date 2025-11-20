@@ -1,25 +1,38 @@
+# ============================ ecg_api_full.py (1-qism) ============================
+import io
 import os
-import tempfile
+import re
+import math
+from openai import OpenAI
+import base64
+from matplotlib.ticker import MultipleLocator
+from typing import Dict, Optional, Tuple
+import xml.etree.ElementTree as ET
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 import pandas as pd
-import cv2
+from PIL import Image, ImageDraw, ImageFont
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
 import neurokit2 as nk
-from fastapi import FastAPI, UploadFile, File, HTTPException, Form
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from openai import OpenAI
-import xml.etree.ElementTree as ET
-import base64
-from dotenv import load_dotenv
-import json
-import math
-load_dotenv()
+import openai
+import warnings
+Image.MAX_IMAGE_PIXELS = None
+# Optional for PDF -> image
+try:
+    from pdf2image import convert_from_bytes
+except Exception:
+    convert_from_bytes = None
 
-# ============================
-# 🔹 FASTAPI konfiguratsiyasi
-# ============================
+# For fuzzy lead mapping
+from fuzzywuzzy import process
+
+# ---------------- FastAPI app init ----------------
 app = FastAPI(title="AI EKG Analyzer")
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -28,424 +41,631 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ============================
-# 🔹 OpenAI mijozini sozlash
-# ============================
+# ---------------- OpenAI API key ----------------
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
     raise RuntimeError("OPENAI_API_KEY muhit o'zgaruvchisi topilmadi.")
-client = OpenAI(api_key=OPENAI_API_KEY)
 
-PROMPT_TEMPLATE = """
-Siz tajribali kardiolog shifokorsiz. Quyidagi EKG signal tahlilidan olingan o'lchovlarni tahlil qiling va natijani faqat JSON formatida qaytaring. Hech qanday qo‘shimcha izoh yoki matn yozmang — faqat toza JSON. Barcha matnlar o‘zbek tilida bo‘lsin.
+# ---------------- Canonical leads ----------------
+CANONICAL_LEADS = ['I','II','III','aVR','aVL','aVF','V1','V2','V3','V4','V5','V6']
 
-Natijani faqat JSON formatida qaytaring:
+# ---------------- Lead fuzzy mapping ----------------
+def map_leads(candidate_names):
+    mapping = {}
+    for c in candidate_names:
+        clean = str(c).strip()
+        # exact or partial match
+        for lead in CANONICAL_LEADS:
+            if re.search(r'\b' + re.escape(lead) + r'\b', clean, re.IGNORECASE):
+                mapping[c] = lead
+                break
+        else:
+            # fuzzy match
+            choice, score = process.extractOne(clean, CANONICAL_LEADS)
+            mapping[c] = choice if score >= 75 else None
+    return mapping
 
-{{
-  "digital_measurements_str":"EKG o‘lchovlarning eng asosiylarini, qiymatga ega bo‘lganlarini tanlab, har birining nomi, qiymati, birligi va qiymatga beriladigan izohini yoz. Qiymati mavjud bo‘lmagan o‘lchovlarni yozma. Natijani object ko‘rinishida emas, umumiy bitta string ko‘rinishida chiqarsin.",
-  "automatic_analysis": "EKG signali asosida yurak ritmi, o‘tkazuvchanlik, interval va o‘qlar tahlili, ishemik belgilar, aritmiyalar hamda digital_measurements dagi parametrlarning normal yoki patologik holati haqida to‘liq tibbiy izoh. Agar aniqlansa, quyidagi klinik holatlar haqida ham batafsil ma’lumot bering: giperkalemiya, gipokalemiya, gipokaltsemiya, giperkaltsemiya, perikardit, perikard effuziyasi, digoksin ta’siri, antiaritmiklar, intoksikatsiyalar, stress, sinus taxikardiya/bradikardiya, ekstrasistoliyalar, atrial fibrillyatsiya/flutter, ventrikulyar taxikardiya/fibrillyatsiya, miokard ishemiyasi yoki infarkti. Har bir aniqlangan o‘zgarish klinik jihatdan asoslanib, yurak mushaklari faoliyati va bemor holatiga ta’siri bilan izohlanishi kerak.",
-  "automatic_analysis_bool": "1 = yengil, 2 = o‘rtacha, 3 = og‘ir (xulosaning jiddiylik darajasi)",
-  "AI_recommendations": "Oddiy tilda bemor uchun tavsiya: tekshiruv zarurati, dam olish, jismoniy yuklamani kamaytirish yoki shifokor ko‘rigiga murojaat qilish, kasallik aniqlansa davolash usuli.",
-  "final_summary": "Tibbiy asosli yakuniy tashxis va qisqa tahlil natijasi, asosiy klinik xulosa bilan."
-}}
+# ---------------- Parsers ----------------
+def parse_table_bytes(b: bytes) -> Tuple[Dict[str, np.ndarray], Optional[float]]:
+    text = b.decode('utf-8', errors='ignore')
+    df = None
+    # try separators
+    for sep in [',',';','\t',' ']:
+        try:
+            df_try = pd.read_csv(io.StringIO(text), sep=sep)
+            if df_try.shape[1] > 1:
+                df = df_try
+                break
+        except Exception:
+            continue
+    if df is None or df.shape[1] < 1:
+        raise ValueError("Could not parse table data")
+    # find time column
+    time_col = None
+    for c in df.columns:
+        if re.search(r'time|sec|s$', str(c), re.IGNORECASE):
+            time_col = c
+            break
+    leads = {}
+    mapping = map_leads(df.columns)
+    for col in df.columns:
+        if col == time_col:
+            continue
+        name = mapping.get(col) or col
+        try:
+            arr = pd.to_numeric(df[col], errors='coerce').dropna().to_numpy(dtype=float)
+            if arr.size > 0:
+                leads[name] = arr
+        except Exception:
+            continue
+    fs = None
+    if time_col is not None:
+        t = pd.to_numeric(df[time_col], errors='coerce').dropna().to_numpy(dtype=float)
+        if t.size > 2:
+            fs = 1.0 / np.mean(np.diff(t))
+    return leads, fs
+LEAD_NAME_MAP = {
+    'MDC_ECG_LEAD_I': 'I',
+    'MDC_ECG_LEAD_II': 'II',
+    'MDC_ECG_LEAD_III': 'III',
+    'MDC_ECG_LEAD_AVR': 'aVR',
+    'MDC_ECG_LEAD_AVL': 'aVL',
+    'MDC_ECG_LEAD_AVF': 'aVF',
+    'MDC_ECG_LEAD_V1': 'V1',
+    'MDC_ECG_LEAD_V2': 'V2',
+    'MDC_ECG_LEAD_V3': 'V3',
+    'MDC_ECG_LEAD_V4': 'V4',
+    'MDC_ECG_LEAD_V5': 'V5',
+    'MDC_ECG_LEAD_V6': 'V6'
+}
+def parse_xml_bytes(b: bytes) -> Tuple[Dict[str, np.ndarray], float]:
+    ns = {'hl7': 'urn:hl7-org:v3', 'xsi': 'http://www.w3.org/2001/XMLSchema-instance'}
+    root = ET.fromstring(b)
+    
+    leads_dict = {}
+    fs = 500.0  # default sampling rate
+
+    sr_elem = root.find(".//hl7:sampleRate", ns)
+    if sr_elem is not None and sr_elem.text:
+        try:
+            fs = float(sr_elem.text.strip())
+        except:
+            pass
+    
+    for sequence_comp in root.findall(".//hl7:sequence", ns):
+        code_elem = sequence_comp.find("hl7:code", ns)
+        value_elem = sequence_comp.find("hl7:value", ns)
+        if code_elem is None or value_elem is None:
+            continue
+        
+        raw_lead_name = code_elem.get("code")
+        if not raw_lead_name:
+            continue
+        
+        lead_name = LEAD_NAME_MAP.get(raw_lead_name, raw_lead_name)  # Standart nomga o'tkazish
+        
+        digits_elem = value_elem.find("hl7:digits", ns)
+        if digits_elem is None or not digits_elem.text:
+            continue
+        
+        digits_str = digits_elem.text.strip()
+        arr = np.array([float(x) for x in digits_str.split()])
+        
+        origin_elem = value_elem.find("hl7:origin", ns)
+        scale_elem = value_elem.find("hl7:scale", ns)
+        origin = float(origin_elem.get("value")) if origin_elem is not None else 0.0
+        scale = float(scale_elem.get("value")) if scale_elem is not None else 1.0
+        arr = origin + arr * scale
+        
+        # Old va oxiridagi 0 larni qirqish
+        nonzero_idx = np.where(arr != 0)[0]
+        if len(nonzero_idx) > 0:
+            arr = arr[nonzero_idx[0]:nonzero_idx[-1]+1]
+        
+        # Maksimal 3000 sample (oxirgi qism)
+        if len(arr) > 3000:
+            arr = arr[-3000:]
+        
+        leads_dict[lead_name] = arr
+
+    return leads_dict, fs
+
+def extract_image_bytes_as_signal(b: bytes, paper_speed: float = 25.0) -> Tuple[Dict[str, np.ndarray], float]:
+    """
+    b: rasm bytes
+    paper_speed: mm/s, odatiy 25 mm/s
+    """
+    img = Image.open(io.BytesIO(b)).convert('L')
+    arr = np.array(img)
+    arr_inv = 255 - arr
+
+    # Centerline extraction
+    ys = np.argmax(arr_inv, axis=0)
+    ys_s = nk.signal_smooth(ys.astype(float), method='moving_average', window=5)
+    # Convert to mV assuming 10 mm/mV
+    mV_per_px = 0.1  # masalan, 1 px = 0.1 mV
+    signal_mV = (np.median(ys_s) - ys_s) * mV_per_px
+
+    # Compute sampling rate: pixels / (mm per s)
+    # Agar rasm kengligi 25 mm/s bo'lsa va signal length = arr.shape[1] pixels
+    fs = (arr.shape[1] / img.width) * paper_speed  # soddalashtirilgan, moslashtirish mumkin
+    return {'ImageTrace': signal_mV}, fs
+
+# ---------------- Lead signal helper ----------------
+def get_lead_signal(leads: dict, lead: str):
+    if lead in leads:
+        return leads[lead]
+    if lead.upper() in leads:
+        return leads[lead.upper()]
+    if lead.lower() in leads:
+        return leads[lead.lower()]
+    # fuzzy contains
+    for key in leads.keys():
+        if lead.lower() in key.lower():
+            return leads[key]
+    return np.zeros(1)
+
+# ---------------- OpenAI upload helper ----------------
+def openai_upload_file(api_key: str, file_bytes: bytes, filename: str = "ecg.png") -> str:
+    client = OpenAI(api_key=api_key)
+    try:
+        fobj = io.BytesIO(file_bytes)
+        fobj.name = filename
+        resp = client.files.create(file=fobj, purpose="vision")  # purpose="answers" PNG uchun to‘g‘ri
+        return resp.id
+    except Exception as e:
+        raise RuntimeError(f"OpenAI file upload failed: {e}")
+
+# ---------------- Compose prompt ----------------
+def compose_prompt_for_openai() -> str:
+    prompt_header = """Siz tajribali kardiolog shifokor yordamchisisiz. Quyidagi EKG grafigini faqat texnik va morfologik nuqtai nazardan tahlil qiling. EKG signali asosida o‘lchash mumkin bo‘lgan raqamli parametrlarni hisoblang, ritm va to‘lqin shakllarini baholang. Hech qanday klinik tashxisni to‘g‘ridan-to‘g‘ri qo‘ymang — faqat rasmda ko‘rinadigan EKG o‘zgarishlarini texnik tarzda tasvirlab bering.
+
+Natijani faqat quyidagi JSON formatida RETURN qiling. Hech qanday qo‘shimcha matn, sharh yoki izoh yozmang. Barcha matnlar o‘zbek tilida bo‘lsin.
+
+Agar rasm sifati yetarli bo‘lmasa yoki aniq o‘lchashning imkoni bo‘lmasa, tegishli maydonda "not measurable" deb qaytaring.
+
+JSON shabloni:
+
+{
+  "digital_measurements": {
+    "HR": "Yurak urish tezligi (bpm) va qisqa izoh",
+    "PR_interval": "PR interval (ms) va qisqa izoh",
+    "QRS_duration": "QRS davomiyligi (ms) va qisqa izoh",
+    "QT_interval": "QT interval (ms) va qisqa izoh",
+    "QTc_Bazett": "QTc (Bazett) (ms) va qisqa izoh",
+    "QRS_axis": "QRS o‘qi (gradus bilan) va qisqa izoh",
+    "P_wave_duration": "P to‘lqin davomiyligi (ms) va qisqa izoh",
+    "P_wave_amplitude": "P to‘lqin amplitudasi (mV) va qisqa izoh",
+    "R_wave_amplitude": "R to‘lqin amplitudasi (mV) va qisqa izoh",
+    "S_wave_amplitude": "S to‘lqin amplitudasi (mV) va qisqa izoh",
+    "T_wave_amplitude": "T to‘lqin amplitudasi (mV) va qisqa izoh",
+    "PR_segment": "PR segment (ms) va qisqa izoh",
+    "ST_segment_elevation": "ST segment ko‘tarilishi/tushishi (mV) va qisqa izoh",
+    "RR_interval": "RR interval (ms) va qisqa izoh",
+    "heart_rate_variability": "HRV (ms) va qisqa izoh",
+    "P_QRS_T_morphology": "P, QRS va T to‘lqin shakli haqida qisqa tavsif"
+  },
+
+  "automatic_analysis": "EKG signali asosida yurak ritmi, o‘tkazuvchanlik tizimi, to‘lqinlar morfologiyasi, intervallar, o‘qlar va ST-T o‘zgarishlari bo‘yicha texnik tahlil. Agar rasmda ko‘rinadigan belgilar EKG orqali aniqlanishi mumkin bo‘lgan holatlarga mos kelsa, masalan: elektrolit o‘zgarishlari, ishemiya belgilariga o‘xshash o‘zgarishlar, aritmiya belgilariga o‘xshash ritm o‘zgarishlari — ularni faqat EKG ko‘rinishidagi faktlar asosida tushuntiring. Klinik tashxis qo‘ymang, faqat grafik belgilarning texnik tavsifini bering.",
+
+  "automatic_analysis_bool": "1 (yengil), 2 (o‘rtacha) yoki 3 (ifodali o‘zgarishlar)",
+
+  "AI_recommendations": "EKG natijasi asosida umumiy tavsiya (masalan, qo‘shimcha tekshiruv zarurligi yoki shifokor ko‘rigiga murojaat qilish). Tibbiy tashxis qo‘ymang.",
+
+  "final_summary": "EKG ko‘rinishidagi asosiy texnik xulosalar, to‘lqinlar morfologiyasi va o‘lchovlar bo‘yicha yakuniy qisqa umumlashtirish. Klinika emas, faqat EKG grafik xulosasi."
+}
 
 Qo‘shimcha talablar:
-- Elektrolit, perikard, ishemiya yoki aritmiya belgilaridan biri aniqlansa, u alohida tibbiy izoh bilan tushuntirilsin.
+- Barcha qiymatlar o‘lchov birliklari bilan (bpm, ms, mV, gradus) yozilsin.
+- Raqamli qiymat + ularning EKG bo‘yicha bahosi aniq berilsin.
+- Hech qanday tashqi matn bo‘lmasin — faqat toza JSON qaytaring.
+    """
+    return prompt_header
+# ============================ ecg_api_full.py (2-qism) ============================
 
-O'lchovlar:
-{digital_measurements}
-"""
-
-# ============================
-# 🔹 Helper funksiyalar
-# ============================
-def extract_signal_from_image(file_path):
-    img = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
-    if img is None:
-        return None
-    # Threshold -> o'rtacha bo'ylab chiziq olinadi
-    _, thresh = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY_INV)
-    # X o'qi bo'yicha o'rtacha (qalin chiziq bo'lsa good)
-    signal = np.mean(thresh, axis=0)
-    return signal.astype(float)
-
-def detect_sampling_rate_from_csv(df):
-    # Time ustuni bo'lsa undan aniqlashga urinamiz
-    time_cols = [c for c in df.columns if "time" in c.lower() or "t" == c.lower()]
-    if time_cols:
-        try:
-            t = df[time_cols[0]].values.astype(float)
-            if len(t) >= 2:
-                dt = np.median(np.diff(t))
-                if dt > 0:
-                    return int(round(1.0 / dt))
-        except Exception:
-            pass
-    return None
-
-def extract_signal_from_csv_with_rate(df):
-    sampling_rate = detect_sampling_rate_from_csv(df)
-    # Asosiy signal ustuni – birinchi numeric ustun
-    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-    if not numeric_cols:
-        # agar barcha qiymatlar string bo'lsa, har birini float qilib o'qish
-        vals = pd.to_numeric(df.iloc[:, 0], errors='coerce').dropna().values
-        return vals.astype(float), sampling_rate
-    signal = df[numeric_cols[0]].values.astype(float)
-    return signal, sampling_rate
-
-def detect_sampling_rate_from_hl7_xml(root):
-    ns = {"hl7": "urn:hl7-org:v3"}
-    sequences = root.findall(".//hl7:sequence", ns)
-    for seq in sequences:
-        code = seq.find("hl7:code", ns)
-        if code is not None and code.attrib.get("code") == "TIME_ABSOLUTE":
-            value = seq.find("hl7:value", ns)
-            if value is not None:
-                increment = value.find("hl7:increment", ns)
-                if increment is not None and "value" in increment.attrib:
-                    try:
-                        delta_t = float(increment.attrib["value"])
-                        if delta_t > 0:
-                            return int(round(1.0 / delta_t))
-                    except:
-                        continue
-    return None
-
-def detect_sampling_rate_from_xml(root):
-    tags = [
-        ".//SampleRate",
-        ".//SamplingRate",
-        ".//SampleFrequency",
-        ".//fs",
-        ".//WaveFormSampleRate",
-        ".//Hz"
-    ]
-    for tag in tags:
-        node = root.find(tag)
-        if node is not None and node.text:
-            try:
-                val = float(node.text.strip())
-                if val > 0:
-                    return int(round(val))
-            except:
-                continue
-    return None
-
-def extract_signal_from_xml_with_rate(file_path, lead_name="MDC_ECG_LEAD_I"):
-    try:
-        tree = ET.parse(file_path)
-        root = tree.getroot()
-        signal = None
-        sampling_rate = None
-
-        # 1️⃣ HL7 <component> ichidan berilgan lead signalini olish
-        components = root.findall(".//{urn:hl7-org:v3}component")
-        for comp in components:
-            code = comp.find(".//{urn:hl7-org:v3}code")
-            if code is not None and code.attrib.get("code") == lead_name:
-                digits = comp.find(".//{urn:hl7-org:v3}digits")
-                if digits is not None and digits.text:
-                    nums = [float(x) for x in digits.text.strip().split()]
-                    signal = np.array(nums, dtype=float)
-                    break
-
-        # 2️⃣ WaveFormData fallback (base64 int16)
-        if signal is None:
-            wave_data = root.find(".//WaveFormData")
-            if wave_data is not None and wave_data.text:
-                try:
-                    decoded = base64.b64decode(wave_data.text.strip())
-                    signal = np.frombuffer(decoded, dtype=np.int16).astype(float)
-                except Exception:
-                    signal = None
-
-        # 3️⃣ ECGWaveform yoki LeadData fallback (whitespace-separated floats)
-        if signal is None:
-            waveform = root.find(".//ECGWaveform")
-            if waveform is not None and waveform.text:
-                try:
-                    nums = [float(x) for x in waveform.text.split() 
-                            if x.replace(".", "", 1).replace("-", "", 1).isdigit()]
-                    signal = np.array(nums, dtype=float)
-                except Exception:
-                    signal = None
-
-        # 4️⃣ Oxirgi fallback: barcha matn ichidagi raqamlar
-        if signal is None:
-            text = ET.tostring(root, encoding='unicode', method='text')
-            nums = [float(x) for x in text.split() if x.replace(".", "", 1).replace("-", "", 1).isdigit()]
-            if nums:
-                signal = np.array(nums, dtype=float)
-
-        # 5️⃣ Sampling rate aniqlash
-        sampling_rate = detect_sampling_rate_from_hl7_xml(root) or detect_sampling_rate_from_xml(root) or 500
-
-        if signal is None:
-            return None, None
-
-        return signal, int(round(sampling_rate))
-
-    except Exception as e:
-        print("XML parsing xatosi:", e)
-        return None, None
-
-def safe_format(value, unit=None):
-    if value is None or (isinstance(value, float) and np.isnan(value)):
-        return None
-    if unit:
-        # agar value hanuz ms yoki bpm bo'lsa, formatlab qaytarish
-        try:
-            v = float(value)
-            return f"{round(v, 2)} {unit}"
-        except:
-            return f"{value} {unit}"
-    else:
-        try:
-            return round(float(value), 2)
-        except:
-            return value
-
-# ============================
-# 🔹 EKG tahlil funksiyasi
-# ============================
-def analyze_signal(signal, sampling_rate=300):
-    signal = np.array(signal, dtype=float)
-    print(sampling_rate)
-    fs = int(round(sampling_rate))
-    print(fs)
-    if len(signal) < 200:
-        raise ValueError("Signal juda qisqa (kamida 200 nuqta kerak).")
-
-    # NeuroKit bilan tozalash va R-piklarni aniqlash
-    clean = nk.ecg_clean(signal, sampling_rate=fs, method='neurokit')
-    try:
-        signals, info = nk.ecg_peaks(clean, sampling_rate=fs, method="neurokit", correct_artifacts=False)
-        print(signals.keys())
-    except Exception as e:
-        # fallback: find_peaks oddiy usuli
-        peaks_indices, _ = nk.signal_findpeaks(clean, relative_height=0.5)
-        signals = {"ECG_R_Peaks": peaks_indices}
-        info = {}
-
-    # R-peaks olish: nk.ecg_peaks qaytargan formatlar bir nechta bo'lishi mumkin
-    if isinstance(signals, dict) and "ECG_R_Peaks" in signals:
-        rpeaks_arr = signals["ECG_R_Peaks"]
-        # agar bu binary vector bo'lsa, indekslarni olib kelamiz
-        if len(rpeaks_arr) == len(clean):
-            rpeaks = np.where(np.array(rpeaks_arr) > 0)[0]
-        else:
-            rpeaks = np.array(rpeaks_arr, dtype=float)
-    else:
-        # info ichida bo'lishi mumkin
-        rpeaks = np.array(info.get("ECG_R_Peaks", []), dtype=float)
-        if rpeaks.size == 0:
-            rpeaks = np.array([], dtype=float)
-
-    # Agar rpeaks topilmasa xato beramiz
-    if rpeaks.size < 2:
-        raise ValueError("R-piklar yetarli emas yoki aniqlanmadi.")
-
-    # HR hisoblash (RR intervallari orqali)
-    rr_samples = np.diff(rpeaks)
-    
-    rr_ms = (rr_samples / fs) * 1000.0
-    heart_rate_inst = 60000.0 / rr_ms  # instant HR in bpm
-    heart_rate_mean = np.mean(heart_rate_inst)
-    heart_rate_std = np.std(heart_rate_inst)
-    print(rpeaks)
-    # Deleniate (P/QRS/T onset/offset) — ba'zan muvaffaqiyatsiz bo'ladi -> try/except
-    delineate = None
-    try:
-        delineate, info_del = nk.ecg_delineate(clean, rpeaks=rpeaks, sampling_rate=fs, method="peak", show=False)
-    except Exception:
-        delineate = None
-    print(delineate)
-    digital_measurements = {
-        "Heart_Rate_Mean_bpm": safe_format(heart_rate_mean, "bpm"),
-        "Heart_Rate_Std_bpm": safe_format(heart_rate_std, "bpm"),
-        "R_Peaks_Count": int(len(rpeaks)),
-        "Sampling_Rate_Hz": int(fs),
+# ---------------- ECG Process Wrapper ----------------
+def ecg_process_wrapper(signal: np.ndarray, sampling_rate: float = 500.0):
+    """
+    Robust replacement for nk.ecg_process where function may not exist.
+    Returns dict with:
+        - ecg_clean: cleaned signal
+        - rpeaks: R peak indices
+        - peaks: peaks dict
+        - delineate: delineation dict
+        - hr: instantaneous HR series
+    """
+    out = {
+        'ecg_clean': None,
+        'rpeaks': np.array([], dtype=int),
+        'peaks': {},
+        'delineate': {},
+        'hr': np.array([])
     }
-    print(delineate is not None and isinstance(delineate, (pd.DataFrame, dict)))
-    if delineate is not None:
-        # delineate DataFrame ko'rinishida bo'lsa
-        if isinstance(delineate, dict):
-            df = pd.DataFrame(delineate)
-        else:
-            df = delineate
-        print(df)
-        cols = df.columns.tolist()
-        cols1 = signals.columns.tolist()
-        print(cols)
-        # QRS onsets/offsets / P onsets / T offsets - sample birlikda
-        # O'rtacha ms ga o'tkazish (samples -> ms)
-        print("ECG_P_Onsets" in cols and "ECG_R_Peaks" in cols1)
-        try:
-            if "ECG_P_Onsets" in cols and "ECG_R_Peaks" in cols1:
-                p_onsets = np.array(df["ECG_P_Onsets"].dropna(), dtype=float)
-                r_peaks_col = np.array(signals["ECG_R_Peaks"].dropna(), dtype=float)
-                print(p_onsets, r_peaks_col, 'XXXXXXXXXXXXX')
-                # some delineate outputs have NaN rows; compute per-beat where both exist
-                valid = (~np.isnan(p_onsets)) & (~np.isnan(r_peaks_col))
-                print(valid, 'SAlo,')
-                if valid.any():
-                    pr_samples = r_peaks_col[valid] - p_onsets[valid]
-                    pr_ms = np.nanmean(pr_samples) / fs * 1000.0
-                    digital_measurements["PR_Interval_ms"] = safe_format(pr_ms, "ms")
-            if "ECG_QRS_Onsets" in cols and "ECG_QRS_Offsets" in cols:
-                q_on = np.array(df["ECG_QRS_Onsets"].dropna(), dtype=float)
-                q_off = np.array(df["ECG_QRS_Offsets"].dropna(), dtype=float)
-                # align lengths
-                n = min(len(q_on), len(q_off))
-                if n > 0:
-                    qrs_samples = q_off[:n] - q_on[:n]
-                    qrs_ms = np.nanmean(qrs_samples) / fs * 1000.0
-                    digital_measurements["QRS_Duration_ms"] = safe_format(qrs_ms, "ms")
-            if "ECG_QRS_Onsets" in cols and "ECG_T_Offsets" in cols:
-                q_on = np.array(df["ECG_QRS_Onsets"].dropna(), dtype=float)
-                t_off = np.array(df["ECG_T_Offsets"].dropna(), dtype=float)
-                n = min(len(q_on), len(t_off))
-                if n > 0:
-                    qt_samples = t_off[:n] - q_on[:n]
-                    qt_ms = np.nanmean(qt_samples) / fs * 1000.0
-                    digital_measurements["QT_Interval_ms"] = safe_format(qt_ms, "ms")
-        except Exception as e:
-            # agar delimiter format bilan bog'liq muammo bo'lsa davom etamiz
-            pass
 
-    return digital_measurements
+    if signal is None or len(signal) < 3:
+        return out
 
-# ============================
-# 🔹 API endpoint
-# ============================
-@app.post("/api/analyze")
-async def analyze_ekg(
-    file: UploadFile = File(...),
-    paper_speed: float = Form(25.0),      # mm/s, default 25
-    amplitude: float = Form(10.0),        # mm/mV, default 10
-):
-    tmp_path = None
+    sr = sampling_rate if sampling_rate is not None else 500.0
+
+    # 1) Clean signal
     try:
-        # Temp faylga yozish
-        with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{file.filename}") as tmp:
-            content = await file.read()
-            tmp.write(content)
-            tmp_path = tmp.name
-
-        mime = file.content_type or ""
-        signal = None
-        sampling_rate = None
-
-        filename_lower = (file.filename or "").lower()
-
-        # CSV: ba'zi brauzerlar application/vnd.ms-excel yuboradi shuning uchun tekshiramiz
-        if "csv" in mime or filename_lower.endswith(".csv") or "excel" in mime:
-            df = pd.read_csv(tmp_path)
-            signal, sampling_rate = extract_signal_from_csv_with_rate(df)
-
-        elif filename_lower.endswith(".xml") or "xml" in mime:
-            signal, sampling_rate = extract_signal_from_xml_with_rate(tmp_path)
-            print(signal)
-        elif filename_lower.endswith(".edf"):
-            try:
-                import pyedflib
-                f = pyedflib.EdfReader(tmp_path)
-                signal = f.readSignal(0)
-                f.close()
-                sampling_rate = int(round(f.getSampleFrequency(0)))
-            except Exception:
-                # fallback
-                signal = None
-
-        elif "image" in mime or filename_lower.endswith((".png", ".jpg", ".jpeg")):
-            signal = extract_signal_from_image(tmp_path)
-
-        elif "pdf" in mime or filename_lower.endswith(".pdf"):
-            # PDF ichidagi rasmni chiqarish murakkab; hozir oddiy fallback
-            signal = extract_signal_from_image(tmp_path)
-
-        else:
-            raise HTTPException(status_code=400, detail=f"Noto'g'ri yoki qo'llab-quvvatlanmaydigan fayl turi: {mime}")
-
-        if signal is None or len(signal) < 100:
-            raise HTTPException(status_code=400, detail="Signal aniqlanmadi yoki juda qisqa (kamida 100 nuqta kerak).")
-
-        # ===========================
-        # Sampling rate hisoblash
-        # ===========================
-        if paper_speed and amplitude:
-            standard_paper_speed = 25    # mm/s
-            standard_amplitude = 10      # mm/mV
-            standard_sampling_rate = 500 # Hz
-
-            # Hisoblash: paper_speed va amplitude asosida skeyl qilinadi
-            sampling_rate = standard_sampling_rate * (paper_speed / standard_paper_speed) * (standard_amplitude / amplitude)
-
-        if sampling_rate is None:
-            sampling_rate = 500  # default
-
-        # ===========================
-        # Signalni tahlil qilish
-        # ===========================
-        print(sampling_rate)
-        digital_measurements = analyze_signal(signal, sampling_rate=sampling_rate)
-
-        # PROMPT uchun JSON string
-        digital_measurements_str = json.dumps(digital_measurements, ensure_ascii=False)
-        print(digital_measurements_str)
-        prompt = PROMPT_TEMPLATE.format(digital_measurements=digital_measurements_str)
-
-        # OpenAI chaqirig'i
-        completion = client.responses.create(
-            model="gpt-4.1-mini",
-            input=[{"role": "user", "content": prompt}],
-            temperature=0.2,
-        )
-
-        # Turli formatli chiqishni qo'llab-quvvatlash
-        ai_text = ""
+        ecg_clean = nk.ecg_clean(signal, sampling_rate=sr)
+    except Exception:
         try:
-            # official SDK may have 'output_text' or structured output
-            if hasattr(completion, "output_text") and completion.output_text:
-                ai_text = completion.output_text
+            from scipy.signal import butter, filtfilt
+            b, a = butter(2, [0.5/(sr/2), 40/(sr/2)], btype='band')
+            ecg_clean = filtfilt(b, a, signal)
+        except Exception:
+            ecg_clean = signal.copy()
+    out['ecg_clean'] = ecg_clean
+
+    # 2) Detect R-peaks
+    try:
+        peaks, info = nk.ecg_peaks(ecg_clean, sampling_rate=sr)
+        out['peaks'] = peaks
+        rpeaks = peaks.get('ECG_R_Peaks', np.array([], dtype=int))
+        rpeaks = np.array(rpeaks, dtype=int) if rpeaks is not None else np.array([], dtype=int)
+        out['rpeaks'] = rpeaks
+    except Exception:
+        out['rpeaks'] = np.array([], dtype=int)
+        out['peaks'] = {}
+
+    # 3) Compute HR series
+    try:
+        r = out['rpeaks']
+        if len(r) >= 2:
+            rr_sec = np.diff(r) / sr
+            rr_sec = rr_sec[rr_sec>0]
+            if rr_sec.size>0:
+                out['hr'] = 60.0 / rr_sec
             else:
-                # structured fallback
-                out = completion.output if hasattr(completion, "output") else None
-                if isinstance(out, list) and len(out) > 0:
-                    # birinchi elementda content bo'lishi mumkin
-                    first = out[0]
-                    # content ichidan matn olish
-                    cont = first.get("content") if isinstance(first, dict) else None
-                    if isinstance(cont, list) and len(cont) > 0:
-                        piece = cont[0]
-                        ai_text = piece.get("text", "") if isinstance(piece, dict) else str(piece)
-                # oxirgi fallback: raw dict ga aylantiramiz
-                if not ai_text:
-                    ai_text = json.dumps(completion, default=str, ensure_ascii=False)
-        except Exception:
-            ai_text = str(completion)
+                out['hr'] = np.array([])
+        else:
+            out['hr'] = np.array([])
+    except Exception:
+        out['hr'] = np.array([])
 
-        # Agar ai_text bo'sh bo'lsa xatolik qaytaramiz
-        if not ai_text:
-            raise RuntimeError("AI javobi olinmadi yoki bo'sh.")
+    # 4) Delineation (QRS, P, T)
+    try:
+        if len(out['rpeaks']) > 0:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", RuntimeWarning)
+                delineate = nk.ecg_delineate(ecg_clean, out['rpeaks'], sampling_rate=sr, method='dwt')
+            if isinstance(delineate, dict):
+                out['delineate'] = delineate
+            else:
+                out['delineate'] = {}
+    except Exception:
+        out['delineate'] = {}
 
-        # Faylni o'chirish
-        try:
-            if tmp_path and os.path.exists(tmp_path):
-                os.remove(tmp_path)
-        except Exception:
-            pass
+    return out
 
-        return JSONResponse(content={"ai_analysis": ai_text, "digital_measurements": digital_measurements})
+# ---------------- Measure from signal ----------------
+def measure_from_signal(leads: Dict[str, np.ndarray], fs: Optional[float]) -> Dict:
+    out = {}
+    sr = fs if fs is not None else 500.0
 
-    except HTTPException as he:
-        # saqlangan temp faylni tozalash
-        if tmp_path and os.path.exists(tmp_path):
-            os.remove(tmp_path)
-        raise he
+    # --- Reference lead tanlash ---
+    ref = next((l for l in ['II','V2','I'] if l in leads), None)
+    if ref is None:
+        ref = list(leads.keys())[0]
 
+    sig = leads.get(ref, np.zeros(1))
+
+    # --- Signalni invert qilish (agar o‘rtacha < 0 bo‘lsa) ---
+    if np.mean(sig) < 0:
+        sig = -sig
+
+    # --- ECG preprocessing va R-peaks ---
+    try:
+        ecg_clean = nk.ecg_clean(sig, sampling_rate=sr)
+        peaks, info = nk.ecg_peaks(ecg_clean, sampling_rate=sr)
+        rpeaks = np.array(peaks.get('ECG_R_Peaks', []), dtype=int)
+    except Exception:
+        ecg_clean = sig.copy()
+        rpeaks = np.array([], dtype=int)
+
+    # --- Instant HR va RR interval ---
+    if len(rpeaks) >= 2:
+        rr_ms = np.diff(rpeaks) / sr * 1000
+        mean_rr = np.nanmean(rr_ms)
+        mean_hr = 60000 / mean_rr if mean_rr > 0 else "not measurable"
+        out['HR'] = f"{mean_hr:.1f} bpm" if mean_rr > 0 else "not measurable"
+        out['RR_interval'] = f"{mean_rr:.1f} ms" if mean_rr > 0 else "not measurable"
+    else:
+        # Signal juda qisqa yoki R-peaks aniqlanmagan
+        out['HR'] = "not measurable"
+        out['RR_interval'] = "not measurable"
+
+    # --- Delineation (QRS, P, T) ---
+    try:
+        if len(rpeaks) > 0:
+            delineate = nk.ecg_delineate(ecg_clean, rpeaks, sampling_rate=sr, method='dwt')
+        else:
+            delineate = {}
+    except Exception:
+        delineate = {}
+
+    try:
+        q_on = delineate.get('ECG_Q_on', [])
+        s_off = delineate.get('ECG_S_off', [])
+        p_on = delineate.get('ECG_P_on', [])
+        t_off = delineate.get('ECG_T_off', [])
+
+        # QRS duration
+        qrs_list = [(s-q)/sr*1000 for q,s in zip(q_on,s_off) if q is not None and s is not None]
+        out['QRS_duration'] = f"{np.nanmean(qrs_list):.1f} ms" if qrs_list else "not measurable"
+
+        # PR interval
+        pr_list = [(q-p)/sr*1000 for p,q in zip(p_on,q_on) if p is not None and q is not None]
+        out['PR_interval'] = f"{np.nanmean(pr_list):.1f} ms" if pr_list else "not measurable"
+
+        # QT interval
+        qt_list = [(t-q)/sr*1000 for q,t in zip(q_on,t_off) if q is not None and t is not None]
+        out['QT_interval'] = f"{np.nanmean(qt_list):.1f} ms" if qt_list else "not measurable"
+
+        # QTc Bazett
+        if out['QT_interval'] != "not measurable" and out['RR_interval'] != "not measurable":
+            qt_ms = float(out['QT_interval'].split()[0])
+            rr_ms = float(out['RR_interval'].split()[0])
+            rr_sec = rr_ms / 1000.0
+            qtc = qt_ms / math.sqrt(rr_sec)
+            out['QTc_Bazett'] = f"{qtc:.1f} ms"
+        else:
+            out['QTc_Bazett'] = "not measurable"
+    except Exception:
+        out['QRS_duration'] = out['PR_interval'] = out['QT_interval'] = out['QTc_Bazett'] = "not measurable"
+
+    # --- QRS axis (I va aVF asosida) ---
+    try:
+        if 'I' in leads and 'aVF' in leads:
+            angle = math.degrees(math.atan2(np.mean(leads['aVF']), np.mean(leads['I'])))
+            out['QRS_axis'] = f"{angle:.1f} deg"
+        else:
+            out['QRS_axis'] = "not measurable"
+    except Exception:
+        out['QRS_axis'] = "not measurable"
+
+    return out
+
+# ---------------- Draw ECG Grid ----------------
+def draw_ecg_grid(width_px:int, height_px:int, pixels_per_mm:float=3.0):
+    img = Image.new('RGB', (width_px, height_px), color=(255,255,255))
+    draw = ImageDraw.Draw(img)
+    # 1 mm grid
+    for x in range(0, width_px, int(pixels_per_mm)):
+        draw.line([(x,0),(x,height_px)], fill=(235,235,235))
+    for y in range(0, height_px, int(pixels_per_mm)):
+        draw.line([(0,y),(width_px,y)], fill=(235,235,235))
+    # 5 mm grid (qalinroq)
+    for x in range(0, width_px, int(5*pixels_per_mm)):
+        draw.line([(x,0),(x,height_px)], fill=(200,200,200))
+    for y in range(0, height_px, int(5*pixels_per_mm)):
+        draw.line([(0,y),(width_px,y)], fill=(200,200,200))
+    return img
+
+def compress_final_png(png_bytes: bytes, scale: float = 0.3) -> bytes:
+    
+    # Bytes -> Image
+    img = Image.open(io.BytesIO(png_bytes))
+
+    # Yangi o‘lcham
+    new_w = int(img.width * scale)
+    new_h = int(img.height * scale)
+
+    # Sifatli downscale
+    img_resized = img.resize((new_w, new_h), Image.LANCZOS)
+
+    # Output buffer
+    buf = io.BytesIO()
+
+    # PNG sifatini buzmasdan saqlash
+    img_resized.save(buf, format="PNG", optimize=True)
+
+    return buf.getvalue()
+
+
+def render_12_lead_png(leads: dict, fs: float = 500.0, gain_mm_mv: float = 10.0) -> bytes:
+    """
+    Maksimal sifatli (tibbiy darajadagi) 12-lead EKG PNG generatsiyasi.
+    1 katakcha (big square) o'lchami 2 baravar kattalashtirilgan.
+    """
+
+    # Anti-aliasing (grafik sifatini oshirish)
+    plt.rcParams['path.simplify'] = False
+    plt.rcParams['agg.path.chunksize'] = 10000
+
+    CANONICAL_LEADS = ['I','II','III','aVR','aVL','aVF','V1','V2','V3','V4','V5','V6']
+    n_leads = len(CANONICAL_LEADS)
+
+    fig, axes = plt.subplots(
+        n_leads, 1,
+        figsize=(22, n_leads * 1.6),
+        sharex=True,
+        constrained_layout=True
+    )
+
+    # --- 2× KATTA GRID UCHUN KOEFFITSIENT ---
+    BASE_MAJOR = 25   # canonical big square = 25 samples
+    BASE_MINOR = 5    # canonical small square = 5 samples
+    SCALE = 2         # 2× katta katak
+    BIG = BASE_MAJOR * SCALE      # 50 samples
+    SMALL = BASE_MINOR * SCALE    # 10 samples
+
+    for i, lead in enumerate(CANONICAL_LEADS):
+        y = leads[lead] * gain_mm_mv / 1000.0
+
+        # Signalni chizish
+        axes[i].plot(y, color='black', linewidth=1.3)
+        axes[i].set_ylabel(lead, rotation=0, labelpad=20, fontsize=14)
+        axes[i].set_facecolor("#ffffff")
+
+        # Min–Max ko‘rsatish
+        y_min, y_max = np.min(y), np.max(y)
+        y_range = max(y_max - y_min, 0.001)
+
+        axes[i].set_ylim(y_min - y_range * 0.1, y_max + y_range * 0.1)
+        axes[i].set_yticks([y_min, y_max])
+        axes[i].set_yticklabels([f"{y_min:.1f}", f"{y_max:.1f}"], fontsize=10)
+
+        # X o‘qi – boshlanish/oxir
+        x_min, x_max = 0, len(y) - 1
+        axes[i].set_xticks([x_min, x_max])
+        axes[i].set_xticklabels([0, round(x_max / fs, 1)], fontsize=10)
+
+        # --- 2× KATTA GRID LOKATORLAR ---
+        axes[i].xaxis.set_major_locator(MultipleLocator(BIG))     # 50 samples
+        axes[i].xaxis.set_minor_locator(MultipleLocator(SMALL))   # 10 samples
+
+        # Y-oq (avtomatik major/minor)
+        major_step = max(y_range / 5, 0.1)
+        minor_step = max(y_range / 25, 0.01)
+
+        axes[i].yaxis.set_major_locator(MultipleLocator(major_step))
+        axes[i].yaxis.set_minor_locator(MultipleLocator(minor_step))
+
+        # --- GRID CHIZIQLAR (kattaroq ko‘rinishi uchun) ---
+        axes[i].grid(which='major', color='#ffb3b3', linewidth=1.1)
+        axes[i].grid(which='minor', color='#ffd9d9', linewidth=0.55)
+
+    axes[-1].set_xlabel("Time (s)")
+
+    # PNG ga yuqori DPI bilan saqlash
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=650)   # juda yuqori sifatlilik
+    plt.close(fig)
+
+    buf.seek(0)
+    return buf.read()
+# ============================ ecg_api_full.py (3-qism) ============================
+
+from fastapi import Form
+
+# ---------------- FastAPI endpoint: analyze ----------------
+@app.post("/api/analyze")
+async def analyze(
+    file: UploadFile = File(...),
+    paper_speed: float = Form(25.0),
+    gain: float = Form(10.0),
+):
+    if OPENAI_API_KEY is None:
+        raise HTTPException(status_code=400, detail="Provide OpenAI API key in environment variable 'OPENAI_API_KEY'")
+    
+    content = await file.read()
+    fname = (file.filename or "upload").lower()
+    leads = {}
+    fs = None
+
+    # --- Parse file according to extension ---
+    try:
+        if fname.endswith(('.csv','.txt','.tsv')):
+            leads, fs = parse_table_bytes(content)
+        elif fname.endswith('.xml'):
+            leads, fs = parse_xml_bytes(content)
+        elif fname.endswith('.pdf'):
+            if convert_from_bytes is None:
+                raise HTTPException(status_code=500, detail="pdf2image not installed or poppler missing")
+            pages = convert_from_bytes(content, first_page=1, last_page=1)
+            pil = pages[0]
+            img_bytes = io.BytesIO()
+            pil.save(img_bytes, format='PNG')
+            img_bytes.seek(0)
+            leads, fs = extract_image_bytes_as_signal(img_bytes.read())
+        elif fname.endswith(('.png','.jpg','.jpeg')):
+            leads, fs = extract_image_bytes_as_signal(content)
+        else:
+            try:
+                leads, fs = parse_table_bytes(content)
+            except Exception:
+                leads, fs = parse_xml_bytes(content)
     except Exception as e:
-        if tmp_path and os.path.exists(tmp_path):
-            os.remove(tmp_path)
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        raise HTTPException(status_code=400, detail=f"Could not parse file: {e}")
+
+    # --- Map fuzzy lead names to canonical leads ---
+    mapped = {}
+    mapping = map_leads(list(leads.keys()))
+    for orig, arr in leads.items():
+        name = mapping.get(orig) or orig
+        mapped[name] = arr
+    leads = mapped
+
+    # --- Fill missing leads with zeros ---
+    for ln in CANONICAL_LEADS:
+        if ln not in leads:
+            leads[ln] = np.zeros(250*10)  # 10s of zeros at 250Hz
+    print(leads, fs)
+    
+    
+
+    # --- Generate PNG ---
+    if fname.endswith(('.png','.jpg','.jpeg')):
+        png_bytes = content
+    else:
+        png_bytes = render_12_lead_png(leads, fs, gain_mm_mv=gain)
+        # compressed_png = compress_final_png(png_bytes, scale=0.3)
+        compressed_png=png_bytes
+    # --- Upload PNG to OpenAI ---
+    try:
+        file_id = openai_upload_file(OPENAI_API_KEY, compressed_png, filename=fname if fname.endswith('.png') else 'ecg.png')
+    except Exception as e:
+        b64 = base64.b64encode(compressed_png).decode('ascii')
+        return JSONResponse(content={
+            "error": f"OpenAI upload failed: {e}",
+            
+            "png_base64": b64
+        })
+    
+    # --- Compose prompt ---
+    prompt = compose_prompt_for_openai()
+
+    # --- Call OpenAI ChatCompletion ---
+    
+    print(file_id)
+    try:
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        resp = client.responses.create(
+            model="gpt-4o",
+            input=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "input_text", "text": prompt},
+                        {"type": "input_image", "file_id": file_id}  # <--- eski file_id o‘rniga
+                    ]
+                }
+            ],
+        )
+        content_out = resp.output_text
+        print("FULL RESPONSE:", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"OpenAI chat completion failed: {e}")
+
+# --- Parse JSON ---
+    try:
+        import json
+        parsed = json.loads(content_out)
+    except Exception:
+        parsed = {"raw": content_out}
+
+# --- Encode PNG to base64 for frontend ---
+    png_b64 = base64.b64encode(compressed_png).decode('ascii')
+
+    return JSONResponse(content={
+        "openai_file_id": file_id,
+        "ai_response": parsed,
+        "ecg_png_base64": png_b64  # rasm base64 sifatida foydalanuvchiga qaytariladi
+    })
+
+# ---------------- Ground truth endpoint ----------------
+class GroundTruth(BaseModel):
+    filename: str
+    true_diagnosis: str
+
+@app.post("/submit_ground_truth")
+async def submit_ground_truth(gt: GroundTruth):
+    os.makedirs('ground_truth', exist_ok=True)
+    safe_name = re.sub(r'[^0-9A-Za-z._-]','_', gt.filename)
+    with open(os.path.join('ground_truth', f'{safe_name}.json'), 'w', encoding='utf-8') as f:
+        import json
+        json.dump(gt.dict(), f, ensure_ascii=False, indent=2)
+    return {"status": "saved"}
