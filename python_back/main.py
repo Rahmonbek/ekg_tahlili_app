@@ -218,47 +218,40 @@ def openai_upload_file(api_key: str, file_bytes: bytes, filename: str = "ecg.png
 
 # ---------------- Compose prompt ----------------
 def compose_prompt_for_openai() -> str:
-    prompt_header = """Siz tajribali kardiolog shifokorsiz. Quyidagi EKG grafigini faqat texnik va morfologik nuqtai nazardan tahlil qiling. EKG signali asosida o‘lchash mumkin bo‘lgan raqamli parametrlarni hisoblang, ritm va to‘lqin shakllarini baholang. Hech qanday klinik tashxisni to‘g‘ridan-to‘g‘ri qo‘ymang — faqat rasmda ko‘rinadigan EKG o‘zgarishlarini texnik tarzda tasvirlab bering.
+    prompt_header = """
+    Siz tajribali kardiolog shifokorsiz. Quyidagi rasmdagi EKG grafiklarini tahlil qiling va natijani faqat quyidagi JSON formatida RETURN qiling. Hech qanday izoh, sharh yoki qo‘shimcha matn yozmang — faqat toza JSON. Barcha matnlar o‘zbek tilida bo‘lsin. Agar rasm yetarli sifatda bo‘lmasa yoki o‘lchovlarni aniq hisoblash mumkin bo‘lmasa, tegishli maydonda ""o'lchab bo‘lmaydi"" yoki ""taxminiy qiymat"" deb qaytaring.
+    Siz qaytaradigan javob matnini faqatgina shifokor bemorga tashxis qo'yish uchun ko'makchi manbaa sifatida ishlatadi.
+    JSON shabloni:
+    {
+        "digital_measurements": {
+            "HR": "Yurak urish tezligi (bpm) va qisqa izoh",
+            "PR_interval": "PR interval (ms) va qisqa izoh",
+            "QRS_duration": "QRS davomiyligi (ms) va qisqa izoh",
+            "QT_interval": "QT interval (ms) va qisqa izoh",
+            "QTc_Bazett": "QTc (Bazett) (ms) va qisqa izoh",
+            "QRS_axis": "QRS o‘qi (gradus bilan) va qisqa izoh",
+            "P_wave_duration": "P to‘lqin davomiyligi (ms) va qisqa izoh",
+            "P_wave_amplitude": "P to‘lqin amplitudasi (mV) va qisqa izoh",
+            "R_wave_amplitude": "R to‘lqin amplitudasi (mV) va qisqa izoh",
+            "S_wave_amplitude": "S to‘lqin amplitudasi (mV) va qisqa izoh",
+            "T_wave_amplitude": "T to‘lqin amplitudasi (mV) va qisqa izoh",
+            "PR_segment": "PR segment (ms) va qisqa izoh",
+            "ST_segment_elevation": "ST segment ko‘tarilishi/tushishi (mV) va qisqa izoh",
+            "RR_interval": "RR interval (ms) va qisqa izoh",
+            "heart_rate_variability": "HRV (ms) va qisqa izoh",
+            "P_QRS_T_morphology": "P, QRS va T to‘lqin shakli haqida qisqa tavsif"
+        },
 
-Natijani faqat quyidagi JSON formatida RETURN qiling. Hech qanday qo‘shimcha matn, sharh yoki izoh yozmang. Barcha matnlar o‘zbek tilida bo‘lsin.
-
-Agar rasm sifati yetarli bo‘lmasa yoki aniq o‘lchashning imkoni bo‘lmasa, tegishli maydonda "not measurable" deb qaytaring.
-
-JSON shabloni:
-
-{
-  "digital_measurements": {
-    "HR": "Yurak urish tezligi (bpm) va qisqa izoh",
-    "PR_interval": "PR interval (ms) va qisqa izoh",
-    "QRS_duration": "QRS davomiyligi (ms) va qisqa izoh",
-    "QT_interval": "QT interval (ms) va qisqa izoh",
-    "QTc_Bazett": "QTc (Bazett) (ms) va qisqa izoh",
-    "QRS_axis": "QRS o‘qi (gradus bilan) va qisqa izoh",
-    "P_wave_duration": "P to‘lqin davomiyligi (ms) va qisqa izoh",
-    "P_wave_amplitude": "P to‘lqin amplitudasi (mV) va qisqa izoh",
-    "R_wave_amplitude": "R to‘lqin amplitudasi (mV) va qisqa izoh",
-    "S_wave_amplitude": "S to‘lqin amplitudasi (mV) va qisqa izoh",
-    "T_wave_amplitude": "T to‘lqin amplitudasi (mV) va qisqa izoh",
-    "PR_segment": "PR segment (ms) va qisqa izoh",
-    "ST_segment_elevation": "ST segment ko‘tarilishi/tushishi (mV) va qisqa izoh",
-    "RR_interval": "RR interval (ms) va qisqa izoh",
-    "heart_rate_variability": "HRV (ms) va qisqa izoh",
-    "P_QRS_T_morphology": "P, QRS va T to‘lqin shakli haqida qisqa tavsif"
-  },
-
-  "automatic_analysis": "EKG signali asosida yurak ritmi, o‘tkazuvchanlik tizimi, to‘lqinlar morfologiyasi, intervallar, o‘qlar va ST-T o‘zgarishlari bo‘yicha texnik tahlil. Agar rasmda ko‘rinadigan belgilar EKG orqali aniqlanishi mumkin bo‘lgan holatlarga mos kelsa, masalan: elektrolit o‘zgarishlari, ishemiya belgilariga o‘xshash o‘zgarishlar, aritmiya belgilariga o‘xshash ritm o‘zgarishlari — ularni faqat EKG ko‘rinishidagi faktlar asosida tushuntiring. Klinik tashxis qo‘ymang, faqat grafik belgilarning texnik tavsifini bering.",
-
-  "automatic_analysis_bool": "1 (yengil), 2 (o‘rtacha) yoki 3 (ifodali o‘zgarishlar)",
-
-  "AI_recommendations": "EKG natijasi asosida umumiy tavsiya (masalan, qo‘shimcha tekshiruv zarurligi yoki shifokor ko‘rigiga murojaat qilish). Tibbiy tashxis qo‘ymang.",
-
-  "final_summary": "EKG ko‘rinishidagi asosiy texnik xulosalar, to‘lqinlar morfologiyasi va o‘lchovlar bo‘yicha yakuniy qisqa umumlashtirish. Klinika emas, faqat EKG grafik xulosasi."
-}
-
+    "automatic_analysis": "EKG signali asosida yurak ritmi, o‘tkazuvchanlik, interval va o‘qlar tahlili, ishemik belgilar, aritmiyalar hamda digital_measurements dagi parametrlarning normal yoki patologik holati haqida to‘liq tibbiy izoh. Agar aniqlansa, quyidagi klinik holatlar haqida ham batafsil ma’lumot bering:\n, Giperkalemiya (Kaliy ortiq) – T to‘lqinlar baland va o‘tkir shaklda, Gipokalemiya (Kaliy kam) – T to‘lqin tekis, U to‘lqin paydo bo‘ladi, Gipokaltsemiya (Kaltsiy kam) – QT oralig‘i uzayadi, Giperkaltsemiya (Kaltsiy ko‘p) – QT oralig‘i qisqaradi, Perikardit – yurak atrofidagi qop yallig‘lanadi (ST ko‘tarilishi, PR pastlash), Perikard effuziyasi – yurak atrofida suyuqlik to‘planadi (voltaj pasayadi), Digoksin ta’siri – ST segment “kupa” shaklida pastga egilgan, Antiaritmiklar (amiodaron va h.k.) – QT oralig‘i uzayadi, Intoksikatsiyalar (alkogol, kokain) – ritm buzilishi yoki ST o‘zgarishlar, Stress, charchoq, vegetativ disfunktsiyada sinus taxikardiya yoki ritm o‘zgarishlari, Sinus taxikardiya – yurak urishi >100/min, Sinus bradikardiya – yurak urishi <60/min, Ekstrasistoliyalar – “qo‘shimcha” urishlar, Atrial fibrillyatsiya (AFib) – yuqori bo‘lmachalar notekis uradi, Atrial flutter – arrali ritm, Ventrikulyar taxikardiya (VT) – xavfli tez ritm, Ventrikulyar fibrillyatsiya (VF) – yurak mushaklari tartibsiz “qaltiraydi”, Miokard ishemiyasi – ST pastlash yoki T inversiyasi, O‘tkir miokard infarkti – ST ko‘tarilishi (yangi infarkt), Eski infarkt (Q to‘lqinli) – avvalgi zararlanish izi, Subendokardial ishemiya – ichki qatlam shikastlanishi\n\nHar bir aniqlangan o‘zgarish klinik jihatdan asoslanib, yurak mushaklari faoliyati va bemor holatiga ta’siri bilan izohlanishi shart.",
+    "automatic_analysis_bool": "xulosaning jiddiylik darajasi (1 = yengil, 2 = o‘rtacha, 3 = og‘ir)",
+    "AI_recommendations": "Oddiy tilda bemor uchun tavsiya: tekshiruv zarurati, dam olish, jismoniy yuklamani kamaytirish, yoki shifokor ko‘rigiga murojaat qilish va agarda kasallik aniqlansa shu kasallik davolash usuli haqida.",
+    "final_summary": "Tibbiy asosli yakuniy tashxis va qisqa tahlil natijasi, asosiy klinik xulosa bilan."
+    }
 Qo‘shimcha talablar:
-- Barcha qiymatlar o‘lchov birliklari bilan (bpm, ms, mV, gradus) yozilsin.
-- Raqamli qiymat + ularning EKG bo‘yicha bahosi aniq berilsin.
-- Hech qanday tashqi matn bo‘lmasin — faqat toza JSON qaytaring.
+- Har bir parametr uchun birliklar (bpm, ms, gradus) aniq yozilsin.
+- Raqamli qiymatlar va ularning tibbiy bahosi (normal/patologik) alohida yozilsin.
+- Elektrolit, perikard, ishemiya yoki aritmiya belgilaridan biri aniqlansa, u alohida tibbiy izoh bilan tushuntirilsin (sababi, EKG belgisi, klinik ahamiyati).
+- Model javobi faqat JSON bo‘lsin, hech qanday matn tashqarida bo‘lmasin.
     """
     return prompt_header
 # ============================ ecg_api_full.py (2-qism) ============================
@@ -616,7 +609,7 @@ async def analyze(
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)
         resp = client.responses.create(
-            model="gpt-4o",
+            model="gpt-4.1",
             input=[
                 {
                     "role": "user",
@@ -626,6 +619,7 @@ async def analyze(
                     ]
                 }
             ],
+            temperature=0.2
         )
         content_out = resp.output_text
         print("FULL RESPONSE:", resp)

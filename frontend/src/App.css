@@ -22,76 +22,11 @@ body {
   padding: 30px;
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 30px;
-}
 
-.title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1e90ff;
-}
-
-.subtitle {
-  font-size: 16px;
-  color: #555;
-  margin-top: 5px;
-}
-
-.upload-section {
-  text-align: center;
-  margin-bottom: 25px;
-}
-
-.upload-label {
-  background-color: #1e90ff;
-  color: white;
-  padding: 10px 18px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.upload-label:hover {
-  background-color: #187bcd;
-}
-
-.file-input {
-  display: none;
-}
-
-.chart-section {
-  margin-top: 20px;
-}
-
-.section-title {
-  font-size: 20px;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.chart-container {
-  background: #f9f9f9;
-  border-radius: 12px;
-  padding: 15px;
-}
-
-.analysis-section {
-  margin-top: 30px;
-  background: #f0f8ff;
-  border-radius: 12px;
-  padding: 20px;
-}
-
-.analysis-text {
-  font-size: 16px;
-  color: #333;
-  line-height: 1.6;
-}
 .ekg-container {
   max-width: 900px;
   margin: auto;
+  margin-top: 50px;
   padding: 30px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: #ffffff;
@@ -170,5 +105,12 @@ body {
   border-radius: 10px;
   white-space: pre-wrap;
   overflow-x: auto;
-  font-size: 14px;
+  
 }
+.ekg-result *{font-size: 16px; line-height: 150%;}
+.ekg-result ul{margin-left: 25px; margin-bottom: 20px;}
+.ekg-result ul li{margin: 10px 0px;}
+.ekg-item-text b{font-size: 17px !important;}
+.ekg-item-text:has(span){margin-top: 20px;}
+.ekg-result ul li b{font-weight: 600;}
+.ekg-image{margin-top: 20px;}
