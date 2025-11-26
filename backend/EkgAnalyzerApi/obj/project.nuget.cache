@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "I70Vaj9gSrg=",
+  "dgSpecHash": "1MSsVnjmCW9rop9ATUOT/jpEFRnmtr1Axfpb7C23gLqLJCYE9WHhwr8lfrVPUlTcyamrF7NKNd5gmH2aSSXwdA==",
   "success": true,
   "projectFilePath": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\EkgAnalyzerApi.csproj",
   "expectedPackageFiles": [
@@ -26,8 +26,8 @@
     "C:\\Users\\lolil\\.nuget\\packages\\microsoft.extensions.primitives\\7.0.0\\microsoft.extensions.primitives.7.0.0.nupkg.sha512",
     "C:\\Users\\lolil\\.nuget\\packages\\microsoft.openapi\\1.4.3\\microsoft.openapi.1.4.3.nupkg.sha512",
     "C:\\Users\\lolil\\.nuget\\packages\\mono.texttemplating\\2.2.1\\mono.texttemplating.2.2.1.nupkg.sha512",
-    "C:\\Users\\lolil\\.nuget\\packages\\npgsql\\7.0.6\\npgsql.7.0.6.nupkg.sha512",
-    "C:\\Users\\lolil\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql\\7.0.11\\npgsql.entityframeworkcore.postgresql.7.0.11.nupkg.sha512",
+    "C:\\Users\\lolil\\.nuget\\packages\\npgsql\\7.0.7\\npgsql.7.0.7.nupkg.sha512",
+    "C:\\Users\\lolil\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql\\7.0.18\\npgsql.entityframeworkcore.postgresql.7.0.18.nupkg.sha512",
     "C:\\Users\\lolil\\.nuget\\packages\\skiasharp\\3.119.0\\skiasharp.3.119.0.nupkg.sha512",
     "C:\\Users\\lolil\\.nuget\\packages\\skiasharp.nativeassets.macos\\3.119.0\\skiasharp.nativeassets.macos.3.119.0.nupkg.sha512",
     "C:\\Users\\lolil\\.nuget\\packages\\skiasharp.nativeassets.win32\\3.119.0\\skiasharp.nativeassets.win32.3.119.0.nupkg.sha512",
@@ -40,18 +40,5 @@
     "C:\\Users\\lolil\\.nuget\\packages\\system.text.encodings.web\\7.0.0\\system.text.encodings.web.7.0.0.nupkg.sha512",
     "C:\\Users\\lolil\\.nuget\\packages\\system.text.json\\7.0.0\\system.text.json.7.0.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1603",
-      "level": "Warning",
-      "message": "EkgAnalyzerApi зависит от Npgsql.EntityFrameworkCore.PostgreSQL (>= 7.0.6), но версия Npgsql.EntityFrameworkCore.PostgreSQL 7.0.6 не найдена. Использовалась версия Npgsql.EntityFrameworkCore.PostgreSQL 7.0.11.",
-      "projectPath": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\EkgAnalyzerApi.csproj",
-      "warningLevel": 1,
-      "filePath": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\EkgAnalyzerApi.csproj",
-      "libraryId": "Npgsql.EntityFrameworkCore.PostgreSQL",
-      "targetGraphs": [
-        "net7.0"
-      ]
-    }
-  ]
+  "logs": []
 }

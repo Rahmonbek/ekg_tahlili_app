@@ -374,7 +374,7 @@
           "lib/netstandard2.0/Mono.TextTemplating.dll": {}
         }
       },
-      "Npgsql/7.0.6": {
+      "Npgsql/7.0.7": {
         "type": "package",
         "dependencies": {
           "Microsoft.Extensions.Logging.Abstractions": "6.0.0"
@@ -390,13 +390,13 @@
           }
         }
       },
-      "Npgsql.EntityFrameworkCore.PostgreSQL/7.0.11": {
+      "Npgsql.EntityFrameworkCore.PostgreSQL/7.0.18": {
         "type": "package",
         "dependencies": {
-          "Microsoft.EntityFrameworkCore": "[7.0.11, 8.0.0)",
-          "Microsoft.EntityFrameworkCore.Abstractions": "[7.0.11, 8.0.0)",
-          "Microsoft.EntityFrameworkCore.Relational": "[7.0.11, 8.0.0)",
-          "Npgsql": "7.0.6"
+          "Microsoft.EntityFrameworkCore": "[7.0.18, 8.0.0)",
+          "Microsoft.EntityFrameworkCore.Abstractions": "[7.0.18, 8.0.0)",
+          "Microsoft.EntityFrameworkCore.Relational": "[7.0.18, 8.0.0)",
+          "Npgsql": "7.0.7"
         },
         "compile": {
           "lib/net7.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll": {
@@ -1325,10 +1325,10 @@
         "mono.texttemplating.nuspec"
       ]
     },
-    "Npgsql/7.0.6": {
-      "sha512": "TAqvwRnm3NJ0QvN7cvu6geJkbI0XPzGVRElVY5hF4gsgA+BnE12x6GM1TLhdeq+7ZKvvo3BD8jXKnXmr3tvdEw==",
+    "Npgsql/7.0.7": {
+      "sha512": "A3BjyNebHjw/MahM6n3VnKbxrj/hQnMROEkUNUTjhUVv7yvcGnfBgw/FszahT9uCR23AVD2N/0Tvw1aHgxr9Gg==",
       "type": "package",
-      "path": "npgsql/7.0.6",
+      "path": "npgsql/7.0.7",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -1345,15 +1345,15 @@
         "lib/netstandard2.0/Npgsql.xml",
         "lib/netstandard2.1/Npgsql.dll",
         "lib/netstandard2.1/Npgsql.xml",
-        "npgsql.7.0.6.nupkg.sha512",
+        "npgsql.7.0.7.nupkg.sha512",
         "npgsql.nuspec",
         "postgresql.png"
       ]
     },
-    "Npgsql.EntityFrameworkCore.PostgreSQL/7.0.11": {
-      "sha512": "cHEgEz0ldXc9wVANs8sJqC+3eilqefrkasCBgaVT0tyj8tb1p3/pwy2ngjboNkDG3M0z+xJsJ4jC5p8wySAM3w==",
+    "Npgsql.EntityFrameworkCore.PostgreSQL/7.0.18": {
+      "sha512": "W+mFtJ1D4kSsCIBMScaq3tq8jdoR0Healb6knhSKqnlIoGGQwkHltHMsFeWacieLQPA+e4UrIgucfDpRpRXQRA==",
       "type": "package",
-      "path": "npgsql.entityframeworkcore.postgresql/7.0.11",
+      "path": "npgsql.entityframeworkcore.postgresql/7.0.18",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -1362,7 +1362,7 @@
         "lib/net6.0/Npgsql.EntityFrameworkCore.PostgreSQL.xml",
         "lib/net7.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll",
         "lib/net7.0/Npgsql.EntityFrameworkCore.PostgreSQL.xml",
-        "npgsql.entityframeworkcore.postgresql.7.0.11.nupkg.sha512",
+        "npgsql.entityframeworkcore.postgresql.7.0.18.nupkg.sha512",
         "npgsql.entityframeworkcore.postgresql.nuspec",
         "postgresql.png"
       ]
@@ -1732,7 +1732,7 @@
       "Microsoft.AspNetCore.OpenApi >= 7.0.19",
       "Microsoft.EntityFrameworkCore >= 7.0.20",
       "Microsoft.EntityFrameworkCore.Design >= 7.0.20",
-      "Npgsql.EntityFrameworkCore.PostgreSQL >= 7.0.6",
+      "Npgsql.EntityFrameworkCore.PostgreSQL >= 7.0.18",
       "Swashbuckle.AspNetCore >= 6.5.0",
       "System.Drawing.Common >= 9.0.10",
       "iTextSharp.LGPLv2.Core >= 3.7.7"
@@ -1776,11 +1776,6 @@
         "warnAsError": [
           "NU1605"
         ]
-      },
-      "restoreAuditProperties": {
-        "enableAudit": "true",
-        "auditLevel": "low",
-        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -1803,7 +1798,7 @@
           },
           "Npgsql.EntityFrameworkCore.PostgreSQL": {
             "target": "Package",
-            "version": "[7.0.6, )"
+            "version": "[7.0.18, )"
           },
           "Swashbuckle.AspNetCore": {
             "target": "Package",
@@ -1840,17 +1835,5 @@
         "runtimeIdentifierGraphPath": "C:\\dotnet\\sdk\\7.0.410\\RuntimeIdentifierGraph.json"
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1603",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "EkgAnalyzerApi зависит от Npgsql.EntityFrameworkCore.PostgreSQL (>= 7.0.6), но версия Npgsql.EntityFrameworkCore.PostgreSQL 7.0.6 не найдена. Использовалась версия Npgsql.EntityFrameworkCore.PostgreSQL 7.0.11.",
-      "libraryId": "Npgsql.EntityFrameworkCore.PostgreSQL",
-      "targetGraphs": [
-        "net7.0"
-      ]
-    }
-  ]
+  }
 }

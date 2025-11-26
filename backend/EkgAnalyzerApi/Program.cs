@@ -1,28 +1,25 @@
-﻿using EkgAnalyzerApi.Controllers;
-using Microsoft.EntityFrameworkCore;                 // <-- MUHIM!
-using Npgsql.EntityFrameworkCore.PostgreSQL;
+﻿using Microsoft.EntityFrameworkCore;
+using EkgAnalyzerApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddHttpClient();
+
+// DbContext ulash
+builder.Services.AddDbContext<MedDataDB>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy
-            .AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader();
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
 });
-
-// ✔ DbContext bu yerda bo‘lishi kerak
-builder.Services.AddDbContext<EkgDataDB>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 

@@ -9,12 +9,12 @@ namespace EkgAnalyzerApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class EkgController : ControllerBase
+    public class MedController : ControllerBase
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string _apiKey;
 
-        public EkgController(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public MedController(IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _httpClientFactory = httpClientFactory;
             _apiKey = configuration["OpenAI:ApiKey"] ?? throw new Exception("API key not found in configuration");
