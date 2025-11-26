@@ -1,12 +1,14 @@
-using EkgAnalyzerApi.Controllers;
+﻿using EkgAnalyzerApi.Controllers;
+using Microsoft.EntityFrameworkCore;                 // <-- MUHIM!
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// OpenAI API kalitini o�qish uchun appsettings.json dan foydalaniladi
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -17,6 +19,10 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader();
     });
 });
+
+// ✔ DbContext bu yerda bo‘lishi kerak
+builder.Services.AddDbContext<EkgDataDB>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
