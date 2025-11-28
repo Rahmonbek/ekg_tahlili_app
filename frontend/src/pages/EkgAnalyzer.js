@@ -66,7 +66,7 @@ const EkgAnalyzer = () => {
             accept=".dat,.hea,.csv,.xml,.jpg,.png,.pdf,.edf,.mat,.zip"
           />
         </div>
-
+          
         <div className="form-group">
           <label>Qog‘oz tezligi (mm/s):</label>
           <input
