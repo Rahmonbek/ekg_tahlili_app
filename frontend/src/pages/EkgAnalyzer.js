@@ -41,6 +41,7 @@ const EkgAnalyzer = () => {
       setimage(res.ecg_png_base64)
       try {
         setResult(JSON.parse(res.ai_response));
+        console.log(JSON.parse(res.ai_response))
       } catch {
         setResult(res.ai_response);
       }

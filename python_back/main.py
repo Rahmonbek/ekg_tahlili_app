@@ -5,6 +5,7 @@ import re
 import math
 from openai import OpenAI
 import base64
+import cv2
 from matplotlib.ticker import MultipleLocator
 from typing import Dict, Optional, Tuple
 import xml.etree.ElementTree as ET
@@ -149,7 +150,7 @@ def parse_xml_bytes(b: bytes) -> Tuple[Dict[str, np.ndarray], float]:
             continue
         
         digits_str = digits_elem.text.strip()
-        arr = np.array([float(x) for x in digits_str.split()])
+        arr = np.array([float(x) for x in re.findall(r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?', digits_str)])
         
         origin_elem = value_elem.find("hl7:origin", ns)
         scale_elem = value_elem.find("hl7:scale", ns)
@@ -157,14 +158,24 @@ def parse_xml_bytes(b: bytes) -> Tuple[Dict[str, np.ndarray], float]:
         scale = float(scale_elem.get("value")) if scale_elem is not None else 1.0
         arr = origin + arr * scale
         
+        unit_elem = value_elem.find("hl7:unit", ns)
+        if unit_elem is not None and unit_elem.get("code"):
+            unit = unit_elem.get("code")
+            if unit.lower() in ["uv", "μv", "microvolt"]:
+                arr = arr / 1000.0  # uV → mV
+            # endi arr mV da
+        
         # Old va oxiridagi 0 larni qirqish
         nonzero_idx = np.where(arr != 0)[0]
         if len(nonzero_idx) > 0:
             arr = arr[nonzero_idx[0]:nonzero_idx[-1]+1]
         
         # Maksimal 3000 sample (oxirgi qism)
-        if len(arr) > 3000:
-            arr = arr[-3000:]
+        if len(arr) > 5000:
+            arr = arr[-5000:-2500]
+        else: 
+            if len(arr) > 3500:
+                arr = arr[-3500:-1000]
         
         leads_dict[lead_name] = arr
 
@@ -219,7 +230,7 @@ def openai_upload_file(api_key: str, file_bytes: bytes, filename: str = "ecg.png
 # ---------------- Compose prompt ----------------
 def compose_prompt_for_openai() -> str:
     prompt_header = """
-    Siz tajribali kardiolog shifokorsiz. Quyidagi rasmdagi EKG grafiklarini tahlil qiling va natijani faqat quyidagi JSON formatida RETURN qiling. Hech qanday izoh, sharh yoki qo‘shimcha matn yozmang — faqat toza JSON. Barcha matnlar o‘zbek tilida bo‘lsin. Agar rasm yetarli sifatda bo‘lmasa yoki o‘lchovlarni aniq hisoblash mumkin bo‘lmasa, tegishli maydonda ""o'lchab bo‘lmaydi"" yoki ""taxminiy qiymat"" deb qaytaring.
+    Siz tajribali kardiolog shifokorsiz. Quyidagi rasmdagi EKG grafiklarini tahlil qiling va natijani faqat quyidagi JSON formatida RETURN qiling. Hech qanday izoh, sharh yoki qo‘shimcha matn yozmang — faqat toza JSON. Barcha matnlar o‘zbek tilida bo‘lsin. Agar rasm yetarli sifatda bo‘lmasa yoki qaysidir o‘lchovni aniq hisoblash mumkin bo‘lmasa, tegishli maydonda ""o'lchab bo‘lmaydi"" deb qaytaring.
     
     JSON shabloni:
     {
@@ -242,7 +253,105 @@ def compose_prompt_for_openai() -> str:
             "P_QRS_T_morphology": "P, QRS va T to‘lqin shakli haqida qisqa tavsif"
         },
 
-    "automatic_analysis": "EKG signali asosida yurak ritmi turi (ektopik ritmlardan, Nod (AV tugun) ritmlaridan, qorincha (ventrikulyar) ritmlaridan, taxiaritmiya ritmlaridan, Ektopik urishlaridan, bradyaritmiyalaridan biri), o‘tkazuvchanlik, interval va o‘qlar tahlili, ishemik belgilar, aritmiyalar hamda digital_measurements dagi parametrlarning normal yoki patologik holati haqida to‘liq tibbiy izoh. Agar aniqlansa, quyidagi klinik holatlar haqida ham batafsil ma’lumot bering:\n, Giperkalemiya (Kaliy ortiq) – T to‘lqinlar baland va o‘tkir shaklda, Gipokalemiya (Kaliy kam) – T to‘lqin tekis, U to‘lqin paydo bo‘ladi, Gipokaltsemiya (Kaltsiy kam) – QT oralig‘i uzayadi, Giperkaltsemiya (Kaltsiy ko‘p) – QT oralig‘i qisqaradi, Perikardit – yurak atrofidagi qop yallig‘lanadi (ST ko‘tarilishi, PR pastlash), Perikard effuziyasi – yurak atrofida suyuqlik to‘planadi (voltaj pasayadi), Digoksin ta’siri – ST segment “kupa” shaklida pastga egilgan, Antiaritmiklar (amiodaron va h.k.) – QT oralig‘i uzayadi, Intoksikatsiyalar (alkogol, kokain) – ritm buzilishi yoki ST o‘zgarishlar, Stress, charchoq, vegetativ disfunktsiyada sinus taxikardiya yoki ritm o‘zgarishlari, Sinus taxikardiya – yurak urishi >100/min, Sinus bradikardiya – yurak urishi <60/min, Ekstrasistoliyalar – “qo‘shimcha” urishlar, Atrial fibrillyatsiya (AFib) – yuqori bo‘lmachalar notekis uradi, Atrial flutter – arrali ritm, Ventrikulyar taxikardiya (VT) – xavfli tez ritm, Ventrikulyar fibrillyatsiya (VF) – yurak mushaklari tartibsiz “qaltiraydi”, Miokard ishemiyasi – ST pastlash yoki T inversiyasi, O‘tkir miokard infarkti – ST ko‘tarilishi (yangi infarkt), Eski infarkt (Q to‘lqinli) – avvalgi zararlanish izi, Subendokardial ishemiya – ichki qatlam shikastlanishi\n\nHar bir aniqlangan o‘zgarish klinik jihatdan asoslanib, yurak mushaklari faoliyati va bemor holatiga ta’siri bilan izohlanishi shart.",
+    "automatic_analysis": "EKG signalida quyidagi belgilar bor yoki yo'qligini aniqlang:
+    Ishemik yurak kasalliklari
+ • ST elevatsiyasi (STEMI — to‘liq o‘tkazuvchi tromb)
+ • ST depressiyasi (NSTEMI, stenokardiya)
+ • T tishchasi inversiyasi
+ • Q patologik tishcha (o‘tkazilgan MI belgisi)
+ • Reciprocal o‘zgarishlar
+ • Wellens sindromi (kuchli LAD stenoz)
+ • De Winter changes (LAD akut o‘tkazuvchi lekin ST ko‘tarilmagan)
+ • Prinzmetal stenokardiyasi (spazm)
+
+Aritmiyalar
+ • Sinus taxikardiya / bradikardiya
+ • AV tugunidan chiqadigan ritemlar
+ • Atrial fibrillyatsiya
+ • Atrial flutter
+ • Supraventrikulyar taxikardiya (AVNRT, AVRT)
+ • Ventrikulyar taxikardiya
+ • Ventrikulyar fibrillyatsiya
+ • Premature beats (PAC, PVC)
+ • Torsades de pointes
+
+O‘tkazuvchanlik buzilishlari
+ • SA blok
+ • AV bloklar (I, II — Mobitz I/II, III)
+ • His shoxi bloklari (LBBB, RBBB)
+ • Fascicular bloklar (LAHB/LPHB)
+ • Wolff-Parkinson-White (WPW)
+ • O‘tkir transmural MI da yangi LBBB xavf belgisidir
+
+Bo‘lmacha va qorincha kengayishi / gipertrofiyasi
+ • Chap bo‘lmacha kengayishi (P mitrale)
+ • O‘ng bo‘lmacha kengayishi (P pulmonale)
+ • Chap qorincha gipertrofiyasi (LVH) + strain
+ • O‘ng qorincha gipertrofiyasi (RVH)
+
+Klapan kasalliklari oqibatlari
+ • Mitral stenoz → P-mitrale, AF, RVH
+ • Mitral yetishmovchiligi → LVH, P-mitrale
+ • Aorta stenoz → LVH + repolyarizatsiya buzilishi
+ • Aorta yetishmovchiligi → LVH
+ • Trikuspid patologiyalar → P-pulmonale, RVH
+
+(Asl sababni EKG bevosita ko‘rmaymiz, oqibatini ko‘ramiz)
+
+Perikard kasalliklari
+ • Perikardit → diffuz ST elevatsiyasi + PR depressiyasi
+ • Perikard tamponadasi → past voltaj, elektr alternans
+
+Miyokardit / Kardiomiopatiyalar
+ • Dilatatsion KMP → QRS keng, sintetik o‘zgarishlar, AF/V
+ • Gipertrofik KMP → LVH, Q chuqur, aritmiyalar
+ • ARVD (o‘ng qorincha displazi) → epsilon to‘lqin V1-V3
+
+Elektrolit buzilishlari
+
+🟡 Kaliy
+ • Giperkalemiya:
+ • T baland va uchi o‘tkir (tented T)
+ • PR uzaygan
+ • QRS kengaygan → sine-wave → asistoliya xavfi
+ • Gipokalemiya:
+ • U tishchasi paydo bo‘ladi
+ • T yassi / inversiya
+ • ST depressiyasi
+ • Torsades xavfi ↑ (QT uzayishi)
+
+⚪️ Kalsiy
+ • Giperkalsemiya:
+ • QT qisqaradi
+ • Gipokalsemiya:
+ • QT uzayadi → Torsades xavfi ↑
+
+Bular dori toksikligi bilan aralashib ketishi mumkin (masalan, digoksin)
+
+Dori toksikligi
+ • Digoksin: Scooping ST depressiyasi
+ • Antiaritmiklarga xos:
+ • Amiodaron → QT uzayishi
+ • Lidokain → QRS kengayishi
+ • TCA toksikligi → QRS keng + arritmiyalar
+ 
+O‘tkir o‘pka patologiyasi
+ • O‘tkir o‘pka emboliyasi:
+ • S1Q3T3 belgisi
+ • Sinus taxikardiya
+ • RVH va o‘ngga og‘ish
+ • RBBB
+
+Qorincha ritmi qurilmalarida
+ • Pacemaker ritmi
+ • ICD shocks izlari
+
+Metabolik va boshqa holatlar
+ • Gipotermiya → Osborn (J) to‘lqin
+ • Gipotiroidizm → past voltaj
+ • Sepsis → sinus taxikardiya
+ • Anemiya → taxikardiya
+ • Vagus tonusi yuqori → sinus bradi",
     "automatic_analysis_bool": "xulosaning jiddiylik darajasi (1 = yengil, 2 = o‘rtacha, 3 = og‘ir)",
     "AI_recommendations": "Oddiy tilda bemor uchun tavsiya: tekshiruv zarurati, dam olish, jismoniy yuklamani kamaytirish, yoki shifokor ko‘rigiga murojaat qilish va agarda kasallik aniqlansa shu kasallik davolash usuli haqida.",
     "final_summary": "Tibbiy asosli yakuniy tashxis va qisqa tahlil natijasi, asosiy klinik xulosa bilan."
@@ -450,79 +559,90 @@ def compress_final_png(png_bytes: bytes, scale: float = 0.3) -> bytes:
     return buf.getvalue()
 
 
-def render_12_lead_png(leads: dict, fs: float = 500.0, gain_mm_mv: float = 10.0) -> bytes:
-    """
-    Maksimal sifatli (tibbiy darajadagi) 12-lead EKG PNG generatsiyasi.
-    1 katakcha (big square) o'lchami 2 baravar kattalashtirilgan.
-    """
-
-    # Anti-aliasing (grafik sifatini oshirish)
+def render_12_lead_png(leads: dict, fs: float = 500.0) -> bytes:
     plt.rcParams['path.simplify'] = False
     plt.rcParams['agg.path.chunksize'] = 10000
 
-    CANONICAL_LEADS = ['I','II','III','aVR','aVL','aVF','V1','V2','V3','V4','V5','V6']
-    n_leads = len(CANONICAL_LEADS)
+    LEFT_LEADS = ['I','II','III','aVR','aVL','aVF']
+    RIGHT_LEADS = ['V1','V2','V3','V4','V5','V6']
+
+    n_rows = 6
+    n_cols = 2
 
     fig, axes = plt.subplots(
-        n_leads, 1,
-        figsize=(22, n_leads * 1.6),
-        sharex=True,
-        constrained_layout=True
+        n_rows, n_cols,
+        figsize=(22, n_rows * 2.0),
+        sharex=False,
+        constrained_layout=False
     )
 
-    # --- 2× KATTA GRID UCHUN KOEFFITSIENT ---
-    BASE_MAJOR = 25   # canonical big square = 25 samples
-    BASE_MINOR = 5    # canonical small square = 5 samples
-    SCALE = 2         # 2× katta katak
-    BIG = BASE_MAJOR * SCALE      # 50 samples
-    SMALL = BASE_MINOR * SCALE    # 10 samples
+    BASE_MAJOR = 25
+    BASE_MINOR = 5
+    SCALE = 2
+    BIG = BASE_MAJOR * SCALE
+    SMALL = BASE_MINOR * SCALE
 
-    for i, lead in enumerate(CANONICAL_LEADS):
-        y = leads[lead] * gain_mm_mv / 1000.0
+    for ax in axes.flatten():
+        ax.set_facecolor("none")
 
-        # Signalni chizish
-        axes[i].plot(y, color='black', linewidth=1.3)
-        axes[i].set_ylabel(lead, rotation=0, labelpad=20, fontsize=14)
-        axes[i].set_facecolor("#ffffff")
+        # --- BORDERNI YO‘QOTISH ---
+        for side in ["top", "bottom", "left", "right"]:
+            ax.spines[side].set_visible(False)
 
-        # Min–Max ko‘rsatish
-        y_min, y_max = np.min(y), np.max(y)
-        y_range = max(y_max - y_min, 0.001)
+        ax.tick_params(left=False, bottom=False)
 
-        axes[i].set_ylim(y_min - y_range * 0.1, y_max + y_range * 0.1)
-        axes[i].set_yticks([y_min, y_max])
-        axes[i].set_yticklabels([f"{y_min:.1f}", f"{y_max:.1f}"], fontsize=10)
+    # --- Signalni chizish ---
+    for i in range(n_rows):
+        for j, lead in enumerate([LEFT_LEADS[i], RIGHT_LEADS[i]]):
+            ax = axes[i, j]
+            if lead not in leads:
+                continue
 
-        # X o‘qi – boshlanish/oxir
-        x_min, x_max = 0, len(y) - 1
-        axes[i].set_xticks([x_min, x_max])
-        axes[i].set_xticklabels([0, round(x_max / fs, 1)], fontsize=10)
+            y = leads[lead]
+            ax.plot(y, color='black', linewidth=1.1)
+            ax.set_ylabel(lead, rotation=0, labelpad=10, fontsize=18)
 
-        # --- 2× KATTA GRID LOKATORLAR ---
-        axes[i].xaxis.set_major_locator(MultipleLocator(BIG))     # 50 samples
-        axes[i].xaxis.set_minor_locator(MultipleLocator(SMALL))   # 10 samples
+            y_min, y_max = np.min(y), np.max(y)
+            y_range = max(y_max - y_min, 0.001)
+            ax.set_ylim(y_min - y_range * 0.1, y_max + y_range * 0.1)
+            ax.set_yticks([y_min, y_max])
+            ax.set_yticklabels([], fontsize=14)
 
-        # Y-oq (avtomatik major/minor)
-        major_step = max(y_range / 5, 0.1)
-        minor_step = max(y_range / 25, 0.01)
+            x_min, x_max = 0, len(y) - 0.5
+            ax.set_xticks([x_min, x_max])
+            ax.set_xticklabels([], fontsize=0)
+    # --- Gridni o‘rnatish ---
+    for ax in axes.flatten():
+        ax.set_xticks(np.arange(0, len(y)/2, BIG))
+        ax.set_xticks(np.arange(0, len(y)/2, SMALL), minor=True)
+        ax.set_yticks(np.arange(-13, 2, 0.5))  
+        ax.set_yticks(np.arange(-13, 2, 0.1), minor=True)
 
-        axes[i].yaxis.set_major_locator(MultipleLocator(major_step))
-        axes[i].yaxis.set_minor_locator(MultipleLocator(minor_step))
+    fig.tight_layout()
+    fig.subplots_adjust(hspace=0.2, wspace=0.02)
+    fig.canvas.draw()
 
-        # --- GRID CHIZIQLAR (kattaroq ko‘rinishi uchun) ---
-        axes[i].grid(which='major', color='#ffb3b3', linewidth=1.1)
-        axes[i].grid(which='minor', color='#ffd9d9', linewidth=0.55)
+    for ax in axes.flatten():
+        ax.grid(False)
 
-    axes[-1].set_xlabel("Time (s)")
+    fig_axes = fig.add_subplot(111, frame_on=True, zorder=-100)
+    fig_axes.set_xticks(np.arange(0, len(y), BIG), minor=False)
+    fig_axes.set_xticks(np.arange(0, len(y), SMALL), minor=True)
+    fig_axes.set_yticks(np.arange(-13, 2, 0.5), minor=False)
+    fig_axes.set_yticks(np.arange(-13, 2, 0.1), minor=True)
+    fig_axes.grid(which='major', color="#ffb0b0", linewidth=0.8)
+    fig_axes.grid(which='minor', color="#fdcbcb", linewidth=0.4)
+    fig_axes.set_xticklabels([])
+    fig_axes.set_yticklabels([])
 
-    # PNG ga yuqori DPI bilan saqlash
+    fig_axes.tick_params(left=False, bottom=False)
+
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=650)   # juda yuqori sifatlilik
+    plt.savefig(buf, format='png', dpi=650)
     plt.close(fig)
-
     buf.seek(0)
     return buf.read()
-# ============================ ecg_api_full.py (3-qism) ============================
+
 
 from fastapi import Form
 
@@ -538,108 +658,103 @@ async def analyze(
     
     content = await file.read()
     fname = (file.filename or "upload").lower()
-    leads = {}
-    fs = None
 
-    # --- Parse file according to extension ---
-    try:
-        if fname.endswith(('.csv','.txt','.tsv')):
-            leads, fs = parse_table_bytes(content)
-        elif fname.endswith('.xml'):
-            leads, fs = parse_xml_bytes(content)
-        elif fname.endswith('.pdf'):
-            if convert_from_bytes is None:
-                raise HTTPException(status_code=500, detail="pdf2image not installed or poppler missing")
-            pages = convert_from_bytes(content, first_page=1, last_page=1)
-            pil = pages[0]
-            img_bytes = io.BytesIO()
-            pil.save(img_bytes, format='PNG')
-            img_bytes.seek(0)
-            leads, fs = extract_image_bytes_as_signal(img_bytes.read())
-        elif fname.endswith(('.png','.jpg','.jpeg')):
-            leads, fs = extract_image_bytes_as_signal(content)
-        else:
-            try:
+    is_image = fname.endswith(('.png','.jpg','.jpeg'))
+
+    if not is_image:
+        leads = {}
+        fs = None
+        # --- Parse file according to extension ---
+        try:
+            if fname.endswith(('.csv','.txt','.tsv')):
                 leads, fs = parse_table_bytes(content)
-            except Exception:
+            elif fname.endswith('.xml'):
                 leads, fs = parse_xml_bytes(content)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Could not parse file: {e}")
+            elif fname.endswith('.pdf'):
+                if convert_from_bytes is None:
+                    raise HTTPException(status_code=500, detail="pdf2image not installed or poppler missing")
+                pages = convert_from_bytes(content, first_page=1, last_page=1)
+                pil = pages[0]
+                img_bytes = io.BytesIO()
+                pil.save(img_bytes, format='PNG')
+                img_bytes.seek(0)
+                leads, fs = extract_image_bytes_as_signal(img_bytes.read())
+            else:
+                try:
+                    leads, fs = parse_table_bytes(content)
+                except Exception:
+                    leads, fs = parse_xml_bytes(content)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Could not parse file: {e}")
 
-    # --- Map fuzzy lead names to canonical leads ---
-    mapped = {}
-    mapping = map_leads(list(leads.keys()))
-    for orig, arr in leads.items():
-        name = mapping.get(orig) or orig
-        mapped[name] = arr
-    leads = mapped
+        # --- Map fuzzy lead names to canonical leads ---
+        mapped = {}
+        mapping = map_leads(list(leads.keys()))
+        for orig, arr in leads.items():
+            name = mapping.get(orig) or orig
+            mapped[name] = arr
+        leads = mapped
 
-    # --- Fill missing leads with zeros ---
-    for ln in CANONICAL_LEADS:
-        if ln not in leads:
-            leads[ln] = np.zeros(250*10)  # 10s of zeros at 250Hz
-    print(leads, fs)
-    
-    
-
-    # --- Generate PNG ---
-    if fname.endswith(('.png','.jpg','.jpeg')):
-        png_bytes = content
+        # --- Fill missing leads with zeros ---
+        expected_seconds = 10
+        expected_samples = int(fs * expected_seconds)
+        for ln in CANONICAL_LEADS:
+            if ln not in leads:
+                leads[ln] = np.zeros(expected_samples, dtype=float)
+        print(leads)
+        # --- Generate PNG from leads ---
+        png_bytes = render_12_lead_png(leads, fs)
     else:
-        png_bytes = render_12_lead_png(leads, fs, gain_mm_mv=gain)
-        # compressed_png = compress_final_png(png_bytes, scale=0.3)
-        compressed_png=png_bytes
+        png_bytes = content
+
     # --- Upload PNG to OpenAI ---
     try:
-        file_id = openai_upload_file(OPENAI_API_KEY, compressed_png, filename=fname if fname.endswith('.png') else 'ecg.png')
+        file_id = openai_upload_file(
+            OPENAI_API_KEY,
+            png_bytes,
+            filename=fname if fname.endswith('.png') else 'ecg.png'
+        )
     except Exception as e:
-        b64 = base64.b64encode(compressed_png).decode('ascii')
+        b64 = base64.b64encode(png_bytes).decode('ascii')
         return JSONResponse(content={
             "error": f"OpenAI upload failed: {e}",
-            
             "png_base64": b64
         })
-    
+
     # --- Compose prompt ---
     prompt = compose_prompt_for_openai()
-
-    # --- Call OpenAI ChatCompletion ---
-    
     print(file_id)
+    # --- Call OpenAI ChatCompletion ---
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)
         resp = client.responses.create(
             model="gpt-4.1",
-            input=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "input_text", "text": prompt},
-                        {"type": "input_image", "file_id": file_id}  # <--- eski file_id o‘rniga
-                    ]
-                }
-            ],
-            temperature=0.2
+            input=[{
+                "role": "user",
+                "content": [
+                    {"type": "input_text", "text": prompt},
+                    {"type": "input_image", "file_id": file_id}
+                ]
+            }]
         )
         content_out = resp.output_text
-        print("FULL RESPONSE:", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"OpenAI chat completion failed: {e}")
 
-# --- Parse JSON ---
+    # --- Parse JSON ---
     try:
         import json
         parsed = json.loads(content_out)
     except Exception:
         parsed = {"raw": content_out}
 
-# --- Encode PNG to base64 for frontend ---
-    png_b64 = base64.b64encode(compressed_png).decode('ascii')
+    # --- Encode PNG to base64 for frontend ---
+    png_b64 = base64.b64encode(png_bytes).decode('ascii')
 
     return JSONResponse(content={
         "openai_file_id": file_id,
         "ai_response": parsed,
-        "ecg_png_base64": png_b64  # rasm base64 sifatida foydalanuvchiga qaytariladi
+        "ecg_png_base64": png_b64
     })
 
 # ---------------- Ground truth endpoint ----------------
