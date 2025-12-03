@@ -15,13 +15,18 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 import pandas as pd
+from scipy.signal import find_peaks
 from PIL import Image, ImageDraw, ImageFont
+from scipy.signal import butter, filtfilt, find_peaks, medfilt
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')
+from typing import Dict
+import math
 import neurokit2 as nk
 import openai
 import warnings
+import json
 Image.MAX_IMAGE_PIXELS = None
 # Optional for PDF -> image
 try:
@@ -171,8 +176,8 @@ def parse_xml_bytes(b: bytes) -> Tuple[Dict[str, np.ndarray], float]:
             arr = arr[nonzero_idx[0]:nonzero_idx[-1]+1]
         
         # Maksimal 3000 sample (oxirgi qism)
-        if len(arr) > 5000:
-            arr = arr[-5000:-2500]
+        if len(arr) > 4500:
+            arr = arr[-4500:-2000]
         else: 
             if len(arr) > 3500:
                 arr = arr[-3500:-1000]
@@ -228,9 +233,19 @@ def openai_upload_file(api_key: str, file_bytes: bytes, filename: str = "ecg.png
         raise RuntimeError(f"OpenAI file upload failed: {e}")
 
 # ---------------- Compose prompt ----------------
-def compose_prompt_for_openai() -> str:
-    prompt_header = """
-    Siz tajribali kardiolog shifokorsiz. Quyidagi rasmdagi EKG grafiklarini tahlil qiling va natijani faqat quyidagi JSON formatida RETURN qiling. Hech qanday izoh, sharh yoki qo‘shimcha matn yozmang — faqat toza JSON. Barcha matnlar o‘zbek tilida bo‘lsin. Agar rasm yetarli sifatda bo‘lmasa yoki qaysidir o‘lchovni aniq hisoblash mumkin bo‘lmasa, tegishli maydonda ""o'lchab bo‘lmaydi"" deb qaytaring.
+def compose_prompt_for_openai(digitals) -> str:
+
+    if isinstance(digitals, dict):
+        digitals_str = json.dumps(digitals, ensure_ascii=False, indent=2)
+    else:
+        digitals_str = str(digitals)
+    prompt_header = f"""
+    EKG aparatdan olingan ekg parametrlari qiymatlari:
+    {digitals_str}"""
+
+    prompt_header += """
+    
+    Siz tajribali kardiolog shifokorsiz. Quyidagi rasmdagi EKG grafiklarini va ekg grafikdan olingan yuqorida berilgan ekg parametrlari qiymatlarini tahlil qiling va natijani faqat quyidagi JSON formatida RETURN qiling. Hech qanday izoh, sharh yoki qo‘shimcha matn yozmang — faqat toza JSON. Barcha matnlar o‘zbek tilida bo‘lsin. Agar rasm yetarli sifatda bo‘lmasa yoki qaysidir o‘lchovni aniq hisoblash mumkin bo‘lmasa, tegishli maydonda ""o'lchab bo‘lmaydi"" deb qaytaring.
     
     JSON shabloni:
     {
@@ -357,6 +372,7 @@ Metabolik va boshqa holatlar
     "final_summary": "Tibbiy asosli yakuniy tashxis va qisqa tahlil natijasi, asosiy klinik xulosa bilan."
     }
 Qo‘shimcha talablar:
+- "digital_measurements" da mavjud ammo EKG aparatdan olingan ekg parametrlarida qiymati mavjud bo'lmagan parametrlarni ekg grafik rasmidan o'lchab chiqaring
 - Har bir parametr uchun birliklar (bpm, ms, gradus) aniq yozilsin.
 - Raqamli qiymatlar va ularning tibbiy bahosi (normal/patologik) alohida yozilsin.
 - Elektrolit, perikard, ishemiya yoki aritmiya belgilaridan biri aniqlansa, u alohida tibbiy izoh bilan tushuntirilsin (sababi, EKG belgisi, klinik ahamiyati).
@@ -434,93 +450,6 @@ def ecg_process_wrapper(signal: np.ndarray, sampling_rate: float = 500.0):
 
     return out
 
-# ---------------- Measure from signal ----------------
-def measure_from_signal(leads: Dict[str, np.ndarray], fs: Optional[float]) -> Dict:
-    out = {}
-    sr = fs if fs is not None else 500.0
-
-    # --- Reference lead tanlash ---
-    ref = next((l for l in ['II','V2','I'] if l in leads), None)
-    if ref is None:
-        ref = list(leads.keys())[0]
-
-    sig = leads.get(ref, np.zeros(1))
-
-    # --- Signalni invert qilish (agar o‘rtacha < 0 bo‘lsa) ---
-    if np.mean(sig) < 0:
-        sig = -sig
-
-    # --- ECG preprocessing va R-peaks ---
-    try:
-        ecg_clean = nk.ecg_clean(sig, sampling_rate=sr)
-        peaks, info = nk.ecg_peaks(ecg_clean, sampling_rate=sr)
-        rpeaks = np.array(peaks.get('ECG_R_Peaks', []), dtype=int)
-    except Exception:
-        ecg_clean = sig.copy()
-        rpeaks = np.array([], dtype=int)
-
-    # --- Instant HR va RR interval ---
-    if len(rpeaks) >= 2:
-        rr_ms = np.diff(rpeaks) / sr * 1000
-        mean_rr = np.nanmean(rr_ms)
-        mean_hr = 60000 / mean_rr if mean_rr > 0 else "not measurable"
-        out['HR'] = f"{mean_hr:.1f} bpm" if mean_rr > 0 else "not measurable"
-        out['RR_interval'] = f"{mean_rr:.1f} ms" if mean_rr > 0 else "not measurable"
-    else:
-        # Signal juda qisqa yoki R-peaks aniqlanmagan
-        out['HR'] = "not measurable"
-        out['RR_interval'] = "not measurable"
-
-    # --- Delineation (QRS, P, T) ---
-    try:
-        if len(rpeaks) > 0:
-            delineate = nk.ecg_delineate(ecg_clean, rpeaks, sampling_rate=sr, method='dwt')
-        else:
-            delineate = {}
-    except Exception:
-        delineate = {}
-
-    try:
-        q_on = delineate.get('ECG_Q_on', [])
-        s_off = delineate.get('ECG_S_off', [])
-        p_on = delineate.get('ECG_P_on', [])
-        t_off = delineate.get('ECG_T_off', [])
-
-        # QRS duration
-        qrs_list = [(s-q)/sr*1000 for q,s in zip(q_on,s_off) if q is not None and s is not None]
-        out['QRS_duration'] = f"{np.nanmean(qrs_list):.1f} ms" if qrs_list else "not measurable"
-
-        # PR interval
-        pr_list = [(q-p)/sr*1000 for p,q in zip(p_on,q_on) if p is not None and q is not None]
-        out['PR_interval'] = f"{np.nanmean(pr_list):.1f} ms" if pr_list else "not measurable"
-
-        # QT interval
-        qt_list = [(t-q)/sr*1000 for q,t in zip(q_on,t_off) if q is not None and t is not None]
-        out['QT_interval'] = f"{np.nanmean(qt_list):.1f} ms" if qt_list else "not measurable"
-
-        # QTc Bazett
-        if out['QT_interval'] != "not measurable" and out['RR_interval'] != "not measurable":
-            qt_ms = float(out['QT_interval'].split()[0])
-            rr_ms = float(out['RR_interval'].split()[0])
-            rr_sec = rr_ms / 1000.0
-            qtc = qt_ms / math.sqrt(rr_sec)
-            out['QTc_Bazett'] = f"{qtc:.1f} ms"
-        else:
-            out['QTc_Bazett'] = "not measurable"
-    except Exception:
-        out['QRS_duration'] = out['PR_interval'] = out['QT_interval'] = out['QTc_Bazett'] = "not measurable"
-
-    # --- QRS axis (I va aVF asosida) ---
-    try:
-        if 'I' in leads and 'aVF' in leads:
-            angle = math.degrees(math.atan2(np.mean(leads['aVF']), np.mean(leads['I'])))
-            out['QRS_axis'] = f"{angle:.1f} deg"
-        else:
-            out['QRS_axis'] = "not measurable"
-    except Exception:
-        out['QRS_axis'] = "not measurable"
-
-    return out
 
 # ---------------- Draw ECG Grid ----------------
 def draw_ecg_grid(width_px:int, height_px:int, pixels_per_mm:float=3.0):
@@ -643,6 +572,345 @@ def render_12_lead_png(leads: dict, fs: float = 500.0) -> bytes:
     buf.seek(0)
     return buf.read()
 
+def bandpass(signal, fs, low=5.0, high=40.0, order=3):
+    nyq = 0.5 * fs
+    b, a = butter(order, [low/nyq, high/nyq], btype='band')
+    return filtfilt(b, a, signal)
+
+def moving_average(x, window_len):
+    if window_len <= 1:
+        return x
+    window = np.ones(window_len) / window_len
+    return np.convolve(x, window, mode='same')
+
+def detect_r_peaks(signal, fs):
+    # 1) Bandpass
+    sig = bandpass(signal, fs, low=5.0, high=35.0, order=2)
+
+    # 2) Derivative
+    deriv = np.diff(sig, prepend=sig[0])
+    # 3) Squaring
+    squared = deriv**2
+    # 4) Moving window integration (~150 ms)
+    ma_win = int(round(0.150 * fs))
+    env = moving_average(squared, ma_win if ma_win>1 else 1)
+
+    # Adaptive threshold: mean + k * std
+    thr = np.mean(env) + 0.5 * np.std(env)
+    distance = int(round(0.25 * fs))  # 250 ms refractory by default
+
+    peaks, props = find_peaks(env, height=thr, distance=distance)
+    # refine peaks to actual R locations on original (search +/- 50 ms for max)
+    r_peaks = []
+    search_half = int(round(0.05 * fs))
+    for p in peaks:
+        lo = max(0, p - search_half)
+        hi = min(len(sig)-1, p + search_half)
+        local_max_idx = lo + int(np.argmax(np.abs(sig[lo:hi+1])))
+        r_peaks.append(local_max_idx)
+    # remove duplicates / sort
+    r_peaks = np.array(sorted(list(set(r_peaks))), dtype=int)
+    return r_peaks
+
+def qrs_onset_offset(signal, peak_idx, fs):
+    # Use slope threshold around peak to find onset/offset
+    # compute absolute derivative in short window
+    win = int(round(0.12 * fs))  # look +/- 120 ms
+    lo = max(0, peak_idx - win)
+    hi = min(len(signal)-1, peak_idx + win)
+    seg = signal[lo:hi+1]
+    deriv = np.abs(np.diff(seg, prepend=seg[0]))
+    # threshold = small fraction of max derivative in the segment
+    if deriv.size == 0:
+        return peak_idx, peak_idx
+    thr = 0.10 * np.max(deriv)  # 10% of max slope
+    # onset: search left from peak to first index where deriv < thr for consecutive samples
+    peak_rel = peak_idx - lo
+    onset_rel = peak_rel
+    for i in range(peak_rel, 0, -1):
+        if deriv[i] < thr:
+            onset_rel = i
+            # require a small run of low derivative to avoid noise
+            if i-3 >=0 and np.all(deriv[max(0,i-3):i] < thr):
+                onset_rel = i-3
+                break
+    # offset: search right
+    offset_rel = peak_rel
+    for i in range(peak_rel, len(deriv)-1):
+        if deriv[i] < thr:
+            offset_rel = i
+            if i+3 < len(deriv) and np.all(deriv[i+1:min(len(deriv),i+4)] < thr):
+                offset_rel = i+3
+                break
+    onset = lo + max(0, onset_rel)
+    offset = lo + min(len(seg)-1, offset_rel)
+    return onset, offset
+
+def find_t_peak_and_end(signal, r_idx, fs):
+    # T window: 120 ms to 400 ms after R (typical)
+    start = r_idx + int(round(0.12*fs))
+    end = r_idx + int(round(0.40*fs))
+    end = min(end, len(signal)-1)
+    if start >= end:
+        return None, None
+    segment = signal[start:end+1]
+    # find peaks (both positive and negative) in absolute sense, but prefer same sign as segment mean
+    if len(segment)==0:
+        return None, None
+    # pick peaks of the segment
+    peaks_pos, _ = find_peaks(segment, distance=int(0.05*fs))
+    peaks_neg, _ = find_peaks(-segment, distance=int(0.05*fs))
+    candidates = []
+    for p in peaks_pos:
+        candidates.append((p, segment[p]))
+    for p in peaks_neg:
+        candidates.append((p, segment[p]))
+    if not candidates:
+        return None, None
+    # choose the largest amplitude (abs) candidate as T-peak
+    t_rel, t_val = max(candidates, key=lambda x: abs(x[1]))
+    t_idx = start + int(t_rel)
+
+    # Find T-end: search forward from t_idx until signal returns near baseline (PR baseline),
+    # or slope becomes very small for a run of samples
+    # baseline estimate: mean of pre-R PR segment: r_idx - 200ms .. r_idx - 80ms
+    pr_start = max(0, r_idx - int(round(0.20*fs)))
+    pr_end = max(0, r_idx - int(round(0.06*fs)))
+    baseline = np.mean(signal[pr_start:pr_end+1]) if pr_end>pr_start else 0.0
+
+    search_start = t_idx
+    search_end = min(len(signal)-1, r_idx + int(round(0.55*fs)))  # search up to 550 ms after R
+    tend = None
+    # tolerance to baseline
+    tol = 0.05 * max(1e-6, np.std(signal))  # 5% of signal std
+    # require return to within (baseline +/- tol) and slope small
+    for i in range(search_start, search_end):
+        window = signal[i:min(i+int(round(0.02*fs))+1, len(signal))]
+        slope = np.abs(np.diff(window)).mean() if len(window)>1 else 0.0
+        if abs(signal[i] - baseline) <= tol and slope < 0.01*np.std(signal):
+            tend = i
+            break
+    # fallback: if not found, take last zero-crossing of derivative after t_idx
+    if tend is None:
+        deriv_after = np.diff(signal[t_idx:search_end+1], prepend=signal[t_idx])
+        zero_cross = np.where(np.sign(deriv_after[:-1]) != np.sign(deriv_after[1:]))[0]
+        if len(zero_cross)>0:
+            tend = t_idx + zero_cross[-1]
+    # as ultimate fallback set tend = t_idx + 200 ms if within bounds
+    if tend is None:
+        fallback = t_idx + int(round(0.20*fs))
+        tend = fallback if fallback < len(signal) else len(signal)-1
+
+    return t_idx, tend
+def detect_pr_interval(signal, r_peaks, fs):
+    pr_list = []
+
+    for r in r_peaks:
+        # P-to‘lqin qidiriladigan oyna: R - 200ms → R - 80ms
+        p_start = max(0, r - int(round(0.20 * fs)))
+        p_end   = max(0, r - int(round(0.08 * fs)))
+        if p_end <= p_start:
+            continue
+
+        segment = signal[p_start:p_end]
+
+        if len(segment) < 5:
+            continue
+
+        # P-to‘lqin tepasi (peak) qidirish
+        p_pos, _ = find_peaks(segment, distance=int(0.04*fs))
+        p_neg, _ = find_peaks(-segment, distance=int(0.04*fs))
+
+        candidates = []
+        for p in p_pos:
+            candidates.append((p, segment[p]))
+        for p in p_neg:
+            candidates.append((p, segment[p]))
+
+        if not candidates:
+            continue
+
+        # eng katta amplitudali P-to‘lqin
+        p_rel, p_val = max(candidates, key=lambda x: abs(x[1]))
+        p_peak = p_start + p_rel
+
+        # P-onset → peakdan chapga asta-pasta pasayish nuqtasi
+        # derivative threshold
+        deriv = np.abs(np.diff(signal[p_start:p_peak+1], prepend=signal[p_start]))
+        if len(deriv) == 0:
+            continue
+
+        thr = 0.08 * np.max(deriv)  # 8% slope threshold
+        p_onset_rel = None
+
+        for i in range(p_peak - p_start, 0, -1):
+            if deriv[i] < thr:
+                p_onset_rel = i
+                # ketma-ket bir nechta sample past bo‘lishi shart
+                if i-2 >= 0 and np.all(deriv[i-2:i+1] < thr):
+                    p_onset_rel = i-2
+                    break
+
+        if p_onset_rel is None:
+            continue
+
+        p_onset = p_start + p_onset_rel
+
+        # PR interval (ms)
+        pr_ms = (r - p_onset) / float(fs) * 1000.0
+        pr_list.append(pr_ms)
+
+    if len(pr_list) == 0:
+        return None
+
+    return float(np.mean(pr_list))
+
+def compute_full_ecg_v2(leads, fs=500):
+    """
+    Improved ECG feature extraction.
+    - leads: dict mapping lead name -> 1D numpy array (same length)
+    - fs: sampling frequency in Hz
+    Returns: dict (not JSON string) with measured values (units: ms for intervals, mV for voltages where original units assumed)
+    """
+    import numpy as np
+
+    # Basic checks
+    if 'II' not in leads:
+        raise ValueError("Lead II required for robust R detection (leads must contain 'II').")
+
+    lead_ii = np.asarray(leads['II'])
+    if lead_ii.size == 0:
+        raise ValueError("Empty lead signal.")
+
+    # R-peaks
+    r_peaks = detect_r_peaks(lead_ii, fs)
+    # compute RR in seconds, careful arithmetic
+    rr_intervals = np.diff(r_peaks) / float(fs)  # seconds
+
+    if rr_intervals.size > 0:
+        mean_rr = float(np.mean(rr_intervals))  # seconds
+        heart_rate_bpm = 60.0 / mean_rr
+        rr_interval_ms = mean_rr * 1000.0
+    else:
+        mean_rr = None
+        heart_rate_bpm = None
+        rr_interval_ms = None
+
+    # QRS durations (ms)
+    qrs_durations = []
+    qrs_onsets = []
+    qrs_offsets = []
+    for r in r_peaks:
+        onset, offset = qrs_onset_offset(lead_ii, r, fs)
+        qrs_onsets.append(onset)
+        qrs_offsets.append(offset)
+        qms = (offset - onset) / float(fs) * 1000.0
+        qrs_durations.append(qms)
+    qrs_duration_ms = float(np.mean(qrs_durations)) if qrs_durations else None
+
+    # QT intervals (ms) and QTc Bazett
+    qt_intervals = []
+    for r in r_peaks:
+        t_peak, t_end = find_t_peak_and_end(lead_ii, r, fs)
+        if t_peak is not None and t_end is not None and t_end > r:
+            qt_ms = (t_end - r) / float(fs) * 1000.0
+            qt_intervals.append(qt_ms)
+    qt_interval_ms = float(np.mean(qt_intervals)) if qt_intervals else None
+    # QTc Bazett: use seconds internally
+    if qt_interval_ms is not None and mean_rr is not None and mean_rr > 0:
+        qt_s = qt_interval_ms / 1000.0
+        qtc_s = qt_s / math.sqrt(mean_rr)
+        qt_c_bazett_ms = qtc_s * 1000.0
+    else:
+        qt_c_bazett_ms = None
+
+    # QRS axis: use net area (integral) of QRS window in leads I and aVF
+    def net_qrs_area_for_lead(signal, onsets, offsets):
+        areas = []
+        for o, p in zip(onsets, offsets):
+            if p > o:
+                areas.append(np.trapz(signal[o:p+1]))
+        return float(np.mean(areas)) if areas else 0.0
+
+    i_area = net_qrs_area_for_lead(np.asarray(leads.get('I', np.zeros_like(lead_ii))), qrs_onsets, qrs_offsets)
+    avf_area = net_qrs_area_for_lead(np.asarray(leads.get('aVF', np.zeros_like(lead_ii))), qrs_onsets, qrs_offsets)
+    # axis in degrees (standard quadrant mapping)
+    # atan2(y, x) where y=+aVF, x=+I
+    axis_rad = math.atan2(avf_area, i_area) if (i_area != 0.0 or avf_area != 0.0) else 0.0
+    axis_deg = math.degrees(axis_rad)
+
+    # ST segment: measure relative to PR baseline
+    st_values = {}
+    j_offset = int(round(0.04 * fs))  # J-point ~ 40 ms after R
+    st_shift = int(round(0.06 * fs))  # measure ST 60 ms after J
+    for lead_name, signal in leads.items():
+        sig = np.asarray(signal)
+        st_points = []
+        baselines = []
+        for r in r_peaks:
+            # baseline (PR segment): r - 200.. r - 60 ms
+            pr_s = max(0, r - int(round(0.20*fs)))
+            pr_e = max(0, r - int(round(0.06*fs)))
+            baseline = np.mean(sig[pr_s:pr_e+1]) if pr_e>pr_s else 0.0
+            baselines.append(baseline)
+            st_idx = r + j_offset + st_shift
+            if st_idx < len(sig):
+                st_points.append(sig[st_idx] - baseline)  # deviation relative to baseline
+        st_values[lead_name] = float(np.mean(st_points)) if st_points else None
+
+    # Q waves: minimal deflection before R within 40 ms
+    q_waves = {}
+    for lead_name, signal in leads.items():
+        sig = np.asarray(signal)
+        qlist = []
+        for r in r_peaks:
+            start = max(0, r - int(round(0.04*fs)))
+            region = sig[start:r] if r>start else np.array([])
+            if region.size > 0:
+                q_min = float(np.min(region))
+                # accept as Q if negative and sufficiently below local baseline
+                pr_s = max(0, r - int(round(0.20*fs)))
+                pr_e = max(0, r - int(round(0.06*fs)))
+                baseline = np.mean(sig[pr_s:pr_e+1]) if pr_e>pr_s else 0.0
+                if q_min < baseline - 0.02 * max(1.0, np.std(sig)):  # threshold adapt
+                    qlist.append(q_min)
+                else:
+                    qlist.append(None)
+            else:
+                qlist.append(None)
+        q_waves[lead_name] = qlist
+
+    # R progression for V1..V6: mean R amplitude around peak (+/- 20 ms)
+    r_progression = {}
+    for v in ["V1","V2","V3","V4","V5","V6"]:
+        sig = np.asarray(leads.get(v, np.zeros_like(lead_ii)))
+        r_amps = []
+        for r in r_peaks:
+            lo = max(0, r - int(round(0.02*fs)))
+            hi = min(len(sig)-1, r + int(round(0.02*fs)))
+            if hi>lo:
+                # pick peak amplitude (signed) in window
+                idx_rel = np.argmax(np.abs(sig[lo:hi+1]))
+                r_amps.append(float(sig[lo + idx_rel]))
+        r_progression[v] = float(np.mean(r_amps)) if r_amps else None
+    pr_interval_ms = detect_pr_interval(lead_ii, r_peaks, fs)
+    result = {
+        "heart_rate_bpm": round(heart_rate_bpm, 1) if heart_rate_bpm is not None else None,
+        "pr_interval_ms": round(pr_interval_ms,1) if pr_interval_ms is not None else None,
+        "rr_interval_ms": round(rr_interval_ms, 1) if rr_interval_ms is not None else None,
+        "qrs_duration_ms": round(qrs_duration_ms, 1) if qrs_duration_ms is not None else None,
+        "qt_interval_ms": round(qt_interval_ms, 1) if qt_interval_ms is not None else None,
+        "qt_c_bazett_ms": round(qt_c_bazett_ms, 1) if qt_c_bazett_ms is not None else None,
+        "qrs_axis_degree": round(axis_deg, 1),
+        "st_segment_mV": st_values,
+        
+        "q_waves_mV": q_waves,
+        "r_progression_mV": r_progression,
+        "r_peak_count": int(len(r_peaks)),
+        "r_peaks_indices": r_peaks.tolist()
+    }
+
+    return result
 
 from fastapi import Form
 
@@ -706,7 +974,8 @@ async def analyze(
         png_bytes = render_12_lead_png(leads, fs)
     else:
         png_bytes = content
-
+    digitals = compute_full_ecg_v2(leads, fs)
+    print(digitals)
     # --- Upload PNG to OpenAI ---
     try:
         file_id = openai_upload_file(
@@ -720,10 +989,10 @@ async def analyze(
             "error": f"OpenAI upload failed: {e}",
             "png_base64": b64
         })
-
+   
     # --- Compose prompt ---
-    prompt = compose_prompt_for_openai()
-    print(file_id)
+    prompt = compose_prompt_for_openai(digitals)
+
     # --- Call OpenAI ChatCompletion ---
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)

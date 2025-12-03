@@ -39,12 +39,18 @@ const EkgAnalyzer = () => {
       console.log(res)
       setshow_btn(false)
       setimage(res.ecg_png_base64)
-      try {
-        setResult(JSON.parse(res.ai_response));
-        console.log(JSON.parse(res.ai_response))
-      } catch {
-        setResult(res.ai_response);
-      }
+      let parsedResult;
+     try {
+  // agar string bo'lsa JSON.parse qilamiz
+  parsedResult = typeof res.ai_response === "string" 
+    ? JSON.parse(res.ai_response) 
+    : res.ai_response;
+} catch (e) {
+  // parse bo‘lmasa, shunchaki original qiymatni o‘rnatamiz
+  parsedResult = res.ai_response;
+}
+
+setResult(parsedResult);
 
     } catch (err) {
       setError(err.message);
