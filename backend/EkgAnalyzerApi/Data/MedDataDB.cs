@@ -15,7 +15,10 @@ namespace EkgAnalyzerApi.Data
         }
 
         public DbSet<Patient> Patients { get; set; }
+        
         public DbSet<PatientAnalysis> PatientAnalysis { get; set; }
+
+        public DbSet<Complaints> Complaints { get; set; }
 
         public override int SaveChanges()
         {

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { analyzeEkgFile } from "../host/EkgService";
+import { analyzeEkgFile } from "../../host/EkgService";
 
 const EkgAnalyzer = () => {
   const [files, setFiles] = useState([]);
