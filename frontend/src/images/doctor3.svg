@@ -21,22 +21,22 @@
 <g id="OBJECTS">
 	<g>
 		<g>
-			<rect x="360.953" y="86.979" style="fill:#f15c04;" width="90.579" height="143.492"/>
+			<rect x="360.953" y="86.979" style="fill:#425A58;" width="90.579" height="143.492"/>
 			<rect x="368.312" y="94.154" style="fill:#FFFFFF;" width="75.86" height="129.143"/>
 		</g>
 		<g>
-			<rect x="356.07" y="83.591" style="fill:#f15c04;" width="98.85" height="5.252"/>
-			<rect x="356.07" y="91.741" style="fill:#f15c04;" width="98.85" height="5.252"/>
-			<rect x="356.07" y="99.891" style="fill:#f15c04;" width="98.85" height="5.252"/>
-			<rect x="356.07" y="108.041" style="fill:#f15c04;" width="98.85" height="5.252"/>
-			<rect x="356.07" y="116.191" style="fill:#f15c04;" width="98.85" height="5.252"/>
-			<rect x="356.07" y="124.34" style="fill:#f15c04;" width="98.85" height="5.252"/>
-			<rect x="356.07" y="132.49" style="fill:#f15c04;" width="98.85" height="5.252"/>
-			<rect x="356.07" y="140.64" style="fill:#f15c04;" width="98.85" height="5.252"/>
-			<rect x="356.07" y="148.79" style="fill:#f15c04;" width="98.85" height="5.252"/>
+			<rect x="356.07" y="83.591" style="fill:#425A58;" width="98.85" height="5.252"/>
+			<rect x="356.07" y="91.741" style="fill:#425A58;" width="98.85" height="5.252"/>
+			<rect x="356.07" y="99.891" style="fill:#425A58;" width="98.85" height="5.252"/>
+			<rect x="356.07" y="108.041" style="fill:#425A58;" width="98.85" height="5.252"/>
+			<rect x="356.07" y="116.191" style="fill:#425A58;" width="98.85" height="5.252"/>
+			<rect x="356.07" y="124.34" style="fill:#425A58;" width="98.85" height="5.252"/>
+			<rect x="356.07" y="132.49" style="fill:#425A58;" width="98.85" height="5.252"/>
+			<rect x="356.07" y="140.64" style="fill:#425A58;" width="98.85" height="5.252"/>
+			<rect x="356.07" y="148.79" style="fill:#425A58;" width="98.85" height="5.252"/>
 		</g>
-		<line style="fill:none;stroke:#f15c04;stroke-miterlimit:10;" x1="454.92" y1="83.591" x2="454.92" y2="178.755"/>
-		<rect x="453.081" y="177.559" style="fill:#f15c04;" width="3.677" height="9.267"/>
+		<line style="fill:none;stroke:#425A58;stroke-miterlimit:10;" x1="454.92" y1="83.591" x2="454.92" y2="178.755"/>
+		<rect x="453.081" y="177.559" style="fill:#425A58;" width="3.677" height="9.267"/>
 		<g>
 			<rect x="372.318" y="191.56" style="fill:#fff0e0;" width="8.842" height="31.777"/>
 			<rect x="404.16" y="196.603" style="fill:#fff0e0;" width="7.944" height="26.734"/>
@@ -46,7 +46,7 @@
 		</g>
 	</g>
 	<polygon style="fill:#fff0e0;" points="468.401,439.723 35.359,439.723 61.472,425.023 442.288,425.023 	"/>
-	<rect x="35.359" y="439.723" style="fill:#f15c04;" width="432.316" height="12.863"/>
+	<rect x="35.359" y="439.723" style="fill:#425A58;" width="432.316" height="12.863"/>
 	<g>
 		<path style="fill:#3763A6;" d="M415.976,379.386c19.685,0,31.754,3.76,32.502,4c1.269,0.407,1.966,1.764,1.561,3.032
 			c-0.407,1.269-1.77,1.963-3.032,1.561c-0.378-0.119-27.095-8.345-65.758,0.06c-1.302,0.278-2.585-0.543-2.869-1.844
@@ -331,8 +331,8 @@
 	<path style="fill:none;stroke:#E3923C;stroke-linecap:round;stroke-miterlimit:10;" d="M159.675,164.085"/>
 	<g>
 		<g>
-			<rect x="47.841" y="59.889" style="fill:#f15c04;" width="91.8" height="56.264"/>
-			<polygon style="fill:#f15c04;" points="106.08,110.4 124.788,133.263 124.788,108.257 			"/>
+			<rect x="47.841" y="59.889" style="fill:#425A58;" width="91.8" height="56.264"/>
+			<polygon style="fill:#425A58;" points="106.08,110.4 124.788,133.263 124.788,108.257 			"/>
 		</g>
 		<line style="fill:none;stroke:#FFFFFF;stroke-miterlimit:10;" x1="60.081" y1="73.356" x2="96.081" y2="73.356"/>
 		<line style="fill:none;stroke:#FFFFFF;stroke-miterlimit:10;" x1="60.081" y1="81.876" x2="127.401" y2="81.876"/>

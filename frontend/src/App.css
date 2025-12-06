@@ -8,10 +8,10 @@
   --extra_large_size:24px;
   --text_color:#2a5267;
   --text_second_color:#416d83;
-  --back_color:#04c6f1;
-  --back_hover_color:#0ab2d8;
+  --back_color:#4FD1C5;
+  --back_hover_color:#38B2AC;
   --border_color:#d9d9d9;
-  --back_gradient_color:#e6fbff;
+  --back_gradient_color:#2AA79B;
   --back_second_color:#56f79e;
 }
 
@@ -43,13 +43,17 @@ body{background-color: #f5fcff;}
 .login_img, .login_form_box{width: 50%; display: flex; align-items: center; justify-content: center; height: 100%; overflow: hidden;}
 .login_img img{width: 80%;  transform: rotateY(180deg);}
 .login_img{  background: linear-gradient(var(--back_color), var(--back_gradient_color));}
-.login_form_box{background-color: white; }
+.login_form_box{background-color: white; flex-direction: column; position: relative; }
+.login_bottom{position: absolute; bottom: 30px; width: 100%; display: flex; flex-wrap: wrap; justify-content: center;}
+.login_bottom, .reset_pass_text{font-size: var(--small_size); font-weight: 500; color: var(--text_color); }
+.login_bottom a, .reset_pass_text a{color:var(--back_color); transition: 0.3s; margin-left: 5px;}
+.login_bottom a:hover, .reset_pass_text a:hover{color: var(--back_hover_color);}
 .login_logo{display: flex; flex-direction: row; align-items: center;}
 .login_logo img{width: 120px; margin-bottom: 20px;}
 .login_form h1{font-size: var(--large_size); color: white; text-align: center;
   padding: 15px;
   background: linear-gradient(var(--back_color), var(--back_hover_color)); margin-bottom: 25px; text-transform: uppercase;}
-.auth_navbar{width: 100%; position: absolute; height: 90px; background-color: transparent; display: flex; align-items: center; justify-content: space-between; padding: 20px 5%;}
+.auth_navbar{width: 100%; z-index: 3333; position: absolute; height: 90px; background-color: transparent; display: flex; align-items: center; justify-content: space-between; padding: 20px 5%;}
 .auth_brand{display: flex; align-items: center; width: 30%;}
 .auth_brand img{height: 70px; margin-right: 15px;}
 .auth_brand h1{font-size: var(--medium_size); color: var(--text_color);}
@@ -85,3 +89,12 @@ border: 1px solid white; background-color: white; cursor: pointer;
 .lang_check{font-size: var(--medium_size); color: var(--back_color);}
 .opened_lang .langs_list{max-height:100vh;  padding: 5px 15px;}
 .opened_lang .selected_lang span{transform: rotate(-90deg);  color: var(--back_color);}
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #fff inset !important; /* fon rangini oq qiladi */
+    box-shadow: 0 0 0 1000px #fff inset !important;
+    -webkit-text-fill-color: var(--text_color) !important; /* matn rangi */
+    transition: background-color 5000s ease-in-out 0s; /* autofillni yashirish */
+}

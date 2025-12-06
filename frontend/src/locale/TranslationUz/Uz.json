@@ -5,10 +5,23 @@
  "password":"Parol",
  "enter_email":"Emailingizni kiriting",
  "enter_password":"Parolingizni kiriting",
+ "enter_new_password":"Parolingizni yarating",
  "login":"Tizimga kirish",
- "main_title":"YMED - shifokorlar uchun AI diagnostika tizimi",
+ "register":"Ro'yhatdan o'tish",
+ "main_title":"N MED - shifokorlar uchun AI diagnostika tizimi",
  "not_empty":"Maydon bo'sh bo'lishi mumkin emas",
- "ymed_login":"YMED tizimiga kirish"
+ "ymed_login":"N MED tizimiga kirish",
+ "ymed_register":"N MED tizimida ro'yhatdan o'tish",
+ "not_have_account":"Sizda akkount yo'qmi?",
+ "have_account":"Sizda akkount bormi?",
+ "register_a":"Ro'yhatdan o'ting",
+ "login_a":"Tizimga kiring",
+ "new_password":"Yangi parol",
+ "check_password":"Parolni tasdiqlang",
+ "enter_check_password":"Parolni qayta kiriting",
+ "password_not_match":"Parollar bir xil emas",
+ "reset_password":"Parolni unutdingizmi?"
+
 }
 
 

@@ -3,7 +3,8 @@ import Login from './components/Login'
 import logo from '../../images/logo.png'
 import { useTranslation } from 'react-i18next'
 import ChangeLangs from '../../components/ChangeLangs'
-
+import { Route, Routes } from 'react-router-dom'
+import Register from './components/Register'
 
 export default function Auth() {
     const {t}=useTranslation()
@@ -20,7 +21,10 @@ export default function Auth() {
                
         </div>
     </div>
-    <Login/>
+    <Routes>
+      <Route path='' element={<Login/>}/>
+      <Route path='/register' element={<Register/>}/>
+    </Routes>
 </>
   )
 }
