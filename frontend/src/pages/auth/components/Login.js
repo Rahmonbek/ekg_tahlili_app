@@ -2,7 +2,7 @@ import { Button, Form, Input } from 'antd'
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next';
 import logo from '../../../images/logo.png'
-import login_img from '../../../images/login_img.svg'
+import login_img from '../../../images/doctor3.svg'
 import { IoIosMail, IoMdLock } from 'react-icons/io';
 export default function Login() {
   
@@ -22,9 +22,7 @@ export default function Login() {
 
   return (
     <div className='login_box'>
-      <div className='login_img'>
-        <img src={login_img}/>
-      </div>
+      
       <div className='login_form_box'>
     <div className='login_form'>
       
@@ -90,6 +88,9 @@ export default function Login() {
   </Form> </div>
 </div>
     </div>
+    <div className='login_img'>
+        <img src={login_img}/>
+      </div>
     </div>
   )
 }
