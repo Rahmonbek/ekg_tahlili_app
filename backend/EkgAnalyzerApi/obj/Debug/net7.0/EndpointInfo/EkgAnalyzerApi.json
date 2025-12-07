@@ -5,41 +5,10 @@
     "version": "1.0"
   },
   "paths": {
-    "/api/auth/get-clinica-by-token": {
-      "get": {
-        "tags": [
-          "Auth"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
     "/api/auth/register": {
       "post": {
         "tags": [
-          "Clinic"
+          "Auth"
         ],
         "requestBody": {
           "content": {
@@ -70,7 +39,7 @@
     "/api/auth/verify": {
       "post": {
         "tags": [
-          "Clinic"
+          "Auth"
         ],
         "requestBody": {
           "content": {
@@ -101,7 +70,7 @@
     "/api/auth/login": {
       "post": {
         "tags": [
-          "Clinic"
+          "Auth"
         ],
         "requestBody": {
           "content": {
@@ -132,7 +101,7 @@
     "/api/auth/change-password": {
       "post": {
         "tags": [
-          "Clinic"
+          "Auth"
         ],
         "requestBody": {
           "content": {
@@ -153,6 +122,18 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/clinic/get-clinic-by-token": {
+      "get": {
+        "tags": [
+          "Clinic"
+        ],
         "responses": {
           "200": {
             "description": "Success"

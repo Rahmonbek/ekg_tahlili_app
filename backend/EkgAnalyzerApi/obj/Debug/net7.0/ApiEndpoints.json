@@ -1,6 +1,6 @@
 [
   {
-    "ContainingType": "ClinicController",
+    "ContainingType": "AuthController",
     "Method": "ChangePassword",
     "RelativePath": "api/auth/change-password",
     "HttpMethod": "POST",
@@ -17,22 +17,6 @@
   },
   {
     "ContainingType": "AuthController",
-    "Method": "getClinicByToken",
-    "RelativePath": "api/auth/get-clinica-by-token",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "dto",
-        "Type": "EkgAnalyzerApi.DTOs.RegisterDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ClinicController",
     "Method": "Login",
     "RelativePath": "api/auth/login",
     "HttpMethod": "POST",
@@ -48,7 +32,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "ClinicController",
+    "ContainingType": "AuthController",
     "Method": "Register",
     "RelativePath": "api/auth/register",
     "HttpMethod": "POST",
@@ -64,7 +48,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "ClinicController",
+    "ContainingType": "AuthController",
     "Method": "Verify",
     "RelativePath": "api/auth/verify",
     "HttpMethod": "POST",
@@ -77,6 +61,16 @@
         "IsRequired": true
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ClinicController",
+    "Method": "GetClinic",
+    "RelativePath": "api/clinic/get-clinic-by-token",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   },
   {

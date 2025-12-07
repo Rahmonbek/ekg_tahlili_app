@@ -2,6 +2,7 @@
 
 :root{
   --main_padding:1vw;
+  --main_mini_padding:0.5vw;
   --mini_size:14px;
   --small_size:16px;
   --medium_size:18px;
@@ -112,9 +113,9 @@ input:-webkit-autofill:active {
 .ant-btn-loading{position: relative !important; opacity: 1 !important;}
 .ant-btn-loading::after{content: ''; position: absolute !important;  display: flex !important; top:0px; left: 0px; width: 100% !important; height: 100% !important; 
   background-color: rgba(255, 255, 255, 0.234); border-radius: 12px !important; backdrop-filter: blur(5px); }
-  .main_box{width: 100%; height: 100vh; overflow: hidden;}
+  .main_box{width: 100%; display: flex; height: 100vh; overflow: hidden;}
   .sidebar{width: 330px;  height: 100%; padding: var(--main_padding);}
-  .sidebar_head{height: 8vh;  padding-left: 10px; display: flex; align-items: center;}
+  .sidebar_head{height: 6vh;  padding-left: 10px; display: flex; align-items: center;}
   .sidebar_head img{height: 100%; margin-right: 15px;}
   .sidebar_head h1{font-size: var(--very_large_size); color: var(--text_color); font-weight: 900; }
   .sidebar_line{margin-top: 2vh; height: 1px; width: 100%; background: linear-gradient(to right, transparent, var(--grey_color), transparent); border-radius: 50%;}
@@ -128,3 +129,21 @@ input:-webkit-autofill:active {
     .active_sidebar_item .sidebar_title{color: var(--text_color); font-weight: 700;}
     .active_sidebar_item .sidebar_icon{background: linear-gradient(var(--back_color), var(--back_hover_color)); color: white;
       box-shadow: none;}
+      .content_box{width: 100%;}
+    .main_header{height: calc(6vh + var(--main_padding) + var(--main_padding));  display: flex; align-items: center;
+       justify-content: flex-end; padding: var(--main_padding);
+      background-color: #F7FAFC; z-index: 344; }
+    .content{width: 100%;  padding:0; height: calc(100vh - 6vh - var(--main_padding) - var(--main_padding)); overflow: auto;}
+    .content::-webkit-scrollbar{display: none;}
+    .main_card{background-color: white; border-radius: 12px; box-shadow: rgba(0, 0, 0, 0.02) 0px 3.5px 5.5px; overflow: hidden;}
+    .main_card h1{padding: var(--main_padding);  background: linear-gradient(var(--back_color), var(--back_gradient_color)); 
+      font-size:var(--medium_size); color: white;}
+    .main_card_content{padding: var(--main_padding);}
+    .main_col{padding: var(--main_mini_padding);}
+    .input_img_box{width: 10vw; cursor: pointer; height: 10vw; background-color: white; border-radius: 12px;  position: relative;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;}
+    .input_img_icon{width: 100%; height: 100%; opacity: 0.3; border: 10px solid  var(--text_color); color: var(--text_color);
+       font-size: 110px; display: flex; align-items: center; justify-content: center;}
+    .input_img_box input{position: absolute;cursor: pointer; top: 0px; left: 0px; width: 100%; height: 100%; z-index: 3; opacity: 0;}
+
+    

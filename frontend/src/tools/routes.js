@@ -10,7 +10,7 @@ export const routers=[
         tools:""
     },
     {
-        path:'/analyse_ecg',
+        path:'/analyse-ecg',
         icon:<FaHeartbeat />,
         title:"analyse_ecg",
         tools:"analyse_ecg"
@@ -23,13 +23,13 @@ export const routers=[
     },
     {
         path:'/billings',
-        icon:<IoMdSettings />,
+        icon:<IoIosCard />,
         title:"billings",
         tools:"billings"
     },
     {
         path:'/settings',
-        icon:<IoIosCard />,
+        icon:<IoMdSettings />,
         title:"organization_info",
         tools:"settings"
     }

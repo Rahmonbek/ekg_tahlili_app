@@ -22,6 +22,8 @@ public class Clinic
         [Column("updated_at")]
         public DateTime? UpdatedAt { get; set; }
 
-        public List<VerificationCode> Codes { get; set; } = new();
-}
+        public ClinicDetail ClinicDetail { get; set; } = new();
+        public User User { get; set; } = new();
+        public List<ClinicPhoneNumber> ClinicPhoneNumber { get; set; } = new();
+    }
 }

@@ -1,189 +1,69 @@
-﻿using BCrypt.Net;
-using EkgAnalyzerApi.Data;
+﻿using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Bcpg;
-using Org.BouncyCastle.Crypto.Generators;
 
-public class ClinicService
+namespace EkgAnalyzerApi.Services
 {
-    private readonly MedDataDB _context;
-
-    public ClinicService(MedDataDB context)
+    public class ClinicService
     {
-        _context = context;
-    }
+        private readonly MedDataDB _context;
 
-    private string GenerateCode()
-    {
-        return new Random().Next(1000, 9999).ToString();
-    }
-
-    public async Task RegisterAsync(RegisterDto dto)
-    {
-        // Userni topamiz yoki yangi yaratamiz
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
-
-        if (user == null)
+        public ClinicService(MedDataDB context)
         {
-            user = new User
-            {
-                Email = dto.Email,
-                PasswordPlain = dto.Password,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                Status = false
-            };
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync(); // Id olish uchun
-        }
-        else
-        {
-            user.PasswordPlain = dto.Password;
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-            user.Status = false;
-            await _context.SaveChangesAsync();
+            _context = context;
         }
 
-        // Verification code yaratamiz yoki mavjudini yangilaymiz
-        var code = GenerateCode();
-
-        var existingCode = await _context.VerificationCodes
-            .FirstOrDefaultAsync(v => v.UserId == user.Id);
-
-        if (existingCode != null)
+        public async Task<ClinicDTO?> GetClinicByUserIdAsync(int userId)
         {
-            // Mavjud kodni yangilaymiz
-            existingCode.Email = dto.Email;
-            existingCode.Code = code;
-            existingCode.ExpiresAt = DateTime.UtcNow.AddMinutes(10);
-            existingCode.IsUsed = false;
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) return null;
+
+            if (user.ClinicId == null)
+            {
+                return new ClinicDTO
+                {
+                    User = new UserDTO
+                    {
+                        Id = user.Id,
+                        Email = user.Email
+                    }
+                };
+            }
+
+            var clinic = await _context.Clinics
+                .Where(c => c.Id == user.ClinicId)
+                .Select(c => new ClinicDTO
+                {
+                    Id = c.Id,
+                    ClinicName = c.ClinicName,
+                    ClinicLogo = c.ClinicLogo,
+                    ClinicDetail = new ClinicDetailDTO
+                    {
+                        BankAccaunt = c.ClinicDetail.BankAccaunt,
+                        BankName = c.ClinicDetail.BankName,
+                        MFO = c.ClinicDetail.MFO,
+                        INN = c.ClinicDetail.INN,
+                        License = c.ClinicDetail.License,
+                        Address = c.ClinicDetail.Address,
+                        Director = c.ClinicDetail.Director
+                    },
+                    User = new UserDTO
+                    {
+                        Id = c.User.Id,
+                        Email = c.User.Email
+                    },
+                    ClinicPhoneNumber = c.ClinicPhoneNumber
+    .Select(p => new ClinicPhoneNumberDTO
+    {
+        Id = p.Id,
+        PhoneNumber = p.PhoneNumber
+    })
+    .ToList()
+                })
+                .FirstOrDefaultAsync();
+
+            return clinic;
         }
-        else
-        {
-            // Yangi kod yaratamiz
-            var verification = new VerificationCode
-            {
-                UserId = user.Id,
-                Email = dto.Email,
-                Code = code,
-                ExpiresAt = DateTime.UtcNow.AddMinutes(10),
-                IsUsed = false
-            };
-            _context.VerificationCodes.Add(verification);
-        }
-
-        await _context.SaveChangesAsync();
-
-    }
-
-    public class VerifyCodeResult
-    {
-        public int UserId { get; set; }
-        public bool Success { get; set; }
-        public string Message { get; set; } = default!;
-        public string? Token { get; set; }
-    }
-
-    public async Task<VerifyCodeResult> VerifyCodeAsync(VerifyCodeDto dto)
-    {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
-        if (user == null)
-            return new VerifyCodeResult
-            {
-                Success = false,
-                Message = "User with this email does not exist"
-            };
-
-        var ver = await _context.VerificationCodes
-            .Where(v => v.UserId == user.Id && !v.IsUsed)
-            .OrderByDescending(v => v.Id)
-            .FirstOrDefaultAsync();
-
-        if (ver == null)
-            return new VerifyCodeResult
-            {
-                Success = false,
-                Message = "retry_register"
-            };
-
-        if (ver.Code != dto.Code)
-            return new VerifyCodeResult
-            {
-                Success = false,
-                Message = "code_incorrect"
-            };
-
-        
-        // Kod to‘g‘ri → mark as used va user status true
-        ver.IsUsed = true;
-        user.Status = true;
-        await _context.SaveChangesAsync();
-
-        var tokenBytes = System.Text.Encoding.UTF8.GetBytes(user.Email);
-        var token = Convert.ToBase64String(tokenBytes);
-
-        return new VerifyCodeResult
-        {
-            UserId = user.Id,
-            Success = true,
-            Message = "success_register",
-            Token = token
-        };
-    }
-
-    public async Task<VerifyCodeResult> LoginAsync(LoginDto dto)
-    {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
-        if (user == null)
-            return new VerifyCodeResult
-            {
-                Success = false,
-                Message = "user_not_find"
-            }; ;
-
-        if (!user.Status)
-            return new VerifyCodeResult
-            {
-                Success = false,
-                Message = "email_not_verified"
-            }; ;
-
-        if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
-            return new VerifyCodeResult
-            {
-                Success = false,
-                Message = "invalid_password"
-            }; ;
-
-       
-        var tokenBytes = System.Text.Encoding.UTF8.GetBytes(user.Email);
-        var token = Convert.ToBase64String(tokenBytes);
-        return new VerifyCodeResult
-        {
-            UserId = user.Id,
-            Success = true,
-            Message = "success_login",
-            Token = token
-        }; ;
-    }
-
-    public async Task ChangePasswordAsync(ChangePasswordDto dto)
-    {
-        var ver = await _context.VerificationCodes
-            .Where(x => x.Email == dto.Email && !x.IsUsed)
-            .OrderByDescending(x => x.Id)
-            .FirstOrDefaultAsync();
-
-        if (ver == null || ver.Code != dto.Code || ver.ExpiresAt < DateTime.UtcNow)
-            throw new Exception("Invalid or expired code");
-
-        ver.IsUsed = true;
-
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == dto.Email);
-        user.PasswordPlain = dto.NewPassword;
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
-
-        await _context.SaveChangesAsync();
     }
 }

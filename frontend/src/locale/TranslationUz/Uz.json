@@ -32,10 +32,29 @@
  "email_not_verified":"Sizning emailingiz tasdiqlanmagan. Iltimos, emailingizni tasdiqlang",
  "invalid_password":"Noto'g'ri parol. Iltimos, qayta urinib ko'ring",
  "patcients":"Bemorlar",
- "organization_info":"Klinika ma'lumotlari",
+ "organization_info":"Tashkilot ma'lumotlari",
  "billings":"Hisob-kitoblar",
  "analyse_ecg":"EKGni tahlil qilish",
- "dashboard":"Asosiy panel"
+ "dashboard":"Asosiy panel",
+ "main_info":"Asosiy ma'lumotlar",
+ "enter_clinic_name":"Tashkilotning to'liq nomini",
+ "clinic_name":"Tashkilot nomi",
+ "save_data":"Ma'lumotni saqlash",
+ "clinic_logo":"Tashkilot logotipi",
+ "bank_info":"Tashkilot rekvizitlari",
+ "enter_inn":"Tashkilotning identifikatsion raqami",
+ "inn":"INN",
+ "license":"Guvohnoma",
+ "bank_account":"Hisob raqam",
+ "enter_bank_account":"Tashkilotning hisob raqami",
+ "mfo":"MFO",
+ "enter_mfo":"Bank MFO si",
+ "director":"Tashkilot rahbari",
+ "enter_director":"Familiya Ism Sharif",
+ "bankName":"Bank nomi",
+ "enter_bankName":"Bankning to'liq nomi",
+ "address":"Tashkilot manzili",
+ "enter_address":"Tashkilotning to'liq manzili"
 
 }
 

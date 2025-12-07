@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using EkgAnalyzerApi.DTOs;
+﻿using EkgAnalyzerApi.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
-[Route("api/auth")]
 [ApiController]
+[Route("api/clinic")]
 public class ClinicController : ControllerBase
 {
     private readonly ClinicService _clinicService;
@@ -12,60 +14,20 @@ public class ClinicController : ControllerBase
         _clinicService = clinicService;
     }
 
-    [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterDto dto)
+    
+    [HttpGet("get-clinic-by-token")]
+    public async Task<IActionResult> GetClinic()
     {
-        await _clinicService.RegisterAsync(dto);
-        return Ok(new { message = "code_sended" });
-    }
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+            return Unauthorized(new { message = "Token invalid" });
 
-    [HttpPost("verify")]
-    public async Task<IActionResult> Verify(VerifyCodeDto dto)
-    {
-        var result = await _clinicService.VerifyCodeAsync(dto);
+        var userId = int.Parse(userIdClaim.Value);
 
-        if (!result.Success)
-        {
-            // Kod noto‘g‘ri yoki expired bo‘lsa
-            return BadRequest(new { message = result.Message });
-        }
+        var clinic = await _clinicService.GetClinicByUserIdAsync(userId);
+        if (clinic == null)
+            return NotFound(new { message = "Clinic not found" });
 
-        // Kod to‘g‘ri bo‘lsa
-        return Ok(new
-        {
-            userId= result.UserId,
-            message = result.Message,
-            token = result.Token
-        });
-    }
-
-    [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginDto dto)
-    {
-        var result = await _clinicService.LoginAsync(dto);
-
-        if (!result.Success)
-        {
-            // Xatolik bo‘lsa, 400 qaytaramiz va message bilan yuboramiz
-            return BadRequest(new
-            {
-                message = result.Message
-            });
-        }
-
-        // Muvaffaqiyatli login bo‘lsa, token, userId va message qaytarish
-        return Ok(new
-        {
-            token = result.Token,
-            userId = result.UserId,
-            message = result.Message
-        });
-    }
-
-    [HttpPost("change-password")]
-    public async Task<IActionResult> ChangePassword(ChangePasswordDto dto)
-    {
-        await _clinicService.ChangePasswordAsync(dto);
-        return Ok(new { message = "Password changed successfully" });
+        return Ok(clinic);
     }
 }

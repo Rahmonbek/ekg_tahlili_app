@@ -2,6 +2,7 @@
 using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
+using EkgAnalyzerApi.Services;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Crypto.Generators;
@@ -10,11 +11,13 @@ public class AuthService
 {
     private readonly MedDataDB _context;
     private readonly IEmailService _emailService;
+    private readonly TokenService _tokenService;
 
-    public AuthService(MedDataDB context, IEmailService emailService)
+    public AuthService(MedDataDB context, IEmailService emailService, TokenService tokenService)
     {
         _context = context;
         _emailService = emailService;
+        _tokenService = tokenService;
     }
 
     private string GenerateCode()
@@ -124,8 +127,7 @@ public class AuthService
         user.Status = true;
         await _context.SaveChangesAsync();
 
-        var tokenBytes = System.Text.Encoding.UTF8.GetBytes(user.Email);
-        var token = Convert.ToBase64String(tokenBytes);
+        var token = _tokenService.GenerateToken(user);
 
         return new VerifyCodeResult
         {
@@ -160,9 +162,8 @@ public class AuthService
                 Message = "invalid_password"
             }; ;
 
-       
-        var tokenBytes = System.Text.Encoding.UTF8.GetBytes(user.Email);
-        var token = Convert.ToBase64String(tokenBytes);
+
+        var token = _tokenService.GenerateToken(user);
         return new VerifyCodeResult
         {
             UserId = user.Id,
