@@ -3,6 +3,13 @@
   "WorkspaceRootPath": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BA4F683-4832-4183-989F-39AD71A30BDC}|EkgAnalyzerApi.csproj|d:\\git\\ekg_tahlili_app\\backend\\ekganalyzerapi\\migrations\\ekgdatadbmodelsnapshot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2BA4F683-4832-4183-989F-39AD71A30BDC}|EkgAnalyzerApi.csproj|solutionrelative:migrations\\ekgdatadbmodelsnapshot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{2BA4F683-4832-4183-989F-39AD71A30BDC}|EkgAnalyzerApi.csproj|d:\\git\\ekg_tahlili_app\\backend\\ekganalyzerapi\\models\\verificationcode.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{2BA4F683-4832-4183-989F-39AD71A30BDC}|EkgAnalyzerApi.csproj|solutionrelative:models\\verificationcode.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -19,9 +26,6 @@
       "RelativeMoniker": "D:0:0:{2BA4F683-4832-4183-989F-39AD71A30BDC}|EkgAnalyzerApi.csproj|solutionrelative:models\\patient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{2BA4F683-4832-4183-989F-39AD71A30BDC}|EkgAnalyzerApi.csproj|d:\\git\\ekg_tahlili_app\\backend\\ekganalyzerapi\\models\\patientanalysis.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{2BA4F683-4832-4183-989F-39AD71A30BDC}|EkgAnalyzerApi.csproj|solutionrelative:models\\patientanalysis.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -32,10 +36,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{2BA4F683-4832-4183-989F-39AD71A30BDC}|EkgAnalyzerApi.csproj|d:\\git\\ekg_tahlili_app\\backend\\ekganalyzerapi\\controllers\\medcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{2BA4F683-4832-4183-989F-39AD71A30BDC}|EkgAnalyzerApi.csproj|solutionrelative:controllers\\medcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{2BA4F683-4832-4183-989F-39AD71A30BDC}|EkgAnalyzerApi.csproj|d:\\git\\ekg_tahlili_app\\backend\\ekganalyzerapi\\migrations\\ekgdatadbmodelsnapshot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{2BA4F683-4832-4183-989F-39AD71A30BDC}|EkgAnalyzerApi.csproj|solutionrelative:migrations\\ekgdatadbmodelsnapshot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{2BA4F683-4832-4183-989F-39AD71A30BDC}|EkgAnalyzerApi.csproj|d:\\git\\ekg_tahlili_app\\backend\\ekganalyzerapi\\models\\complaints.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -61,23 +61,15 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 5,
           "Children": [
             {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "AuthController.cs",
-              "DocumentMoniker": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Controllers\\AuthController.cs",
-              "RelativeDocumentMoniker": "Controllers\\AuthController.cs",
-              "ToolTip": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Controllers\\AuthController.cs",
-              "RelativeToolTip": "Controllers\\AuthController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T06:20:42.867Z"
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "User.cs",
               "DocumentMoniker": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Models\\User.cs",
               "RelativeDocumentMoniker": "Models\\User.cs",
@@ -90,7 +82,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "VerificationCode.cs",
               "DocumentMoniker": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Models\\VerificationCode.cs",
               "RelativeDocumentMoniker": "Models\\VerificationCode.cs",
@@ -104,18 +96,6 @@
             {
               "$type": "Document",
               "DocumentIndex": 5,
-              "Title": "PatientAnalysis.cs",
-              "DocumentMoniker": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Models\\PatientAnalysis.cs",
-              "RelativeDocumentMoniker": "Models\\PatientAnalysis.cs",
-              "ToolTip": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Models\\PatientAnalysis.cs",
-              "RelativeToolTip": "Models\\PatientAnalysis.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAwwAYAAAAfAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-26T10:53:49.684Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
               "Title": "Patient.cs",
               "DocumentMoniker": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Models\\Patient.cs",
               "RelativeDocumentMoniker": "Models\\Patient.cs",
@@ -128,7 +108,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 4,
               "Title": "MedDataDB.cs",
               "DocumentMoniker": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Data\\MedDataDB.cs",
               "RelativeDocumentMoniker": "Data\\MedDataDB.cs",
@@ -141,18 +121,51 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 0,
               "Title": "Microsoft.Common.CurrentVersion.targets",
               "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
               "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
-              "ViewState": "AgIAADMWAAAAAAAAAAAswEsWAAAEAAAAAAAAAA==",
+              "ViewState": "AgIAAFQWAAAAAAAAAAAswEsWAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003801|",
               "WhenOpened": "2025-11-11T12:48:35.625Z",
               "EditorCaption": ""
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "EkgDataDBModelSnapshot.cs",
+              "DocumentMoniker": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Migrations\\EkgDataDBModelSnapshot.cs",
+              "RelativeDocumentMoniker": "Migrations\\EkgDataDBModelSnapshot.cs",
+              "ToolTip": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Migrations\\EkgDataDBModelSnapshot.cs",
+              "RelativeToolTip": "Migrations\\EkgDataDBModelSnapshot.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAAD8AAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-26T10:55:12.787Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "PatientAnalysis.cs",
+              "DocumentMoniker": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Models\\PatientAnalysis.cs",
+              "RelativeDocumentMoniker": "Models\\PatientAnalysis.cs",
+              "ToolTip": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Models\\PatientAnalysis.cs",
+              "RelativeToolTip": "Models\\PatientAnalysis.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAwwAYAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-26T10:53:49.684Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Controllers\\AuthController.cs",
+              "RelativeDocumentMoniker": "Controllers\\AuthController.cs",
+              "ToolTip": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Controllers\\AuthController.cs",
+              "RelativeToolTip": "Controllers\\AuthController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T06:20:42.867Z"
             },
             {
               "$type": "Document",
@@ -180,7 +193,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "MedController.cs",
               "DocumentMoniker": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Controllers\\MedController.cs",
               "RelativeDocumentMoniker": "Controllers\\MedController.cs",
@@ -188,19 +201,8 @@
               "RelativeToolTip": "Controllers\\MedController.cs",
               "ViewState": "AgIAAHUAAAAAAAAAAAAowBkAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-25T09:38:48.275Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "EkgDataDBModelSnapshot.cs",
-              "DocumentMoniker": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Migrations\\EkgDataDBModelSnapshot.cs",
-              "RelativeDocumentMoniker": "Migrations\\EkgDataDBModelSnapshot.cs",
-              "ToolTip": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\Migrations\\EkgDataDBModelSnapshot.cs",
-              "RelativeToolTip": "Migrations\\EkgDataDBModelSnapshot.cs",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAAD8AAAApAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-26T10:55:12.787Z"
+              "WhenOpened": "2025-10-25T09:38:48.275Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
