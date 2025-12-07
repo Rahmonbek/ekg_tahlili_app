@@ -125,9 +125,9 @@
               "Title": "ClinicDTO.cs",
               "DocumentMoniker": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\DTOs\\ClinicDTO.cs",
               "RelativeDocumentMoniker": "DTOs\\ClinicDTO.cs",
-              "ToolTip": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\DTOs\\ClinicDTO.cs*",
-              "RelativeToolTip": "DTOs\\ClinicDTO.cs*",
-              "ViewState": "AgIAABoAAAAAAAAAAAAswCwAAAAAAAAAAAAAAA==",
+              "ToolTip": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\DTOs\\ClinicDTO.cs",
+              "RelativeToolTip": "DTOs\\ClinicDTO.cs",
+              "ViewState": "AgIAABsAAAAAAAAAAAAowCwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-12-07T10:30:01.962Z",
               "EditorCaption": ""
@@ -142,8 +142,7 @@
               "RelativeToolTip": "Services\\ClinicService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAqwBAAAAAjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T09:26:19.407Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T09:26:19.407Z"
             },
             {
               "$type": "Document",
@@ -155,8 +154,7 @@
               "RelativeToolTip": "Models\\User.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T06:14:42.181Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T06:14:42.181Z"
             },
             {
               "$type": "Document",
@@ -168,8 +166,7 @@
               "RelativeToolTip": "Data\\MedDataDB.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAB0AAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-26T10:25:53.724Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-26T10:25:53.724Z"
             },
             {
               "$type": "Document",
@@ -181,8 +178,7 @@
               "RelativeToolTip": "Models\\ClinicPhoneNumber.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T09:45:53.258Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T09:45:53.258Z"
             },
             {
               "$type": "Document",
@@ -194,8 +190,7 @@
               "RelativeToolTip": "Controllers\\ClinicController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABoAAAA1AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T09:25:01.569Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T09:25:01.569Z"
             },
             {
               "$type": "Document",
@@ -203,12 +198,11 @@
               "Title": "UserDTO.cs",
               "DocumentMoniker": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\DTOs\\UserDTO.cs",
               "RelativeDocumentMoniker": "DTOs\\UserDTO.cs",
-              "ToolTip": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\DTOs\\UserDTO.cs*",
-              "RelativeToolTip": "DTOs\\UserDTO.cs*",
+              "ToolTip": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\DTOs\\UserDTO.cs",
+              "RelativeToolTip": "DTOs\\UserDTO.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T10:32:40.08Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T10:32:40.08Z"
             },
             {
               "$type": "Document",
@@ -220,8 +214,7 @@
               "RelativeToolTip": "DTOs\\AuthDTO.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T06:40:41.797Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T06:40:41.797Z"
             },
             {
               "$type": "Document",
@@ -233,8 +226,7 @@
               "RelativeToolTip": "Program.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAACgAAAADAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-25T09:38:27.854Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-25T09:38:27.854Z"
             },
             {
               "$type": "Document",
@@ -246,8 +238,7 @@
               "RelativeToolTip": "Services\\TokenService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T09:59:03.122Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T09:59:03.122Z"
             },
             {
               "$type": "Document",
@@ -259,8 +250,7 @@
               "RelativeToolTip": "Services\\AuthService.cs",
               "ViewState": "AgIAAAMAAAAAAAAAAAAAAKUAAAARAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T06:42:19.387Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T06:42:19.387Z"
             },
             {
               "$type": "Document",
@@ -272,8 +262,7 @@
               "RelativeToolTip": "Models\\ClinicDetail.cs",
               "ViewState": "AgIAABEAAAAAAAAAAAAwwCoAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T09:37:31.448Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T09:37:31.448Z"
             },
             {
               "$type": "Document",
@@ -285,8 +274,7 @@
               "RelativeToolTip": "Models\\Clinic.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABsAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T09:28:28.364Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T09:28:28.364Z"
             },
             {
               "$type": "Document",
@@ -298,8 +286,7 @@
               "RelativeToolTip": "Services\\EmailService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAqwA0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T06:41:30.136Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T06:41:30.136Z"
             },
             {
               "$type": "Document",
@@ -311,8 +298,7 @@
               "RelativeToolTip": "Controllers\\AuthController.cs",
               "ViewState": "AgIAACMAAAAAAAAAAAAwwEAAAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T06:20:42.867Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T06:20:42.867Z"
             },
             {
               "$type": "Document",
@@ -324,12 +310,7 @@
               "RelativeToolTip": "Controllers\\MedController.cs",
               "ViewState": "AgIAAHUAAAAAAAAAAAAowBkAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-25T09:38:48.275Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
+              "WhenOpened": "2025-10-25T09:38:48.275Z"
             },
             {
               "$type": "Document",
@@ -341,8 +322,7 @@
               "RelativeToolTip": "appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-10-25T09:53:34.489Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-25T09:53:34.489Z"
             },
             {
               "$type": "Document",
@@ -354,8 +334,7 @@
               "RelativeToolTip": "Migrations\\EkgDataDBModelSnapshot.cs",
               "ViewState": "AgIAAAYAAAAAAAAAAAAAAD8AAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-26T10:55:12.787Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-26T10:55:12.787Z"
             },
             {
               "$type": "Document",
@@ -367,8 +346,7 @@
               "RelativeToolTip": "Migrations\\20251207094743_AddClinicData.cs",
               "ViewState": "AgIAAHgAAAAAAAAAAAAowAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T09:48:57.32Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T09:48:57.32Z"
             },
             {
               "$type": "Document",

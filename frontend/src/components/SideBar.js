@@ -3,11 +3,13 @@ import logo from '../images/logo.png'
 import { routers } from '../tools/routes'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router-dom'
+import { useStore } from '../store/Store'
 export default function SideBar() {
     const {t}=useTranslation()
     const location=useLocation()
+    const {open_menu}=useStore()
   return (
-    <div className='sidebar'>
+    <div className={`sidebar ${!open_menu?"closed_menu":''}`}>
         <div className='sidebar_head'>
             <img src={logo}/>
             <h1>N MED AI</h1>

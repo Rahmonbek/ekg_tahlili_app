@@ -47,7 +47,6 @@ D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\staticwebassets.p
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\staticwebassets.build.json
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\staticwebassets.development.json
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\scopedcss\bundle\EkgAnalyzerApi.styles.css
-D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\EkgAnalyzerApi.csproj.CopyComplete
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\EkgAnalyzerApi.dll
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\refint\EkgAnalyzerApi.dll
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\EkgAnalyzerApi.pdb
@@ -62,3 +61,8 @@ D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\Microsoft.Identit
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\Microsoft.IdentityModel.Tokens.dll
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\System.IdentityModel.Tokens.Jwt.dll
 D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\EkgAnaly.A0EB023D.Up2Date
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\bin\Debug\net7.0\EkgAnalyzerApi.staticwebassets.endpoints.json
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\EkgAnalyzerApi.sourcelink.json
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\staticwebassets.build.endpoints.json
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\staticwebassets\msbuild.EkgAnalyzerApi.Microsoft.AspNetCore.StaticWebAssetEndpoints.props
+D:\git\ekg_tahlili_app\backend\EkgAnalyzerApi\obj\Debug\net7.0\staticwebassets.upToDateCheck.txt

@@ -13,7 +13,7 @@ export const routers=[
         path:'/analyse-ecg',
         icon:<FaHeartbeat />,
         title:"analyse_ecg",
-        tools:"analyse_ecg"
+        tools:"analyse-ecg"
     },
      {
         path:'/patcients',

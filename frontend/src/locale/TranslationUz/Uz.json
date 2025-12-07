@@ -54,7 +54,11 @@
  "bankName":"Bank nomi",
  "enter_bankName":"Bankning to'liq nomi",
  "address":"Tashkilot manzili",
- "enter_address":"Tashkilotning to'liq manzili"
+ "enter_address":"Tashkilotning to'liq manzili",
+ "phone_numbers":"Telefon raqamlar",
+ "phone_number":"Telefon raqam",
+ "phone_number_add":"Yana qo'shish"
+
 
 }
 
