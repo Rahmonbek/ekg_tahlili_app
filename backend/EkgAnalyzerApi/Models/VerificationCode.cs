@@ -10,6 +10,9 @@ namespace EkgAnalyzerApi.Models
         [Key]
         [Column("id")]
         public int Id { get; set; }
+        
+        [Column("email")]
+        public string Email { get; set; } = default!;
 
         [Column("user_id")]
         public int UserId { get; set; }

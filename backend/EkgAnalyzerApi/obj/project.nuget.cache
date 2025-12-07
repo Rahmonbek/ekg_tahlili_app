@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "1MSsVnjmCW9rop9ATUOT/jpEFRnmtr1Axfpb7C23gLqLJCYE9WHhwr8lfrVPUlTcyamrF7NKNd5gmH2aSSXwdA==",
+  "dgSpecHash": "v7jYeg94+z4=",
   "success": true,
   "projectFilePath": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\EkgAnalyzerApi.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\lolil\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\lolil\\.nuget\\packages\\bouncycastle.cryptography\\2.6.2\\bouncycastle.cryptography.2.6.2.nupkg.sha512",
     "C:\\Users\\lolil\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\lolil\\.nuget\\packages\\itextsharp.lgplv2.core\\3.7.7\\itextsharp.lgplv2.core.3.7.7.nupkg.sha512",
