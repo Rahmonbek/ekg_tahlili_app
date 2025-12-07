@@ -1,12 +1,24 @@
-﻿namespace EkgAnalyzerApi.Models;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-public class VerificationCode
+namespace EkgAnalyzerApi.Models
 {
-    public int Id { get; set; }
 
-    public int UserId { get; set; }
-   
-    public string Code { get; set; } = default!;
-    public DateTime ExpiresAt { get; set; }
-    public bool IsUsed { get; set; } = false;
+    [Table("varification_codes")]
+    public class VerificationCode
+    {
+        [Key]
+        [Column("id")]
+        public int Id { get; set; }
+
+        [Column("user_id")]
+        public int UserId { get; set; }
+
+        [Column("code")]
+        public string Code { get; set; } = default!;
+        [Column("expires_at")]
+        public DateTime ExpiresAt { get; set; }
+        [Column("is_used")]
+        public bool IsUsed { get; set; } = false;
+    }
 }
