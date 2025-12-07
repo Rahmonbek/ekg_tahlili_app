@@ -1,21 +1,43 @@
 import { Button, Form, Input } from 'antd'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import logo from '../../../images/logo.png'
 import login_img from '../../../images/doctor3.svg'
 import { IoIosMail, IoMdLock } from 'react-icons/io';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { login } from '../../../host/requests/AuthRequest';
+import { dangerAlert, successAlert } from '../../../tools/Alerts';
+import { useStore } from '../../../store/Store';
 export default function Login() {
-  
- 
+  const [loading, setloading]=useState(false)
+  const {user_id, setuser_id} = useStore()
     const {t}=useTranslation()
-   
+   const navigate=useNavigate()
 
 
 
-    const  onFinish=async(val)=>{
-      
-    }
+     const  onFinish=async(val)=>{
+            try{
+              setloading(true)
+                var res=await login({
+                    email:val.email,
+                    password:val.password
+                })
+                if(res.status==200){
+                  successAlert(t(res.data.message))
+               setuser_id(res.data.userId)
+               window.localStorage.setItem("NMED_token", res.data.token)
+                }
+            }catch(err){
+               dangerAlert(t(err.response.data.message));
+              if(err.response.data.message=='user_not_find' || err.response.data.message=='email_not_verified'){
+                navigate('/register')
+              }
+               
+            }finally{
+          setloading(false)
+        }
+        }
 
     useEffect(()=>{
       
@@ -84,7 +106,7 @@ export default function Login() {
         span: 24,
       }}
     >
-      <Button className='btn_form' htmlType="submit">
+      <Button className='btn_form' loading={loading} htmlType="submit">
         {t("login")}
       </Button>
        

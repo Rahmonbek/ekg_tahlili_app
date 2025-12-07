@@ -23,5 +23,10 @@ namespace EkgAnalyzerApi.Models
         public DateTime ExpiresAt { get; set; }
         [Column("is_used")]
         public bool IsUsed { get; set; } = false;
+        [Column("created_at")]
+        public DateTime? CreatedAt { get; set; }
+
+        [Column("updated_at")]
+        public DateTime? UpdatedAt { get; set; }
     }
 }

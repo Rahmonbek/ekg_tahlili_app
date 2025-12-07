@@ -201,6 +201,11 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("code");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("email");
+
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at");

@@ -5,8 +5,8 @@
     "version": "1.0"
   },
   "paths": {
-    "/api/Auth/register": {
-      "post": {
+    "/api/auth/get-clinica-by-token": {
+      "get": {
         "tags": [
           "Auth"
         ],
@@ -36,10 +36,41 @@
         }
       }
     },
-    "/api/Auth/verify": {
+    "/api/auth/register": {
       "post": {
         "tags": [
-          "Auth"
+          "Clinic"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/auth/verify": {
+      "post": {
+        "tags": [
+          "Clinic"
         ],
         "requestBody": {
           "content": {
@@ -67,10 +98,10 @@
         }
       }
     },
-    "/api/Auth/login": {
+    "/api/auth/login": {
       "post": {
         "tags": [
-          "Auth"
+          "Clinic"
         ],
         "requestBody": {
           "content": {
@@ -98,10 +129,10 @@
         }
       }
     },
-    "/api/Auth/change-password": {
+    "/api/auth/change-password": {
       "post": {
         "tags": [
-          "Auth"
+          "Clinic"
         ],
         "requestBody": {
           "content": {

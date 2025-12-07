@@ -19,7 +19,12 @@ public class User
     public int? ClinicId { get; set; }
     [Column("status")]
     public bool Status { get; set; } = false;
+        [Column("created_at")]
+        public DateTime? CreatedAt { get; set; }
 
-    public List<VerificationCode> Codes { get; set; } = new();
+        [Column("updated_at")]
+        public DateTime? UpdatedAt { get; set; }
+
+        public List<VerificationCode> Codes { get; set; } = new();
 }
 }

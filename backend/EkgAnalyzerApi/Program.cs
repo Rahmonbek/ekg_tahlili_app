@@ -7,6 +7,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 // DbContext ulash
 builder.Services.AddDbContext<MedDataDB>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));

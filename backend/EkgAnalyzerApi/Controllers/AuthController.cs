@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using EkgAnalyzerApi.DTOs;
 
-[Route("api/[controller]")]
+[Route("api/auth")]
 [ApiController]
 public class AuthController : ControllerBase
 {
@@ -12,31 +12,12 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
-    [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterDto dto)
+    [HttpGet("get-clinica-by-token")]
+    public async Task<IActionResult> getClinicByToken(RegisterDto dto)
     {
         await _authService.RegisterAsync(dto);
-        return Ok(new { message = "Verification code sent to email" });
+        return Ok(new { message = "code_sended" });
     }
 
-    [HttpPost("verify")]
-    public async Task<IActionResult> Verify(VerifyCodeDto dto)
-    {
-        await _authService.VerifyCodeAsync(dto);
-        return Ok(new { message = "Email verified successfully" });
-    }
-
-    [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginDto dto)
-    {
-        var token = await _authService.LoginAsync(dto);
-        return Ok(new { token });
-    }
-
-    [HttpPost("change-password")]
-    public async Task<IActionResult> ChangePassword(ChangePasswordDto dto)
-    {
-        await _authService.ChangePasswordAsync(dto);
-        return Ok(new { message = "Password changed successfully" });
-    }
+   
 }

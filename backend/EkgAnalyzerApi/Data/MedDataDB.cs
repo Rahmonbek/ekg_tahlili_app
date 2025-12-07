@@ -15,6 +15,8 @@ namespace EkgAnalyzerApi.Data
         }
         public DbSet<VerificationCode> VerificationCodes { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Clinic> Clinics { get; set; }
+        public DbSet<ClinicDetail> ClinicDetails { get; set; }
         public DbSet<Patient> Patients { get; set; }
         
         public DbSet<PatientAnalysis> PatientAnalysis { get; set; }

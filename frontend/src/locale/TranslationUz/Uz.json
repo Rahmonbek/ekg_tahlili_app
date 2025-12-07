@@ -20,7 +20,22 @@
  "check_password":"Parolni tasdiqlang",
  "enter_check_password":"Parolni qayta kiriting",
  "password_not_match":"Parollar bir xil emas",
- "reset_password":"Parolni unutdingizmi?"
+ "reset_password":"Parolni unutdingizmi?",
+ "code_sended":"Tasdiqlash kodi emailingizga yuborildi",
+ "sended_code":"Emailingizga yuborilgan tasdiqlash kodini kiriting",
+ "retry_send":"Kodni qayta yuborish",
+ "retry_register":"Texnik nosozlik. Qayta ro'yhatdan o'tishingizni so'raymiz",
+ "code_incorrect":"Kiritilgan kod noto'g'ri. Iltimos, qayta urinib ko'ring",
+ "success_register":"Ro'yhatdan o'tish muvaffaqiyatli yakunlandi. Tashkilot ma'lumotlarini to'ldiring.",
+ "success_login":"Tizimga muvaffaqiyatli kirdingiz",
+ "user_not_find":"Siz ro'yhatdan o'tmagansiz. Iltimos, avval ro'yhatdan o'ting",
+ "email_not_verified":"Sizning emailingiz tasdiqlanmagan. Iltimos, emailingizni tasdiqlang",
+ "invalid_password":"Noto'g'ri parol. Iltimos, qayta urinib ko'ring",
+ "patcients":"Bemorlar",
+ "organization_info":"Klinika ma'lumotlari",
+ "billings":"Hisob-kitoblar",
+ "analyse_ecg":"EKGni tahlil qilish",
+ "dashboard":"Asosiy panel"
 
 }
 

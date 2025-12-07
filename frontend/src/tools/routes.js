@@ -1,0 +1,36 @@
+import { FaHeartbeat, FaHome } from "react-icons/fa";
+import { FaPeopleGroup } from "react-icons/fa6";
+import { IoIosCard, IoIosPeople, IoMdSettings } from "react-icons/io";
+
+export const routers=[
+    {
+        path:'/',
+        icon:<FaHome />,
+        title:"dashboard",
+        tools:""
+    },
+    {
+        path:'/analyse_ecg',
+        icon:<FaHeartbeat />,
+        title:"analyse_ecg",
+        tools:"analyse_ecg"
+    },
+     {
+        path:'/patcients',
+        icon:<FaPeopleGroup />,
+        title:"patcients",
+        tools:"patcients"
+    },
+    {
+        path:'/billings',
+        icon:<IoMdSettings />,
+        title:"billings",
+        tools:"billings"
+    },
+    {
+        path:'/settings',
+        icon:<IoIosCard />,
+        title:"organization_info",
+        tools:"settings"
+    }
+]
