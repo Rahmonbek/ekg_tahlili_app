@@ -117,21 +117,8 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 8,
+          "SelectedChildIndex": 7,
           "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "ClinicDTO.cs",
-              "DocumentMoniker": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\DTOs\\ClinicDTO.cs",
-              "RelativeDocumentMoniker": "DTOs\\ClinicDTO.cs",
-              "ToolTip": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\DTOs\\ClinicDTO.cs",
-              "RelativeToolTip": "DTOs\\ClinicDTO.cs",
-              "ViewState": "AgIAABsAAAAAAAAAAAAowCwAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T10:30:01.962Z",
-              "EditorCaption": ""
-            },
             {
               "$type": "Document",
               "DocumentIndex": 2,
@@ -142,8 +129,7 @@
               "RelativeToolTip": "Models\\User.cs",
               "ViewState": "AgIAABAAAAAAAAAAAAA5wBwAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T06:14:42.181Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T06:14:42.181Z"
             },
             {
               "$type": "Document",
@@ -203,8 +189,7 @@
               "RelativeToolTip": "Models\\PatientAnalysis.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAwwA4AAAASAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-26T10:53:49.684Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-26T10:53:49.684Z"
             },
             {
               "$type": "Document",
@@ -216,8 +201,7 @@
               "RelativeToolTip": "Models\\VerificationCode.cs",
               "ViewState": "AgIAAA0AAAAAAAAAAAAQwB0AAAAwAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T06:11:24.471Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T06:11:24.471Z"
             },
             {
               "$type": "Document",
@@ -231,6 +215,22 @@
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-12-07T09:59:03.122Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "ClinicDTO.cs",
+              "DocumentMoniker": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\DTOs\\ClinicDTO.cs",
+              "RelativeDocumentMoniker": "DTOs\\ClinicDTO.cs",
+              "ToolTip": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\DTOs\\ClinicDTO.cs",
+              "RelativeToolTip": "DTOs\\ClinicDTO.cs",
+              "ViewState": "AgIAABsAAAAAAAAAAAAowCwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T10:30:01.962Z"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
             },
             {
               "$type": "Document",
