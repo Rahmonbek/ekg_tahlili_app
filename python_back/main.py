@@ -5,7 +5,6 @@ import re
 import math
 from openai import OpenAI
 import base64
-import cv2
 from matplotlib.ticker import MultipleLocator
 from typing import Dict, Optional, Tuple
 import xml.etree.ElementTree as ET
@@ -48,7 +47,7 @@ app.add_middleware(
 )
 
 # ---------------- OpenAI API key ----------------
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = "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"
 if not OPENAI_API_KEY:
     raise RuntimeError("OPENAI_API_KEY muhit o'zgaruvchisi topilmadi.")
 
@@ -243,7 +242,7 @@ def compose_prompt_for_openai(digitals) -> str:
     EKG aparatdan olingan ekg parametrlari qiymatlari:
     {digitals_str}"""
 
-    prompt_header += """
+    prompt_header = """
     
     Siz tajribali kardiolog shifokorsiz. Quyidagi rasmdagi EKG grafiklarini va ekg grafikdan olingan yuqorida berilgan ekg parametrlari qiymatlarini tahlil qiling va natijani faqat quyidagi JSON formatida RETURN qiling. Hech qanday izoh, sharh yoki qo‘shimcha matn yozmang — faqat toza JSON. Barcha matnlar o‘zbek tilida bo‘lsin. Agar rasm yetarli sifatda bo‘lmasa yoki qaysidir o‘lchovni aniq hisoblash mumkin bo‘lmasa, tegishli maydonda ""o'lchab bo‘lmaydi"" deb qaytaring.
     
@@ -268,12 +267,15 @@ def compose_prompt_for_openai(digitals) -> str:
             "P_QRS_T_morphology": "P, QRS va T to‘lqin shakli haqida qisqa tavsif"
         },
 
-    "automatic_analysis": "EKG signalida quyidagi belgilar bor yoki yo'qligini aniqlang:
+    "automatic_analysis": "Shu EKG ni to'liq tahlil qilib bemorda quyidagi o'zgarishlardan qaysi birlari mavjud ekanligini yoz:
     Ishemik yurak kasalliklari
  • ST elevatsiyasi (STEMI — to‘liq o‘tkazuvchi tromb)
  • ST depressiyasi (NSTEMI, stenokardiya)
  • T tishchasi inversiyasi
  • Q patologik tishcha (o‘tkazilgan MI belgisi)
+ • R tishlar oralig'i va undagi o'zgarishlar
+ • P tish va R tish oralig'i va undagi o'zgarishlar
+ • QRS dagi o'zgarishlar   
  • Reciprocal o‘zgarishlar
  • Wellens sindromi (kuchli LAD stenoz)
  • De Winter changes (LAD akut o‘tkazuvchi lekin ST ko‘tarilmagan)
@@ -372,6 +374,7 @@ Metabolik va boshqa holatlar
     "final_summary": "Tibbiy asosli yakuniy tashxis va qisqa tahlil natijasi, asosiy klinik xulosa bilan."
     }
 Qo‘shimcha talablar:
+- "automatic_analysis" da agarda hech qanday kasallik belgilari aniqlanmasa nima sababdan kasallik mavjud emasligini tushuntir
 - "digital_measurements" da mavjud ammo EKG aparatdan olingan ekg parametrlarida qiymati mavjud bo'lmagan parametrlarni ekg grafik rasmidan o'lchab chiqaring
 - Har bir parametr uchun birliklar (bpm, ms, gradus) aniq yozilsin.
 - Raqamli qiymatlar va ularning tibbiy bahosi (normal/patologik) alohida yozilsin.
@@ -766,13 +769,7 @@ def detect_pr_interval(signal, r_peaks, fs):
     return float(np.mean(pr_list))
 
 def compute_full_ecg_v2(leads, fs=500):
-    """
-    Improved ECG feature extraction.
-    - leads: dict mapping lead name -> 1D numpy array (same length)
-    - fs: sampling frequency in Hz
-    Returns: dict (not JSON string) with measured values (units: ms for intervals, mV for voltages where original units assumed)
-    """
-    import numpy as np
+   
 
     # Basic checks
     if 'II' not in leads:
@@ -784,11 +781,13 @@ def compute_full_ecg_v2(leads, fs=500):
 
     # R-peaks
     r_peaks = detect_r_peaks(lead_ii, fs)
+    print(r_peaks)
     # compute RR in seconds, careful arithmetic
     rr_intervals = np.diff(r_peaks) / float(fs)  # seconds
-
+    print(rr_intervals)
     if rr_intervals.size > 0:
         mean_rr = float(np.mean(rr_intervals))  # seconds
+        print(mean_rr)
         heart_rate_bpm = 60.0 / mean_rr
         rr_interval_ms = mean_rr * 1000.0
     else:
@@ -977,52 +976,52 @@ async def analyze(
     digitals = compute_full_ecg_v2(leads, fs)
     print(digitals)
     # --- Upload PNG to OpenAI ---
-    try:
-        file_id = openai_upload_file(
-            OPENAI_API_KEY,
-            png_bytes,
-            filename=fname if fname.endswith('.png') else 'ecg.png'
-        )
-    except Exception as e:
-        b64 = base64.b64encode(png_bytes).decode('ascii')
-        return JSONResponse(content={
-            "error": f"OpenAI upload failed: {e}",
-            "png_base64": b64
-        })
+    # try:
+    #     file_id = openai_upload_file(
+    #         OPENAI_API_KEY,
+    #         png_bytes,
+    #         filename=fname if fname.endswith('.png') else 'ecg.png'
+    #     )
+    # except Exception as e:
+    #     b64 = base64.b64encode(png_bytes).decode('ascii')
+    #     return JSONResponse(content={
+    #         "error": f"OpenAI upload failed: {e}",
+    #         "png_base64": b64
+    #     })
    
-    # --- Compose prompt ---
-    prompt = compose_prompt_for_openai(digitals)
+    # # --- Compose prompt ---
+    # prompt = compose_prompt_for_openai(digitals)
 
-    # --- Call OpenAI ChatCompletion ---
-    try:
-        client = OpenAI(api_key=OPENAI_API_KEY)
-        resp = client.responses.create(
-            model="gpt-4.1",
-            input=[{
-                "role": "user",
-                "content": [
-                    {"type": "input_text", "text": prompt},
-                    {"type": "input_image", "file_id": file_id}
-                ]
-            }]
-        )
-        content_out = resp.output_text
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"OpenAI chat completion failed: {e}")
+    # # --- Call OpenAI ChatCompletion ---
+    # try:
+    #     client = OpenAI(api_key=OPENAI_API_KEY)
+    #     resp = client.responses.create(
+    #         model="gpt-4.1",
+    #         input=[{
+    #             "role": "user",
+    #             "content": [
+    #                 {"type": "input_text", "text": prompt},
+    #                 {"type": "input_image", "file_id": file_id}
+    #             ]
+    #         }]
+    #     )
+    #     content_out = resp.output_text
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=f"OpenAI chat completion failed: {e}")
 
-    # --- Parse JSON ---
-    try:
-        import json
-        parsed = json.loads(content_out)
-    except Exception:
-        parsed = {"raw": content_out}
+    # # --- Parse JSON ---
+    # try:
+    #     import json
+    #     parsed = json.loads(content_out)
+    # except Exception:
+    #     parsed = {"raw": content_out}
 
-    # --- Encode PNG to base64 for frontend ---
+    # # --- Encode PNG to base64 for frontend ---
     png_b64 = base64.b64encode(png_bytes).decode('ascii')
 
     return JSONResponse(content={
-        "openai_file_id": file_id,
-        "ai_response": parsed,
+        # "openai_file_id": file_id,
+        # "ai_response": parsed,
         "ecg_png_base64": png_b64
     })
 

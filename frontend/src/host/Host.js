@@ -8,6 +8,12 @@ export const getTokenAccess=()=>{
 
 }
 
+export const deleteTokenAccess=()=>{
+    var token=window.localStorage.removeItem("NMED_token")
+   
+
+}
+
 export const httpPostRequest=async(url, data)=>{
     var token=getTokenAccess()
     var res=await axios.post(api+url, data, {

@@ -10,10 +10,13 @@ import { Route, Routes } from 'react-router-dom'
 import { useStore } from './store/Store'
 import Main from './pages/cabinet/Main'
 import { get_clinic_data } from './host/requests/ClinicRequest'
+import { deleteTokenAccess } from './host/Host'
+import {useNavigate} from 'react-router-dom'
 export default function App() {
   const {t}=useTranslation()
   const {user_id, setuser_id, clinic, setclinic}=useStore()
   const [first_load, setfirst_load]=useState(false)
+  const navigate=useNavigate()
   useEffect(()=>{
     const token=window.localStorage.getItem("NMED_token")
     if(token!=null){
@@ -34,7 +37,8 @@ export default function App() {
          setfirst_load(true)
          console.log(res)
       }catch(err){
-
+            deleteTokenAccess()
+            navigate('/')
       }finally{
 
       }
