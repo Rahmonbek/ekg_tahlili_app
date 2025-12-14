@@ -78,7 +78,7 @@
  "saveData":"Ma'lumotlar saqlash",
  "ecg_analyse":"EKG ni tahlil qilish",
  "alert_patcient":"Bemorning ma’lumotlarini pasportdagi ma’lumotlar bilan bir xil tarzda kiriting.",
- "alert_ecg":"EKG faylini yuklashda aynan shu bemorga tegishli fayl ekanligigiga ishonch hosil qiling.",
+ "alert_ecg":"EKG faylini yuklashda aynan shu bemorga tegishli fayl ekanligigiga ishonch hosil qiling. Agarda EKG grafigini rasm ko'rinishida yuborayotgan bo'lsangiz rasmni sifati yaxshiligiga, rasmda EKG qo'gozidan boshqa buyumlar yo'qligiga va rasmni yaqinlashtirganda EKG chiziqlari aniq ko'rinayotganligiga ishonch hosil qiling.",
  "select_ecg_file":"EKG fayl tanlang",
  "access_file_types":"Fayl turlari",
  "patcient_complaint":"Bemor shikoyatlarini tanglang",
@@ -88,6 +88,7 @@
  "select_file_error":"Iltimos, kamida bitta fayl tanlang!",
  "please_wait":"EKG tahlil uzoqroq vaqt talab qilishi mumkin. Iltimos natijani kuting va browser oynasini yangilamang.",
  "retry_ecg_analyse":"Yangi EKG ni tahlil qilish"
+
 
 
 }

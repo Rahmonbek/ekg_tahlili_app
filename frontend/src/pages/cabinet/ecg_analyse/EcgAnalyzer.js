@@ -143,9 +143,7 @@ setResult(parsedResult);
   };
 const retryAnalyse=()=>{
     setPatcient(null);
-              form.resetFields();
-              form1.resetFields();
-              form2.resetFields();
+             
               setselect_complaint([])
               setFiles([])
               setcheck_ecg(false)
@@ -156,6 +154,26 @@ const retryAnalyse=()=>{
     setLoading(false)
     setLoading1(false)
     setLoading3(false)
+     form.resetFields();
+              form1.resetFields();
+              form2.resetFields();
+}
+
+const resetData=()=>{
+    setPatcient(null);
+             
+              setselect_complaint([])
+              setFiles([])
+              setcheck_ecg(false)
+              setshow_btn(false)
+              setResult(null);
+    setError(null);
+    setimage(null)
+    setLoading(false)
+    setLoading1(false)
+    setLoading3(false)
+     form.resetFields();
+              form2.resetFields();
 }
 
   return (
@@ -169,11 +187,7 @@ const retryAnalyse=()=>{
           <Form
             form={form1}
             onValuesChange={() => {
-              setPatcient(null);
-              form.resetFields();
-              setselect_complaint([])
-              setFiles([])
-              setcheck_ecg(false)
+             resetData()
             }}
             name="basic"
             labelCol={{ span: 24 }}
@@ -405,9 +419,7 @@ const retryAnalyse=()=>{
         </div>
         </div>:<></>}
        {result!=null || loading3?<div className="main_card">
-        <h1>{t('ecg_last_result')} <Tooltip placement="bottomRight" title={t("alert_ecg")}>
-                <span className='alert_icon'><IoAlertCircleSharp /></span>
-            </Tooltip></h1>
+        <h1>{t('ecg_last_result')}</h1>
         <div className="main_card_content">
             {loading3?<div className='mini_loader'><MoonLoader size={50} color={"#4FD1C5"} /></div>:
             <>

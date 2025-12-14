@@ -272,7 +272,7 @@ Tahlilda bemorning ma'lumotlari va shikoyatlarini ham inobatga oling.
 ❗️JAVOB QOIDALARI:
 - Javob FAQAT quyida berilgan JSON formatida bo‘lsin
 - JSON dan tashqarida hech qanday izoh, sharh yoki qo‘shimcha matn YOZILMASIN
-- Barcha matnlar RUS tilida bo‘lsin
+- Javobni O'ZBEK tilida taqdim et
 - Agar EKG rasmi sifati yetarli bo‘lmasa yoki aniq o‘lchash imkoni bo‘lmasa, mos maydonda:
   "o‘lchab bo‘lmaydi"
   deb yozilsin
@@ -349,7 +349,7 @@ asosiy EKG topilmalar va umumiy klinik baho."
   — EKG belgisi
   — klinik ahamiyati qisqacha tushuntirilsin
 
-❗️Javob FAQAT JSON bo‘lsin.
+❗️Javob FAQAT JSON bo‘lsin va O'ZBEK tilida bo'lsin
     """
     return prompt_header
 
@@ -414,6 +414,7 @@ def render_12_lead_png(leads: dict, fs: float = 500.0) -> bytes:
         ax.set_xticks(np.arange(0, len(y)/2, SMALL), minor=True)
         ax.set_yticks(np.arange(-13, 2, 0.5))  
         ax.set_yticks(np.arange(-13, 2, 0.1), minor=True)
+        ax.minorticks_off()
 
     fig.tight_layout()
     fig.subplots_adjust(hspace=0.2, wspace=0.02)
@@ -421,6 +422,7 @@ def render_12_lead_png(leads: dict, fs: float = 500.0) -> bytes:
 
     for ax in axes.flatten():
         ax.grid(False)
+        ax.minorticks_off()
 
     fig_axes = fig.add_subplot(111, frame_on=True, zorder=-100)
     fig_axes.set_xticks(np.arange(0, len(y), BIG), minor=False)
