@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import SideBar from '../../components/SideBar'
 import Header from '../../components/Header'
 import { useTranslation } from 'react-i18next'
@@ -6,9 +6,26 @@ import { Route, Routes } from 'react-router-dom'
 import ClinicInfo from './pages/ClinicInfo'
 import EkgAnalyzer from '../ekg_analyse/EkgAnalyzer'
 import EcgAnalyzer from './ecg_analyse/EcgAnalyzer'
+import { useStore } from '../../store/Store'
+import { get_complaints_data } from '../../host/requests/ComplaintsRequest'
 
 export default function Main() {
     const {t}=useTranslation()
+    const {complaints, setcomplaints}=useStore()
+    useEffect(()=>{
+         if(complaints.length==0){
+            getComplaints()
+         }
+    }, [])
+    const getComplaints=async()=>{
+        try{
+             var res=await get_complaints_data()
+             console.log(res)
+             setcomplaints(res.data)
+        }catch(err){
+            console.log(err)
+        }
+    }
   return (
     <div className='main_box'>
         <SideBar/>

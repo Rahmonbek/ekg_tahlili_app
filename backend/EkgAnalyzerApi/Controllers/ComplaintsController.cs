@@ -23,7 +23,7 @@ public class ComplaintsController : ControllerBase
         if (userIdClaim == null)
             return Unauthorized(new { message = "Token invalid" });
 
-        var complaints=_context.Complaints.OrderBy(v => v.Id);
+        var complaints=_context.Complaints.OrderBy(v => v.NameUz);
        
 
         return Ok(complaints);

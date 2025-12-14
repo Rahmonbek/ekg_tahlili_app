@@ -15,7 +15,7 @@ namespace EkgAnalyzerApi.Models
         public string Passport { get; set; }
 
         [Column("birthdate")]
-        public DateTime BirthDate { get; set; }
+        public DateOnly BirthDate { get; set; }
 
         [Column("firstname")]
         public string FirstName { get; set; }

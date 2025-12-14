@@ -187,6 +187,36 @@
           }
         }
       }
+    },
+    "/api/patcient/get-patient-by-passport": {
+      "get": {
+        "tags": [
+          "Patcient"
+        ],
+        "parameters": [
+          {
+            "name": "passport",
+            "in": "query",
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "birthdate",
+            "in": "query",
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
     }
   },
   "components": {

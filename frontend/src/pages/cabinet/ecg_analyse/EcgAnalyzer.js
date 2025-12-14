@@ -1,16 +1,33 @@
-import { Button, Col, DatePicker, Form, Input, Row } from 'antd'
+import { Button, Col, DatePicker, Form, Input, Row, Select } from 'antd'
+import Cleave from 'cleave.js/react'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FaBuilding } from 'react-icons/fa'
+import { FaBuilding, FaFemale, FaMale } from 'react-icons/fa'
 import { FaAddressCard, FaCalendarDays } from 'react-icons/fa6'
 import InputMask from "react-input-mask";
+import { get_patcient_by_passport } from '../../../host/requests/PatcientRequest'
 
 const formatDate="dd.mm.yyyy"
 
 export default function EcgAnalyzer() {
-    const [loading, setloading]=useState()
+    const [loading, setloading]=useState(false)
     const {t}=useTranslation()
-    const searchPatcient=(val)=>{
+    const [gender, setGender] = useState(true);
+    const [check_ecg, setcheck_ecg] = useState(false);
+    const [patcient, setpatcient] = useState(null);
+    const searchPatcient=async(val)=>{
+       try{
+        setloading(true)
+        var res=await get_patcient_by_passport(val)
+        console.log(res)
+       }catch(err){
+
+       }finally{
+        setloading(false)
+       }
+    }
+
+    const savePatcient=(val)=>{
        console.log(val)
     }
   return (
@@ -35,7 +52,7 @@ export default function EcgAnalyzer() {
     
   >
     <Row>
-        <Col  className='main_col' lg={6} md={24}>
+        <Col  className='main_col' lg={8} md={24}>
         <Form.Item
       name="passport"
       label={t("passport_seria")}
@@ -79,7 +96,7 @@ export default function EcgAnalyzer() {
 </InputMask>
     </Form.Item>
         </Col>
-        <Col  className='main_col' lg={6} md={24}>
+        <Col  className='main_col' lg={8} md={24}>
         <Form.Item
       name="birthdate"
       label={t("birthdate")}
@@ -97,7 +114,7 @@ export default function EcgAnalyzer() {
         <Col  className='main_col' lg={6} md={24}>
          <div className='form_div'>
       <Button className='btn_form' loading={loading} htmlType="submit">
-        {t("save_data")}
+        {t("search_patcient")}
       </Button>
        
   </div>
@@ -110,7 +127,140 @@ export default function EcgAnalyzer() {
     
     
   </Form>
-                    </div>
+<div className={`hidden_box ${check_ecg?"showed_box":''}`}>
+    <Form
+    name="basic"
+    labelCol={{
+      span: 24,
+    }}
+    wrapperCol={{
+      span: 24,
+    }}
+   initialValues={{
+      remember: true,
+    }}
+    onFinish={savePatcient}
+    // onFinishFailed={onFinishFailed}
+    
+  >
+<Row>
+    <Col  className='main_col' lg={8} md={24}>
+      
+ <Form.Item
+      name="lastname"
+      label={t("lastname")}
+      normalize={(value) =>
+  value
+    ?.toUpperCase()
+}
+      rules={[
+        {
+           required: true,
+           message: "",
+            
+        }
+      ]}
+    >
+      <Input prefix={<FaBuilding />} className='login_input' placeholder={t("enter_lastname")} />
+    </Form.Item>
+    </Col>
+    <Col  className='main_col' lg={8} md={24}>
+ <Form.Item
+  name="firstname"
+  label={t("firstname")}
+  normalize={(value) =>
+  value
+    ?.toUpperCase()
+}
+  rules={[{ required: true, message: "" }]}
+>
+  <Input
+    prefix={<FaBuilding />}
+    className="login_input"
+    placeholder={t("enter_firstname")}
+  />
+</Form.Item>
+    </Col>
+    <Col  className='main_col' lg={8} md={24}>
+      
+ <Form.Item
+      name="surename"
+      label={t("surename")}
+      normalize={(value) =>
+  value
+    ?.toUpperCase()
+}
+      rules={[
+        {
+           required: true,
+           message: "",
+            
+        }
+      ]}
+    >
+      <Input prefix={<FaBuilding />} className='login_input' placeholder={t("enter_surename")} />
+    </Form.Item>
+    </Col>
+    <Col  className='main_col' lg={8} md={24}>
+      
+ <Form.Item
+      name="gender"
+      label={t("gender")}
+      rules={[
+        {
+           required: true,
+           message: "",
+            
+        }
+      ]}
+    >
+       <Select
+      prefix={gender === true ? <FaMale /> : <FaFemale />}
+      defaultValue={true}
+      style={{ width: "100%" }}
+    onChange={(value) => setGender(value)}
+      options={[
+        { value: true, label: t("male") },
+        { value: false, label: t("female") },
+      ]}
+    />
+    </Form.Item>
+    </Col>
+    <Col  className='main_col' lg={8} md={24}>
+     <Form.Item
+              
+                 wrapperCol={{
+      span: 24,
+    }}
+    label={t("phone_number")}
+                name={"phone_number"}
+                rules={[{ required: true, message: '' }, { len: 19, message: '' }]}
+              >
+                <Cleave
+    options={{
+      prefix: "+998",
+      delimiters: [" (", ") ", "-", "-"],
+      blocks: [4, 2, 3, 2, 2],
+      numericOnly: true
+    }}
+    placeholder="+998 (__) ___-__-__"
+    className="ant-input claveInput"
+    style={{ width: "100%" }}
+  />
+              </Form.Item>
+    </Col>
+     <Col  className='main_col' lg={8} md={24}>
+         <div className='form_div'>
+      <Button className='btn_form' loading={loading} htmlType="submit">
+        {t("saveData")}
+      </Button>
+       
+  </div>
+        </Col>
+</Row>
+
+  </Form>
+          </div>          </div>
     </div>
     
     </div>

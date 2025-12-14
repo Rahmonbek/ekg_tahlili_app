@@ -62,7 +62,19 @@
  "passport_seria":"Passport seriyasi",
  "enter_passport_seria":"Passport seriyasi va raqamini kiriting",
  "enter_birthdate":"Tug'ilgan sanani kiriting",
- "birthdate":"Tug'ilgan sana"
+ "birthdate":"Tug'ilgan sana",
+ "search_patcient":"Qidirish",
+ "enter_firstname":"Bemorning ismini kiriting",
+ "firstname":"Ism",
+ "enter_lastname":"Bemorning familiyasini kiriting",
+ "lastname":"Familiya",
+ "enter_surename":"Bemorning sharifini kiriting",
+ "surename":"Sharif",
+ "female":"Ayol",
+ "male":"Erkak",
+ "gender":"Jins",
+ "phone_number":"Telefon raqam",
+ "saveData":"Ma'lumotlar saqlash"
 
 
 }

@@ -63,9 +63,12 @@ body{background-color: #F7FAFC;}
 .auth_brand{display: flex; align-items: center; width: 30%;}
 .auth_brand img{height: 70px; margin-right: 15px;}
 .auth_brand h1{font-size: var(--medium_size); color: var(--text_color);}
-input{padding: 10px !important; font-size: var(--small_size) !important; border-radius: 12px !important;}
+
+input, .ant-select-selection-item{padding: 10px !important; font-size: var(--small_size) !important; height: 46px !important; display: flex !important; align-items: center; border-radius: 12px !important;}
 .ant-input-affix-wrapper {padding: 0px !important; padding-right: 15px !important; border-radius: 12px !important;}
-.ant-input-prefix{padding-left: 10px !important; font-size: var(--large_size); margin-right: 0px !important; color: var(--text_second_color);}
+.ant-input-prefix, .ant-select-prefix{display: flex !important; padding-left: 10px !important; font-size: var(--large_size) !important; 
+  margin-right: 0px !important;margin-inline-end: 0px !important; color: var(--text_second_color) !important;}
+.ant-select-selector{height: 46px !important; border-radius: 12px !important; padding-left: 0px !important;}
 .ant-form-item-required::before, .ant-form-item-required::after{display: none !important; }
 .ant-form-item-required{padding-left: 10px !important; font-size: var(--small_size) !important; font-weight: 500; height: max-content !important;
 color: var(--text_second_color) !important; }
@@ -157,6 +160,8 @@ input:-webkit-autofill:active {
 .form_div{height: 100%; display: flex; align-items: center !important; padding-top: 8px;}
 .form_div button{margin-top: 0px !important;} 
 .input_date{padding: 10px; border: 1px solid #d9d9d9; width: 100%; border-radius: 12px;}
+.hidden_box{max-height: 0px; overflow: hidden; transition: 0.5s;}
+.showed_box{max-height: 100vh !important; }
     @media (max-width:1700px){
       .login_img img{width: 70%;}
     }

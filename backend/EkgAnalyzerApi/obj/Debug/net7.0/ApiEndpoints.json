@@ -98,5 +98,26 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PatcientController",
+    "Method": "GetPatientByPassport",
+    "RelativePath": "api/patcient/get-patient-by-passport",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "passport",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "birthdate",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
   }
 ]
