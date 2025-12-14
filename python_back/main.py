@@ -676,7 +676,57 @@ def calculate_qrs_axis_robust(leads, fs):
     except Exception as e:
         print(f"Xatolik: {e}")
         return None
-    
+
+def get_st_segment_mv(leads: dict, fs: int) -> float:
+    """
+    Returns the median ST deviation (mV) across key leads (V4-V6, I, aVL)
+    Positive → ST elevation
+    Negative → ST depression
+    0 → normal / no significant deviation
+    """
+
+    # Leads to consider (lateral and high-priority)
+    key_leads = ["V4", "V5", "V6", "I", "aVL"]
+    st_devs = []
+
+    for lead in key_leads:
+        if lead not in leads:
+            continue
+
+        signal = leads[lead]
+        try:
+            signals, info = nk.ecg_process(signal, sampling_rate=fs)
+            r_peaks = info["ECG_R_Peaks"]
+
+            st_vals = []
+            pr_vals = []
+
+            for r in r_peaks:
+                j = r + int(0.04 * fs)
+                st = j + int(0.06 * fs)
+                pr = r - int(0.2 * fs)
+
+                if 0 < pr and st < len(signal):
+                    st_vals.append(signal[st])
+                    pr_vals.append(signal[pr])
+
+            if len(st_vals) < 3:
+                continue
+
+            st_level = np.median(st_vals)
+            baseline = np.median(pr_vals)
+
+            st_devs.append(st_level - baseline)
+
+        except:
+            continue
+
+    if not st_devs:
+        return 0.0
+
+    # Median across selected leads → general ST deviation
+    return float(np.median(st_devs)*0.1)
+
 def compute_full_ecg_v3(leads, fs=500):
     heart_rate_bpm_array=[]
     pr_intervals_ms=[]
@@ -738,7 +788,7 @@ def compute_full_ecg_v3(leads, fs=500):
         qtc_final = calculate_qtc(qt_interval_ms, heart_rate_bpm)
     
     qrs_axis_degree=calculate_qrs_axis_robust(leads, fs)
-    
+    st_segment=get_st_segment_mv(leads, fs)
     result = {
         "heart_rate_bpm": round(heart_rate_bpm, 1) if heart_rate_bpm is not None else None,
         "pr_interval_ms": round(pr_interval_ms,1) if pr_interval_ms is not None else None,
@@ -747,6 +797,7 @@ def compute_full_ecg_v3(leads, fs=500):
         "rr_interval_ms": round(rr_interval_ms, 1) if rr_interval_ms is not None else None,
         "qrs_duration_ms": round(qrs_interval_ms, 1) if qrs_interval_ms is not None else None,
         "qrs_axis_degree": round(qrs_axis_degree, 1) if qrs_axis_degree is not None else None,
+        "st_segment_mv": round(st_segment, 2) if st_segment is not None else None,
     }
     return result
 
@@ -834,7 +885,7 @@ async def analyze(
    
     # --- Compose prompt ---
     prompt = compose_prompt_for_openai(digitals, age, gender, complaint, lang)
-    print(prompt)
+    
     
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)
@@ -861,7 +912,7 @@ async def analyze(
 
     # --- Encode PNG to base64 for frontend ---
     png_b64 = base64.b64encode(png_bytes).decode('ascii')
-
+    print(parsed)
     return JSONResponse(content={
         "openai_file_id": file_id,
         "ai_response": parsed,
