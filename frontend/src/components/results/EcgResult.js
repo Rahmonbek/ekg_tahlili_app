@@ -85,7 +85,7 @@ export default function EcgResult({error, image, result}) {
         
       {result.automatic_analysis ? (
   <> 
-  <div className="ekg-item-text"><b>{result.automatic_analysis_bool==1?"✅":result.automatic_analysis_bool==2?'⚠️':result.automatic_analysis_bool==3?"❌":"⭐"} Avtomatik tahlil (AI xulosasi): </b><span>{result.automatic_analysis}</span></div>
+  <div className="ekg-item-text"><b>{String(result.automatic_analysis_bool).indexOf('1')!=-1?"✅":String(result.automatic_analysis_bool).indexOf('2')!=-1?'⚠️':String(result.automatic_analysis_bool).indexOf('3')!=-1?"❌":"⭐"} Avtomatik tahlil (AI xulosasi): </b><span>{result.automatic_analysis}</span></div>
   </>
 ) : null}
  {result.AI_recommendations ? (

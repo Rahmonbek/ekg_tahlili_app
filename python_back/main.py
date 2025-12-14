@@ -345,6 +345,7 @@ asosiy EKG topilmalar va umumiy klinik baho."
 
 ### QO‘SHIMCHA TALABLAR:
 - "automatic_analysis" bo‘limida faqat BOR patologiyalar yozilsin
+- "automatic_analysis_bool" bo'limida faqat 1 yoki 2 yoki 3 sonlari bo'lsin ortiqcha narsa kerak emas 
 - Agar patologiya yo‘q bo‘lsa, nima sababdan yo‘qligi aniq tushuntirilsin
 - EKG apparatida yo‘q bo‘lgan parametrlar grafikdan o‘lchab chiqilsin
 - Har bir raqam yonida birliklar (bpm, ms, mV, gradus) bo‘lsin
