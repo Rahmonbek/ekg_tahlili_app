@@ -87,7 +87,11 @@
  "ecg_last_result":"So'ngi EKG tahlili",
  "select_file_error":"Iltimos, kamida bitta fayl tanlang!",
  "please_wait":"EKG tahlil uzoqroq vaqt talab qilishi mumkin. Iltimos natijani kuting va browser oynasini yangilamang.",
- "retry_ecg_analyse":"Yangi EKG ni tahlil qilish"
+ "retry_ecg_analyse":"Yangi EKG ni tahlil qilish",
+ "english":"Ingliz tili",
+ "russian":"Rus tili",
+ "uzbek":"O'zbek tili",
+ "lang_analyse":"Tashxis tilini tanlang"
 
 
 

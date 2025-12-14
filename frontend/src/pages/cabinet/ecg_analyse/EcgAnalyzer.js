@@ -14,6 +14,7 @@ import { analyzeEkgFile } from '../../../host/EkgService';
 import EcgResult from '../../../components/results/EcgResult';
 import { MoonLoader } from 'react-spinners';
 import { warningAlert } from '../../../tools/Alerts';
+import { MdLanguage } from 'react-icons/md';
 
 export default function EcgAnalyzer() {
   const [loading, setLoading] = useState(false);
@@ -25,6 +26,7 @@ export default function EcgAnalyzer() {
     const [error, setError] = useState(null);
   const { t } = useTranslation();
   const [gender, setGender] = useState(true);
+  const [lang, setlang] = useState('uz');
   const [select_complaint, setselect_complaint] = useState([]);
   const [patcient, setPatcient] = useState(null);
   const [passport, setPassport] = useState(null);
@@ -114,6 +116,7 @@ const onChangeComplaints=(val)=>{
       files.forEach((f) => formData.append("file", f));
       select_complaint.forEach((f) => formData.append("complaint", f.nameUz));
       formData.append('gender', patcient.gender?"erkak":'ayol')
+      formData.append('lang', lang)
       formData.append('age', calculateAge(patcient.birthDate))
 
       const res = await analyzeEkgFile(formData);
@@ -375,7 +378,7 @@ const resetData=()=>{
                 
               >
               <Row>
-                <Col lg={8} md={24}>
+                <Col  className="main_col" lg={8} md={24}>
 
                      <Form.Item
   name="select_ecg_file"
@@ -396,7 +399,27 @@ const resetData=()=>{
   </div>
 </Form.Item>
                 </Col>
-                <Col lg={24} md={24}>
+                 <Col className="main_col" lg={8} md={24}>
+                    <Form.Item
+                      name="lang"
+                      label={t('lang_analyse')}
+                      rules={[{ required: true, message: '' }]}
+                    >
+                      <Select
+                        style={{ width: '100%' }}
+                        value={lang}
+                        prefix={<MdLanguage />}
+                        defaultValue={lang}
+                        onChange={(value) => setlang(value)}
+                        options={[
+                          { value: 'uz', label: <> {t('uzbek')}</> },
+                          { value: 'ru', label: <>{t('russian')}</> },
+                          { value: 'en', label: <>{t('english')}</> },
+                        ]}
+                      />
+                    </Form.Item>
+                  </Col>
+                <Col  className="main_col" lg={24} md={24}>
                 <label>{t("patcient_complaint")}</label>
                 <br/>
                 <Row>
@@ -424,6 +447,7 @@ const resetData=()=>{
             {loading3?<div className='mini_loader'><MoonLoader size={50} color={"#4FD1C5"} /></div>:
             <>
             <EcgResult error={error} result={result} image={image} />
+            <br/>
             <Row>
             <Col lg={9} md={24}></Col>
                 <Col lg={6} md={24}>
@@ -434,7 +458,7 @@ const resetData=()=>{
                 <Col lg={9} md={24}></Col>
             </Row></>
             }
-            
+            <br/>
             </div></div>:<></>}
             <br/>
             <br/>

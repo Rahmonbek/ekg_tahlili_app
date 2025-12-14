@@ -223,9 +223,14 @@ def openai_upload_file(api_key: str, file_bytes: bytes, filename: str = "ecg.png
         raise RuntimeError(f"OpenAI file upload failed: {e}")
 
 # ---------------- Compose prompt ----------------
-def compose_prompt_for_openai(digitals, age, gender, complaint) -> str:
+def compose_prompt_for_openai(digitals, age, gender, complaint, lang) -> str:
     prompt_header = ""
-
+    language = (
+    "O'ZBEK" if lang == 'uz'
+    else "RUS" if lang == 'ru'
+    else "INGLIZ" if lang == 'en'
+    else "O'ZBEK"
+    )
     # Bemor ma'lumotlari
     if age is not None or gender is not None:
         prompt_header += "Bemor ma'lumotlari:"
@@ -252,7 +257,7 @@ def compose_prompt_for_openai(digitals, age, gender, complaint) -> str:
     
     
     print(digitals_str)
-    prompt_header += """
+    prompt_header += f"""
     
     Siz tajribali kardiolog shifokorsiz.
 
@@ -272,7 +277,7 @@ Tahlilda bemorning ma'lumotlari va shikoyatlarini ham inobatga oling.
 ❗️JAVOB QOIDALARI:
 - Javob FAQAT quyida berilgan JSON formatida bo‘lsin
 - JSON dan tashqarida hech qanday izoh, sharh yoki qo‘shimcha matn YOZILMASIN
-- Javobni O'ZBEK tilida taqdim et
+- Javobni {language} tilida taqdim et
 - Agar EKG rasmi sifati yetarli bo‘lmasa yoki aniq o‘lchash imkoni bo‘lmasa, mos maydonda:
   "o‘lchab bo‘lmaydi"
   deb yozilsin
@@ -281,7 +286,7 @@ Tahlilda bemorning ma'lumotlari va shikoyatlarini ham inobatga oling.
 
 ### JSON SHABLONI (QAT’IY SAQLANSIN):
 
-{
+{"""{
   "digital_measurements": {
     "HR": "Yurak urish tezligi (bpm), raqamli qiymat + tibbiy baho (normal/patologik)",
     "PR_interval": "PR interval (ms), raqamli qiymat + izoh",
@@ -334,7 +339,7 @@ Agar kasallik aniqlansa, umumiy davolash yo‘nalishini qisqacha yoz.",
 
   "final_summary": "Tibbiy asoslangan yakuniy xulosa:
 asosiy EKG topilmalar va umumiy klinik baho."
-}
+}"""}
 
 ---
 
@@ -349,7 +354,7 @@ asosiy EKG topilmalar va umumiy klinik baho."
   — EKG belgisi
   — klinik ahamiyati qisqacha tushuntirilsin
 
-❗️Javob FAQAT JSON bo‘lsin va O'ZBEK tilida bo'lsin
+❗️Javob FAQAT JSON bo‘lsin va {language} tilida bo'lsin
     """
     return prompt_header
 
@@ -752,8 +757,9 @@ from fastapi import Form
 @app.post("/api/analyze")
 async def analyze(
     file: list[UploadFile] = File(...),
-    complaint: list[str] = Form(...),
+    complaint: list[str] | None = Form(None),
     gender: str = Form(...),
+    lang: str = Form(...),
     age: int = Form(...)
 ):
     if OPENAI_API_KEY is None:
@@ -826,7 +832,7 @@ async def analyze(
         })
    
     # --- Compose prompt ---
-    prompt = compose_prompt_for_openai(digitals, age, gender, complaint)
+    prompt = compose_prompt_for_openai(digitals, age, gender, complaint, lang)
     print(prompt)
     
     try:
