@@ -1,6 +1,7 @@
 {
  "lang":"UZ",
  "error_api":"uz",
+ "data_lang":"Uz",
  "email":"Email",
  "password":"Parol",
  "enter_email":"Emailingizni kiriting",
@@ -74,7 +75,19 @@
  "male":"Erkak",
  "gender":"Jins",
  "phone_number":"Telefon raqam",
- "saveData":"Ma'lumotlar saqlash"
+ "saveData":"Ma'lumotlar saqlash",
+ "ecg_analyse":"EKG ni tahlil qilish",
+ "alert_patcient":"Bemorning ma’lumotlarini pasportdagi ma’lumotlar bilan bir xil tarzda kiriting.",
+ "alert_ecg":"EKG faylini yuklashda aynan shu bemorga tegishli fayl ekanligigiga ishonch hosil qiling.",
+ "select_ecg_file":"EKG fayl tanlang",
+ "access_file_types":"Fayl turlari",
+ "patcient_complaint":"Bemor shikoyatlarini tanglang",
+ "checking":"Tahlil qilinmoqda...",
+ "check":"Tahlil qilish",
+ "ecg_last_result":"So'ngi EKG tahlili",
+ "select_file_error":"Iltimos, kamida bitta fayl tanlang!",
+ "please_wait":"EKG tahlil uzoqroq vaqt talab qilishi mumkin. Iltimos natijani kuting va browser oynasini yangilamang.",
+ "retry_ecg_analyse":"Yangi EKG ni tahlil qilish"
 
 
 }

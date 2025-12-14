@@ -1,107 +1,10 @@
-import React, { useState } from "react";
-import { analyzeEkgFile } from "../../host/EkgService";
+import React from 'react'
 
-const EkgAnalyzer = () => {
-  const [files, setFiles] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [show_btn, setshow_btn] = useState(true);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
-  const [image, setimage] = useState(null)
-
-  const [paperSpeed, setPaperSpeed] = useState(25); // mm/s
-  const [amplitude, setAmplitude] = useState(10);   // mm/mV
-  const [freqLow, setFreqLow] = useState(0.5);      // Hz
-  const [freqHigh, setFreqHigh] = useState(35);     // Hz
-
-  const handleChange = (e) => {
-    setshow_btn(true)
-    setFiles(Array.from(e.target.files))};
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (files.length === 0) return alert("Iltimos, kamida bitta fayl tanlang!");
-
-    setLoading(true);
-    setResult(null);
-    setError(null);
-    setimage(null)
-
-    try {
-      const formData = new FormData();
-      files.forEach((f) => formData.append("file", f));
-      formData.append("paper_speed", paperSpeed);
-      formData.append("amplitude", amplitude);
-      formData.append("freq_low", freqLow);
-      formData.append("freq_high", freqHigh);
-
-      const res = await analyzeEkgFile(formData);
-      console.log(res)
-      setshow_btn(false)
-      setimage(res.ecg_png_base64)
-      let parsedResult;
-     try {
-  // agar string bo'lsa JSON.parse qilamiz
-  parsedResult = typeof res.ai_response === "string" 
-    ? JSON.parse(res.ai_response) 
-    : res.ai_response;
-} catch (e) {
-  // parse bo‘lmasa, shunchaki original qiymatni o‘rnatamiz
-  parsedResult = res.ai_response;
-}
-
-setResult(parsedResult);
-
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+export default function EcgResult({error, image, result}) {
   return (
-    <div className="ekg-container">
-      <h2 className="ekg-title">🫀 EKG Tahlil Platformasi</h2>
+    <div>
 
-      <form className="ekg-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>EKG fayl tanlang:</label>
-          <input
-            type="file"
-            multiple
-            onChange={handleChange}
-            accept=".dat,.hea,.csv,.xml,.jpg,.png,.pdf,.edf,.mat,.zip"
-          />
-        </div>
-          
-        <div className="form-group">
-          <label>Qog‘oz tezligi (mm/s):</label>
-          <input
-            type="number"
-            value={paperSpeed}
-            onChange={(e) => setPaperSpeed(parseFloat(e.target.value))}
-            step="1"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Signal kattaligi (mm/mV):</label>
-          <input
-            type="number"
-            value={amplitude}
-            onChange={(e) => setAmplitude(parseFloat(e.target.value))}
-            step="0.1"
-          />
-        </div>
-
-        
-
-        {show_btn?<button type="submit" disabled={loading} className="ekg-button">
-          {loading ? "Tahlil qilinmoqda..." : "Tahlil qilish"}
-        </button>:<></>}
-      </form>
-
-      {error && <div className="ekg-error">❌ Xatolik: {error}</div>}
+        {error && <div className="ekg-error">❌ Xatolik: {error}</div>}
       
        {image!=null?<div className="ekg-image"><img style={{width:'100%'}} src={`data:image/png;base64,${image}`}/></div>:<></>}
       {result && (
@@ -196,15 +99,6 @@ setResult(parsedResult);
 ) : null}
 </div>
       )}
-      {/* {result && (
-        <pre className="ekg-result">
-          {typeof result === "object"
-            ? JSON.stringify(result, null, 2)
-            : result}
-        </pre>
-      )} */}
     </div>
-  );
-};
-
-export default EkgAnalyzer;
+  )
+}

@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import EkgAnalyzer from './pages/ekg_analyse/EkgAnalyzer'
 import './App.css'
 import './Ekg.css'
-import Login from './pages/auth/components/Login'
 import Auth from './pages/auth/Auth'
 import { useTranslation } from 'react-i18next';
 import './locale/i18next'
-import { Route, Routes } from 'react-router-dom'
 import { useStore } from './store/Store'
 import Main from './pages/cabinet/Main'
 import { get_clinic_data } from './host/requests/ClinicRequest'

@@ -122,14 +122,14 @@
   },
   {
     "ContainingType": "PatcientController",
-    "Method": "SavePatcientData",
+    "Method": "SavePatientData",
     "RelativePath": "api/patcient/save-patient-data",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "patcient",
+        "Name": "patientDto",
         "Type": "EkgAnalyzerApi.DTOs.PatcientDTO",
         "IsRequired": true
       }

@@ -41,35 +41,58 @@ public class PatcientController : ControllerBase
     }
 
     [HttpPost("save-patient-data")]
-    public async Task<IActionResult> SavePatcientData(PatcientDTO patcient)
+    public async Task<IActionResult> SavePatientData(PatcientDTO patientDto)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
             return Unauthorized(new { message = "Token invalid" });
 
-        DateOnly birthDate = DateOnly.Parse(patcient.birthdate);
+        // Parse birthdate
+        if (!DateOnly.TryParse(patientDto.birthdate, out DateOnly birthDate))
+            return BadRequest(new { message = "Invalid birthdate format" });
 
-        var new_patient = new Patient
+        // Tekshirish: patient mavjudmi (passport + birthdate)
+        var existingPatient = await _context.Patients
+            .FirstOrDefaultAsync(p =>
+                p.Passport == patientDto.passport.ToUpper() &&
+                p.BirthDate == birthDate
+            );
+
+        if (existingPatient != null)
         {
-            Passport = patcient.passport.ToUpper(),
-            BirthDate = birthDate, 
-            FirstName = patcient.firstname,
-            LastName = patcient.lastname,
-            SureName = patcient.surename,
-            Gender = patcient.gender,
-            Phone = patcient.phone,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+            // ✅ Update mavjud patient
+            existingPatient.FirstName = patientDto.firstname;
+            existingPatient.LastName = patientDto.lastname;
+            existingPatient.SureName = patientDto.surename;
+            existingPatient.Gender = patientDto.gender;
+            existingPatient.Phone = patientDto.phone;
+            existingPatient.UpdatedAt = DateTime.UtcNow;
 
-        await _context.Patients.AddAsync(new_patient);
-        await _context.SaveChangesAsync();
+            _context.Patients.Update(existingPatient);
+            await _context.SaveChangesAsync();
 
+            return Ok(existingPatient);
+        }
+        else
+        {
+            // ✅ Create yangi patient
+            var newPatient = new Patient
+            {
+                Passport = patientDto.passport.ToUpper(),
+                BirthDate = birthDate,
+                FirstName = patientDto.firstname,
+                LastName = patientDto.lastname,
+                SureName = patientDto.surename,
+                Gender = patientDto.gender,
+                Phone = patientDto.phone,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
 
-        
-        if (new_patient == null)
-            return NotFound(new { message = "Patient not found" });
+            await _context.Patients.AddAsync(newPatient);
+            await _context.SaveChangesAsync();
 
-        return Ok(new_patient);
+            return Ok(newPatient);
+        }
     }
 }

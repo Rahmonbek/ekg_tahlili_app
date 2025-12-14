@@ -6,3 +6,7 @@ export const dangerAlert=(content)=>{
 export const successAlert=(content)=>{
     message.success(content, 3)
 } 
+
+export const warningAlert=(content)=>{
+    message.warning(content, 5)
+} 

@@ -9,7 +9,6 @@ public class PatcientDTO
     public string firstname { get; set; }
     public string lastname { get; set; }
     public string surename { get; set; }
-    public string phone_number { get; set; }
     public string passport { get; set; }
     public string phone { get; set; }
     public string birthdate { get; set; }

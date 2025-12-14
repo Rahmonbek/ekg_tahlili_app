@@ -299,10 +299,6 @@
             "type": "string",
             "nullable": true
           },
-          "phone_number": {
-            "type": "string",
-            "nullable": true
-          },
           "passport": {
             "type": "string",
             "nullable": true

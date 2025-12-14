@@ -223,15 +223,34 @@ def openai_upload_file(api_key: str, file_bytes: bytes, filename: str = "ecg.png
         raise RuntimeError(f"OpenAI file upload failed: {e}")
 
 # ---------------- Compose prompt ----------------
-def compose_prompt_for_openai(digitals) -> str:
-    
+def compose_prompt_for_openai(digitals, age, gender, complaint) -> str:
+    prompt_header = ""
+
+    # Bemor ma'lumotlari
+    if age is not None or gender is not None:
+        prompt_header += "Bemor ma'lumotlari:"
+        if age is not None:
+            prompt_header += f"\n - Yoshi {age}"
+        if gender is not None:
+            prompt_header += f"\n - Jinsi {gender}"
+
+    # Shikoyatlar
+    if complaint and len(complaint) > 0:
+        complaint_str = "\n".join([f"- {c}" for c in complaint])
+        prompt_header += f"\n\nBemorning shikoyatlari:\n{complaint_str}"
+
+    # EKG parametrlar
     if isinstance(digitals, dict):
         digitals_str = json.dumps(digitals, ensure_ascii=False, indent=2)
     else:
         digitals_str = str(digitals)
-    prompt_header = f"""
-    EKG aparatdan olingan ekg parametrlari qiymatlari:
-    {digitals_str}"""
+
+    prompt_header += f"\n\nEKG aparatdan olingan ekg parametrlari qiymatlari:\n{digitals_str}"
+
+    
+        
+    
+    
     print(digitals_str)
     prompt_header += """
     
@@ -239,18 +258,21 @@ def compose_prompt_for_openai(digitals) -> str:
 
 Sizga:
 1) EKG grafik rasmi
-2) EKG apparatidan olingan raqamli parametrlar
+2) Bemor ma'lumotlari
+3) Bemor shikoyatlari
+4) EKG grafikdan aniqlangan raqamli parametrlar
 
 yuboriladi.
 
 Vazifa:
-EKG grafiklarini va berilgan raqamli EKG parametrlarini birgalikda tahlil qiling.
-Grafikdagi vizual (paralogik) o‘zgarishlarni ham inobatga oling.
+EKG grafiklarini, bemor shikoyatlarini, bemor ma'lumotlarini va berilgan raqamli EKG parametrlarini birgalikda tahlil qiling.
+Grafikdagi vizual (paralogik) o‘zgarishlarni ham inobatga oling. 
+Tahlilda bemorning ma'lumotlari va shikoyatlarini ham inobatga oling.
 
 ❗️JAVOB QOIDALARI:
 - Javob FAQAT quyida berilgan JSON formatida bo‘lsin
 - JSON dan tashqarida hech qanday izoh, sharh yoki qo‘shimcha matn YOZILMASIN
-- Barcha matnlar O‘ZBEK tilida bo‘lsin
+- Barcha matnlar RUS tilida bo‘lsin
 - Agar EKG rasmi sifati yetarli bo‘lmasa yoki aniq o‘lchash imkoni bo‘lmasa, mos maydonda:
   "o‘lchab bo‘lmaydi"
   deb yozilsin
@@ -279,7 +301,7 @@ Grafikdagi vizual (paralogik) o‘zgarishlarni ham inobatga oling.
     "P_QRS_T_morphology": "P, QRS va T to‘lqin shakllari haqida qisqa tavsif"
   },
 
-  "automatic_analysis": "EKG asosida FAQAT ANIQLANGAN kasallik yoki patologik holatlarni yoz.
+  "automatic_analysis": "EKG, bemor ma'lumotlari, bemor shikoyatlari va raqamli parametrlar asosida ANIQLANGAN kasalliklarni yoki patologik holatlarni yoz.
 Agar hech qanday kasallik aniqlanmasa, alohida tushuntir:
 — qaysi EKG ko‘rsatkichlari normal bo‘lgani sababli kasallik mavjud emasligi xulosa qilingan.
 
@@ -727,15 +749,16 @@ from fastapi import Form
 # ---------------- FastAPI endpoint: analyze ----------------
 @app.post("/api/analyze")
 async def analyze(
-    file: UploadFile = File(...),
-    paper_speed: float = Form(25.0),
-    gain: float = Form(10.0),
+    file: list[UploadFile] = File(...),
+    complaint: list[str] = Form(...),
+    gender: str = Form(...),
+    age: int = Form(...)
 ):
     if OPENAI_API_KEY is None:
         raise HTTPException(status_code=400, detail="Provide OpenAI API key in environment variable 'OPENAI_API_KEY'")
-    
-    content = await file.read()
-    fname = (file.filename or "upload").lower()
+    first_file: UploadFile = file[0]
+    content = await first_file.read()
+    fname = (first_file.filename or "upload").lower()
 
     is_image = fname.endswith(('.png','.jpg','.jpeg'))
 
@@ -801,9 +824,9 @@ async def analyze(
         })
    
     # --- Compose prompt ---
-    prompt = compose_prompt_for_openai(digitals)
-
-    # --- Call OpenAI ChatCompletion ---
+    prompt = compose_prompt_for_openai(digitals, age, gender, complaint)
+    print(prompt)
+    
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)
         resp = client.responses.create(
