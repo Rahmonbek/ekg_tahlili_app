@@ -15,13 +15,17 @@ export default function EcgAnalyzer() {
     const [gender, setGender] = useState(true);
     const [check_ecg, setcheck_ecg] = useState(false);
     const [patcient, setpatcient] = useState(null);
+    const [passport, setpassport] = useState(null);
+    const [birthdate, setbirthdate] = useState(null);
     const searchPatcient=async(val)=>{
        try{
         setloading(true)
+        setpassport(val.passport)
+        setbirthdate(val.birthdate)
         var res=await get_patcient_by_passport(val)
         console.log(res)
        }catch(err){
-
+         setpatcient({})
        }finally{
         setloading(false)
        }
@@ -127,7 +131,7 @@ export default function EcgAnalyzer() {
     
     
   </Form>
-<div className={`hidden_box ${check_ecg?"showed_box":''}`}>
+<div className={`hidden_box ${patcient!=null?"showed_box":''}`}>
     <Form
     name="basic"
     labelCol={{

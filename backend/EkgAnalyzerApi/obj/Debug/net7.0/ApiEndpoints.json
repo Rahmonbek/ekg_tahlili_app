@@ -119,5 +119,21 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PatcientController",
+    "Method": "SavePatcientData",
+    "RelativePath": "api/patcient/save-patient-data",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "patcient",
+        "Type": "EkgAnalyzerApi.DTOs.PatcientDTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   }
 ]

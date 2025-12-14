@@ -30,7 +30,7 @@ namespace EkgAnalyzerApi.Models
         public bool Gender { get; set; }
 
         [Column("phone")]
-        public bool Phone { get; set; }
+        public string Phone { get; set; }
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

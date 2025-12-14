@@ -7,8 +7,8 @@ namespace EkgAnalyzerApi.DTOs;
 public class UserDTO
 {
     public int Id { get; set; }
-    public string Email { get; set; } = default!;
+    public string Email { get; set; }
     public int? ClinicId { get; set; }
-    public bool Status { get; set; } = false;
+    public bool Status { get; set; }
 
 }

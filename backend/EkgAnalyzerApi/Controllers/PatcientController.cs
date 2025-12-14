@@ -1,4 +1,6 @@
 ﻿using EkgAnalyzerApi.Data;
+using EkgAnalyzerApi.DTOs;
+using EkgAnalyzerApi.Models;
 using EkgAnalyzerApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -36,5 +38,38 @@ public class PatcientController : ControllerBase
             return NotFound(new { message = "Patient not found" });
 
         return Ok(patient);
+    }
+
+    [HttpPost("save-patient-data")]
+    public async Task<IActionResult> SavePatcientData(PatcientDTO patcient)
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+            return Unauthorized(new { message = "Token invalid" });
+
+        DateOnly birthDate = DateOnly.Parse(patcient.birthdate);
+
+        var new_patient = new Patient
+        {
+            Passport = patcient.passport.ToUpper(),
+            BirthDate = birthDate, 
+            FirstName = patcient.firstname,
+            LastName = patcient.lastname,
+            SureName = patcient.surename,
+            Gender = patcient.gender,
+            Phone = patcient.phone,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        await _context.Patients.AddAsync(new_patient);
+        await _context.SaveChangesAsync();
+
+
+        
+        if (new_patient == null)
+            return NotFound(new { message = "Patient not found" });
+
+        return Ok(new_patient);
     }
 }
