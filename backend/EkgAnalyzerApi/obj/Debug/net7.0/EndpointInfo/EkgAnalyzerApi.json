@@ -141,6 +141,18 @@
         }
       }
     },
+    "/api/complaints/get-complaints": {
+      "get": {
+        "tags": [
+          "Complaints"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/Med/analyze": {
       "post": {
         "tags": [

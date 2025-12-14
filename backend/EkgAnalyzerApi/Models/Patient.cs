@@ -11,9 +11,6 @@ namespace EkgAnalyzerApi.Models
         [Column("id")]
         public int Id { get; set; }
 
-        [Column("clinic_id")]
-        public int ClinicId { get; set; }
-
         [Column("passport")]
         public string Passport { get; set; }
 
@@ -28,6 +25,12 @@ namespace EkgAnalyzerApi.Models
 
         [Column("surename")]
         public string SureName { get; set; }
+
+        [Column("gender")]
+        public bool Gender { get; set; }
+
+        [Column("phone")]
+        public bool Phone { get; set; }
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

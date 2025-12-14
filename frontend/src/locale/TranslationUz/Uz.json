@@ -57,7 +57,12 @@
  "enter_address":"Tashkilotning to'liq manzili",
  "phone_numbers":"Telefon raqamlar",
  "phone_number":"Telefon raqam",
- "phone_number_add":"Yana qo'shish"
+ "phone_number_add":"Yana qo'shish",
+ "patcient_info":"Bemor ma'lumotlari",
+ "passport_seria":"Passport seriyasi",
+ "enter_passport_seria":"Passport seriyasi va raqamini kiriting",
+ "enter_birthdate":"Tug'ilgan sanani kiriting",
+ "birthdate":"Tug'ilgan sana"
 
 
 }

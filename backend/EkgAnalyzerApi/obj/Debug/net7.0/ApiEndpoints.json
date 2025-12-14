@@ -74,6 +74,16 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "ComplaintsController",
+    "Method": "GetComplaints",
+    "RelativePath": "api/complaints/get-complaints",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "EkgAnalyzerApi.Controllers.MedController",
     "Method": "AnalyzeEkg",
     "RelativePath": "api/Med/analyze",

@@ -154,6 +154,9 @@ input:-webkit-autofill:active {
 .closed_menu{width: calc(68px + var(--main_padding) + var(--main_padding));}
 .closed_menu .sidebar_head h1{margin-left: 20px;}
 .closed_menu .sidebar_title{margin-left: 20px;}
+.form_div{height: 100%; display: flex; align-items: center !important; padding-top: 8px;}
+.form_div button{margin-top: 0px !important;} 
+.input_date{padding: 10px; border: 1px solid #d9d9d9; width: 100%; border-radius: 12px;}
     @media (max-width:1700px){
       .login_img img{width: 70%;}
     }
