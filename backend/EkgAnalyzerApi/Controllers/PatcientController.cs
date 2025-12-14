@@ -26,16 +26,15 @@ public class PatcientController : ControllerBase
 
         DateOnly birthDate = DateOnly.Parse(birthdate);
 
-        var complaints = await _context.Patients
+        var patient = await _context.Patients
             .FirstOrDefaultAsync(v =>
                 v.Passport == passport &&
-                v.BirthDate.Date == birthDate.ToDateTime(TimeOnly.MinValue)
+                v.BirthDate == birthDate
             );
-        ;
 
-        if (complaints == null)
+        if (patient == null)
             return NotFound(new { message = "Patient not found" });
 
-        return Ok(complaints);
+        return Ok(patient);
     }
 }
