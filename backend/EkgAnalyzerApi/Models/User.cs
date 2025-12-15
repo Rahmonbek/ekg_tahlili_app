@@ -19,9 +19,16 @@ public class User
     [Column("password_plain")]
     public string? PasswordPlain { get; set; }
     [Column("clinic_id")]
-    public int? ClinicId { get; set; }
-    [Column("status")]
-    public bool Status { get; set; } = false;
+        public int? ClinicId { get; set; }
+
+        [Column("role_id")]
+        public int? RoleId { get; set; }
+        
+        [Column("position_id")]
+        public int? PositionId { get; set; }
+        
+        [Column("status")]
+        public bool Status { get; set; } = false;
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; }
 
