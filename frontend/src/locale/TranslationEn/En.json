@@ -89,5 +89,10 @@
  "please_wait": "ECG analysis may take some time. Please wait for the result and do not refresh the browser.",
  "retry_ecg_analyse": "Analyze a new ECG",
 "enter_username":"Enter your login",
-"username":"Login"
+"username":"Login",
+"username_already_exists": "This login already exists in the system",
+"email_already_exists": "This email is already registered.",
+"change_password": "Change password in the N MED application"
+
+
 }

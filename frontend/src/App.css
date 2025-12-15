@@ -182,8 +182,9 @@ input:-webkit-autofill:active {
   width: 50px; height: 50px; background-color: #dadada; cursor: pointer;}
 
 
-
-
+:where(.css-dev-only-do-not-override-ac2jek).ant-form-item .ant-form-item-explain-error{
+  display: none !important;
+}
 
 
 
@@ -195,11 +196,12 @@ input:-webkit-autofill:active {
 
 
 @media (max-width: 1024px){
+  .auth_navbar{padding: 30px 5%;}
   .login_img{display: none !important;}
   .login_form_box{width: 100%;}
  
   .auth_brand{width: 50%;}
   .selected_lang{background-color: #fafafa;  padding: 10px 10px;}
   .langs_box img{height: 22px;}
-  label{font-size: 20px !important;}
+
 }
