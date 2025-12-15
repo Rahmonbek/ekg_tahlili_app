@@ -151,18 +151,6 @@
         }
       }
     },
-    "/api/clinic/get-clinic-by-token": {
-      "get": {
-        "tags": [
-          "Clinic"
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
     "/api/complaints/get-complaints": {
       "get": {
         "tags": [
@@ -264,6 +252,18 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/user/get-user-by-token": {
+      "get": {
+        "tags": [
+          "User"
+        ],
         "responses": {
           "200": {
             "description": "Success"

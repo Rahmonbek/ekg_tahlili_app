@@ -3,6 +3,7 @@ using System;
 using EkgAnalyzerApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EkgAnalyzerApi.Migrations
 {
     [DbContext(typeof(MedDataDB))]
-    partial class EkgDataDBModelSnapshot : ModelSnapshot
+    [Migration("20251215162232_AddDoctors")]
+    partial class AddDoctors
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -175,91 +178,6 @@ namespace EkgAnalyzerApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("complaints");
-                });
-
-            modelBuilder.Entity("EkgAnalyzerApi.Models.Doctor", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("firstname");
-
-                    b.Property<bool>("Gender")
-                        .HasColumnType("boolean")
-                        .HasColumnName("gender");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("lastname");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("phone");
-
-                    b.Property<string>("SureName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("surename");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer")
-                        .HasColumnName("user_id");
-
-                    b.Property<int?>("UserId1")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.HasIndex("UserId1")
-                        .IsUnique();
-
-                    b.ToTable("doctors");
-                });
-
-            modelBuilder.Entity("EkgAnalyzerApi.Models.DoctorPosition", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("DoctorId")
-                        .HasColumnType("integer")
-                        .HasColumnName("doctor_id");
-
-                    b.Property<int?>("PositionId")
-                        .HasColumnType("integer")
-                        .HasColumnName("position_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DoctorId");
-
-                    b.HasIndex("PositionId");
-
-                    b.ToTable("doctor_position");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.Patient", b =>
@@ -473,7 +391,8 @@ namespace EkgAnalyzerApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ClinicId");
+                    b.HasIndex("ClinicId")
+                        .IsUnique();
 
                     b.ToTable("users");
                 });
@@ -540,38 +459,11 @@ namespace EkgAnalyzerApi.Migrations
                         .HasForeignKey("ClinicId");
                 });
 
-            modelBuilder.Entity("EkgAnalyzerApi.Models.Doctor", b =>
-                {
-                    b.HasOne("EkgAnalyzerApi.Models.User", null)
-                        .WithOne()
-                        .HasForeignKey("EkgAnalyzerApi.Models.Doctor", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EkgAnalyzerApi.Models.User", null)
-                        .WithOne("Doctor")
-                        .HasForeignKey("EkgAnalyzerApi.Models.Doctor", "UserId1");
-                });
-
-            modelBuilder.Entity("EkgAnalyzerApi.Models.DoctorPosition", b =>
-                {
-                    b.HasOne("EkgAnalyzerApi.Models.Doctor", null)
-                        .WithMany()
-                        .HasForeignKey("DoctorId");
-
-                    b.HasOne("EkgAnalyzerApi.Models.Position", null)
-                        .WithMany()
-                        .HasForeignKey("PositionId");
-                });
-
             modelBuilder.Entity("EkgAnalyzerApi.Models.User", b =>
                 {
-                    b.HasOne("EkgAnalyzerApi.Models.Clinic", "Clinic")
-                        .WithMany("Users")
-                        .HasForeignKey("ClinicId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Clinic");
+                    b.HasOne("EkgAnalyzerApi.Models.Clinic", null)
+                        .WithOne("User")
+                        .HasForeignKey("EkgAnalyzerApi.Models.User", "ClinicId");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.VerificationCode", b =>
@@ -590,14 +482,13 @@ namespace EkgAnalyzerApi.Migrations
 
                     b.Navigation("ClinicPhoneNumber");
 
-                    b.Navigation("Users");
+                    b.Navigation("User")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.User", b =>
                 {
                     b.Navigation("Codes");
-
-                    b.Navigation("Doctor");
                 });
 #pragma warning restore 612, 618
         }

@@ -23,7 +23,9 @@ public class Clinic
         public DateTime? UpdatedAt { get; set; }
 
         public ClinicDetail ClinicDetail { get; set; } = new();
-        public User User { get; set; } = new();
+        public List<User> Users { get; set; } = new(); // 🔹 Reverse navigation
+
+        
         public List<ClinicPhoneNumber> ClinicPhoneNumber { get; set; } = new();
     }
 }

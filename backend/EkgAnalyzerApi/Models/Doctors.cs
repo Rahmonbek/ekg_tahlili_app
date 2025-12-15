@@ -34,5 +34,7 @@ namespace EkgAnalyzerApi.Models
 
         [Column("updated_at")]
         public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        public List<DoctorPosition> DoctorPositions { get; set; } = new();
     }
 }

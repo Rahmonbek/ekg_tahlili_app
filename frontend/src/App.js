@@ -16,6 +16,7 @@ export default function App() {
   const [first_load, setfirst_load]=useState(false)
   const navigate=useNavigate()
   useEffect(()=>{
+
     const token=window.localStorage.getItem("NMED_token")
     if(token!=null){
       getUserData()
@@ -32,10 +33,11 @@ export default function App() {
       try{
          var res=await get_user_data()
          setuser(res.data)
-         setuser_id(res.data.user.id)
+         setuser_id(res.data.id)
          setfirst_load(true)
          console.log(res)
       }catch(err){
+        console.log(err)
             deleteTokenAccess()
             navigate('/')
       }finally{

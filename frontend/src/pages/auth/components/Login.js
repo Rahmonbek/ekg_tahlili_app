@@ -26,8 +26,9 @@ export default function Login() {
                 })
                 if(res.status==200){
                   successAlert(t(res.data.message))
-               setuser_id(res.data.userId)
+               
                window.localStorage.setItem("NMED_token", res.data.token)
+               setuser_id(res.data.userId)
                 }
             }catch(err){
                dangerAlert(t(err.response.data.message));

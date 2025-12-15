@@ -7,6 +7,6 @@ export const useStore = create((set) => ({
     setcomplaints: (id) => set({ complaints: id }),
     open_menu: true,
     setopen_menu: (id) => set({ open_menu: id }),
-    clinic: null,
-    user: (id) => set({ clinic: id }),
+    user: null,
+    setuser: (id) => set({ user: id }),
 }))

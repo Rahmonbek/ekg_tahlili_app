@@ -80,16 +80,6 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "ClinicController",
-    "Method": "GetClinic",
-    "RelativePath": "api/clinic/get-clinic-by-token",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
     "ContainingType": "ComplaintsController",
     "Method": "GetComplaints",
     "RelativePath": "api/complaints/get-complaints",
@@ -150,6 +140,16 @@
         "IsRequired": true
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "UserController",
+    "Method": "GetUser",
+    "RelativePath": "api/user/get-user-by-token",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   }
 ]

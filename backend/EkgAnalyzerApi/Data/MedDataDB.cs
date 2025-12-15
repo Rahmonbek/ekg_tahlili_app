@@ -17,6 +17,9 @@ namespace EkgAnalyzerApi.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
 
+        public DbSet<Doctor> Doctors { get; set; }
+        public DbSet<DoctorPosition> DoctorPositions { get; set; }
+
         public DbSet<Position> Positions { get; set; }
         public DbSet<ClinicPhoneNumber> ClinicPhoneNumbers { get; set; }
         public DbSet<Clinic> Clinics { get; set; }
@@ -29,31 +32,73 @@ namespace EkgAnalyzerApi.Data
 
         public override int SaveChanges()
         {
-            UpdateTimestamps();
+            ApplyTimestamps();
             return base.SaveChanges();
         }
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            UpdateTimestamps();
+            ApplyTimestamps();
             return await base.SaveChangesAsync(cancellationToken);
         }
 
-        private void UpdateTimestamps()
+        private void ApplyTimestamps()
         {
-            var entries = ChangeTracker.Entries()
-                .Where(e => e.Entity is Patient &&
+            var timestampedEntities = ChangeTracker.Entries()
+                .Where(e => e.Entity is ITimestamped &&
                             (e.State == EntityState.Added || e.State == EntityState.Modified));
 
-            foreach (var entityEntry in entries)
+            foreach (var entry in timestampedEntities)
             {
-                ((Patient)entityEntry.Entity).UpdatedAt = DateTime.UtcNow;
+                var entity = (ITimestamped)entry.Entity;
+                entity.UpdatedAt = DateTime.UtcNow;
 
-                if (entityEntry.State == EntityState.Added)
-                {
-                    ((Patient)entityEntry.Entity).CreatedAt = DateTime.UtcNow;
-                }
+                if (entry.State == EntityState.Added)
+                    entity.CreatedAt = DateTime.UtcNow;
             }
         }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // User - Doctor (1:1)
+            modelBuilder.Entity<User>()
+                .HasOne<Doctor>()
+                .WithOne()
+                .HasForeignKey<Doctor>(d => d.UserId);
+
+            // Doctor - DoctorPosition (1:n)
+            modelBuilder.Entity<DoctorPosition>()
+                .HasOne<Doctor>()
+                .WithMany()
+                .HasForeignKey(dp => dp.DoctorId);
+
+            // DoctorPosition - Position (n:1)
+            modelBuilder.Entity<DoctorPosition>()
+                .HasOne<Position>()
+                .WithMany()
+                .HasForeignKey(dp => dp.PositionId);
+
+            // User - Clinic (n:1)
+            modelBuilder.Entity<User>()
+    .HasOne(u => u.Clinic)    // User navigatsiya property
+    .WithMany(c => c.Users)   // Clinic navigatsiya property
+    .HasForeignKey(u => u.ClinicId)
+    .OnDelete(DeleteBehavior.SetNull);
+
+            // Clinic - ClinicDetail (1:1)
+            modelBuilder.Entity<Clinic>()
+                .HasOne(c => c.ClinicDetail)
+                .WithOne()
+                .HasForeignKey<ClinicDetail>(cd => cd.ClinicId);
+        }
+    }
+
+    // Interface for timestamped entities
+    public interface ITimestamped
+    {
+        DateTime? CreatedAt { get; set; }
+        DateTime? UpdatedAt { get; set; }
     }
 }

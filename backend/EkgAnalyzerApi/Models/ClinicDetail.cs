@@ -31,9 +31,6 @@ public class ClinicDetail
         [Column("address")]
         public string? Address { get; set; }
 
-        [Column("director")]
-        public string? Director { get; set; }
-
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; }
 

@@ -32,8 +32,6 @@ public class ClinicDetailDTO
 
     public string? Address { get; set; }
 
-    public string? Director { get; set; }
-
 
 }
 

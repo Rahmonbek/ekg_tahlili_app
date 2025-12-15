@@ -36,5 +36,8 @@ public class User
         public DateTime? UpdatedAt { get; set; }
 
         public List<VerificationCode>? Codes { get; set; } = new();
-}
+        public Clinic? Clinic { get; set; }
+
+        public Doctor? Doctor { get; set; }
+    }
 }
