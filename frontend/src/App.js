@@ -21,10 +21,11 @@ export default function App() {
     
 
     }else{
+      navigate("/")
        setfirst_load(true)
     }
    
-    }, [])
+    }, [user_id])
 
     const getClinicData=async()=>{
       try{

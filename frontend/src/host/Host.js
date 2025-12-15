@@ -1,6 +1,6 @@
 import axios from "axios"
 
-export const api="https://localhost:7020/api"
+export const api="http://192.168.100.129:5000/api"
 
 export const getTokenAccess=()=>{
     var token=window.localStorage.getItem("NMED_token")
