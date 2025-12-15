@@ -8,5 +8,5 @@ export const useStore = create((set) => ({
     open_menu: true,
     setopen_menu: (id) => set({ open_menu: id }),
     clinic: null,
-    setclinic: (id) => set({ clinic: id }),
+    user: (id) => set({ clinic: id }),
 }))

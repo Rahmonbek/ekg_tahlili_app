@@ -174,7 +174,32 @@ input:-webkit-autofill:active {
 .ekg-image{padding: 0px 25%;}
 :where(.css-dev-only-do-not-override-ac2jek) .ant-image-preview-operations, :where(.css-dev-only-do-not-override-ac2jek) .ant-image-preview-close{background-color: var(--text_color);}
 .ant-image-preview-operations-operation span{color: white !important;} 
+
+
+
+.lang_exit{display: flex; align-items: center !important; }
+.exit_icon button{font-size: 40px; margin-left: 10px; display: flex; border-radius: 10px; justify-content: center; align-items: center; 
+  width: 50px; height: 50px; background-color: #dadada; cursor: pointer;}
+
+
+
+
+
+
+
 @media (max-width:1700px){
       .login_img img{width: 70%;}
     }
     
+
+
+
+@media (max-width: 1024px){
+  .login_img{display: none !important;}
+  .login_form_box{width: 100%;}
+ 
+  .auth_brand{width: 50%;}
+  .selected_lang{background-color: #fafafa;  padding: 10px 10px;}
+  .langs_box img{height: 22px;}
+  label{font-size: 20px !important;}
+}

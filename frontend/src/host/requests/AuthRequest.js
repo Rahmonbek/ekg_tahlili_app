@@ -1,4 +1,4 @@
-import { httpPostRequest } from "../Host"
+import { httpGetRequest, httpPostRequest } from "../Host"
 
 
 export const registration=(data)=>{
@@ -12,3 +12,12 @@ export const login=(data)=>{
 export const verify_code=(data)=>{
     return httpPostRequest("/auth/verify/", data)
 }
+
+
+export const checkusername = (username) => {
+    return httpGetRequest("/auth/check-username", {
+      username: username
+    });
+  };
+  
+  

@@ -91,7 +91,9 @@
  "english":"Ingliz tili",
  "russian":"Rus tili",
  "uzbek":"O'zbek tili",
- "lang_analyse":"Tashxis tilini tanlang"
+ "lang_analyse":"Tashxis tilini tanlang",
+ "enter_username":"Loginingizni kiriting",
+"username":"Login"
 
 
 

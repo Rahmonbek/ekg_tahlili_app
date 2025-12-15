@@ -6,18 +6,19 @@ import { useTranslation } from 'react-i18next';
 import './locale/i18next'
 import { useStore } from './store/Store'
 import Main from './pages/cabinet/Main'
-import { get_clinic_data } from './host/requests/ClinicRequest'
+
 import { deleteTokenAccess } from './host/Host'
 import {useNavigate} from 'react-router-dom'
+import { get_user_data } from './host/requests/UserRequest';
 export default function App() {
   const {t}=useTranslation()
-  const {user_id, setuser_id, clinic, setclinic}=useStore()
+  const {user_id, setuser_id, user, setuser}=useStore()
   const [first_load, setfirst_load]=useState(false)
   const navigate=useNavigate()
   useEffect(()=>{
     const token=window.localStorage.getItem("NMED_token")
     if(token!=null){
-      getClinicData()
+      getUserData()
     
 
     }else{
@@ -27,10 +28,10 @@ export default function App() {
    
     }, [user_id])
 
-    const getClinicData=async()=>{
+    const getUserData=async()=>{
       try{
-         var res=await get_clinic_data()
-         setclinic(res.data)
+         var res=await get_user_data()
+         setuser(res.data)
          setuser_id(res.data.user.id)
          setfirst_load(true)
          console.log(res)

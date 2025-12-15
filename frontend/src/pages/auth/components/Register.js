@@ -5,15 +5,17 @@ import logo from '../../../images/logo.png'
 import login_img from '../../../images/doctor2.svg'
 import { IoIosMail, IoMdLock } from 'react-icons/io';
 import { Link } from 'react-router-dom';
-import { registration, verify_code } from '../../../host/requests/AuthRequest';
+import { checkusername, registration, verify_code } from '../../../host/requests/AuthRequest';
 import { dangerAlert, successAlert } from '../../../tools/Alerts';
 import { useStore } from '../../../store/Store';
+import { IoPerson } from 'react-icons/io5';
 
 
 export default function Register() {
   const [open, setopen]=useState(false)
   const [loading, setloading]=useState(false)
   const [email, setemail]=useState(null)
+  const [username, setUsername]=useState(null)
   const {user_id, setuser_id} = useStore()
  const [codeForm] = Form.useForm();
     const {t}=useTranslation()
@@ -39,24 +41,39 @@ try{
 }
 
 
-    const  onFinish=async(val)=>{
-        try{
-          setloading(true)
-  setemail(val.email)
-            var res=await registration({
-                email:val.email,
-                password:val.password
-            })
-            if(res.status==200){
-              successAlert(t(res.data.message))
-              setopen(true)
-            }
-        }catch(err){
-            console.log(err);
-        }finally{
-          setloading(false)
-        }
+const onFinish = async (val) => {
+  try {
+    setloading(true);
+
+ 
+    const checkRes = await checkusername(val.username);
+
+    if (checkRes.status === 200 && checkRes.data.exists === false) {
+
+
+      setemail(val.email);
+
+      const res = await registration({
+        email: val.email,
+        password: val.password,
+        username: val.username, 
+      });
+
+      if (res.status === 200) {
+        successAlert(t(res.data.message));
+        setopen(true);
+      }
+
+    } else {
     }
+
+  } catch (err) {
+    console.log(err);
+  } finally {
+    setloading(false);
+  }
+};
+
 
     useEffect(()=>{
       
@@ -105,6 +122,25 @@ try{
       <Input prefix={<IoIosMail />} className='login_input' placeholder={t("enter_email")} />
     </Form.Item>
 
+
+
+    <Form.Item
+      name="username"
+      label={t("username")}
+      rules={[
+        
+        {
+           required: true,
+           message: "",
+            
+        }
+      ]}
+    >
+      <Input prefix={<IoPerson />}  autoComplete="username" className='login_input' placeholder={t("enter_username")} />
+    </Form.Item>
+
+
+
     <Form.Item
       name="password"
       label={t("new_password")}
@@ -117,32 +153,7 @@ try{
     >
       <Input.Password  prefix={<IoMdLock />} className='login_input'  placeholder={t("enter_new_password")} autoComplete="new-password"/>
     </Form.Item>
-   <Form.Item
-  name="check_password"
-  label={t("check_password")}
-  dependencies={['password']}
-  rules={[
-    {
-      required: true,
-      message: "",
-    },
-    ({ getFieldValue }) => ({
-      validator(_, value) {
-        if (!value || getFieldValue('password') === value) {
-          return Promise.resolve();
-        }
-        if(getFieldValue('password').length==value.length){
-return Promise.reject(new Error(t("password_not_match")));
-        }else{
-          return Promise.reject(new Error(t("")));
-        }
-        
-      },
-    }),
-  ]}
->
-  <Input.Password prefix={<IoMdLock />}   className='login_input' placeholder={t("enter_check_password")} autoComplete="new-password" />
-</Form.Item>
+
      <Form.Item
       wrapperCol={{
         span: 24,
