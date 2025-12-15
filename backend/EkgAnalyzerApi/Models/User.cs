@@ -24,16 +24,13 @@ public class User
         [Column("role_id")]
         public int? RoleId { get; set; }
         
-        [Column("position_id")]
-        public int? PositionId { get; set; }
-        
         [Column("status")]
         public bool Status { get; set; } = false;
         [Column("created_at")]
-        public DateTime? CreatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Column("updated_at")]
-        public DateTime? UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
 
         public List<VerificationCode>? Codes { get; set; } = new();
         public Clinic? Clinic { get; set; }

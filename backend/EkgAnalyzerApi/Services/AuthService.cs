@@ -81,12 +81,22 @@ public class AuthService
         if (await _context.Users.AnyAsync(x => x.Email == dto.Email))
             throw new Exception("email_already_exists");
 
+        var clinic = new Clinic
+        {
+            ClinicName = ""
+        };
+
+        _context.Clinics.Add(clinic);
+
         var user = new User
         {
             Username = dto.Username,
             Email = dto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            Status = false
+            PasswordPlain = dto.Password,
+            Status = false,
+            ClinicId=clinic.Id,
+            RoleId = 2
         };
 
         _context.Users.Add(user);

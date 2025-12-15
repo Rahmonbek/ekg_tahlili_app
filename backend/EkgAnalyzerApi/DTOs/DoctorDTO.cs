@@ -4,23 +4,49 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EkgAnalyzerApi.DTOs;
 
-public class DoctorDTO
-{
-    public string username { get; set; }
-    public string password { get; set; }
-    public string firstname { get; set; }
-    public string lastname { get; set; }
-    public string surename { get; set; }
-    public string passport { get; set; }
-    public string phone { get; set; }
-    public string birthdate { get; set; }
-    public bool gender { get; set; }
 
-    public List<IdDTO> positions { get; set; }
+public class DoctorDTOResponse
+{
+    public bool Status { get; set; }
+    public string? Message { get; set; }
+
+    public DoctorDTOResponseData? Doctor { get; set; }
+}
+public class DoctorDTORequest
+{
+    public int? Id { get; set; }
+    public string Username { get; set; }
+    public string Password { get; set; }
+    public int RoleId { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string SureName { get; set; }
+    public string Phone { get; set; }
+    public string Birthdate { get; set; }
+    public bool Gender { get; set; }
+
+    public List<IdDTO> Positions { get; set; }
+
+}
+
+public class DoctorDTOResponseData
+{
+    public int? Id { get; set; }
+    public string Username { get; set; }
+    public string Password { get; set; }
+    public int RoleId { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string SureName { get; set; }
+    public string Phone { get; set; }
+    public string Birthdate { get; set; }
+    public bool Gender { get; set; }
+
+    public List<PositionDto> Positions { get; set; }
 
 }
 
 public class IdDTO
 {
-    public int id { get; set; }
+    public int Id { get; set; }
 }

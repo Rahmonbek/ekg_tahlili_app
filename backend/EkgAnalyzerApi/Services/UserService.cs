@@ -34,7 +34,9 @@ namespace EkgAnalyzerApi.Services
                     .Select(dp => new PositionDto
                     {
                         Id = dp.Position!.Id,
-                        NameUz = dp.Position!.NameUz ?? ""
+                        NameUz = dp.Position!.NameUz ?? "",
+                        NameRu = dp.Position!.NameRu ?? "",
+                        NameEn = dp.Position!.NameEn ?? ""
                     }).ToListAsync();
 
                 doctorDto = new DoctorDto

@@ -25,6 +25,11 @@ public class VerifyCodeDto
     public string Email { get; set; } = default!;
     public string Code { get; set; } = default!;
 }
+
+public class EmailDTO
+{
+    public string Email { get; set; } = default!;
+}
 public class ChangePasswordDto
 {
     public string Email { get; set; } = default!;

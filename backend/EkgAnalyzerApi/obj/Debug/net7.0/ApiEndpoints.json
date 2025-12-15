@@ -90,6 +90,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "DoctorController",
+    "Method": "GetClinic",
+    "RelativePath": "api/doctor/save-doctor-data",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "data",
+        "Type": "EkgAnalyzerApi.DTOs.DoctorDTORequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "EkgAnalyzerApi.Controllers.MedController",
     "Method": "AnalyzeEkg",
     "RelativePath": "api/Med/analyze",
