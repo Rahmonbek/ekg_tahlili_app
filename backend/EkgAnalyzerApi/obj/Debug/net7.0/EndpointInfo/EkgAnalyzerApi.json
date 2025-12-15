@@ -36,6 +36,28 @@
         }
       }
     },
+    "/api/auth/check-username": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "query",
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/auth/verify": {
       "post": {
         "tags": [
@@ -259,11 +281,11 @@
             "type": "string",
             "nullable": true
           },
-          "newPassword": {
+          "code": {
             "type": "string",
             "nullable": true
           },
-          "code": {
+          "newPassword": {
             "type": "string",
             "nullable": true
           }
@@ -273,7 +295,7 @@
       "LoginDto": {
         "type": "object",
         "properties": {
-          "email": {
+          "username": {
             "type": "string",
             "nullable": true
           },
@@ -320,6 +342,10 @@
       "RegisterDto": {
         "type": "object",
         "properties": {
+          "username": {
+            "type": "string",
+            "nullable": true
+          },
           "email": {
             "type": "string",
             "nullable": true

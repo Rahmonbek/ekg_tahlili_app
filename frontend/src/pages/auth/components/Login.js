@@ -8,6 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../../../host/requests/AuthRequest';
 import { dangerAlert, successAlert } from '../../../tools/Alerts';
 import { useStore } from '../../../store/Store';
+import { IoPerson } from 'react-icons/io5';
 export default function Login() {
   const [loading, setloading]=useState(false)
   const {user_id, setuser_id} = useStore()
@@ -20,7 +21,7 @@ export default function Login() {
             try{
               setloading(true)
                 var res=await login({
-                    email:val.email,
+                    username:val.username,
                     password:val.password
                 })
                 if(res.status==200){
@@ -69,13 +70,10 @@ export default function Login() {
     
   >
     <Form.Item
-      name="email"
-      label={t("email")}
+      name="username"
+      label={t("username")}
       rules={[
-        {
-          type: 'email',
-          message: "",
-        },
+        
         {
            required: true,
            message: "",
@@ -83,7 +81,7 @@ export default function Login() {
         }
       ]}
     >
-      <Input prefix={<IoIosMail />}  autoComplete="email" className='login_input' placeholder={t("enter_email")} />
+      <Input prefix={<IoPerson />}  autoComplete="username" className='login_input' placeholder={t("enter_username")} />
     </Form.Item>
 
     <Form.Item

@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using EkgAnalyzerApi.DTOs;
 
-[Route("api/auth")]
 [ApiController]
+[Route("api/auth")]
 public class AuthController : ControllerBase
 {
     private readonly AuthService _authService;
@@ -12,62 +12,80 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
+    // ========================= REGISTER =========================
     [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterDto dto)
+    public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
-        await _authService.RegisterAsync(dto);
-        return Ok(new { message = "code_sended" });
+        try
+        {
+            await _authService.RegisterAsync(dto);
+            return Ok(new { message = "code_sended" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
+    [HttpGet("check-username")]
+    public async Task<IActionResult> CheckUsername([FromQuery] string username)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+            return BadRequest(new { message = "username_required" });
 
+        var exists = await _authService.CheckUsernameAsync(username);
+
+        return Ok(new
+        {
+            exists = exists,
+            message = exists ? "username_already_exists" : "username_available"
+        });
+    }
+    // ========================= VERIFY EMAIL =========================
     [HttpPost("verify")]
-    public async Task<IActionResult> Verify(VerifyCodeDto dto)
+    public async Task<IActionResult> Verify([FromBody] VerifyCodeDto dto)
     {
         var result = await _authService.VerifyCodeAsync(dto);
 
         if (!result.Success)
-        {
-            // Kod noto‘g‘ri yoki expired bo‘lsa
             return BadRequest(new { message = result.Message });
-        }
 
-        // Kod to‘g‘ri bo‘lsa
         return Ok(new
         {
             userId = result.UserId,
-            message = result.Message,
-            token = result.Token
-        });
-    }
-
-    [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginDto dto)
-    {
-        var result = await _authService.LoginAsync(dto);
-
-        if (!result.Success)
-        {
-            // Xatolik bo‘lsa, 400 qaytaramiz va message bilan yuboramiz
-            return BadRequest(new
-            {
-                message = result.Message
-            });
-        }
-
-        // Muvaffaqiyatli login bo‘lsa, token, userId va message qaytarish
-        return Ok(new
-        {
             token = result.Token,
-            userId = result.UserId,
             message = result.Message
         });
     }
 
-    [HttpPost("change-password")]
-    public async Task<IActionResult> ChangePassword(ChangePasswordDto dto)
+    // ========================= LOGIN =========================
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
-        await _authService.ChangePasswordAsync(dto);
-        return Ok(new { message = "Password changed successfully" });
+        var result = await _authService.LoginAsync(dto);
+
+        if (!result.Success)
+            return BadRequest(new { message = result.Message });
+
+        return Ok(new
+        {
+            userId = result.UserId,
+            token = result.Token,
+            message = result.Message
+        });
     }
 
-
+    // ========================= CHANGE PASSWORD =========================
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+    {
+        try
+        {
+            await _authService.ChangePasswordAsync(dto);
+            return Ok(new { message = "password_changed_successfully" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
