@@ -19,7 +19,10 @@ export default function App() {
 
     const token=window.localStorage.getItem("NMED_token")
     if(token!=null){
-      getUserData()
+      if(user==null){
+getUserData()
+      }
+      
     
 
     }else{

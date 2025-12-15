@@ -13,6 +13,7 @@ namespace EkgAnalyzerApi.Models
 
         [Column("user_id")]
         public int UserId { get; set; }
+        public User User { get; set; } = null!;
 
         [Column("firstname")]
         public string FirstName { get; set; }
@@ -34,6 +35,7 @@ namespace EkgAnalyzerApi.Models
 
         [Column("updated_at")]
         public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
+        
 
         public List<DoctorPosition> DoctorPositions { get; set; } = new();
     }

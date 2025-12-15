@@ -6,6 +6,8 @@ namespace EkgAnalyzerApi.DTOs;
 
 public class DoctorDTO
 {
+    public string username { get; set; }
+    public string password { get; set; }
     public string firstname { get; set; }
     public string lastname { get; set; }
     public string surename { get; set; }
@@ -14,5 +16,11 @@ public class DoctorDTO
     public string birthdate { get; set; }
     public bool gender { get; set; }
 
+    public List<IdDTO> positions { get; set; }
 
+}
+
+public class IdDTO
+{
+    public int id { get; set; }
 }
