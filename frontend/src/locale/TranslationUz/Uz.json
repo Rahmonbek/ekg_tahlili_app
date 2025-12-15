@@ -93,7 +93,11 @@
  "uzbek":"O'zbek tili",
  "lang_analyse":"Tashxis tilini tanlang",
  "enter_username":"Loginingizni kiriting",
-"username":"Login"
+"username":"Login",
+"username_already_exists": "Bu login tizimda mavjud",
+"email_already_exists":"Bu email bilan allaqachon ro‘yxatdan o‘tgan.",
+"change_password": "N MED dasturida parolni o'zgartirish"
+
 
 
 

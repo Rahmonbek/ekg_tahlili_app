@@ -16,6 +16,9 @@ export default function Register() {
   const [loading, setloading]=useState(false)
   const [email, setemail]=useState(null)
   const [username, setUsername]=useState(null)
+  const [usernameError, setUsernameError] = useState(""); 
+  const [emailError, setEmailError] = useState("");
+
   const {user_id, setuser_id} = useStore()
  const [codeForm] = Form.useForm();
     const {t}=useTranslation()
@@ -45,18 +48,17 @@ const onFinish = async (val) => {
   try {
     setloading(true);
 
- 
     const checkRes = await checkusername(val.username);
 
     if (checkRes.status === 200 && checkRes.data.exists === false) {
-
-
+      setUsernameError("");
+      setEmailError("");
       setemail(val.email);
 
       const res = await registration({
         email: val.email,
         password: val.password,
-        username: val.username, 
+        username: val.username,
       });
 
       if (res.status === 200) {
@@ -64,11 +66,21 @@ const onFinish = async (val) => {
         setopen(true);
       }
 
-    } else {
+    } else if (checkRes.status === 200 && checkRes.data.exists === true) {
+      setUsernameError(t(checkRes.data.message));
+      dangerAlert(t(checkRes.data.message));
     }
 
   } catch (err) {
     console.log(err);
+
+
+    if (err.response && err.response.data && err.response.data.message) {
+   
+      setEmailError(t(err.response.data.message));
+      dangerAlert(t(err.response.data.message));
+    }
+
   } finally {
     setloading(false);
   }
@@ -104,40 +116,50 @@ const onFinish = async (val) => {
     // onFinishFailed={onFinishFailed}
     
   >
-    <Form.Item
-      name="email"
-      label={t("email")}
-      rules={[
-        {
-          type: 'email',
-          message: "",
-        },
-        {
-           required: true,
-           message: "",
-            
-        }
-      ]}
-    >
-      <Input prefix={<IoIosMail />} className='login_input' placeholder={t("enter_email")} />
-    </Form.Item>
+  <Form.Item
+    name="email"
+    label={t("email")}
+    validateStatus={emailError ? "error" : ""}
+    help={emailError || ""}
+    rules={[
+      {
+        type: 'email',
+        message: t("please_enter_valid_email"),
+      },
+      {
+        required: true,
+        message: t("please_enter_email"),
+      }
+    ]}
+  >
+    <Input
+      prefix={<IoIosMail />}
+      placeholder={t("enter_email")}
+      onChange={() => setEmailError("")}
+    />
+  </Form.Item>
 
 
 
-    <Form.Item
-      name="username"
-      label={t("username")}
-      rules={[
-        
-        {
-           required: true,
-           message: "",
-            
-        }
-      ]}
-    >
-      <Input prefix={<IoPerson />}  autoComplete="username" className='login_input' placeholder={t("enter_username")} />
-    </Form.Item>
+<Form.Item
+    name="username"
+    label={t("username")}
+    validateStatus={usernameError ? "error" : ""}
+    help={usernameError || ""}
+    rules={[
+      {
+        required: true,
+        message: t("please_enter_username"),
+      },
+    ]}
+  >
+    <Input
+      prefix={<IoPerson />}
+      placeholder={t("enter_username")}
+      onChange={() => setUsernameError("")} // input o'zgarganda API errorni tozalash
+    />
+  </Form.Item>
+
 
 
 

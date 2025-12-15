@@ -4,12 +4,14 @@ import { FaBars } from 'react-icons/fa6'
 import { useStore } from '../store/Store'
 import { IoMdExit } from 'react-icons/io'
 import { useNavigate } from 'react-router-dom'
+import { deleteTokenAccess } from '../host/Host'
+
 
 export default function Header() {
   const {open_menu, setopen_menu, setuser_id, setuser}=useStore()
   const navigate = useNavigate();
   const handleExit = () => {
-    localStorage.removeItem("NMED_token");
+    deleteTokenAccess();
     navigate("/"); 
     setuser_id(null)
     setuser(null)
