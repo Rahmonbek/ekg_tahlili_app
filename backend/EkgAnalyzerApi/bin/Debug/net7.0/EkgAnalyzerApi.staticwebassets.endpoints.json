@@ -1,136 +1,19 @@
 {
   "Version": 1,
-  "Hash": "MMUtQj8j4Kax+lEVV3WYqni8IXvBJSd//CToPx9S1GE=",
-  "Source": "EkgAnalyzerApi",
-  "BasePath": "_content/EkgAnalyzerApi",
-  "Mode": "Default",
   "ManifestType": "Build",
-  "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [
-    {
-      "Name": "EkgAnalyzerApi\\wwwroot",
-      "Source": "EkgAnalyzerApi",
-      "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
-      "BasePath": "_content/EkgAnalyzerApi",
-      "Pattern": "**"
-    }
-  ],
-  "Assets": [
-    {
-      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\.picasa.ini",
-      "SourceId": "EkgAnalyzerApi",
-      "SourceType": "Discovered",
-      "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
-      "BasePath": "_content/EkgAnalyzerApi",
-      "RelativePath": "uploads/.picasa#[.{fingerprint}]?.ini",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "AssetMergeBehavior": "",
-      "AssetMergeSource": "",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "Fingerprint": "paqz0172xz",
-      "Integrity": "H/wIcV09n0evKB3I7NHvLk9lj3v5BJNZTuCcLqJeKM8=",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\uploads\\.picasa.ini"
-    },
-    {
-      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg.jpg",
-      "SourceId": "EkgAnalyzerApi",
-      "SourceType": "Discovered",
-      "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
-      "BasePath": "_content/EkgAnalyzerApi",
-      "RelativePath": "uploads/ekg#[.{fingerprint}]?.jpg",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "AssetMergeBehavior": "",
-      "AssetMergeSource": "",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "Fingerprint": "ualaxxxoiy",
-      "Integrity": "qoB6YeQtiTq0o08GE/EM7ABGGzJmDjvpv7fzpPVUSQw=",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\uploads\\ekg.jpg"
-    },
-    {
-      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg2.jpg",
-      "SourceId": "EkgAnalyzerApi",
-      "SourceType": "Discovered",
-      "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
-      "BasePath": "_content/EkgAnalyzerApi",
-      "RelativePath": "uploads/ekg2#[.{fingerprint}]?.jpg",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "AssetMergeBehavior": "",
-      "AssetMergeSource": "",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "Fingerprint": "fssamhuriv",
-      "Integrity": "PwpTeEDx6B8pm1T+dVvwyxmzdYZ0Tn2qSW/ApDNQh2Y=",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\uploads\\ekg2.jpg"
-    },
-    {
-      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg3.jpg",
-      "SourceId": "EkgAnalyzerApi",
-      "SourceType": "Discovered",
-      "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
-      "BasePath": "_content/EkgAnalyzerApi",
-      "RelativePath": "uploads/ekg3#[.{fingerprint}]?.jpg",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "AssetMergeBehavior": "",
-      "AssetMergeSource": "",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "Fingerprint": "s14v99xte9",
-      "Integrity": "wBzjkD5jgP2gctF9UT6SSdNXTuZhT0Mm5b5TC6/Rc7I=",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\uploads\\ekg3.jpg"
-    },
-    {
-      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg4.JPG",
-      "SourceId": "EkgAnalyzerApi",
-      "SourceType": "Discovered",
-      "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
-      "BasePath": "_content/EkgAnalyzerApi",
-      "RelativePath": "uploads/ekg4#[.{fingerprint}]?.JPG",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "AssetMergeBehavior": "",
-      "AssetMergeSource": "",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "Fingerprint": "nu4f7qalmt",
-      "Integrity": "sUpRo+IuoPyD7TlXlloFiGrpTrgju3WcunsqQ7Vc+N0=",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\uploads\\ekg4.JPG"
-    }
-  ],
   "Endpoints": [
     {
       "Route": "uploads/.picasa.ini",
-      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\.picasa.ini",
+      "AssetFile": "uploads/.picasa.ini",
       "Selectors": [],
       "ResponseHeaders": [
         {
           "Name": "Accept-Ranges",
           "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
         },
         {
           "Name": "Content-Length",
@@ -147,10 +30,6 @@
         {
           "Name": "Last-Modified",
           "Value": "Sun, 26 Oct 2025 13:15:48 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
         }
       ],
       "EndpointProperties": [
@@ -162,12 +41,16 @@
     },
     {
       "Route": "uploads/.picasa.paqz0172xz.ini",
-      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\.picasa.ini",
+      "AssetFile": "uploads/.picasa.ini",
       "Selectors": [],
       "ResponseHeaders": [
         {
           "Name": "Accept-Ranges",
           "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
         },
         {
           "Name": "Content-Length",
@@ -184,10 +67,6 @@
         {
           "Name": "Last-Modified",
           "Value": "Sun, 26 Oct 2025 13:15:48 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
         }
       ],
       "EndpointProperties": [
@@ -196,23 +75,27 @@
           "Value": "paqz0172xz"
         },
         {
-          "Name": "label",
-          "Value": "uploads/.picasa.ini"
-        },
-        {
           "Name": "integrity",
           "Value": "sha256-H/wIcV09n0evKB3I7NHvLk9lj3v5BJNZTuCcLqJeKM8="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/.picasa.ini"
         }
       ]
     },
     {
       "Route": "uploads/ekg.jpg",
-      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg.jpg",
+      "AssetFile": "uploads/ekg.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
           "Name": "Accept-Ranges",
           "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
         },
         {
           "Name": "Content-Length",
@@ -229,10 +112,6 @@
         {
           "Name": "Last-Modified",
           "Value": "Sun, 26 Oct 2025 13:15:48 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=3600, must-revalidate"
         }
       ],
       "EndpointProperties": [
@@ -244,12 +123,16 @@
     },
     {
       "Route": "uploads/ekg.ualaxxxoiy.jpg",
-      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg.jpg",
+      "AssetFile": "uploads/ekg.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
           "Name": "Accept-Ranges",
           "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
         },
         {
           "Name": "Content-Length",
@@ -266,10 +149,6 @@
         {
           "Name": "Last-Modified",
           "Value": "Sun, 26 Oct 2025 13:15:48 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
         }
       ],
       "EndpointProperties": [
@@ -278,23 +157,27 @@
           "Value": "ualaxxxoiy"
         },
         {
-          "Name": "label",
-          "Value": "uploads/ekg.jpg"
-        },
-        {
           "Name": "integrity",
           "Value": "sha256-qoB6YeQtiTq0o08GE/EM7ABGGzJmDjvpv7fzpPVUSQw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/ekg.jpg"
         }
       ]
     },
     {
       "Route": "uploads/ekg2.fssamhuriv.jpg",
-      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg2.jpg",
+      "AssetFile": "uploads/ekg2.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
           "Name": "Accept-Ranges",
           "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
         },
         {
           "Name": "Content-Length",
@@ -311,10 +194,6 @@
         {
           "Name": "Last-Modified",
           "Value": "Sun, 26 Oct 2025 13:15:48 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
         }
       ],
       "EndpointProperties": [
@@ -323,23 +202,27 @@
           "Value": "fssamhuriv"
         },
         {
-          "Name": "label",
-          "Value": "uploads/ekg2.jpg"
-        },
-        {
           "Name": "integrity",
           "Value": "sha256-PwpTeEDx6B8pm1T+dVvwyxmzdYZ0Tn2qSW/ApDNQh2Y="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/ekg2.jpg"
         }
       ]
     },
     {
       "Route": "uploads/ekg2.jpg",
-      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg2.jpg",
+      "AssetFile": "uploads/ekg2.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
           "Name": "Accept-Ranges",
           "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
         },
         {
           "Name": "Content-Length",
@@ -356,10 +239,6 @@
         {
           "Name": "Last-Modified",
           "Value": "Sun, 26 Oct 2025 13:15:48 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=3600, must-revalidate"
         }
       ],
       "EndpointProperties": [
@@ -371,12 +250,16 @@
     },
     {
       "Route": "uploads/ekg3.jpg",
-      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg3.jpg",
+      "AssetFile": "uploads/ekg3.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
           "Name": "Accept-Ranges",
           "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
         },
         {
           "Name": "Content-Length",
@@ -393,10 +276,6 @@
         {
           "Name": "Last-Modified",
           "Value": "Sun, 26 Oct 2025 13:15:48 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=3600, must-revalidate"
         }
       ],
       "EndpointProperties": [
@@ -408,12 +287,16 @@
     },
     {
       "Route": "uploads/ekg3.s14v99xte9.jpg",
-      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg3.jpg",
+      "AssetFile": "uploads/ekg3.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
           "Name": "Accept-Ranges",
           "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
         },
         {
           "Name": "Content-Length",
@@ -430,10 +313,6 @@
         {
           "Name": "Last-Modified",
           "Value": "Sun, 26 Oct 2025 13:15:48 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
         }
       ],
       "EndpointProperties": [
@@ -442,23 +321,27 @@
           "Value": "s14v99xte9"
         },
         {
-          "Name": "label",
-          "Value": "uploads/ekg3.jpg"
-        },
-        {
           "Name": "integrity",
           "Value": "sha256-wBzjkD5jgP2gctF9UT6SSdNXTuZhT0Mm5b5TC6/Rc7I="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/ekg3.jpg"
         }
       ]
     },
     {
       "Route": "uploads/ekg4.JPG",
-      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg4.JPG",
+      "AssetFile": "uploads/ekg4.JPG",
       "Selectors": [],
       "ResponseHeaders": [
         {
           "Name": "Accept-Ranges",
           "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
         },
         {
           "Name": "Content-Length",
@@ -475,10 +358,6 @@
         {
           "Name": "Last-Modified",
           "Value": "Sun, 26 Oct 2025 13:15:48 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=3600, must-revalidate"
         }
       ],
       "EndpointProperties": [
@@ -490,12 +369,16 @@
     },
     {
       "Route": "uploads/ekg4.nu4f7qalmt.JPG",
-      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg4.JPG",
+      "AssetFile": "uploads/ekg4.JPG",
       "Selectors": [],
       "ResponseHeaders": [
         {
           "Name": "Accept-Ranges",
           "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
         },
         {
           "Name": "Content-Length",
@@ -512,10 +395,6 @@
         {
           "Name": "Last-Modified",
           "Value": "Sun, 26 Oct 2025 13:15:48 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
         }
       ],
       "EndpointProperties": [
@@ -524,12 +403,12 @@
           "Value": "nu4f7qalmt"
         },
         {
-          "Name": "label",
-          "Value": "uploads/ekg4.JPG"
-        },
-        {
           "Name": "integrity",
           "Value": "sha256-sUpRo+IuoPyD7TlXlloFiGrpTrgju3WcunsqQ7Vc+N0="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/ekg4.JPG"
         }
       ]
     }
