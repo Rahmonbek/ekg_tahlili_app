@@ -93,9 +93,10 @@
 "username_already_exists": "Этот логин уже существует в системе",
 "email_already_exists": "Этот email уже зарегистрирован.",
 "change_password": "Изменение пароля в приложении N MED",
-"enter_lastname_admin": "Введите фамилию сотрудника",
-"enter_firstname_admin": "Введите имя сотрудника",
-"enter_surename_admin": "Введите отчество сотрудника"
+"enter_lastname_staff": "Введите фамилию сотрудника",
+"enter_firstname_staff": "Введите имя сотрудника",
+"enter_surename_staff": "Введите отчество сотрудника",
+"saveDataStaff": "Сохранить данные сотрудника"
 
 
 

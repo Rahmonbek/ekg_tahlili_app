@@ -178,9 +178,13 @@ input:-webkit-autofill:active {
 
 
 .lang_exit{display: flex; align-items: center !important; }
-.exit_icon button{font-size: 40px; margin-left: 10px; display: flex; border-radius: 10px; justify-content: center; align-items: center; 
-  width: 50px; height: 50px; background-color: #dadada; cursor: pointer;}
 
+.exit_icon{display: flex; align-items: center; cursor: pointer; padding: 0px 35px 0px 30px;}
+.exit_icon img{width: 50px !important; height: 50px; border-radius: 5px; margin-right: 10px;}
+.exit_icon h1{ color:var(--text_color); width: 110px; overflow: hidden;
+  font-size: var(--small_size);}
+  .exit_icon p{ color:#416d83;
+    font-size: var(--small_size);}
 
 :where(.css-dev-only-do-not-override-ac2jek).ant-form-item .ant-form-item-explain-error{
   display: none !important;
@@ -203,6 +207,50 @@ margin-bottom: 20px;}
 :where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-thead >tr>th, :where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-thead >tr>td{
   background: var(--back_color);
 }
+
+
+.open_list{display: flex; flex-direction: column; position: relative;}
+.right_list{background-color: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px #00000014;
+ z-index: 9999;
+  overflow: hidden;
+  padding: 0 20px;
+  position: absolute;
+  right: 20px;
+  top: 121%;
+  transition: .3s;  width: 230px;
+max-height: 0px;
+}
+  
+  
+  .right_list li a{
+    display: flex; 
+    align-items: center;
+    color:var(--text_color);
+    font-size: var(--small_size);
+    cursor: pointer;
+    margin: 15px 0;
+    font-weight: 500;
+  
+  }
+  .right_list li a:hover{
+    color: #38B2AC !important;
+  }
+  .right_list.open {
+    max-height: 300px !important;
+  }
+
+  .right_list li i{    align-items: center;
+  
+    display: flex;
+    font-size: 25px !important;
+    margin-right: 10px;}
+
+
+
+
+
 
 @media (max-width:1700px){
       .login_img img{width: 70%;}

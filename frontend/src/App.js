@@ -9,16 +9,12 @@ import Main from './pages/cabinet/Main'
 
 import { deleteTokenAccess } from './host/Host'
 import {useNavigate} from 'react-router-dom'
-import { get_user_data, send_doc_data } from './host/requests/UserRequest';
-import { Button, Col, Form, Input, Modal, Row, Select } from 'antd';
-import { IoPerson } from 'react-icons/io5';
+import { get_user_data } from './host/requests/UserRequest';
 
-import { FaFemale, FaMale } from 'react-icons/fa';
-import Cleave from 'cleave.js/react';
-import AdminModal from './components/AdminModal';
 export default function App() {
   const {t}=useTranslation()
   const {user_id, setuser_id, user, setuser, open_admin_modal, setopen_admin_modal}=useStore()
+  
   const [first_load, setfirst_load]=useState(false)
   const navigate=useNavigate()
   
@@ -37,18 +33,7 @@ getUserData()
     }, [user_id, open_admin_modal])
 
  
- const formatPhoneNumber = (phone) => {
-  if (phone) {
-    return phone
-      .replaceAll("+", "")
-      .replaceAll("(", "")
-      .replaceAll(")", "")
-      .replaceAll("-", "")
-      .replaceAll(" ", "");
-  } else {
-    return null;
-  }
-};
+
 
 
     
