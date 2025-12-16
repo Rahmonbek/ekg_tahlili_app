@@ -3,6 +3,8 @@ import { create } from "zustand";
 export const useStore = create((set) => ({
     user_id: null,
     setuser_id: (id) => set({ user_id: id }),
+    open_admin_modal: false,
+    setopen_admin_modal: (id) => set({ open_admin_modal: id }),
     complaints: [],
     setcomplaints: (id) => set({ complaints: id }),
     open_menu: true,

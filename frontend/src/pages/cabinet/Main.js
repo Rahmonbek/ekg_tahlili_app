@@ -7,6 +7,7 @@ import ClinicInfo from './pages/ClinicInfo'
 import EcgAnalyzer from './ecg_analyse/EcgAnalyzer'
 import { useStore } from '../../store/Store'
 import { get_complaints_data } from '../../host/requests/ComplaintsRequest'
+import AdminModal from '../../components/AdminModal'
 
 export default function Main() {
     const {t}=useTranslation()
@@ -37,6 +38,7 @@ export default function Main() {
                 </Routes>
             </div>
         </div>
+        <AdminModal/>
     </div>
   )
 }

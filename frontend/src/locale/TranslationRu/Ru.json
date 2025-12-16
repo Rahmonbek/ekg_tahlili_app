@@ -92,7 +92,10 @@
 "username": "Логин",
 "username_already_exists": "Этот логин уже существует в системе",
 "email_already_exists": "Этот email уже зарегистрирован.",
-"change_password": "Изменение пароля в приложении N MED"
+"change_password": "Изменение пароля в приложении N MED",
+"enter_lastname_admin": "Введите фамилию сотрудника",
+"enter_firstname_admin": "Введите имя сотрудника",
+"enter_surename_admin": "Введите отчество сотрудника"
 
 
 

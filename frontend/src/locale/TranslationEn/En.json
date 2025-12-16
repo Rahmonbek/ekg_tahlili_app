@@ -92,7 +92,11 @@
 "username":"Login",
 "username_already_exists": "This login already exists in the system",
 "email_already_exists": "This email is already registered.",
-"change_password": "Change password in the N MED application"
+"change_password": "Change password in the N MED application",
+"enter_lastname_admin": "Enter the employee's last name",
+"enter_firstname_admin": "Enter the employee's first name",
+"enter_surename_admin": "Enter the employee's middle name"
+
 
 
 }

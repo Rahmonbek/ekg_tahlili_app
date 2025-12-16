@@ -15,33 +15,26 @@ import { IoPerson } from 'react-icons/io5';
 
 import { FaFemale, FaMale } from 'react-icons/fa';
 import Cleave from 'cleave.js/react';
+import AdminModal from './components/AdminModal';
 export default function App() {
   const {t}=useTranslation()
-  const {user_id, setuser_id, user, setuser}=useStore()
+  const {user_id, setuser_id, user, setuser, open_admin_modal, setopen_admin_modal}=useStore()
   const [first_load, setfirst_load]=useState(false)
   const navigate=useNavigate()
-  const [form] = Form.useForm(); 
-  const [gender, setGender] = useState(true);
-
-  const showProfileModal =
-  user_id != null && user?.doctor?.firstName === null;
-
+  
   useEffect(()=>{
 
     const token=window.localStorage.getItem("NMED_token")
     if(token!=null){
-      if(user==null){
+      if(user==null || !open_admin_modal){
 getUserData()
       }
-      
-    
-
-    }else{
+     }else{
       navigate("/")
        setfirst_load(true)
     }
    
-    }, [user_id])
+    }, [user_id, open_admin_modal])
 
  
  const formatPhoneNumber = (phone) => {
@@ -58,31 +51,6 @@ getUserData()
 };
 
 
-const onFinishProfile = async (values) => {
-  try {
-    const userId = user?.id;
-    const doctorId = user?.doctor?.id;
-    const roleId = user?.roleId;
-
-   
-    const formattedPhone = formatPhoneNumber(values.phone);
-
-    await send_doc_data({
-      id:doctorId,
-      userId,
-      roleId,
-      ...values,
-      phone: formattedPhone, 
-    });
-
-    await getUserData();
-
-    console.log("Profil muvaffaqiyatli yangilandi!");
-  } catch (e) {
-    console.log("Xatolik:", e);
-  }
-};
-
     
     
 
@@ -94,6 +62,9 @@ const onFinishProfile = async (values) => {
          setuser_id(res.data.id)
          setfirst_load(true)
          console.log(res)
+         if(res.data.doctor==null || res.data.doctor.firstName==null){
+          setopen_admin_modal(true)
+         }
       }catch(err){
         console.log(err)
             deleteTokenAccess()
@@ -108,125 +79,8 @@ const onFinishProfile = async (values) => {
 {first_load && (
   <div className="main_app">
     {user_id == null ? <Auth /> : <Main />}
-
-    {/* PROFILE TO‘LDIRISH MODALI */}
-    <Modal
-      open={showProfileModal}
-      footer={null}
-      closable={false}
-      maskClosable={false}
-     centered
-    >
-<div className='doctor_info_modal'>
-
-      <Form
-        form={form}
-        name="completeProfile"
-        layout="vertical"
-        onFinish={onFinishProfile}
-        
-      >
-        <Row gutter={16} className='ant_rows'>
-
-<div className='modal-text'>
-<h1>Shifoxona administratorining ma’lumotlarini kiriting.</h1>
-<p>Tizimdan foydalanish uchun admin ma'lumotlarini kiritishingiz shart</p>
-</div>
-
-
-          <Col lg={8} md={24} >
-            <Form.Item
-            className='antd_modal_inputs'
-              name="lastname"
-              label={t('lastname')}
-              normalize={(v) => v?.toUpperCase()}
-              rules={[{ required: true }]}
-            >
-              <Input prefix={<IoPerson />} />
-            </Form.Item>
-          </Col>
-
-          <Col lg={8} md={24} >
-            <Form.Item
-             className='antd_modal_inputs'
-              name="firstname"
-              label={t('firstname')}
-              normalize={(v) => v?.toUpperCase()}
-              rules={[{ required: true }]}
-            >
-              <Input prefix={<IoPerson />} />
-            </Form.Item>
-          </Col>
-
-          <Col lg={8} md={24}>
-            <Form.Item
-             className='antd_modal_inputs'
-              name="surename"
-              label={t('surename')}
-              normalize={(v) => v?.toUpperCase()}
-              rules={[{ required: true }]}
-            >
-              <Input prefix={<IoPerson />} />
-            </Form.Item>
-          </Col>
-
-          <Col lg={8} md={24}>
-            <Form.Item
-             className='antd_modal_inputs'
-              label={t('phone_number')}
-              name="phone"
-              rules={[{ required: true }, { len: 19 }]}
-            >
-              <Cleave
-                options={{
-                  prefix: '+998',
-                  delimiters: [' (', ') ', '-', '-'],
-                  blocks: [4, 2, 3, 2, 2],
-                  numericOnly: true,
-                }}
-                className="ant-input modal_number_input"
-              />
-            </Form.Item>
-          </Col>
-
-
-          <Col className="main_col" lg={8} md={24}>
-                    <Form.Item
-                     className='antd_modal_inputs'
-                      name="gender"
-                      label={t('gender')}
-                      rules={[{ required: true, message: '' }]}
-                    >
-                      <Select
-                      className="modal_select"
-                        style={{ width: '100%' }}
-                        value={gender}
-                        prefix={gender?<FaMale />:<FaFemale />}
-                        onChange={(value) => setGender(value)}
-                        options={[
-                          { value: true, label: <> {t('male')}</> },
-                          { value: false, label: <>{t('female')}</> },
-                        ]}
-                      />
-                    </Form.Item>
-                  </Col>
-         
-
-          <Col span={24}>
-            <Button
-            className='modal_button'
-              type="primary"
-              htmlType="submit"
-              block
-            >
-              {t('saveData')}
-            </Button>
-          </Col>
-        </Row>
-      </Form>
-      </div>
-    </Modal>
-  </div>
+     
+   </div>
 )}
     </>
 
