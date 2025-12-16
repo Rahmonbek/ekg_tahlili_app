@@ -186,7 +186,42 @@ input:-webkit-autofill:active {
   display: none !important;
 }
 
+.ant_rows{display: flex !important; flex-direction: column !important; }
 
+:where(.css-dev-only-do-not-override-ac2jek).ant-modal .ant-modal-content{
+  width: 35vw !important;
+}
+.modal_button{width: calc(35vw - 50px) ;
+  font-size: 15px;
+  height: 38px; margin-top: 10px;}
+.antd_modal_inputs{width: calc(35vw - 50px) ; 
+ }
+:where(.css-dev-only-do-not-override-ac2jek).ant-modal-root .ant-modal-wrap{
+  width: 100% ; display: flex; justify-content: center; align-items: center;
+}
+
+.modal-text{width: 100%; display: flex; justify-content: center;flex-direction: column; text-align: center;
+margin-bottom: 20px;}
+.modal-text h1{
+  color:var(--text_second_color);
+  font-size: var(--small_size);
+}
+.modal-text p{
+  color:var(--grey_color);
+  font-size: var(--mini_size);
+}
+.modal_number_input{
+  background: #ffffff;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #d9d9d9;
+  width:calc(35vw - 50px)  ;
+
+}
+
+.doctor_info_modal :where(.css-dev-only-do-not-override-ac2jek).ant-form-item{
+  margin-bottom: 15px !important;
+}
 
 @media (max-width:1700px){
       .login_img img{width: 70%;}
