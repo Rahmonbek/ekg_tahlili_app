@@ -97,9 +97,10 @@
 "username_already_exists": "Bu login tizimda mavjud",
 "email_already_exists":"Bu email bilan allaqachon ro‘yxatdan o‘tgan.",
 "change_password": "N MED dasturida parolni o'zgartirish",
-"enter_lastname_admin":"Xodimning familiyasini kiriting",
-"enter_firstname_admin":"Xodimning ismini kiriting",
-"enter_surename_admin":"Xodimning sharifini kiriting"
+"enter_lastname_staff":"Xodimning familiyasini kiriting",
+"enter_firstname_staff":"Xodimning ismini kiriting",
+"enter_surename_staff":"Xodimning sharifini kiriting",
+"saveDataStaff":"Xodim ma'lumotlarini saqlash"
 
 
 

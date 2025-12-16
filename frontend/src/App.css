@@ -200,10 +200,6 @@ margin-bottom: 20px;}
 }
 
 
-.doctor_info_modal :where(.css-dev-only-do-not-override-ac2jek).ant-form-item{
-  margin-bottom: 15px !important;
-}
-
 @media (max-width:1700px){
       .login_img img{width: 70%;}
     }

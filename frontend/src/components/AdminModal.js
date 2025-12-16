@@ -60,7 +60,7 @@ export default function AdminModal() {
     xxl: '30%',
   }}
   >
-<div className='doctor_info_modal'>
+<div>
 
 <div className='modal-text'>
 <h1>Shifoxona administratorining ma’lumotlarini kiriting.</h1>
@@ -91,7 +91,7 @@ export default function AdminModal() {
           >
             <Input prefix={<IoPerson />} 
             className="login_input"
-            placeholder={t('enter_lastname_admin')}/>
+            placeholder={t('enter_lastname_staff')}/>
           </Form.Item>
         </Col>
 
@@ -104,7 +104,7 @@ export default function AdminModal() {
             rules={[{ required: true }]}
           >
             <Input prefix={<IoPerson />}   className="login_input"
-                      placeholder={t('enter_firstname_admin')}/>
+                      placeholder={t('enter_firstname_staff')}/>
           </Form.Item>
         </Col>
 
@@ -118,7 +118,7 @@ export default function AdminModal() {
           >
             <Input prefix={<IoPerson />} 
                 className="login_input"
-                placeholder={t('enter_surename_admin')}/>
+                placeholder={t('enter_surename_staff')}/>
           </Form.Item>
         </Col>
 
@@ -165,7 +165,7 @@ export default function AdminModal() {
                   </Form.Item>
                 </Col>
        
-
+                <Col lg={24} md={24}>
                 <Form.Item
       wrapperCol={{
         span: 24,
@@ -175,9 +175,10 @@ export default function AdminModal() {
           className='btn_form'
             htmlType="submit"
           >
-            {t('saveData')}
+            {t('saveDataStaff')}
           </Button>
         </Form.Item>
+        </Col>
       </Row>
     </Form>
     </div>
