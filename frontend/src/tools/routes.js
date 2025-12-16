@@ -1,12 +1,12 @@
 import { FaHeartbeat, FaHome } from "react-icons/fa";
-import { FaPeopleGroup } from "react-icons/fa6";
+import { FaPeopleGroup, FaUserDoctor } from "react-icons/fa6";
 import { IoIosCard, IoIosPeople, IoMdSettings } from "react-icons/io";
 
 export const routers=[
     {
         path:'/',
-        icon:<FaHome />,
-        title:"dashboard",
+        icon:<FaUserDoctor />,
+        title:"staffs",
         tools:""
     },
 

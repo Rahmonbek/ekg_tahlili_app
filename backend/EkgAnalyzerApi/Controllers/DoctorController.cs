@@ -17,7 +17,7 @@ public class DoctorController : ControllerBase
 
 
     [HttpPost("save-doctor-data")]
-    public async Task<IActionResult> GetClinic([FromBody] DoctorDTORequest data)
+    public async Task<IActionResult> SaveDoctorData([FromBody] DoctorDTORequest data)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
@@ -27,11 +27,44 @@ public class DoctorController : ControllerBase
 
         var clinic = await _doctorService.SaveDoctorData(userId, data);
         if (clinic == null)
-            return NotFound(new { message = "Clinic not found" });
+            return NotFound(new { message = "error" });
         if (clinic.Status == false)
         {
-            return BadRequest(new { message = "Clinic not found" });
+            return BadRequest(new { message = "error" });
         }
+
+        return Ok(clinic);
+    }
+    [HttpGet("get-doctors-of-clinic")]
+    public async Task<IActionResult> GetDoctors([FromQuery] int page = 1)
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+            return Unauthorized(new { message = "Token invalid" });
+
+        var userId = int.Parse(userIdClaim.Value);
+
+        if (page < 1) page = 1;
+
+        var result = await _doctorService.GetDoctorsAsync(page, userId);
+
+        return Ok(result);
+    }
+
+
+    [HttpGet("get-params-for-add-staff")]
+    public async Task<IActionResult> GetRolesForAddStaff()
+    {
+        var roleIdClaim = User.Claims.FirstOrDefault(c => c.Type == "roleId");
+        if (roleIdClaim == null)
+            return Unauthorized(new { message = "Token invalid" });
+
+        int roleId = int.Parse(roleIdClaim.Value);
+
+        var clinic = await _doctorService.GetRolesForAddStaff(roleId);
+        if (clinic == null)
+            return NotFound(new { message = "error" });
+        
 
         return Ok(clinic);
     }

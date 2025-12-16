@@ -100,7 +100,11 @@
 "enter_lastname_staff":"Xodimning familiyasini kiriting",
 "enter_firstname_staff":"Xodimning ismini kiriting",
 "enter_surename_staff":"Xodimning sharifini kiriting",
-"saveDataStaff":"Xodim ma'lumotlarini saqlash"
+"saveDataStaff":"Xodim ma'lumotlarini saqlash",
+
+"staffs":"Xodimlar",
+"clinic_staffs":"Shifoxona xodimlari",
+"FIO":"F.I.SH"
 
 
 

@@ -81,37 +81,55 @@ public class AuthService
         if (await _context.Users.AnyAsync(x => x.Email == dto.Email))
             throw new Exception("email_already_exists");
 
-        var clinic = new Clinic
+        using var transaction = await _context.Database.BeginTransactionAsync();
+
+        try
         {
-            ClinicName = ""
-        };
+            var clinic = new Clinic
+            {
+                ClinicName = ""
+            };
 
-        _context.Clinics.Add(clinic);
+            var user = new User
+            {
+                Username = dto.Username,
+                Email = dto.Email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                PasswordPlain = dto.Password,
+                Status = false,
+                RoleId = 2,
+                Clinic = clinic   // 🔥 MUHIM
+            };
 
-        
-        var user = new User
+            var doctor = new Doctor
+            {
+                User = user,      // 🔥 MUHIM
+                Gender = true
+            };
+
+            _context.Clinics.Add(clinic);
+            _context.Users.Add(user);
+            _context.Doctors.Add(doctor);
+            await _context.SaveChangesAsync();
+            var doctor_position = new DoctorPosition
+            {
+                DoctorId = doctor.Id,      // 🔥 MUHIM
+                PositionId = 77
+            };
+
+            _context.DoctorPositions.Add(doctor_position);
+            await _context.SaveChangesAsync();
+
+
+            await transaction.CommitAsync();
+
+            await SendVerificationCodeAsync(user);
+        }
+        catch
         {
-            Username = dto.Username,
-            Email = dto.Email,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            PasswordPlain = dto.Password,
-            Status = false,
-            ClinicId=clinic.Id,
-            RoleId = 2
-        };
-
-        _context.Users.Add(user);
-        var doctor = new Doctor
-        {
-            UserId = user.Id,
-            Gender=true
-        };
-
-        _context.Clinics.Add(clinic);
-
-        await _context.SaveChangesAsync();
-
-        await SendVerificationCodeAsync(user);
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 
     // ========================= VERIFY EMAIL =========================

@@ -24,7 +24,8 @@ public class Position
 
         [Column("name_en")]
         public string? NameEn { get; set; }
-       
+        public ICollection<DoctorPosition> DoctorPositions { get; set; }
+        = new List<DoctorPosition>();
 
     }
 }

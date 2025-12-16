@@ -42,6 +42,9 @@ namespace EkgAnalyzerApi.Services
                 doctorDto = new DoctorDto
                 {
                     Id = user.Doctor.Id,
+                    Gender=user.Doctor.Gender,
+                    Phone=user.Doctor.Phone,
+                    SureName=user.Doctor.SureName,
                     FirstName = user.Doctor.FirstName,
                     LastName = user.Doctor.LastName,
                     Positions = positions
@@ -75,6 +78,7 @@ namespace EkgAnalyzerApi.Services
             var userDto = new UserResponseDto
             {
                 Id = user.Id,
+                RoleId= user.RoleId,
                 Email = user.Email,
                 Username = user.Username,
                 Doctor = doctorDto,

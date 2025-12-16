@@ -91,7 +91,33 @@
   },
   {
     "ContainingType": "DoctorController",
-    "Method": "GetClinic",
+    "Method": "GetDoctors",
+    "RelativePath": "api/doctor/get-doctors-of-clinic",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "DoctorController",
+    "Method": "GetRolesForAddStaff",
+    "RelativePath": "api/doctor/get-params-for-add-staff",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "DoctorController",
+    "Method": "SaveDoctorData",
     "RelativePath": "api/doctor/save-doctor-data",
     "HttpMethod": "POST",
     "IsController": true,

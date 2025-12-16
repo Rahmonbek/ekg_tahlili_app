@@ -17,6 +17,7 @@ public class UserDTO
 public class UserResponseDto
 {
     public int Id { get; set; }
+    public int? RoleId { get; set; }
     public string Email { get; set; } = default!;
     public string Username { get; set; } = default!;
     public DoctorDto? Doctor { get; set; }
@@ -30,11 +31,21 @@ public class DoctorDto
     public string LastName { get; set; } = default!;
     public string SureName { get; set; } = default!;
     public string Phone { get; set; } = default!;
-    public string Gender { get; set; } = default!;
+    public bool Gender { get; set; } = default!;
     public List<PositionDto> Positions { get; set; } = new();
 }
 
+
 public class PositionDto
+{
+    public int Id { get; set; }
+    public int? RoleId { get; set; }
+    public string NameUz { get; set; } = default!;
+    public string NameRu { get; set; } = default!;
+    public string NameEn { get; set; } = default!;
+}
+
+public class RolesDTO
 {
     public int Id { get; set; }
     public string NameUz { get; set; } = default!;

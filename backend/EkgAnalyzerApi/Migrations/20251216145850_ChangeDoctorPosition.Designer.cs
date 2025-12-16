@@ -3,6 +3,7 @@ using System;
 using EkgAnalyzerApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EkgAnalyzerApi.Migrations
 {
     [DbContext(typeof(MedDataDB))]
-    partial class EkgDataDBModelSnapshot : ModelSnapshot
+    [Migration("20251216145850_ChangeDoctorPosition")]
+    partial class ChangeDoctorPosition
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -235,15 +238,25 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("doctor_id");
 
+                    b.Property<int?>("DoctorId1")
+                        .HasColumnType("integer");
+
                     b.Property<int>("PositionId")
                         .HasColumnType("integer")
                         .HasColumnName("position_id");
+
+                    b.Property<int?>("PositionId1")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DoctorId");
 
+                    b.HasIndex("DoctorId1");
+
                     b.HasIndex("PositionId");
+
+                    b.HasIndex("PositionId1");
 
                     b.ToTable("doctor_position");
                 });
@@ -388,17 +401,17 @@ namespace EkgAnalyzerApi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("NameEn")
+                    b.Property<string>("RoleNameEn")
                         .HasColumnType("text")
-                        .HasColumnName("name_en");
+                        .HasColumnName("role_name_en");
 
-                    b.Property<string>("NameRu")
+                    b.Property<string>("RoleNameRu")
                         .HasColumnType("text")
-                        .HasColumnName("name_ru");
+                        .HasColumnName("role_name_ru");
 
-                    b.Property<string>("NameUz")
+                    b.Property<string>("RoleNameUz")
                         .HasColumnType("text")
-                        .HasColumnName("name_uz");
+                        .HasColumnName("role_name_uz");
 
                     b.HasKey("Id");
 
@@ -423,6 +436,7 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("email");
 
@@ -534,17 +548,25 @@ namespace EkgAnalyzerApi.Migrations
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.DoctorPosition", b =>
                 {
-                    b.HasOne("EkgAnalyzerApi.Models.Doctor", "Doctor")
-                        .WithMany("DoctorPositions")
+                    b.HasOne("EkgAnalyzerApi.Models.Doctor", null)
+                        .WithMany()
                         .HasForeignKey("DoctorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EkgAnalyzerApi.Models.Position", "Position")
+                    b.HasOne("EkgAnalyzerApi.Models.Doctor", "Doctor")
                         .WithMany("DoctorPositions")
+                        .HasForeignKey("DoctorId1");
+
+                    b.HasOne("EkgAnalyzerApi.Models.Position", null)
+                        .WithMany()
                         .HasForeignKey("PositionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("EkgAnalyzerApi.Models.Position", "Position")
+                        .WithMany()
+                        .HasForeignKey("PositionId1");
 
                     b.Navigation("Doctor");
 
@@ -581,11 +603,6 @@ namespace EkgAnalyzerApi.Migrations
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.Doctor", b =>
-                {
-                    b.Navigation("DoctorPositions");
-                });
-
-            modelBuilder.Entity("EkgAnalyzerApi.Models.Position", b =>
                 {
                     b.Navigation("DoctorPositions");
                 });

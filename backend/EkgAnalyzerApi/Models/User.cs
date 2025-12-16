@@ -10,7 +10,7 @@ public class User
     [Column("id")]
     public int Id { get; set; }
         [Column("email")]
-        public string Email { get; set; } = default!;
+        public string? Email { get; set; } = default!;
 
         [Column("username")]
         public string Username { get; set; } = default!;
@@ -22,8 +22,9 @@ public class User
         public int? ClinicId { get; set; }
 
         [Column("role_id")]
-        public int? RoleId { get; set; }
-        
+        public int RoleId { get; set; }
+        public Role? Role { get; set; }
+
         [Column("status")]
         public bool Status { get; set; } = false;
         [Column("created_at")]

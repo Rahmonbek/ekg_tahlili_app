@@ -194,6 +194,42 @@
         }
       }
     },
+    "/api/doctor/get-doctors-of-clinic": {
+      "get": {
+        "tags": [
+          "Doctor"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "style": "form",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/doctor/get-params-for-add-staff": {
+      "get": {
+        "tags": [
+          "Doctor"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/Med/analyze": {
       "post": {
         "tags": [
@@ -331,6 +367,11 @@
             "format": "int32",
             "nullable": true
           },
+          "userId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
           "username": {
             "type": "string",
             "nullable": true
@@ -356,10 +397,6 @@
             "nullable": true
           },
           "phone": {
-            "type": "string",
-            "nullable": true
-          },
-          "birthdate": {
             "type": "string",
             "nullable": true
           },

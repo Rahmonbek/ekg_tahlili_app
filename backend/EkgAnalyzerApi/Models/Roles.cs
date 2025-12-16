@@ -10,14 +10,14 @@ public class Role
         [Column("id")]
         public int Id { get; set; }
 
-        [Column("role_name_uz")]
-        public string? RoleNameUz { get; set; }
+        [Column("name_uz")]
+        public string? NameUz { get; set; }
 
-        [Column("role_name_ru")]
-        public string? RoleNameRu { get; set; }
+        [Column("name_ru")]
+        public string? NameRu { get; set; }
 
-        [Column("role_name_en")]
-        public string? RoleNameEn { get; set; }
+        [Column("name_en")]
+        public string? NameEn { get; set; }
        
 
     }

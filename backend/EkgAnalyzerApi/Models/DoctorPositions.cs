@@ -11,11 +11,11 @@ public class DoctorPosition
         public int Id { get; set; }
 
         [Column("doctor_id")]
-        public int? DoctorId { get; set; }
+        public int DoctorId { get; set; }
+        public Doctor? Doctor { get; set; }
 
         [Column("position_id")]
-        public int? PositionId { get; set; }
-
-        public Position? Position { get; set; }
+        public int PositionId { get; set; }
+        public Position Position { get; set; } = null!;
     }
 }

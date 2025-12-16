@@ -70,15 +70,16 @@ namespace EkgAnalyzerApi.Data
 
             // Doctor - DoctorPosition (1:n)
             modelBuilder.Entity<DoctorPosition>()
-                .HasOne<Doctor>()
-                .WithMany()
-                .HasForeignKey(dp => dp.DoctorId);
+         .HasOne(dp => dp.Doctor)
+         .WithMany(d => d.DoctorPositions)
+         .HasForeignKey(dp => dp.DoctorId);
 
-            // DoctorPosition - Position (n:1)
+            // Position -> DoctorPosition (1:n)
             modelBuilder.Entity<DoctorPosition>()
-                .HasOne<Position>()
-                .WithMany()
+                .HasOne(dp => dp.Position)
+                .WithMany(p => p.DoctorPositions)
                 .HasForeignKey(dp => dp.PositionId);
+
 
             // User - Clinic (n:1)
             modelBuilder.Entity<User>()

@@ -199,6 +199,10 @@ margin-bottom: 20px;}
   font-size: var(--mini_size);
 }
 
+.big_card_content{width: 100%; min-height: 85vh;}
+:where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-thead >tr>th, :where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-thead >tr>td{
+  background: var(--back_color);
+}
 
 @media (max-width:1700px){
       .login_img img{width: 70%;}

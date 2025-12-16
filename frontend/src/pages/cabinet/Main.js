@@ -8,6 +8,7 @@ import EcgAnalyzer from './ecg_analyse/EcgAnalyzer'
 import { useStore } from '../../store/Store'
 import { get_complaints_data } from '../../host/requests/ComplaintsRequest'
 import AdminModal from '../../components/AdminModal'
+import Doctors from './pages/doctors/Doctors'
 
 export default function Main() {
     const {t}=useTranslation()
@@ -33,6 +34,7 @@ export default function Main() {
             <Header/>
             <div className='content'>
                 <Routes>
+                    <Route path="" element={<Doctors/>} />
                     <Route path="settings" element={<ClinicInfo/>} />
                     <Route path="analyse-ecg" element={<EcgAnalyzer/>} />
                 </Routes>
