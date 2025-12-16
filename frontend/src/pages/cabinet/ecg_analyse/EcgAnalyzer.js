@@ -34,6 +34,7 @@ export default function EcgAnalyzer() {
   const [number, setnumber] = useState(0);
   const [form] = Form.useForm(); 
   const [form1] = Form.useForm(); 
+    const [phoneValue, setPhoneValue] = useState('');
   const [form2] = Form.useForm(); 
     const [image, setimage] = useState(null)
     const [file_input, setfile_input] = useState("")
@@ -64,6 +65,7 @@ export default function EcgAnalyzer() {
         gender: res.data.gender,
         phone: formatPhoneNumberForForm(res.data.phone),
       });
+      setPhoneValue(formatPhoneNumberForForm(res.data.phone));
       setcheck_ecg(true)
     } catch (err) {
       setPatcient({});
@@ -320,6 +322,7 @@ const resetData=()=>{
                       <Select
                         style={{ width: '100%' }}
                         value={gender}
+                        placeholder={t('enter_gender')}
                         prefix={gender?<FaMale />:<FaFemale />}
                         onChange={(value) => setGender(value)}
                         options={[
@@ -338,6 +341,8 @@ const resetData=()=>{
                       rules={[{ required: true, message: '' }, { len: 19, message: '' }]}
                     >
                       <Cleave
+                       value={phoneValue}
+    onChange={(e) => setPhoneValue(e.target.value)}
                         options={{
                           prefix: '+998',
                           delimiters: [' (', ') ', '-', '-'],

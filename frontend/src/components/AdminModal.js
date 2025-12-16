@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Button, Col, Form, Input, Modal, Row, Select } from 'antd';
+import React, { useEffect, useState } from 'react'
+import { Button, Col, Form, Input, message, Modal, Row, Select } from 'antd';
 import { IoPerson } from 'react-icons/io5';
 
 import { FaFemale, FaMale } from 'react-icons/fa';
@@ -7,15 +7,35 @@ import Cleave from 'cleave.js/react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { send_doc_data } from '../host/requests/UserRequest';
-import { formatPhoneNumber } from '../tools/formatters';
+import { formatPhoneNumber, formatPhoneNumberForForm, formatPhoneNumberForForm1 } from '../tools/formatters';
 import { useStore } from '../store/Store';
 export default function AdminModal() {
     const {t}=useTranslation()
   const {user_id, setuser_id, user, setuser, open_admin_modal, setopen_admin_modal}=useStore()
   const [first_load, setfirst_load]=useState(false)
   const navigate=useNavigate()
+  const [phoneValue, setPhoneValue] = useState('');
   const [form] = Form.useForm(); 
   const [gender, setGender] = useState(true);
+  const [number, setnumber] = useState(1);
+
+
+  useEffect(()=>{
+    if (open_admin_modal) {
+    const formatted = formatPhoneNumberForForm(user.doctor.phone);
+    setPhoneValue(formatted);
+    form.setFieldsValue({
+      gender: user?.doctor?.gender,
+      surename: user?.doctor?.sureName,
+      lastname: user?.doctor?.lastName,
+      firstname: user?.doctor?.firstName,
+      phone: formatted,
+    });
+  }
+ 
+    
+    
+  }, [user, open_admin_modal])
 
   const onFinishProfile = async (values) => {
     try {
@@ -35,9 +55,11 @@ export default function AdminModal() {
       });
   
       setopen_admin_modal(false)
+      message.success(t("data_saved"))
       console.log("Profil muvaffaqiyatli yangilandi!");
     } catch (e) {
       console.log("Xatolik:", e);
+      message.error(t("server_error"))
     }
   };
   
@@ -48,8 +70,9 @@ export default function AdminModal() {
     <Modal
     open={open_admin_modal}
     footer={null}
-    closable={false}
-    maskClosable={false}
+    onCancel={()=>{setopen_admin_modal(false)}}
+    closable={user?.doctor!=null && user?.doctor?.firstName!=null}
+    maskClosable={user?.doctor!=null && user?.doctor?.firstName!=null}
    centered
    width={{
     xs: '90%',
@@ -63,8 +86,8 @@ export default function AdminModal() {
 <div>
 
 <div className='modal-text'>
-<h1>Shifoxona administratorining ma’lumotlarini kiriting.</h1>
-<p>Tizimdan foydalanish uchun admin ma'lumotlarini kiritishingiz shart</p>
+<h1>{t("self_data_add")}</h1>
+{!(user?.doctor!=null && user?.doctor?.firstName!=null)?<p>{t("required_self_data")}</p>:<></>}
 </div>
     <Form
       form={form}
@@ -121,29 +144,6 @@ export default function AdminModal() {
                 placeholder={t('enter_surename_staff')}/>
           </Form.Item>
         </Col>
-
-        <Col lg={24} md={24}>
-        <Form.Item
-                      label={t('phone_number')}
-                      name="phone"
-                      wrapperCol={{ span: 24 }}
-                      rules={[{ required: true, message: '' }, { len: 19, message: '' }]}
-                    >
-                      <Cleave
-                        options={{
-                          prefix: '+998',
-                          delimiters: [' (', ') ', '-', '-'],
-                          blocks: [4, 2, 3, 2, 2],
-                          numericOnly: true,
-                        }}
-                        placeholder="+998 (__) ___-__-__"
-                        className="ant-input claveInput"
-                        style={{ width: '100%' }}
-                      />
-                    </Form.Item>
-        </Col>
-
-
         <Col className="main_col" lg={24} md={24}>
                   <Form.Item
                    className=''
@@ -152,6 +152,7 @@ export default function AdminModal() {
                     rules={[{ required: true, message: '' }]}
                   >
                     <Select
+                    placeholder={t('enter_gender_staff')}
                     className="modal_select"
                       style={{ width: '100%' }}
                       value={gender}
@@ -164,6 +165,32 @@ export default function AdminModal() {
                     />
                   </Form.Item>
                 </Col>
+         
+         <Col className="main_col" lg={24} md={24}>
+                    <Form.Item
+                      label={t('phone_number')}
+                      name="phone"
+                      wrapperCol={{ span: 24 }}
+                      rules={[{ required: true, message: '' }, { len: 19, message: '' }]}
+                    >
+                      <Cleave
+                        options={{
+                          prefix: '+998',
+                          delimiters: [' (', ') ', '-', '-'],
+                          blocks: [4, 2, 3, 2, 2],
+                          numericOnly: true,
+                        }}
+                        value={phoneValue}
+    onChange={(e) => setPhoneValue(e.target.value)}
+                        placeholder="+998 (__) ___-__-__"
+                        className="ant-input claveInput"
+                        style={{ width: '100%' }}
+                      />
+                    </Form.Item>
+                  </Col>
+
+
+
        
                 <Col lg={24} md={24}>
                 <Form.Item

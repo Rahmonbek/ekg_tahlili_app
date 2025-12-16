@@ -20,6 +20,7 @@ public class UserResponseDto
     public int? RoleId { get; set; }
     public string Email { get; set; } = default!;
     public string Username { get; set; } = default!;
+    public RolesDTO? Role { get; set; }
     public DoctorDto? Doctor { get; set; }
     public ClinicDto? Clinic { get; set; }
 }

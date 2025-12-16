@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import ChangeLangs from './ChangeLangs'
-import { FaBars } from 'react-icons/fa6'
+import { FaBars, FaCircleInfo, FaHandSparkles } from 'react-icons/fa6'
 import { useStore } from '../store/Store'
 import { IoIosExit, IoMdExit } from 'react-icons/io'
 import { useNavigate } from 'react-router-dom'
@@ -10,13 +10,10 @@ import { useTranslation } from 'react-i18next'
 import maleStaff from '../images/men_staff.jpg'
 import femaleStaff from '../images/women_staff.jpg'
 import { MdOutlineMedicalInformation } from 'react-icons/md'
+import { formatHeaderLastname } from '../tools/formatters'
 export default function Header() {
-  const { open_menu, setopen_menu, setuser_id, setuser, user } = useStore();
-  console.log(user.doctor.firstName); 
-  console.log(user.doctor.gender);
-console.log(user.doctor.lastName);   
-console.log(user.doctor.phone);     
-console.log(user.role.nameEn);
+  const { open_menu, setopen_menu, setuser_id, setuser, user, setopen_admin_modal } = useStore();
+
 
 const [isRightListOpen, setIsRightListOpen] = useState(false);
 
@@ -36,22 +33,9 @@ const handleExitIconClick = () => {
     setuser(null);
   };
 
-  const lastName = user.doctor.lastName; 
-let prefix = "";
 
 
-const twoLetterPrefixes = ["Sh", "Ch"]; 
-const lastNameUpper = lastName.toUpperCase();
-
-const prefixMatch = twoLetterPrefixes.find(p => lastNameUpper.startsWith(p.toUpperCase()));
-
-if (prefixMatch) {
-  prefix = prefixMatch;
-} else {
-  prefix = lastNameUpper[0];
-}
-
-const displayName = `${prefix}.${user.doctor.firstName}`;
+  
 
 
   return (
@@ -64,15 +48,13 @@ const displayName = `${prefix}.${user.doctor.firstName}`;
         <div className='header_others'>
           <ChangeLangs />
         </div>
-<div className='open_list'>
+{user!=null && user.doctor!=null?<div className='open_list'>
         <div className='exit_icon' onClick={handleExitIconClick}>
-        <img src={user ? (user.doctor.gender ? maleStaff : femaleStaff) : staff} alt="Staff" />
+        <img src={(!user?.doctor?.gender ? femaleStaff : maleStaff)} alt="Staff" />
           <div>
-          <h1>{user ? displayName : "..."}</h1>
+          <h1>{formatHeaderLastname(user?.doctor?.lastName)+user?.doctor?.firstName}</h1>
  <p>
-  {user 
-    ? user.role[`name${t("data_lang")}`] 
-    : ""
+  { user.role[`name${t("data_lang")}`] 
   }
 </p>
 
@@ -81,11 +63,12 @@ const displayName = `${prefix}.${user.doctor.firstName}`;
 
         <div  className={`right_list ${isRightListOpen ? "open" : ""}`}>
 <ul>
-  <li ><a><i><MdOutlineMedicalInformation /></i> Shaxsiy ma'lumotlar</a></li>
-  <li onClick={handleExit}><a><i><IoIosExit /></i> Chiqish</a></li>
+  <li onClick={()=>{setopen_admin_modal(true); setIsRightListOpen(false)}}><a><i><FaCircleInfo /></i> {t("self_data")}</a></li>
+  <li onClick={()=>{handleExit();  setIsRightListOpen(false)}}><a><i><FaHandSparkles /></i> {t("exit")}</a></li>
 </ul>
         </div>
-        </div>
+        </div>:<></>}
+
       </div>
     </div>
   );

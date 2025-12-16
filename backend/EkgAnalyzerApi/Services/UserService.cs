@@ -17,6 +17,7 @@ namespace EkgAnalyzerApi.Services
         public async Task<UserResponseDto?> GetUserByIdAsync(int userId)
         {
             var user = await _context.Users
+    .Include(u => u.Role)
     .Include(u => u.Doctor)
     .Include(u => u.Clinic)
         .ThenInclude(c => c.ClinicDetail)
@@ -81,6 +82,13 @@ namespace EkgAnalyzerApi.Services
                 RoleId= user.RoleId,
                 Email = user.Email,
                 Username = user.Username,
+                Role=new RolesDTO
+                {
+                    Id=user.Role.Id,
+                    NameUz=user.Role.NameUz,
+                    NameRu=user.Role.NameRu,
+                    NameEn=user.Role.NameEn,
+                },
                 Doctor = doctorDto,
                 Clinic = clinicDto
             };

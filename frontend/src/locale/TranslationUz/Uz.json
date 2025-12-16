@@ -78,6 +78,7 @@
  "saveData":"Ma'lumotlar saqlash",
  "ecg_analyse":"EKG ni tahlil qilish",
  "alert_patcient":"Bemorning ma’lumotlarini pasportdagi ma’lumotlar bilan bir xil tarzda kiriting.",
+ "alert_staff_change":"Xodimning ma’lumotlarini pasportdagi ma’lumotlar bilan bir xil tarzda kiriting.",
  "alert_ecg":"EKG faylini yuklashda aynan shu bemorga tegishli fayl ekanligigiga ishonch hosil qiling. Agarda EKG grafigini rasm ko'rinishida yuborayotgan bo'lsangiz rasmni sifati yaxshiligiga, rasmda EKG qo'gozidan boshqa buyumlar yo'qligiga va rasmni yaqinlashtirganda EKG chiziqlari aniq ko'rinayotganligiga ishonch hosil qiling.",
  "select_ecg_file":"EKG fayl tanlang",
  "access_file_types":"Fayl turlari",
@@ -104,7 +105,18 @@
 
 "staffs":"Xodimlar",
 "clinic_staffs":"Shifoxona xodimlari",
-"FIO":"F.I.SH"
+"FIO":"F.I.SH",
+"role":"Lavozim",
+"add_new_staff":"Yangi xodim qo'shish",
+"enter_gender_staff":"Xodimning jinsini tanlang",
+"enter_gender":"Bemorning jinsini tanlang",
+"self_data_add":"Shaxsiy ma'lumotlaringizni kiriting",
+"required_self_data":"Tizimdan foydalanish uchun shaxsiy ma'lumotlariningizni kiritishingiz shart",
+"self_data":"Shaxsiy ma'lumotlar",
+"exit":"Tizimdan chiqish",
+"data_saved":"Ma'lumot muvaffaqiyatli saqlandi",
+"server_error":"Xato! Ma'lumot saqlanmadi"
+
 
 
 

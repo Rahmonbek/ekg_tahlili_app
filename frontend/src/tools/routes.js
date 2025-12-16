@@ -4,10 +4,10 @@ import { IoIosCard, IoIosPeople, IoMdSettings } from "react-icons/io";
 
 export const routers=[
     {
-        path:'/',
+        path:'/doctor',
         icon:<FaUserDoctor />,
         title:"staffs",
-        tools:""
+        tools:"doctor"
     },
 
     

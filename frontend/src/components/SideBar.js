@@ -18,7 +18,7 @@ export default function SideBar() {
         <div className='sidebar_menu'>
             {routers.map((item, index)=>(
                 <Link to={item.path} className={`sidebar_menu_item 
-                ${(location.pathname.indexOf(item.tools)!=-1 && item.tools.length!=0) || (item.tools.length==0 && location.pathname.replaceAll("/", '').length==0)?"active_sidebar_item":""}`} key={index}>
+                ${(location.pathname.indexOf(item.tools)!=-1 && item.tools.length!=0) || (index==0 && location.pathname.replaceAll("/", '').length==0)?"active_sidebar_item":""}`} key={index}>
                    <div className='sidebar_icon'>
                     {item.icon}
                    </div>

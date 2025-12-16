@@ -9,6 +9,7 @@ import { useStore } from '../../store/Store'
 import { get_complaints_data } from '../../host/requests/ComplaintsRequest'
 import AdminModal from '../../components/AdminModal'
 import Doctors from './pages/doctors/Doctors'
+import CreateUpdateDoctor from './pages/doctors/create/CreateUpdateDoctor'
 
 export default function Main() {
     const {t}=useTranslation()
@@ -35,6 +36,8 @@ export default function Main() {
             <div className='content'>
                 <Routes>
                     <Route path="" element={<Doctors/>} />
+                    <Route path="doctor" element={<Doctors/>} />
+                    <Route path="doctor/create" element={<CreateUpdateDoctor/>} />
                     <Route path="settings" element={<ClinicInfo/>} />
                     <Route path="analyse-ecg" element={<EcgAnalyzer/>} />
                 </Routes>
