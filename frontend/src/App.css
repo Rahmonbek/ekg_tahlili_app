@@ -205,14 +205,14 @@ margin-bottom: 20px;}
 }
 
 .big_card_content{width: 100%; min-height: 85vh;}
-:where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-thead >tr>th, :where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-thead >tr>td{
-  background: var(--back_color);
-}
+
 :where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-cell, :where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-thead>tr>th, :where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-tbody>tr>th, :where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-tbody>tr>td, :where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper tfoot>tr>th, :where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper tfoot>tr>td{
-  padding: 10px !important;
+  padding: 10px !important; 
 }
 :where(.css-dev-only-do-not-override-ac2jek).ant-modal-root .ant-modal-wrap{padding: 20px;}
-
+:where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-thead >tr>th, :where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-thead >tr>td{
+   background: linear-gradient(var(--back_color), var(--back_gradient_color)) !important; padding: 15px 10px !important; color: white !important;
+}
 .open_list{display: flex; flex-direction: column; position: relative;}
 .right_list{background-color: #fff;
   border-radius: 15px;
