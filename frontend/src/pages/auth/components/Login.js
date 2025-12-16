@@ -12,8 +12,11 @@ import { IoPerson } from 'react-icons/io5';
 export default function Login() {
   const [loading, setloading]=useState(false)
   const {user_id, setuser_id} = useStore()
+  
+
     const {t}=useTranslation()
    const navigate=useNavigate()
+
 
 
 
@@ -78,11 +81,13 @@ export default function Login() {
         {
            required: true,
            message: "",
-            
-        }
+         }
       ]}
+      normalize={(value) => {
+        return value ? value.replace(/[.,!? ]/g, '') : '';
+      }}
     >
-      <Input prefix={<IoPerson />}  autoComplete="username" className='login_input' placeholder={t("enter_username")} />
+      <Input prefix={<IoPerson />}   autoComplete="username" className='login_input' placeholder={t("enter_username")} />
     </Form.Item>
 
     <Form.Item
@@ -94,6 +99,9 @@ export default function Login() {
           message: "",
         },
       ]}
+      normalize={(value) => {
+        return value ? value.replace(/[.,!? ]/g, '') : '';
+      }}
     >
       <Input.Password prefix={<IoMdLock />} className='login_input'  placeholder={t("enter_password")} autoComplete="current-password"/>
     </Form.Item>
