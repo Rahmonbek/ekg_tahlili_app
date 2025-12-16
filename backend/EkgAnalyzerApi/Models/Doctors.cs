@@ -16,19 +16,19 @@ namespace EkgAnalyzerApi.Models
         public User User { get; set; } = null!;
 
         [Column("firstname")]
-        public string FirstName { get; set; }
+        public string? FirstName { get; set; }
 
         [Column("lastname")]
-        public string LastName { get; set; }
+        public string? LastName { get; set; }
 
         [Column("surename")]
-        public string SureName { get; set; }
+        public string? SureName { get; set; }
 
         [Column("gender")]
         public bool Gender { get; set; }
 
         [Column("phone")]
-        public string Phone { get; set; }
+        public string? Phone { get; set; }
 
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;

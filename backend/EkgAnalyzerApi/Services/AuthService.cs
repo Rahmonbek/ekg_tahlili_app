@@ -88,6 +88,7 @@ public class AuthService
 
         _context.Clinics.Add(clinic);
 
+        
         var user = new User
         {
             Username = dto.Username,
@@ -100,6 +101,14 @@ public class AuthService
         };
 
         _context.Users.Add(user);
+        var doctor = new Doctor
+        {
+            UserId = user.Id,
+            Gender=true
+        };
+
+        _context.Clinics.Add(clinic);
+
         await _context.SaveChangesAsync();
 
         await SendVerificationCodeAsync(user);
