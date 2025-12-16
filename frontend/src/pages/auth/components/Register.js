@@ -15,7 +15,7 @@ export default function Register() {
   const [open, setopen]=useState(false)
   const [loading, setloading]=useState(false)
   const [email, setemail]=useState(null)
-  const [username, setUsername]=useState(null)
+ 
   const [usernameError, setUsernameError] = useState(""); 
   const [emailError, setEmailError] = useState("");
 
@@ -131,6 +131,9 @@ const onFinish = async (val) => {
         message: t("please_enter_email"),
       }
     ]}
+    normalize={(value) => {
+      return value ? value.replace(/[.,!? ]/g, '') : '';
+    }}
   >
     <Input
       prefix={<IoIosMail />}
@@ -152,11 +155,14 @@ const onFinish = async (val) => {
         message: t("please_enter_username"),
       },
     ]}
+    normalize={(value) => {
+      return value ? value.replace(/[.,!? ]/g, '') : '';
+    }}
   >
     <Input
       prefix={<IoPerson />}
       placeholder={t("enter_username")}
-      onChange={() => setUsernameError("")} // input o'zgarganda API errorni tozalash
+      onChange={() => setUsernameError("")} 
     />
   </Form.Item>
 
@@ -172,6 +178,9 @@ const onFinish = async (val) => {
           message: "",
         },
       ]}
+      normalize={(value) => {
+        return value ? value.replace(/[.,!? ]/g, '') : '';
+      }}
     >
       <Input.Password  prefix={<IoMdLock />} className='login_input'  placeholder={t("enter_new_password")} autoComplete="new-password"/>
     </Form.Item>
@@ -180,6 +189,7 @@ const onFinish = async (val) => {
       wrapperCol={{
         span: 24,
       }}
+      
     >
       <Button loading={loading} className='btn_form' htmlType="submit">
         {t("register")}

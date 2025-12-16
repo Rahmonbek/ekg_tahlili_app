@@ -44,13 +44,11 @@ const twoLetterPrefixes = ["Sh", "Ch"];
 const lastNameUpper = lastName.toUpperCase();
 
 const prefixMatch = twoLetterPrefixes.find(p => lastNameUpper.startsWith(p.toUpperCase()));
-
 if (prefixMatch) {
   prefix = prefixMatch;
 } else {
   prefix = lastNameUpper[0];
 }
-
 const displayName = `${prefix}.${user.doctor.firstName}`;
 
 
