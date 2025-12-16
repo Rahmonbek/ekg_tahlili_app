@@ -181,7 +181,7 @@ input:-webkit-autofill:active {
 .lang_exit{display: flex; align-items: center !important; }
 
 .exit_icon{display: flex; align-items: center; cursor: pointer; padding: 0px 35px 0px 30px;}
-.exit_icon img{width: 45px !important; height: 45px; border-radius: 12px; margin-right: 10px;}
+.exit_icon img{ width: 45px; border-radius: 12px; margin-right: 10px;}
 .exit_icon h1{ color:var(--text_color); max-width: 160px; overflow: hidden;
   font-size: var(--small_size); font-weight: 600;}
   .exit_icon p{ color:var(--grey_color);
