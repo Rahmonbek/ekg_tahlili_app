@@ -5,6 +5,8 @@ export const useStore = create((set) => ({
     setuser_id: (id) => set({ user_id: id }),
     open_admin_modal: false,
     setopen_admin_modal: (id) => set({ open_admin_modal: id }),
+    loader: false,
+    setloader: (id) => set({ loader: id }),
     complaints: [],
     setcomplaints: (id) => set({ complaints: id }),
     roles: [],

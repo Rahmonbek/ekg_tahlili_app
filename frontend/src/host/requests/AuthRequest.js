@@ -14,10 +14,8 @@ export const verify_code=(data)=>{
 }
 
 
-export const checkusername = (username) => {
-    return httpGetRequest("/auth/check-username", {
-      username: username
-    });
+export const checkusername = (data) => {
+    return httpGetRequest("/auth/check-username", data);
   };
   
   

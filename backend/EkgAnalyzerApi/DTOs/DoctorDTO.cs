@@ -55,7 +55,7 @@ public class DoctorDTOResponseData
     public bool Gender { get; set; }
 
     public List<PositionDto> Positions { get; set; }
-    public RolesDTO Role { get; set; }
+    public RolesDTO? Role { get; set; }
 
 }
 

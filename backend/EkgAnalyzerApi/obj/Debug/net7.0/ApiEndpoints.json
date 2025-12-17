@@ -91,6 +91,16 @@
   },
   {
     "ContainingType": "DoctorController",
+    "Method": "GetDefaultUserName",
+    "RelativePath": "api/doctor/get-default-username",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "DoctorController",
     "Method": "GetDoctors",
     "RelativePath": "api/doctor/get-doctors-of-clinic",
     "HttpMethod": "GET",

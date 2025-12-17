@@ -2,6 +2,7 @@
 using EkgAnalyzerApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Security.Claims;
 
 [ApiController]
@@ -35,6 +36,22 @@ public class DoctorController : ControllerBase
 
         return Ok(clinic);
     }
+
+    [HttpGet("get-default-username")]
+    public async Task<IActionResult> GetDefaultUserName()
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+            return Unauthorized(new { message = "Token invalid" });
+
+        var userId = int.Parse(userIdClaim.Value);
+        
+
+        var result = await _doctorService.GetDefaultUserName(userId);
+
+        return Ok(new { username = result });
+    }
+
     [HttpGet("get-doctors-of-clinic")]
     public async Task<IActionResult> GetDoctors([FromQuery] int page = 1)
     {

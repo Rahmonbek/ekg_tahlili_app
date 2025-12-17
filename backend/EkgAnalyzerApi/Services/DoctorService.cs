@@ -19,7 +19,23 @@ namespace EkgAnalyzerApi.Services
             _superAdminRoleId = 1;
 
         }
+        public async Task<string> GetDefaultUserName(int user_id)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(x => x.Id == user_id);
+            var username = "";
+            string yil = DateTime.Now.Year.ToString();
+            var doctors_count = _context.Users.Where(u => u.ClinicId == user.ClinicId).OrderByDescending(u => u.Id).FirstOrDefault();
+            if (doctors_count != null) {
+                username = "dr" + user.ClinicId.ToString()+ yil +(doctors_count.Id+1).ToString();
+            }
+            else
+            {
+                username = "dr" + user.ClinicId.ToString()+ yil + "1";
+            }
 
+                return username;
+        }
         public async Task<DoctorListDTO> GetDoctorsAsync(int pageNumber, int user_id)
         {
             var user = await _context.Users
@@ -102,7 +118,7 @@ namespace EkgAnalyzerApi.Services
                 NameRu = r.NameRu,
                 NameEn = r.NameEn,
 
-            }).ToList();
+            }).OrderBy(d => d.Id).ToList();
 
             var positions = _context.Positions.Where(r => r.RoleId != _superAdminRoleId && r.RoleId != _adminRoleId).Select(r => new PositionDto
             {
@@ -112,7 +128,7 @@ namespace EkgAnalyzerApi.Services
                 NameRu = r.NameRu,
                 NameEn = r.NameEn,
 
-            }).ToList();
+            }).OrderBy(d=>d.RoleId).ToList();
 
             return new ParamsStaffDTO
             {
@@ -122,77 +138,75 @@ namespace EkgAnalyzerApi.Services
         }
         public async Task<DoctorDTOResponse> SaveDoctorData(int user_id, DoctorDTORequest dto)
         {
-            var user = await _context.Users
+            var currentUser = await _context.Users
                 .FirstOrDefaultAsync(x => x.Id == user_id);
-            var doctor = new Doctor();
-            
-            if (user == null)
+
+            if (currentUser == null)
                 return Fail("user_not_found");
 
-            if (user.RoleId != _adminRoleId && user.RoleId != _directorRoleId)
+            if (currentUser.RoleId != _adminRoleId && currentUser.RoleId != _directorRoleId)
                 return Fail("user_has_not_permission");
 
+            Doctor doctor;
+
+            // =========================
+            // CREATE
+            // =========================
             if (dto.Id == null)
             {
-                var new_user = new User
+                if (string.IsNullOrWhiteSpace(dto.Username))
+                    return Fail("username_required");
+
+                var usernameExists = await _context.Users
+                    .AnyAsync(u => u.Username == dto.Username);
+
+                if (usernameExists)
+                    return Fail("username_already_exists");
+
+                var newUser = new User
                 {
-                    Id = dto.UserId ?? 0,
+                    Username = dto.Username,
+                    PasswordPlain = dto.Password ?? "000",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password ?? "000"),
+                    Status = true,
+                    RoleId = dto.RoleId,
+                    ClinicId = currentUser.ClinicId
                 };
-                if (dto.Username != null)
+
+                _context.Users.Add(newUser);
+                await _context.SaveChangesAsync();
+
+                doctor = new Doctor
                 {
-                    var existingUser = await _context.Users
-                 .FirstOrDefaultAsync(x => x.Username == dto.Username);
-
-                    if (existingUser != null)
-                        return Fail("username_already_exists");
-
-                   new_user = new User
-                    {
-                        Username = dto.Username,
-                        PasswordPlain = dto.Password ?? "000",
-                        PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password??"000"),
-                        Status = true,
-                        RoleId = dto.RoleId,
-                        ClinicId = user.ClinicId
-                    };
-
-                    _context.Users.Add(new_user);
-                    await _context.SaveChangesAsync();
-                }
-
-
-
-
-                    doctor = new Doctor
-                    {
-                        UserId = new_user.Id,
-                        FirstName = dto.FirstName,
-                        LastName = dto.LastName,
-                        SureName = dto.SureName,
-                        Gender = dto.Gender,
-                        Phone = dto.Phone
-                    };
+                    UserId = newUser.Id,
+                    FirstName = dto.FirstName,
+                    LastName = dto.LastName,
+                    SureName = dto.SureName,
+                    Gender = dto.Gender,
+                    Phone = dto.Phone
+                };
 
                 _context.Doctors.Add(doctor);
                 await _context.SaveChangesAsync();
-               
-                foreach (var position in dto.Positions)
+
+                if (dto.Positions != null)
                 {
-                    var new_position = new DoctorPosition
+                    foreach (var position in dto.Positions)
                     {
-                        DoctorId = doctor.Id,
-                        PositionId = position.Id
-                    };
-                    _context.DoctorPositions.Add(new_position);
+                        _context.DoctorPositions.Add(new DoctorPosition
+                        {
+                            DoctorId = doctor.Id,
+                            PositionId = position.Id
+                        });
+                    }
+                    await _context.SaveChangesAsync();
                 }
-                await _context.SaveChangesAsync();
-                doctor = await _context.Doctors
-                   .Include(d => d.User)
-                   .FirstOrDefaultAsync(d => d.Id == dto.Id);
             }
+            // =========================
+            // UPDATE
+            // =========================
             else
             {
-                // Mavjud doktorni yangilash
                 doctor = await _context.Doctors
                     .Include(d => d.User)
                     .FirstOrDefaultAsync(d => d.Id == dto.Id);
@@ -200,15 +214,14 @@ namespace EkgAnalyzerApi.Services
                 if (doctor == null)
                     return Fail("doctor_not_found");
 
-                // Doktor ma'lumotlarini yangilash
                 doctor.FirstName = dto.FirstName;
                 doctor.LastName = dto.LastName;
                 doctor.SureName = dto.SureName;
                 doctor.Gender = dto.Gender;
                 doctor.Phone = dto.Phone;
 
-                // Username yangilash, agar o'zgargan bo'lsa
-                if (dto.Username != null && doctor.User.Username != dto.Username)
+                if (!string.IsNullOrWhiteSpace(dto.Username) &&
+                    doctor.User.Username != dto.Username)
                 {
                     var usernameExists = await _context.Users
                         .AnyAsync(u => u.Username == dto.Username && u.Id != doctor.UserId);
@@ -219,8 +232,7 @@ namespace EkgAnalyzerApi.Services
                     doctor.User.Username = dto.Username;
                 }
 
-                // Password yangilash, agar berilgan bo'lsa
-                if (!string.IsNullOrEmpty(dto.Password))
+                if (!string.IsNullOrWhiteSpace(dto.Password))
                 {
                     doctor.User.PasswordPlain = dto.Password;
                     doctor.User.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
@@ -228,34 +240,43 @@ namespace EkgAnalyzerApi.Services
 
                 if (dto.Positions != null)
                 {
-                    var existingPositions = _context.DoctorPositions
-                    .Where(dp => dp.DoctorId == doctor.Id);
-                    _context.DoctorPositions.RemoveRange(existingPositions);
+                    var oldPositions = _context.DoctorPositions
+                        .Where(dp => dp.DoctorId == doctor.Id);
+
+                    _context.DoctorPositions.RemoveRange(oldPositions);
 
                     foreach (var position in dto.Positions)
                     {
-                        var new_position = new DoctorPosition
+                        _context.DoctorPositions.Add(new DoctorPosition
                         {
                             DoctorId = doctor.Id,
                             PositionId = position.Id
-                        };
-                        _context.DoctorPositions.Add(new_position);
+                        });
                     }
-                    await _context.SaveChangesAsync();
                 }
+
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
+            // =========================
+            // RESPONSE
+            // =========================
+            doctor = await _context.Doctors
+                .Include(d => d.User)
+                .ThenInclude(u => u.Role)
+                .FirstOrDefaultAsync(d => d.Id == doctor.Id);
+
             var positions = await _context.DoctorPositions
-                   .Where(dp => dp.DoctorId == doctor.Id)
-                   .Include(dp => dp.Position)
-                   .Select(dp => new PositionDto
-                   {
-                       Id = dp.Position!.Id,
-                       NameUz = dp.Position!.NameUz ?? "",
-                       NameRu = dp.Position!.NameRu ?? "",
-                       NameEn = dp.Position!.NameEn ?? ""
-                   }).ToListAsync();
+                .Where(dp => dp.DoctorId == doctor.Id && dp.Position != null)
+                .Select(dp => new PositionDto
+                {
+                    Id = dp.Position!.Id,
+                    NameUz = dp.Position.NameUz ?? "",
+                    NameRu = dp.Position.NameRu ?? "",
+                    NameEn = dp.Position.NameEn ?? ""
+                })
+                .ToListAsync();
+
             return new DoctorDTOResponse
             {
                 Status = true,
@@ -266,12 +287,11 @@ namespace EkgAnalyzerApi.Services
                     FirstName = doctor.FirstName,
                     LastName = doctor.LastName,
                     SureName = doctor.SureName,
-                    Gender= doctor.Gender,
-                    Phone= doctor.Phone,
-                    Username=doctor.User.Username,
-                    Password=doctor.User.PasswordPlain,
-                    Positions=positions
-
+                    Gender = doctor.Gender,
+                    Phone = doctor.Phone,
+                    Username = doctor.User?.Username ?? "",
+                    Password = doctor.User?.PasswordPlain ?? "",
+                    Positions = positions
                 }
             };
         }

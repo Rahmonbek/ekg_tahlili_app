@@ -26,6 +26,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+   
     [HttpGet("check-username")]
     public async Task<IActionResult> CheckUsername([FromQuery] string username)
     {

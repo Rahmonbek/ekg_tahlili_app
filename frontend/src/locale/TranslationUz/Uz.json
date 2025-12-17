@@ -117,7 +117,13 @@
 "self_data":"Shaxsiy ma'lumotlar",
 "exit":"Tizimdan chiqish",
 "data_saved":"Ma'lumot muvaffaqiyatli saqlandi",
-"server_error":"Xato! Ma'lumot saqlanmadi"
+"server_error":"Xato! Ma'lumot saqlanmadi",
+"enter_role_staff":"Xodimning lavozimini tanlang",
+"enter_position_staff":"Xodimning mutaxassislikini tanlang",
+"position":"Mutaxassislik",
+"enter_new_password_staff":"Xodim uchun parol yarating",
+"enter_username_staff":"Xodim uchun login yarating",
+"edit":"O'zgartirish"
 
 
 

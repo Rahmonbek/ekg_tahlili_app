@@ -194,6 +194,18 @@
         }
       }
     },
+    "/api/doctor/get-default-username": {
+      "get": {
+        "tags": [
+          "Doctor"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/doctor/get-doctors-of-clinic": {
       "get": {
         "tags": [

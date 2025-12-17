@@ -45,7 +45,7 @@ const onFinish = async (val) => {
   try {
     setloading(true);
 
-    const checkRes = await checkusername(val.username);
+    const checkRes = await checkusername({username:val.username});
 
     if (checkRes.status === 200 && checkRes.data.exists === false) {
       setemail(val.email);

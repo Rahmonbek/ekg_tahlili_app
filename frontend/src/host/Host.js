@@ -9,7 +9,7 @@ export const getTokenAccess=()=>{
 }
 
 export const deleteTokenAccess=()=>{
-    var token=window.localStorage.removeItem("NMED_token")
+    window.localStorage.removeItem("NMED_token")
    
 
 }

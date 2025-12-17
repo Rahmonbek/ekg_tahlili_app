@@ -253,14 +253,22 @@ max-height: 0px;
 
 
 
-
-
-
+.ant-select-multiple .ant-select-selection-wrap{min-height: 46px !important;}
+.ant-select-multiple  .ant-select-selection-placeholder{padding-left: 10px !important; 
+  font-size: var(--small_size) !important; }
+  input::placeholder{  font-size: var(--small_size) !important; font-family:  'Open Sans', sans-serif !important;}
+:where(.css-dev-only-do-not-override-ac2jek).ant-select-multiple .ant-select-selection-overflow .ant-select-selection-item{
+  padding: 5px 10px !important; background-color:#F7FAFC;
+}
 :where(.css-dev-only-do-not-override-ac2jek).ant-select .ant-select-selection-wrap{
   padding-left: 8px !important; padding-right: 10px !important;
 }
+.ant-select-multiple .ant-select-selector{height: auto !important; min-height: 46px !important;}
 .ant-select input, .ant-select-selection-item{padding: 0 !important; height: 100% !important;}
 :where(.css-dev-only-do-not-override-ac2jek).ant-select-single{height: 46px !important;}
+.ant-select-multiple .ant-select-prefix{padding-left: 0px !important;}
+.ant-select-multiple .anticon-close{color: rgb(255, 33, 33); margin-left: 8px !important; font-size: var(--mini_size);}
+.ant-form-item-has-error .claveInput{border: 1px solid #ff4d4f !important;}
 @media (max-width:1700px){
       .login_img img{width: 70%;}
     }

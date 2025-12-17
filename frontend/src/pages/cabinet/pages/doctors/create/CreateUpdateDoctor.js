@@ -1,4 +1,4 @@
-import { Button, Col, Form, Input, Row, Tooltip } from 'antd';
+import { Button, Col, Form, Input, message, Row, Tooltip } from 'antd';
 import Cleave from 'cleave.js/react';
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next';
@@ -6,22 +6,43 @@ import { Select } from 'antd';
 import { FaFemale, FaMale } from 'react-icons/fa';
 import { IoAlertCircleSharp, IoPerson } from 'react-icons/io5';
 import { useStore } from '../../../../../store/Store';
-import { get_params_for_add_staff } from '../../../../../host/requests/DoctorRequest';
+import { change_doctor_data, get_default_username, get_params_for_add_staff } from '../../../../../host/requests/DoctorRequest';
+import { FaUserDoctor } from 'react-icons/fa6';
+import { checkusername } from '../../../../../host/requests/AuthRequest';
+import { IoMdLock } from 'react-icons/io';
+import { formatPhoneNumber } from '../../../../../tools/formatters';
+import { useNavigate, useParams } from 'react-router-dom';
 
 export default function CreateUpdateDoctor() {
     const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [gender, setGender] = useState(true);
+    const [position_ids, setposition_ids] = useState([]);
+    const [position_datas, setposition_datas] = useState([]);
     const [form] = Form.useForm();
-    const {roles, positions, setroles, setpositions}=useStore()
-
+    const {roles, positions, setroles, setpositions, setloader}=useStore()
+    const {id}=useParams()
+    const navigate=useNavigate()
+      const [usernameError, setUsernameError] = useState(null);
 
     useEffect(()=>{
+        setloader(true)
        if(roles.length==0 || positions.length==0){
            getParamsData()
        }
+       getUsername()
     }, [])
+    const getUsername=async()=>{
+        try{
+             var res=await get_default_username()
+             console.log(res)
+             form.setFieldValue('username', res.data.username)
+             setloader(false)
 
+        }catch(err){
+
+        }
+    }
     const getParamsData=async()=>{
         try{
            var res=await get_params_for_add_staff()
@@ -32,9 +53,46 @@ export default function CreateUpdateDoctor() {
         }
     }
 
+    const changeRole=(val)=>{
+        setposition_ids([])
+        form.setFieldValue('positions', [])
+        let a=positions.filter((item)=>(item.roleId==val))
+        if(a.length==1){
+            setposition_ids([a[0].id])
+            form.setFieldValue('positions', [a[0].id])
+        }
+        setposition_datas(a)
+    }
 
     const saveData=async(val)=>{
-
+          try{
+             setLoading(true)
+             const checkRes = await checkusername({username:val.username});
+             if(checkRes.data.exists === true){
+                setUsernameError(t(checkRes.data.message))
+                message.error(t(checkRes.data.message))
+             }else{
+                  var data={
+  "username": val.username,
+  "password": val.password,
+  "roleId": val.role,
+  "firstName":  val.firstname,
+  "lastName": val.lastname,
+  "sureName": val.surename,
+  "phone": formatPhoneNumber(val.phone),
+  "gender": val.gender,
+  "positions": val.positions.map((item)=>({id:item}))}
+   var res=await change_doctor_data(data)
+   message.success(t("data_saved"))
+   navigate("/doctor")
+             console.log(res)
+             }
+            
+          }catch(err){
+ message.danger(t("server_error"))
+          }finally{
+            setLoading(false)
+          }
     }
   return (
     <div>
@@ -52,6 +110,48 @@ export default function CreateUpdateDoctor() {
                 onFinish={saveData}
               >
                 <Row>
+                    <Col className="main_col" lg={8} md={24}>
+                    <Form.Item
+    name="username"
+    label={t("username")}
+    validateStatus={usernameError ? "error" : ""}
+    help={usernameError || ""}
+    rules={[
+      {
+        required: true,
+        message: t("please_enter_username_staff"),
+      },
+    ]}
+    normalize={(value) => {
+      return value ? value.replace(/[.,!? ]/g, '') : '';
+    }}
+  >
+    <Input
+      prefix={<IoPerson />}
+      autoComplete="new-password"
+      placeholder={t("enter_username_staff")}
+      onChange={() => setUsernameError("")} 
+    />
+  </Form.Item>
+                    </Col>
+                    <Col className="main_col" lg={8} md={24}>
+                    <Form.Item
+      name="password"
+      label={t("new_password")}
+      rules={[
+        {
+          required: true,
+          message: "",
+        },
+      ]}
+      normalize={(value) => {
+        return value ? value.replace(/[.,!? ]/g, '') : '';
+      }}
+    >
+      <Input prefix={<IoMdLock />} className='login_input'  placeholder={t("enter_new_password_staff")} autoComplete="new-password"/>
+    </Form.Item>
+                    </Col>
+                    <Col className="main_col" lg={8} md={24}></Col>
                   <Col className="main_col" lg={8} md={24}>
                     <Form.Item
                       name="lastname"
@@ -137,33 +237,58 @@ export default function CreateUpdateDoctor() {
                       />
                     </Form.Item>
                   </Col>
-                     <Col className="main_col" lg={8} md={24}></Col>
+                  <Col className="main_col" lg={8} md={24}></Col>
                      <Col className="main_col" lg={8} md={24}>
                      <Form.Item
-                      name="gender"
-                      label={t('gender')}
+                      name="role"
+                      label={t('role')}
                       rules={[{ required: true, message: '' }]}
                     >
                       <Select
                         style={{ width: '100%' }}
-                        value={gender}
-                        prefix={gender?<FaMale />:<FaFemale />}
-                        onChange={(value) => setGender(value)}
-                        placeholder={t('enter_gender_staff')}
-                        options={[
-                          { value: true, label: <> {t('male')}</> },
-                          { value: false, label: <>{t('female')}</> },
-                        ]}
+                         
+                        prefix={<FaUserDoctor />}
+                        onChange={(value) => changeRole(value)}
+                        placeholder={t('enter_role_staff')}
+                         options={roles.map(role => ({
+    value: role.id,
+    label: role.nameUz,
+  }))}
+                        
                       />
                     </Form.Item>
                      </Col>
+                     <Col className="main_col" lg={16} md={24}>
+                     <Form.Item
+                      name="positions"
+                      label={t('position')}
+                      rules={[{ required: true, message: '' }]}
+                    >
+ <Select
+ value={position_ids}
+ onChange={(val)=>{setposition_ids(val)}}
+                        style={{ width: '100%' }}
+                        mode="multiple"
+                        prefix={<FaUserDoctor />}
+                        placeholder={t('enter_position_staff')}
+                         options={position_datas.map(role => ({
+    value: role.id,
+    label: role.nameUz,
+  }))}
+                        
+                      />
+
+                    </Form.Item>
+                    </Col>
+                  <Col className="main_col" lg={8} md={24}></Col>
                   <Col className="main_col" lg={8} md={24}>
                     <div className="form_div">
                       <Button className="btn_form" loading={loading} htmlType="submit">
-                        {t('saveData')}
+                        {t('saveDataStaff')}
                       </Button>
                     </div>
                   </Col>
+                  <Col className="main_col" lg={8} md={24}></Col>
                 </Row>
               </Form>
         </div>

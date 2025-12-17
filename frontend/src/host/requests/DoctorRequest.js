@@ -1,4 +1,4 @@
-import { httpGetRequest } from "../Host"
+import { httpGetRequest, httpPostRequest } from "../Host"
 
 export const get_doctors_of_clinic=(data)=>{
     return httpGetRequest("/doctor/get-doctors-of-clinic/", data)
@@ -6,4 +6,12 @@ export const get_doctors_of_clinic=(data)=>{
 
 export const get_params_for_add_staff=(data)=>{
     return httpGetRequest("/doctor/get-params-for-add-staff/", data)
+}
+
+export const get_default_username=(data)=>{
+    return httpGetRequest("/doctor/get-default-username/", data)
+}
+
+export const change_doctor_data=(data)=>{
+    return httpPostRequest("/doctor/save-doctor-data/", data)
 }
