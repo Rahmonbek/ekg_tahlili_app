@@ -40,7 +40,7 @@ const handleExitIconClick = () => {
 
   return (
     <div className='main_header'>
-      <div onClick={() => setopen_menu(!open_menu)} className='menu_close'>
+      <div onClick={() => setopen_menu(!open_menu)}   className={`menu_close ${open_menu ? "open" : ""}`}>
         <FaBars />
       </div>
 

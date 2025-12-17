@@ -96,7 +96,9 @@
 "enter_lastname_staff": "Enter the employee's last name",
 "enter_firstname_staff": "Enter the employee's first name",
 "enter_surename_staff": "Enter the employee's middle name",
-"saveDataStaff": "Save employee data"
+"saveDataStaff": "Save employee data",
+"user_not_found": "Invalid login. Please try again"
+
 
 
 

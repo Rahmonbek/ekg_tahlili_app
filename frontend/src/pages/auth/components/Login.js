@@ -99,9 +99,7 @@ export default function Login() {
           message: "",
         },
       ]}
-      normalize={(value) => {
-        return value ? value.replace(/[.,!? ]/g, '') : '';
-      }}
+     
     >
       <Input.Password prefix={<IoMdLock />} className='login_input'  placeholder={t("enter_password")} autoComplete="current-password"/>
     </Form.Item>

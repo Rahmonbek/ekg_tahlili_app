@@ -269,12 +269,37 @@ max-height: 0px;
 
 
 @media (max-width: 1024px){
-  .auth_navbar{padding: 30px 5%;}
-  .login_img{display: none !important;}
-  .login_form_box{width: 100%;}
- 
+  .login_img{
+    display: none;
+  }
+  .login_form_box{
+    width: 100%;
+  }
   .auth_brand{width: 50%;}
-  .selected_lang{background-color: #fafafa;  padding: 10px 10px;}
-  .langs_box img{height: 22px;}
+  .closed_menu{width: 0px !important; position: absolute !important; z-index: 0 !important; opacity: 0 !important; }
+  .sidebar{position: absolute; z-index: 1000; background-color: white;  overflow: hidden !important; }
+  .menu_close.open{margin-left: 355px !important;}
 
+}
+
+
+@media (max-width: 760px){
+  .auth_brand img{
+    height: 50px;
+  }
+  .auth_brand{width: 70% !important;}
+  .auth_brand h1{
+    font-size: var(--mini_size)
+  }
+  .auth_navbar{
+    padding: 20px 2.5%;
+  }
+.auth_brand img{margin-right: 5px;}
+.selected_lang{width: 85px;}
+
+.login_form h1{    font-size: var(--medium_size) !important;}
+.login_form_box{padding: 0px 5% ;}
+.login_form_form{padding: 0px 30px !important;}
+.login_bottom{bottom: 60px;}
+.login_box{height: 95vh;}
 }
