@@ -1,7 +1,6 @@
 import { Button, Form, Input, Modal } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next';
-import logo from '../../../images/logo.png'
 import login_img from '../../../images/doctor2.svg'
 import { IoIosMail, IoMdLock } from 'react-icons/io';
 import { Link } from 'react-router-dom';
@@ -16,9 +15,7 @@ export default function Register() {
   const [loading, setloading]=useState(false)
   const [email, setemail]=useState(null)
  
-  const [usernameError, setUsernameError] = useState(""); 
-  const [emailError, setEmailError] = useState("");
-
+  const [form] = Form.useForm();
   const {user_id, setuser_id} = useStore()
  const [codeForm] = Form.useForm();
     const {t}=useTranslation()
@@ -51,8 +48,6 @@ const onFinish = async (val) => {
     const checkRes = await checkusername(val.username);
 
     if (checkRes.status === 200 && checkRes.data.exists === false) {
-      setUsernameError("");
-      setEmailError("");
       setemail(val.email);
 
       const res = await registration({
@@ -60,6 +55,7 @@ const onFinish = async (val) => {
         password: val.password,
         username: val.username,
       });
+      console.log(res)
 
       if (res.status === 200) {
         successAlert(t(res.data.message));
@@ -67,21 +63,36 @@ const onFinish = async (val) => {
       }
 
     } else if (checkRes.status === 200 && checkRes.data.exists === true) {
-      setUsernameError(t(checkRes.data.message));
       dangerAlert(t(checkRes.data.message));
+ 
+      form.setFields([
+        {
+          name: "username",
+          value: "",
+          errors: [t(checkRes.data.message)],
+        },
+      ]);
     }
 
   } catch (err) {
-    console.log(err);
-
-
-    if (err.response && err.response.data && err.response.data.message) {
-   
-      setEmailError(t(err.response.data.message));
-      dangerAlert(t(err.response.data.message));
+    const message = err?.response?.data?.message;
+  
+    if (message === 'email_already_exists') {
+      dangerAlert(t(message));
+      form.setFields([
+        {
+          name: "email",
+          value: "",
+          errors: [t("email_already_exists")],
+        },
+      ]);
+    } else {
+     console.log(err)
     }
-
-  } finally {
+  }
+  
+  
+  finally {
     setloading(false);
   }
 };
@@ -113,14 +124,13 @@ const onFinish = async (val) => {
       remember: true,
     }}
     onFinish={onFinish}
-    // onFinishFailed={onFinishFailed}
+  form={form}
     
   >
   <Form.Item
     name="email"
     label={t("email")}
-    validateStatus={emailError ? "error" : ""}
-    help={emailError || ""}
+
     rules={[
       {
         type: 'email',
@@ -131,14 +141,12 @@ const onFinish = async (val) => {
         message: t("please_enter_email"),
       }
     ]}
-    normalize={(value) => {
-      return value ? value.replace(/[.,!? ]/g, '') : '';
-    }}
+   
   >
     <Input
       prefix={<IoIosMail />}
       placeholder={t("enter_email")}
-      onChange={() => setEmailError("")}
+
     />
   </Form.Item>
 
@@ -147,8 +155,6 @@ const onFinish = async (val) => {
 <Form.Item
     name="username"
     label={t("username")}
-    validateStatus={usernameError ? "error" : ""}
-    help={usernameError || ""}
     rules={[
       {
         required: true,
@@ -158,11 +164,12 @@ const onFinish = async (val) => {
     normalize={(value) => {
       return value ? value.replace(/[.,!? ]/g, '') : '';
     }}
+   
   >
     <Input
       prefix={<IoPerson />}
       placeholder={t("enter_username")}
-      onChange={() => setUsernameError("")} 
+
     />
   </Form.Item>
 
@@ -178,9 +185,8 @@ const onFinish = async (val) => {
           message: "",
         },
       ]}
-      normalize={(value) => {
-        return value ? value.replace(/[.,!? ]/g, '') : '';
-      }}
+     
+  
     >
       <Input.Password  prefix={<IoMdLock />} className='login_input'  placeholder={t("enter_new_password")} autoComplete="new-password"/>
     </Form.Item>

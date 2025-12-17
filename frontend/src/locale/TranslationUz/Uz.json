@@ -96,7 +96,9 @@
  "enter_username":"Loginingizni kiriting",
 "username":"Login",
 "username_already_exists": "Bu login tizimda mavjud",
+"user_not_found": "Login noto‘g‘ri. Iltimos, qayta urinib ko'ring",
 "email_already_exists":"Bu email bilan allaqachon ro‘yxatdan o‘tgan.",
+
 "change_password": "N MED dasturida parolni o'zgartirish",
 "enter_lastname_staff":"Xodimning familiyasini kiriting",
 "enter_firstname_staff":"Xodimning ismini kiriting",
