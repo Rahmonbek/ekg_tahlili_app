@@ -103,9 +103,9 @@ export default function Login() {
     >
       <Input.Password prefix={<IoMdLock />} className='login_input'  placeholder={t("enter_password")} autoComplete="current-password"/>
     </Form.Item>
-   <div className="reset_pass_text">
+   {/* <div className="reset_pass_text">
     <Link to={"/change_password"}>{t("reset_password")}</Link>
-</div>
+</div> */}
      <Form.Item
       wrapperCol={{
         span: 24,

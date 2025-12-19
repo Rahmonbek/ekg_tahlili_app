@@ -35,10 +35,10 @@ public class AuthService
             .OrderByDescending(x => x.Id)
             .FirstOrDefaultAsync();
     }
-    public async Task<bool> CheckUsernameAsync(string username)
+    public async Task<bool> CheckUsernameAsync(string username, int? user_id)
     {
         return await _context.Users
-            .AnyAsync(x => x.Username.ToLower() == username.ToLower());
+            .AnyAsync(x => x.Username.ToLower() == username.ToLower() && ((user_id!=null && x.Id!=user_id) || (user_id==null)) );
     }
     private async Task<VerificationCode?> GetActiveCodeByEmailAsync(string email)
     {

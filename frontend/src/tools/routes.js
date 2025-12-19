@@ -7,7 +7,8 @@ export const routers=[
         path:'/doctor',
         icon:<FaUserDoctor />,
         title:"staffs",
-        tools:"doctor"
+        tools:"doctor",
+        role_id:[2, 3]
     },
 
     
@@ -15,24 +16,28 @@ export const routers=[
         path:'/analyse-ecg',
         icon:<FaHeartbeat />,
         title:"analyse_ecg",
-        tools:"analyse-ecg"
+        tools:"analyse-ecg",
+        role_id:[]
     },
      {
         path:'/patcients',
         icon:<FaPeopleGroup />,
         title:"patcients",
-        tools:"patcients"
+        tools:"patcients",
+        role_id:[]
     },
     {
         path:'/billings',
         icon:<IoIosCard />,
         title:"billings",
-        tools:"billings"
+        tools:"billings",
+        role_id:[2, 3]
     },
     {
         path:'/settings',
         icon:<IoMdSettings />,
         title:"organization_info",
-        tools:"settings"
+        tools:"settings",
+        role_id:[2, 3]
     }
 ]

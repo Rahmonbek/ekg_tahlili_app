@@ -17,4 +17,5 @@ export const useStore = create((set) => ({
     setopen_menu: (id) => set({ open_menu: id }),
     user: null,
     setuser: (id) => set({ user: id }),
+    
 }))

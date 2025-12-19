@@ -13,8 +13,23 @@ public class ClinicController : ControllerBase
     {
         _clinicService = clinicService;
     }
+    [HttpGet("get-doctors-by-id")]
+    public async Task<IActionResult> GetDoctorsById([FromQuery] int id)
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+            return Unauthorized(new { message = "Token invalid" });
 
-    
+        var userId = int.Parse(userIdClaim.Value);
+
+        var result = await _clinicService.GetClinicByIdAsync(userId, id);
+
+        if (result == null)
+            return NotFound(new { message = "Doctor not found or access denied" });
+
+        return Ok(result);
+    }
+
     //[HttpGet("get-clinic-by-token")]
     //public async Task<IActionResult> GetClinic()
     //{

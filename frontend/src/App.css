@@ -269,6 +269,9 @@ max-height: 0px;
 .ant-select-multiple .ant-select-prefix{padding-left: 0px !important;}
 .ant-select-multiple .anticon-close{color: rgb(255, 33, 33); margin-left: 8px !important; font-size: var(--mini_size);}
 .ant-form-item-has-error .claveInput{border: 1px solid #ff4d4f !important;}
+.big_loader{position: fixed; top: 0px; left: 0px; width: 100%;
+  display: flex; align-items: center; justify-content: center; z-index: 3455;
+  height: 100%; background-color: rgba(255, 255, 255, 0.796); backdrop-filter: blur(10px);}
 @media (max-width:1700px){
       .login_img img{width: 70%;}
     }

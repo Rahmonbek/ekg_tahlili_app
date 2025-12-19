@@ -7,7 +7,7 @@ import { useStore } from '../store/Store'
 export default function SideBar() {
     const {t}=useTranslation()
     const location=useLocation()
-    const {open_menu}=useStore()
+    const {open_menu, user}=useStore()
   return (
     <div className={`sidebar ${!open_menu?"closed_menu":''}`}>
         <div className='sidebar_head'>
@@ -17,15 +17,17 @@ export default function SideBar() {
         <div className='sidebar_line'></div>
         <div className='sidebar_menu'>
             {routers.map((item, index)=>(
-                <Link to={item.path} className={`sidebar_menu_item 
-                ${(location.pathname.indexOf(item.tools)!=-1 && item.tools.length!=0) || (index==0 && location.pathname.replaceAll("/", '').length==0)?"active_sidebar_item":""}`} key={index}>
+                (user==null || item.role_id.length==0 || item.role_id.indexOf(user.roleId)!=-1)?<Link to={item.path} className={`sidebar_menu_item 
+                ${(location.pathname.indexOf(item.tools)!=-1 && item.tools.length!=0) || (index==0 && location.pathname.replaceAll("/", '').length==0) || 
+                
+                (user!=null && (user.roleId!=2 && user.roleId!=3) && item.tools=='analyse-ecg' && location.pathname.replaceAll("/", '').length==0)?"active_sidebar_item":""}`} key={index}>
                    <div className='sidebar_icon'>
                     {item.icon}
                    </div>
                     <div className='sidebar_title'>
                         {t(item.title)}
                     </div>
-                </Link>
+                </Link>:<></>
             ))}
         </div>
     </div>

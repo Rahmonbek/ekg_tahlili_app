@@ -18,6 +18,7 @@ public class TokenService
     {
         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
         new Claim("roleId", user.RoleId.ToString()), // 🔥 MUHIM
+        new Claim("username", user.Username.ToString()), // 🔥 MUHIM
         new Claim(ClaimTypes.Role, user.RoleId.ToString()) // (ixtiyoriy)
     };
 

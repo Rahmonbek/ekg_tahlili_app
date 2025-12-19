@@ -13,7 +13,7 @@ import CreateUpdateDoctor from './pages/doctors/create/CreateUpdateDoctor'
 
 export default function Main() {
     const {t}=useTranslation()
-    const {complaints, setcomplaints}=useStore()
+    const {complaints, setcomplaints, user}=useStore()
     useEffect(()=>{
          if(complaints.length==0){
             getComplaints()
@@ -33,16 +33,20 @@ export default function Main() {
         <SideBar/>
         <div className='content_box'>
             <Header/>
-            <div className='content'>
+            {user!=null?<div className='content'>
                 <Routes>
-                    <Route path="" element={<Doctors/>} />
+                {user.roleId==2 || user.roleId==3?<>
+                <Route path="" element={<Doctors/>} />
                     <Route path="doctor" element={<Doctors/>} />
                     <Route path="doctor/create" element={<CreateUpdateDoctor/>} />
                     <Route path="doctor/create/:id" element={<CreateUpdateDoctor/>} />
                     <Route path="settings" element={<ClinicInfo/>} />
+                </>:<></>}
+                    
+                    {user.roleId!=2 && user.roleId!=3?<Route path="" element={<EcgAnalyzer/>} />:<></>}
                     <Route path="analyse-ecg" element={<EcgAnalyzer/>} />
                 </Routes>
-            </div>
+            </div>:<></>}
         </div>
         <AdminModal/>
     </div>

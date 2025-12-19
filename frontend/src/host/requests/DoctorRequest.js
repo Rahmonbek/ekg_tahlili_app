@@ -11,6 +11,9 @@ export const get_params_for_add_staff=(data)=>{
 export const get_default_username=(data)=>{
     return httpGetRequest("/doctor/get-default-username/", data)
 }
+export const get_doctor_by_id=(data)=>{
+    return httpGetRequest("/doctor/get-doctors-by-id/", data)
+}
 
 export const change_doctor_data=(data)=>{
     return httpPostRequest("/doctor/save-doctor-data/", data)

@@ -68,6 +68,24 @@ public class DoctorController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("get-doctors-by-id")]
+    public async Task<IActionResult> GetDoctorsById([FromQuery] int id)
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+            return Unauthorized(new { message = "Token invalid" });
+
+        var userId = int.Parse(userIdClaim.Value);
+
+        var result = await _doctorService.GetDoctorByIdAsync(userId, id);
+
+        if (result == null)
+            return NotFound(new { message = "Doctor not found or access denied" });
+
+        return Ok(result);
+    }
+
+
 
     [HttpGet("get-params-for-add-staff")]
     public async Task<IActionResult> GetRolesForAddStaff()

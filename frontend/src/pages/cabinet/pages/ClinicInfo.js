@@ -13,13 +13,13 @@ import Cleave from "cleave.js/react"
 export default function ClinicInfo() {
     const {t}=useTranslation()
     const [loading, setloading]=useState(false)
-    const {clinic}=useStore()
+    const {clinic, setclinic}=useState(null)
     const onFinish=()=>{
-
+          
     }
   
   return (
-    <div>
+    clinic!=null?<div>
         <Row>
                          <Col className='main_col' lg={8} md={12} sm={24}>
                          <div className='main_card'>
@@ -394,6 +394,6 @@ export default function ClinicInfo() {
                     </Row>
  
 
-    </div>
+    </div>:<></>
   )
 }

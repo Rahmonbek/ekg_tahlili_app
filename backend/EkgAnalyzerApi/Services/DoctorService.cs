@@ -1,6 +1,7 @@
 ﻿using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
+using iTextSharp.text;
 using Microsoft.EntityFrameworkCore;
 
 namespace EkgAnalyzerApi.Services
@@ -65,7 +66,7 @@ namespace EkgAnalyzerApi.Services
                 .Take(pageSize)
                 .Select(u => new DoctorDTOResponseData
                 {
-                    Id = u.Id,
+                    Id = u.Doctor.Id,
                     Username = u.Username,
                     Password = u.PasswordPlain,
                     RoleId = u.RoleId,
@@ -74,12 +75,12 @@ namespace EkgAnalyzerApi.Services
                     SureName = u.Doctor.SureName,
                     Phone = u.Doctor.Phone,
                     Gender = u.Doctor.Gender,
-                    Role=new RolesDTO
+                    Role = new RolesDTO
                     {
                         Id = u.Role.Id,
-                        NameUz=u.Role.NameUz,
-                        NameRu=u.Role.NameRu,
-                        NameEn=u.Role.NameEn,
+                        NameUz = u.Role.NameUz,
+                        NameRu = u.Role.NameRu,
+                        NameEn = u.Role.NameEn,
                     },
                     Positions = u.Doctor.DoctorPositions
                         .Select(dp => new PositionDto
@@ -100,6 +101,67 @@ namespace EkgAnalyzerApi.Services
                 TotalCount = totalDoctors,
                 TotalPages = totalPages
             };
+        }
+
+        public async Task<DoctorDTOResponseData?> GetDoctorByIdAsync(int userId, int doctorId)
+        {
+            var user = await _context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == userId);
+
+            if (user == null)
+                return null;
+
+            if (user.RoleId != _adminRoleId && user.RoleId != _directorRoleId)
+                return null;
+            var doc = await _context.Doctors
+    .Where(d => d.Id == doctorId)
+    .FirstOrDefaultAsync();
+            if (doc == null)
+                return null;
+            var doctorsQuery = _context.Users
+                .Where(u => u.Id == doc.UserId)
+                .Include(u => u.Role)
+                .Include(u => u.Doctor)
+                    .ThenInclude(d => d.DoctorPositions)
+                        .ThenInclude(dp => dp.Position);
+
+
+            var doctor = await doctorsQuery
+            .OrderBy(u => u.Id)
+                .Select(u => new DoctorDTOResponseData
+                {
+                    Id = u.Doctor.Id,
+                    UserId=u.Id,
+                    Username = u.Username,
+                    Password = u.PasswordPlain,
+                    RoleId = u.RoleId,
+                    FirstName = u.Doctor.FirstName,
+                    LastName = u.Doctor.LastName,
+                    SureName = u.Doctor.SureName,
+                    Phone = u.Doctor.Phone,
+                    Gender = u.Doctor.Gender,
+                    Role = new RolesDTO
+                    {
+                        Id = u.Role.Id,
+                        NameUz = u.Role.NameUz,
+                        NameRu = u.Role.NameRu,
+                        NameEn = u.Role.NameEn,
+                    },
+                    Positions = u.Doctor.DoctorPositions
+                        .Select(dp => new PositionDto
+                        {
+                            Id = dp.Position.Id,
+                            RoleId = dp.Position.RoleId,
+                            NameUz = dp.Position.NameUz,
+                            NameRu = dp.Position.NameRu,
+                            NameEn = dp.Position.NameEn
+                        })
+                        .ToList()
+                })
+                .FirstOrDefaultAsync();
+
+            return doctor;
         }
 
 
@@ -219,7 +281,7 @@ namespace EkgAnalyzerApi.Services
                 doctor.SureName = dto.SureName;
                 doctor.Gender = dto.Gender;
                 doctor.Phone = dto.Phone;
-
+                
                 if (!string.IsNullOrWhiteSpace(dto.Username) &&
                     doctor.User.Username != dto.Username)
                 {
@@ -237,7 +299,7 @@ namespace EkgAnalyzerApi.Services
                     doctor.User.PasswordPlain = dto.Password;
                     doctor.User.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
                 }
-
+                doctor.User.RoleId = dto.RoleId;
                 if (dto.Positions != null)
                 {
                     var oldPositions = _context.DoctorPositions

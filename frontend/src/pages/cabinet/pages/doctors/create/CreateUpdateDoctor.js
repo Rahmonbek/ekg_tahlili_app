@@ -6,17 +6,20 @@ import { Select } from 'antd';
 import { FaFemale, FaMale } from 'react-icons/fa';
 import { IoAlertCircleSharp, IoPerson } from 'react-icons/io5';
 import { useStore } from '../../../../../store/Store';
-import { change_doctor_data, get_default_username, get_params_for_add_staff } from '../../../../../host/requests/DoctorRequest';
+import { change_doctor_data, get_default_username, get_doctor_by_id, get_params_for_add_staff } from '../../../../../host/requests/DoctorRequest';
 import { FaUserDoctor } from 'react-icons/fa6';
 import { checkusername } from '../../../../../host/requests/AuthRequest';
 import { IoMdLock } from 'react-icons/io';
-import { formatPhoneNumber } from '../../../../../tools/formatters';
+import { formatPhoneNumber, formatPhoneNumberForForm } from '../../../../../tools/formatters';
 import { useNavigate, useParams } from 'react-router-dom';
 
 export default function CreateUpdateDoctor() {
     const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [gender, setGender] = useState(true);
+    const [doctor, setdoctor] = useState(null);
+    const [user_id, setuser_id] = useState(null);
+    const [role_id, setrole_id] = useState(null);
     const [position_ids, setposition_ids] = useState([]);
     const [position_datas, setposition_datas] = useState([]);
     const [form] = Form.useForm();
@@ -30,8 +33,51 @@ export default function CreateUpdateDoctor() {
        if(roles.length==0 || positions.length==0){
            getParamsData()
        }
-       getUsername()
-    }, [])
+       if(id==null){
+          getUsername()
+       }else{
+        if(doctor==null){
+getDoctorData()
+        }
+         
+       }
+       if(role_id!=null){
+        changeRole(role_id)
+       }
+    }, [id, positions])
+
+    const getDoctorData=async()=>{
+
+          try{
+      
+            var res=await get_doctor_by_id({id:id})
+            
+             setloader(false)
+             var val=res.data
+             setdoctor(val)
+             var a=val.positions.map((item)=>(item.id))
+             console.log(a)
+             setuser_id(val.userId)
+             form.setFieldsValue({
+              "username": val.username,
+  "password": val.password,
+  "role": val.roleId,
+  "firstname":  val.firstName,
+  "lastname": val.lastName,
+  "surename": val.sureName,
+  "phone": formatPhoneNumberForForm(val.phone),
+  "gender": val.gender,
+  "positions": a
+             })  
+             
+             setposition_ids([...a])
+             changeRoleFirst(val.roleId)
+             setrole_id(val.roleId)
+             
+        }catch(err){
+         console.log(err)
+        }
+    }
     const getUsername=async()=>{
         try{
              var res=await get_default_username()
@@ -46,14 +92,21 @@ export default function CreateUpdateDoctor() {
     const getParamsData=async()=>{
         try{
            var res=await get_params_for_add_staff()
-           setpositions(res.data.positions)
+           setpositions([...res.data.positions])
            setroles(res.data.roles)
+console.log(form.getFieldValue('role'))
+           
+           if(id!=null){
+changeRole(form.getFieldValue('role'))
+           }
+           
         }catch(err){
 
         }
     }
 
     const changeRole=(val)=>{
+      console.log(val, positions)
         setposition_ids([])
         form.setFieldValue('positions', [])
         let a=positions.filter((item)=>(item.roleId==val))
@@ -61,18 +114,30 @@ export default function CreateUpdateDoctor() {
             setposition_ids([a[0].id])
             form.setFieldValue('positions', [a[0].id])
         }
-        setposition_datas(a)
+        console.log(a)
+        setposition_datas([...a])
+    }
+
+     const changeRoleFirst=(val)=>{
+     
+        let a=positions.filter((item)=>(item.roleId==val))
+        if(a.length==1){
+            setposition_ids([a[0].id])
+            form.setFieldValue('positions', [a[0].id])
+        }
+        setposition_datas([...a])
     }
 
     const saveData=async(val)=>{
           try{
              setLoading(true)
-             const checkRes = await checkusername({username:val.username});
+             const checkRes = await checkusername({username:val.username, user_id:user_id});
              if(checkRes.data.exists === true){
                 setUsernameError(t(checkRes.data.message))
                 message.error(t(checkRes.data.message))
              }else{
                   var data={
+                    'id':id,
   "username": val.username,
   "password": val.password,
   "roleId": val.role,
@@ -242,13 +307,14 @@ export default function CreateUpdateDoctor() {
                      <Form.Item
                       name="role"
                       label={t('role')}
+                      value={role_id}
                       rules={[{ required: true, message: '' }]}
                     >
                       <Select
                         style={{ width: '100%' }}
                          
                         prefix={<FaUserDoctor />}
-                        onChange={(value) => changeRole(value)}
+                        onChange={(value) => {changeRole(value); setrole_id(value)}}
                         placeholder={t('enter_role_staff')}
                          options={roles.map(role => ({
     value: role.id,
@@ -266,7 +332,7 @@ export default function CreateUpdateDoctor() {
                     >
  <Select
  value={position_ids}
- onChange={(val)=>{setposition_ids(val)}}
+ onChange={(val)=>{setposition_ids(val); console.log(val)}}
                         style={{ width: '100%' }}
                         mode="multiple"
                         prefix={<FaUserDoctor />}

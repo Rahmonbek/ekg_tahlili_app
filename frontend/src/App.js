@@ -10,10 +10,11 @@ import Main from './pages/cabinet/Main'
 import { deleteTokenAccess } from './host/Host'
 import {useNavigate} from 'react-router-dom'
 import { get_user_data } from './host/requests/UserRequest';
+import Loader from './components/Loader';
 
 export default function App() {
   const {t}=useTranslation()
-  const {user_id, setuser_id, user, setuser, open_admin_modal, setopen_admin_modal}=useStore()
+  const {user_id, setuser_id, user, setuser, open_admin_modal, setopen_admin_modal, loader, setloader}=useStore()
   
   const [first_load, setfirst_load]=useState(false)
   const navigate=useNavigate()
@@ -64,7 +65,9 @@ getUserData()
 {first_load && (
   <div className="main_app">
     {user_id == null ? <Auth /> : <Main />}
-     
+     {
+      loader?<Loader/>:<></>
+     }
    </div>
 )}
     </>

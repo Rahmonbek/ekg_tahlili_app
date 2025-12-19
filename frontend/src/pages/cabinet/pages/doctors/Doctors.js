@@ -84,6 +84,7 @@ export default function Doctors() {
              console.log(res)
              setdoctors(res.data.data)
              settotal(res.data.totalCount)
+             setloading(false)
           }catch(err){
 
           }
@@ -97,7 +98,9 @@ export default function Doctors() {
                 <div className='main_card_btn'>
             <Link to={"/doctor/create"} className='btn_form'>{t("add_new_staff")}</Link>
         </div>
-                   <Table pagination={{
+                   <Table
+                   loading={loading}
+                   pagination={{
                     current:page,
                     pageSize:10,
                     total:total,
