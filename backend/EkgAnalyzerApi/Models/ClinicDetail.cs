@@ -16,6 +16,7 @@ public class ClinicDetail
         [Column("bank_accaunt")]
         public string? BankAccaunt { get; set; }
 
+
         [Column("mfo")]
         public string? MFO { get; set; }
 

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EkgAnalyzerApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9a37bdbff97b86385a1a921a2f8acb6a180af462")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f3a9e3de6afa5a9ad61ee8e98eabd8aaca8194e4")]
 [assembly: System.Reflection.AssemblyProductAttribute("EkgAnalyzerApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EkgAnalyzerApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

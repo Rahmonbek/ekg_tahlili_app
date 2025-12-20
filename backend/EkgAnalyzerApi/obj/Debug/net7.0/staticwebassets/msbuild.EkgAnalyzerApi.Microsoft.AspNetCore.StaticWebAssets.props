@@ -1,5 +1,23 @@
 ﻿<Project>
   <ItemGroup>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\1a6a96f9-1e10-4496-8b2f-37b9fdbd64eb.jpeg'))">
+      <SourceType>Package</SourceType>
+      <SourceId>EkgAnalyzerApi</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/EkgAnalyzerApi</BasePath>
+      <RelativePath>clinicbrands/1a6a96f9-1e10-4496-8b2f-37b9fdbd64eb.jpeg</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>kc1zowqm3a</Fingerprint>
+      <Integrity>lKnQk5w+VL9bPccWwehW1KdVXBosBCpus1J+TjR9So8=</Integrity>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\1a6a96f9-1e10-4496-8b2f-37b9fdbd64eb.jpeg'))</OriginalItemSpec>
+    </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\.picasa.ini'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>

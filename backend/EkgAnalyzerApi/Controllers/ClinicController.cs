@@ -1,4 +1,5 @@
-﻿using EkgAnalyzerApi.Services;
+﻿using EkgAnalyzerApi.DTOs;
+using EkgAnalyzerApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -12,6 +13,43 @@ public class ClinicController : ControllerBase
     public ClinicController(ClinicService clinicService)
     {
         _clinicService = clinicService;
+    }
+
+    [HttpPost("update-clinic-data")]
+    public async Task<IActionResult> UpdateClinicData([FromForm] ClinicUpsertDto dto)
+    {
+        var clinic = await _clinicService.UpsertAsync(dto);
+
+        return Ok(new
+        {
+            clinic.Id,
+            clinic.ClinicName,
+            clinic.ClinicLogo
+        });
+    }
+
+    [HttpPost("update-clinic-phone")]
+    public async Task<IActionResult> UpdateClinicPhoneData([FromForm] ClinicPhoneUpsertDto dto)
+    {
+        await _clinicService.UpsertClinicPhonesAsync(dto);
+        return Ok();
+    }
+    [HttpPost("create-update-clinic-detail")]
+    public async Task<IActionResult> Upsert([FromForm] ClinicDetailUpsertDto dto)
+    {
+        var detail = await _clinicService.CreateUpdateClinicDetail(dto);
+
+        return Ok(new
+        {
+            detail.Id,
+            detail.ClinicId,
+            detail.BankAccaunt,
+            detail.MFO,
+            detail.BankName,
+            detail.INN,
+            detail.Address,
+            detail.License
+        });
     }
     [HttpGet("get-clinic-by-id")]
     public async Task<IActionResult> GetClinicById([FromQuery] int id)

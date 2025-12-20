@@ -13,10 +13,14 @@ import Cleave from "cleave.js/react"
 import { get_clinic_by_id, send_clinic_detail, send_clinic_info } from '../../../host/requests/ClinicRequest';
 import { api, imgApi } from '../../../host/Host';
 import { formatPhoneForCleave } from '../../../tools/formatters';
+import { useForm } from 'antd/es/form/Form';
+import { formatPhoneNumberForForm } from '../../../tools/formatters';
 export default function ClinicInfo() {
     const {t}=useTranslation()
+    const [formPhones]=Form.useForm()
     const [loading, setloading]=useState(false)
     const [clinic, setclinic]=useState(null)
+    const [phones, setphones]=useState([])
     const {user, loader, setloader}=useStore()
     const [form] = Form.useForm();
     const [formMain] = Form.useForm();
@@ -38,17 +42,24 @@ export default function ClinicInfo() {
         const res = await get_clinic_by_id({ id: user.clinic.id });
     
         setclinic(res.data);
-        setloader(false);
+        
         formMain.setFieldsValue({
           clinicName:res.data.clinicName,
           clinicLogo:res.data.clinicLogo
         })
-
-
-        const formatBankAccount = (v) =>
-          v ? v.replace(/(.{4})/g, "$1 ").trim() : "";
-        
-        const detail = res.data.clinicDetail;
+    
+     setphones([...res.data.clinicPhoneNumber])
+     var a=res.data.clinicPhoneNumber.map((item,key)=>{
+      return({
+        id:item.id,
+        phoneNumber:formatPhoneNumberForForm(item.phoneNumber)
+      })
+     })
+     console.log(a)
+     formPhones.setFieldsValue({
+      phone_numbers: a
+    });
+     const detail = res.data.clinicDetail;
 
         formSecend.setFieldsValue({
           bankAccount: formatBankAccount(detail.bankAccaunt), 
@@ -58,12 +69,25 @@ export default function ClinicInfo() {
           license: detail.license,
           address: detail.address,
         });
-        } catch (err) {
-        console.log(err);
-      }
-    };
+        
+    
+      setloader(false)
+  }catch(err){
+console.log(err)
+  }finally{
+  setloader(false);
+  }}
+
+       
+          
+        
+       
     
 
+     const formatBankAccount = (v) =>
+        {
+              return(v ? v.replace(/(.{4})/g, "$1 ").trim() : "")
+        }
 
 
 
@@ -88,7 +112,8 @@ formData.append("Id", clinic.id);
     formData.append("ClinicName", values.clinicName);
  if (clinicLogoFile) {
       formData.append("ClinicLogo", clinicLogoFile);
-    }
+ }  
+
  const res = await send_clinic_info(formData);
 
 console.log( res);
@@ -96,8 +121,13 @@ console.log( res);
     console.error( error);
  }
 
-};
+}
 
+ const onFinishPhones=(values)=>{
+         setphones(values.phone_numbers);
+    console.log(values.phone_numbers); 
+    
+    }
 
 
 
@@ -234,8 +264,8 @@ const onFinishFinish = async (values) => {
                     <h1>{t("phone_numbers")}</h1>
                     
                     <div className='main_card_content'>
-                          <Form
-                         form={formPhone}   
+                          <Form 
+                          form={formPhones}
     name="basic"
     labelCol={{
       span: 24,
@@ -246,53 +276,63 @@ const onFinishFinish = async (values) => {
    initialValues={{
       remember: true,
     }}
-    onFinish={onFinish}
+    onFinish={onFinishPhones}
     // onFinishFailed={onFinishFailed}
     
   >
-    <Form.Item
-              
-                 wrapperCol={{
-      span: 24,
-    }}
-                name={["phone_numbers", 'zero']}
-                rules={[{ required: true, message: '' }, { len: 19, message: '' }]}
-              >
-                <Cleave
-    options={{
-      prefix: "+998",
-      delimiters: [" (", ") ", "-", "-"],
-      blocks: [4, 2, 3, 2, 2],
-      numericOnly: true
-    }}
-    placeholder="+998 (__) ___-__-__"
-    className="ant-input claveInput"
-    style={{ width: "100%" }}
-  />
-              </Form.Item>
+   
   <Form.List name="phone_numbers">
   {(fields, { add, remove }) => (
     <>
       {fields.map(({ key, name, ...restField }) => (
-        <div key={key} className='list_phone_input' style={{ display: 'flex', width: '100%', alignItems:'flex-start' }}>
+        <div
+          key={key}
+          style={{ display: "flex", gap: 8, alignItems: "flex-start" }}
+        >
+         
+          {/* ID yashirin holda */}
           <Form.Item
             form={formPhone}
             {...restField}
-            style={{ flex: 1 }}   // FULL WIDTH
-            name={[name, 'first']}
-            rules={[{ required: true, message: '' }]}
+            name={[name, "id"]}
+            hidden
+          >
+            <Input />
+          </Form.Item>
+
+          {/* Telefon raqam */}
+          <Form.Item
+            {...restField}
+            name={[name, "phoneNumber"]}
+            rules={[
+              { required: true },
+              { len: 19 }
+            ]}
+            
           >
             <Cleave
-    options={{
-      prefix: "+998",
-      delimiters: [" (", ") ", "-", "-"],
-      blocks: [4, 2, 3, 2, 2],
-      numericOnly: true
-    }}
-    placeholder="+998 (__) ___-__-__"
-    className="ant-input claveInput"
-    style={{ width: "100%" }}
-  />
+              options={{
+                prefix: "+998",
+                delimiters: [" (", ") ", "-", "-"],
+                blocks: [4, 2, 3, 2, 2],
+                numericOnly: true
+              }}
+              className="ant-input claveInput"
+                        style={{ width: '100%' }}
+              value={phones[name]?.phoneNumber || ""}
+              onChange={(e) => {
+    const value = e.target.value;
+
+    setphones((prev) =>
+      prev.map((item, index) =>
+        index === name
+          ? { ...item, phoneNumber: value }
+          : item
+      )
+    );
+  }}
+              placeholder="+998 (__) ___-__-__"
+            />
           </Form.Item>
 
           <MinusCircleOutlined
@@ -303,8 +343,18 @@ const onFinishFinish = async (values) => {
       ))}
 
       <Form.Item>
-        <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
-          {t("phone_number_add")}
+        <Button
+          type="dashed"
+          block
+          icon={<PlusOutlined />}
+          onClick={() =>
+            add({
+              id: null,
+              phoneNumber: ""
+            })
+          }
+        >
+          Telefon qo‘shish
         </Button>
       </Form.Item>
     </>
