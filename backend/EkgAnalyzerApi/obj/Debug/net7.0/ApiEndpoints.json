@@ -85,6 +85,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "ClinicController",
+    "Method": "GetDoctorsById",
+    "RelativePath": "api/clinic/get-doctors-by-id",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "ComplaintsController",
     "Method": "GetComplaints",
     "RelativePath": "api/complaints/get-complaints",

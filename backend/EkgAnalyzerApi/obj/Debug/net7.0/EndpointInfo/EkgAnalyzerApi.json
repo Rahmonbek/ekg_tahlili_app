@@ -160,6 +160,29 @@
         }
       }
     },
+    "/api/clinic/get-doctors-by-id": {
+      "get": {
+        "tags": [
+          "Clinic"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "style": "form",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/complaints/get-complaints": {
       "get": {
         "tags": [
