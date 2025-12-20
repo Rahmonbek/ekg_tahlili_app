@@ -13,8 +13,8 @@ public class ClinicController : ControllerBase
     {
         _clinicService = clinicService;
     }
-    [HttpGet("get-doctors-by-id")]
-    public async Task<IActionResult> GetDoctorsById([FromQuery] int id)
+    [HttpGet("get-clinic-by-id")]
+    public async Task<IActionResult> GetClinicById([FromQuery] int id)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         if (userIdClaim == null)

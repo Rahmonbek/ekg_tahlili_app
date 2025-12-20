@@ -86,8 +86,8 @@
   },
   {
     "ContainingType": "ClinicController",
-    "Method": "GetDoctorsById",
-    "RelativePath": "api/clinic/get-doctors-by-id",
+    "Method": "GetClinicById",
+    "RelativePath": "api/clinic/get-clinic-by-id",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,

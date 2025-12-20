@@ -1,5 +1,5 @@
 import { Button, Col, Form, Input, Row, Space } from 'antd'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FaBuilding, FaLocationDot, FaPlus } from 'react-icons/fa6'
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
@@ -10,16 +10,39 @@ import { IoPersonSharp } from 'react-icons/io5'
 import InputMask from "react-input-mask";
 import { BsBank2 } from 'react-icons/bs'
 import Cleave from "cleave.js/react"
+import { get_clinic_by_id } from '../../../host/requests/ClinicRequest';
 export default function ClinicInfo() {
     const {t}=useTranslation()
     const [loading, setloading]=useState(false)
-    const {clinic, setclinic}=useState(null)
+    const [clinic, setclinic]=useState(null)
+    const {user, loader, setloader}=useStore()
+
+    useEffect(()=>{
+         setloader(true)
+         getClinicData()
+    }, [user])
+
+const getClinicData=async()=>{
+  try{
+    var res= await get_clinic_by_id({id:user.clinic.id})
+    
+     setclinic(res.data)
+     console.log(res.data)
+      setloader(false)
+  }catch(err){
+console.log(err)
+  }finally{
+
+  }
+}
+
     const onFinish=()=>{
           
     }
   
   return (
-    clinic!=null?<div>
+    <>
+    {clinic!=null?<div>
         <Row>
                          <Col className='main_col' lg={8} md={12} sm={24}>
                          <div className='main_card'>
@@ -394,6 +417,6 @@ export default function ClinicInfo() {
                     </Row>
  
 
-    </div>:<></>
+    </div>:<></>}</>
   )
 }

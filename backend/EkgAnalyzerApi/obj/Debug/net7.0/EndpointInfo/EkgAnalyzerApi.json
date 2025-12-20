@@ -160,7 +160,7 @@
         }
       }
     },
-    "/api/clinic/get-doctors-by-id": {
+    "/api/clinic/get-clinic-by-id": {
       "get": {
         "tags": [
           "Clinic"

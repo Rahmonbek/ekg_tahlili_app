@@ -37,10 +37,10 @@ export default function Main() {
                 <Routes>
                 {user.roleId==2 || user.roleId==3?<>
                 <Route path="" element={<Doctors/>} />
-                    <Route path="doctor" element={<Doctors/>} />
-                    <Route path="doctor/create" element={<CreateUpdateDoctor/>} />
-                    <Route path="doctor/create/:id" element={<CreateUpdateDoctor/>} />
-                    <Route path="settings" element={<ClinicInfo/>} />
+                    <Route path="/doctor" element={<Doctors/>} />
+                    <Route path="/doctor/create" element={<CreateUpdateDoctor/>} />
+                    <Route path="/doctor/create/:id" element={<CreateUpdateDoctor/>} />
+                    <Route path="/settings" element={<ClinicInfo/>} />
                 </>:<></>}
                     
                     {user.roleId!=2 && user.roleId!=3?<Route path="" element={<EcgAnalyzer/>} />:<></>}
