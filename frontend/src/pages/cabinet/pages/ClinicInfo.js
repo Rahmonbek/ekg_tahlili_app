@@ -1,8 +1,8 @@
-import { Button, Col, Form, Input, Row, Space } from 'antd'
-import React, { useState, useEffect } from 'react'
+import { Button, Col, Form, Input, Row, Space, Upload } from 'antd'
+import React, { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FaBuilding, FaLocationDot, FaPlus } from 'react-icons/fa6'
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { MinusCircleOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom'
 import { useStore } from '../../../store/Store'
 import { AiOutlineFieldNumber } from 'react-icons/ai'
@@ -10,35 +10,130 @@ import { IoPersonSharp } from 'react-icons/io5'
 import InputMask from "react-input-mask";
 import { BsBank2 } from 'react-icons/bs'
 import Cleave from "cleave.js/react"
-import { get_clinic_by_id } from '../../../host/requests/ClinicRequest';
+import { get_clinic_by_id, send_clinic_detail, send_clinic_info } from '../../../host/requests/ClinicRequest';
+import { api, imgApi } from '../../../host/Host';
+import { formatPhoneForCleave } from '../../../tools/formatters';
 export default function ClinicInfo() {
     const {t}=useTranslation()
     const [loading, setloading]=useState(false)
     const [clinic, setclinic]=useState(null)
     const {user, loader, setloader}=useStore()
-
+    const [form] = Form.useForm();
+    const [formMain] = Form.useForm();
+    const [formSecend] = Form.useForm();
+    const [formPhone] = Form.useForm();
+    const [filename, setFilename]=useState();
+    const [licenseFile, setLicenseFile] = useState(null);
+    const [clinicLogoFile, setClinicLogoFile] = useState(null);
+    const fileRef = useRef(null);
     useEffect(()=>{
          setloader(true)
          getClinicData()
     }, [user])
 
-const getClinicData=async()=>{
-  try{
-    var res= await get_clinic_by_id({id:user.clinic.id})
+    const getClinicData = async () => {
+      try {
+        const res = await get_clinic_by_id({ id: user.clinic.id });
     
-     setclinic(res.data)
-     console.log(res.data)
-      setloader(false)
-  }catch(err){
-console.log(err)
-  }finally{
+        setclinic(res.data);
+        setloader(false);
+        formMain.setFieldsValue({
+          clinicName:res.data.clinicName,
+          clinicLogo:res.data.clinicLogo
+        })
 
+
+        const formatBankAccount = (v) =>
+          v ? v.replace(/(.{4})/g, "$1 ").trim() : "";
+        
+        const detail = res.data.clinicDetail;
+
+        formSecend.setFieldsValue({
+          bankAccount: formatBankAccount(detail.bankAccaunt), 
+          mfo: detail.mfo,
+          bankName: detail.bankName,
+          inn: detail.inn,
+          license: detail.license,
+          address: detail.address,
+        });
+        } catch (err) {
+        console.log(err);
+      }
+    };
+    
+
+
+
+
+const handleClick = () => {
+  if (fileRef.current) {
+    fileRef.current.value = ""; 
+    fileRef.current.click();
   }
+};
+
+
+const onFinish =()=>{
+
 }
 
-    const onFinish=()=>{
-          
+
+
+const onFinished = async (values) => {
+  try {
+    const formData = new FormData();
+formData.append("Id", clinic.id);
+    formData.append("ClinicName", values.clinicName);
+ if (clinicLogoFile) {
+      formData.append("ClinicLogo", clinicLogoFile);
     }
+ const res = await send_clinic_info(formData);
+
+console.log( res);
+} catch (error) {
+    console.error( error);
+ }
+
+};
+
+
+
+
+
+const onFinishFinish = async (values) => {
+  try {
+    const formData = new FormData();
+
+    if (clinic?.clinicDetail?.id) {
+      formData.append("Id", clinic.clinicDetail.id);
+    }
+
+ 
+    formData.append("ClinicId", clinic.id);
+
+    formData.append("BankAccaunt", values.bankAccount?.replace(/\s/g, ""));
+    formData.append("BankName", values.bankName);
+    formData.append("Mfo", values.mfo);
+
+  
+    formData.append("Inn", values.inn);
+    formData.append("Address", values.address);
+    formData.append("License", values.license);
+
+
+    if (licenseFile) {
+      formData.append("LicenseFile", licenseFile);
+    }
+
+    await send_clinic_detail(formData);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+
+
+
   
   return (
     <>
@@ -50,6 +145,7 @@ console.log(err)
                     
                     <div className='main_card_content'>
                           <Form
+                          form={formMain}
     name="basic"
     labelCol={{
       span: 24,
@@ -60,8 +156,7 @@ console.log(err)
    initialValues={{
       remember: true,
     }}
-    onFinish={onFinish}
-    // onFinishFailed={onFinishFailed}
+    onFinish={onFinished}
     
   >
     
@@ -77,9 +172,14 @@ console.log(err)
       ]}
     >
         <div className='input_img_box'>
- <input type='file' />
+ <input type='file'  onChange={(e) => {
+        const file = e.target.files[0];
+        if (file) {
+          setClinicLogoFile(file);
+        }
+      }}/>
 
-    {clinic.clinicLogo!=null?<img src={clinic.clinicLogo}/>:<div className='input_img_icon'><FaPlus /></div>}
+    {clinic.clinicLogo!=null?<img src={imgApi+clinic.clinicLogo}/>:<div className='input_img_icon'><FaPlus /></div>}
         </div>
          
         </Form.Item>
@@ -119,6 +219,7 @@ console.log(err)
                     
                     <div className='main_card_content'>
                           <Form
+                         form={formPhone}   
     name="basic"
     labelCol={{
       span: 24,
@@ -159,6 +260,7 @@ console.log(err)
       {fields.map(({ key, name, ...restField }) => (
         <div key={key} className='list_phone_input' style={{ display: 'flex', width: '100%', alignItems:'flex-start' }}>
           <Form.Item
+            form={formPhone}
             {...restField}
             style={{ flex: 1 }}   // FULL WIDTH
             name={[name, 'first']}
@@ -216,7 +318,14 @@ console.log(err)
                     <h1>{t("bank_info")}</h1>
                     
                     <div className='main_card_content'>
+                          
+                          
+                          
+                          
+                          
                           <Form
+                            form={formSecend}
+
     name="basic"
     labelCol={{
       span: 24,
@@ -227,8 +336,7 @@ console.log(err)
    initialValues={{
       remember: true,
     }}
-    onFinish={onFinish}
-    // onFinishFailed={onFinishFailed}
+    onFinish={onFinishFinish}
     
   >
 <Row>
@@ -266,6 +374,9 @@ console.log(err)
       <Input  prefix={<AiOutlineFieldNumber />} className='login_input' placeholder={t("enter_inn")} />}
 </InputMask>
     </Form.Item>
+                      
+                      
+                      
                          </Col>
     <Col className='main_col' lg={12} md={24} sm={24}>
                          <Form.Item
@@ -279,24 +390,32 @@ console.log(err)
         }
       ]}
     >
-      <Input prefix={<AiOutlineFieldNumber />} className='login_input' placeholder={t("")} />
+  <div className="file-input-wrapper">
+  <Input
+ prefix={<AiOutlineFieldNumber />}
+ className="login_input"
+ readOnly
+ value={filename || clinic?.clinicDetail?.license || ""}
+ onClick={handleClick}
+/>
+  <input
+    type="file"
+    className="hidden-file-input"
+    accept=".pdf,.jpg,.png"
+    onChange={(e) => {
+      const file = e.target.files[0];
+      if (file) {
+        setLicenseFile(file); 
+        setFilename(file.name);   
+      }
+    }}
+  />
+</div>
+
+
     </Form.Item>
                          </Col>
-                          <Col className='main_col' lg={24} md={24} sm={24}>
-                         <Form.Item
-      name="director"
-      label={t("director")}
-      rules={[
-        {
-           required: true,
-           message: "",
-            
-        }
-      ]}
-    >
-      <Input prefix={<IoPersonSharp />} className='login_input' placeholder={t("enter_director")} />
-    </Form.Item>
-                         </Col>
+
                          <Col className='main_col' lg={24} md={24} sm={24}>
                          <Form.Item
       name="address"
@@ -314,38 +433,26 @@ console.log(err)
                          </Col>
                          <Col className='main_col' lg={12} md={24} sm={24}>
                          <Form.Item
-      name="bankAccaunt"
-      label={t("bank_account")}
-      rules={[
-        {
-           required: true,
-           message: "",
-            
-        }
-      ]}
-    >
-      <InputMask
-  mask="9999 9999 9999 9999"
-  maskChar={null}
-  alwaysShowMask={true}
-  beforeMaskedValueChange={(newState, oldState, userInput) => {
-    let { value } = newState;
-
-    // Belgilarni siljishidan himoya
-    if (userInput === "") {
-      if (oldState.value && oldState.value.length > value.length) {
-        // eski qiymatni qaytarib qo'yamiz
-        return oldState;
-      }
-    }
-
-    return newState;
-  }}
+  name="bankAccount"
+  label={t("bank_account")}
+  rules={[{ required: true }]}
 >
-  {(props) => 
-      <Input prefix={<AiOutlineFieldNumber />} className='login_input' placeholder={t("enter_bank_account")} />}
-</InputMask>
-    </Form.Item>
+  <InputMask
+    mask="9999 9999 9999 9999"
+    maskChar={null}
+    alwaysShowMask
+  >
+    {(props) => (
+      <Input
+        {...props}  
+        prefix={<AiOutlineFieldNumber />}
+        className="login_input"
+        placeholder={t("enter_bank_account")}
+      />
+    )}
+  </InputMask>
+</Form.Item>
+
                          </Col>
                           <Col className='main_col' lg={12} md={24} sm={24}>
                          <Form.Item

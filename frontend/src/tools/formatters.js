@@ -54,6 +54,9 @@ export const formatPhoneNumberForForm1 = (phone) => {
   return "";
 };
 
+
+
+
 export function calculateAge(birthdate) {
   if(birthdate!=null){
 const [year, month, day] = birthdate.split('-').map(Number);
