@@ -279,13 +279,16 @@ max-height: 0px;
     position: relative;
     width: 100%;
   }
-  
+  .login_input{
+    cursor: pointer !important;
+  }
   .hidden-file-input {
     position: absolute;
     inset: 0;          
     opacity: 0;
     cursor: pointer;
-
+width: 100% !important;
+height: 100% !important;
   }
   
 

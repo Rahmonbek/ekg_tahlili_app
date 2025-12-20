@@ -25,6 +25,8 @@ export default function ClinicInfo() {
     const [filename, setFilename]=useState();
     const [licenseFile, setLicenseFile] = useState(null);
     const [clinicLogoFile, setClinicLogoFile] = useState(null);
+    const [logoPreview, setLogoPreview] = useState(null);
+
     const fileRef = useRef(null);
     useEffect(()=>{
          setloader(true)
@@ -171,16 +173,30 @@ const onFinishFinish = async (values) => {
         }
       ]}
     >
-        <div className='input_img_box'>
- <input type='file'  onChange={(e) => {
-        const file = e.target.files[0];
-        if (file) {
-          setClinicLogoFile(file);
-        }
-      }}/>
+       <div className="input_img_box">
+  <input
+    type="file"
+    accept="image/*"
+    onChange={(e) => {
+      const file = e.target.files[0];
+      if (file) {
+        setClinicLogoFile(file);
+        setLogoPreview(URL.createObjectURL(file));
+      }
+    }}
+  />
 
-    {clinic.clinicLogo!=null?<img src={imgApi+clinic.clinicLogo}/>:<div className='input_img_icon'><FaPlus /></div>}
-        </div>
+  {logoPreview ? (
+    <img src={logoPreview} />
+  ) : clinic?.clinicLogo ? (
+    <img src={imgApi + clinic.clinicLogo} />
+  ) : (
+    <div className="input_img_icon">
+      <FaPlus />
+    </div>
+  )}
+</div>
+
          
         </Form.Item>
  <Form.Item
@@ -318,12 +334,7 @@ const onFinishFinish = async (values) => {
                     <h1>{t("bank_info")}</h1>
                     
                     <div className='main_card_content'>
-                          
-                          
-                          
-                          
-                          
-                          <Form
+                        <Form
                             form={formSecend}
 
     name="basic"
