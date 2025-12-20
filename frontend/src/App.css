@@ -156,8 +156,10 @@ input:-webkit-autofill:active {
     display: flex; align-items: center; justify-content: center; overflow: hidden;}
     .input_img_icon{width: 100%; height: 100%; opacity: 0.3; border: 10px solid  var(--text_color); color: var(--text_color);
        font-size: 110px; display: flex; align-items: center; justify-content: center;}
-    .input_img_box input{position: absolute;cursor: pointer; top: 0px; left: 0px; width: 100%; height: 100%; z-index: 3; opacity: 0;}
-.list_phone_input .anticon-minus-circle{font-size: 20px; color: var(--grey_color); padding-left: 5px !important;}
+    .input_img_box input{position: absolute;cursor: pointer;
+         top: 0px; left: 0px; width: 100%; height: 100% !important; z-index: 3; opacity: 0;}
+.input_img_box img{width: 100% !important; height: 100% !important;}
+      .list_phone_input .anticon-minus-circle{font-size: 20px; color: var(--grey_color); padding-left: 5px !important;}
 .claveInput{border: 1px solid #d9d9d9; outline: none; border-radius: 12px;}
 .closed_menu{width: calc(68px + var(--main_padding) + var(--main_padding));}
 .closed_menu .sidebar_head h1{margin-left: 20px;}
@@ -272,7 +274,27 @@ max-height: 0px;
 .big_loader{position: fixed; top: 0px; left: 0px; width: 100%;
   display: flex; align-items: center; justify-content: center; z-index: 3455;
   height: 100%; background-color: rgba(255, 255, 255, 0.796); backdrop-filter: blur(10px);}
-@media (max-width:1700px){
+
+  .file-input-wrapper {
+    position: relative;
+    width: 100%;
+  }
+  
+  .hidden-file-input {
+    position: absolute;
+    inset: 0;          
+    opacity: 0;
+    cursor: pointer;
+
+  }
+  
+
+
+
+
+
+
+  @media (max-width:1700px){
       .login_img img{width: 70%;}
     }
     
@@ -313,4 +335,6 @@ max-height: 0px;
 .login_form_form{padding: 0px 30px !important;}
 .login_bottom{bottom: 60px;}
 .login_box{height: 95vh;}
+.sidebar_head h1{    font-size: var(--large_size) !important;}
+.sidebar_head{ padding-top: 10px;}
 }
