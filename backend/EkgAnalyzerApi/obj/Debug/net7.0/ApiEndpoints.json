@@ -86,6 +86,62 @@
   },
   {
     "ContainingType": "ClinicController",
+    "Method": "Upsert",
+    "RelativePath": "api/clinic/create-update-clinic-detail",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Id",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "ClinicId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "BankAccaunt",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "MFO",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "BankName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "INN",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "License",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "LicenseFile",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      },
+      {
+        "Name": "Address",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ClinicController",
     "Method": "GetClinicById",
     "RelativePath": "api/clinic/get-clinic-by-id",
     "HttpMethod": "GET",
@@ -95,6 +151,53 @@
       {
         "Name": "id",
         "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ClinicController",
+    "Method": "UpdateClinicData",
+    "RelativePath": "api/clinic/update-clinic-data",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Id",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=7.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "ClinicName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "ClinicLogo",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ClinicController",
+    "Method": "UpdateClinicPhoneData",
+    "RelativePath": "api/clinic/update-clinic-phone",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "ClinicId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "PhoneNumbers",
+        "Type": "System.Collections.Generic.List\u00601[[EkgAnalyzerApi.DTOs.ClinicPhoneNumberDTO, EkgAnalyzerApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
         "IsRequired": false
       }
     ],

@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "MMUtQj8j4Kax+lEVV3WYqni8IXvBJSd//CToPx9S1GE=",
+  "Hash": "x8i1fjyUqQnBrFmnRKhA38ENRllDtjt770SzhRvE8AY=",
   "Source": "EkgAnalyzerApi",
   "BasePath": "_content/EkgAnalyzerApi",
   "Mode": "Default",
@@ -16,6 +16,27 @@
     }
   ],
   "Assets": [
+    {
+      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinicbrands\\1a6a96f9-1e10-4496-8b2f-37b9fdbd64eb.jpeg",
+      "SourceId": "EkgAnalyzerApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
+      "BasePath": "_content/EkgAnalyzerApi",
+      "RelativePath": "clinicbrands/1a6a96f9-1e10-4496-8b2f-37b9fdbd64eb#[.{fingerprint}]?.jpeg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "kc1zowqm3a",
+      "Integrity": "lKnQk5w+VL9bPccWwehW1KdVXBosBCpus1J+TjR9So8=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\clinicbrands\\1a6a96f9-1e10-4496-8b2f-37b9fdbd64eb.jpeg"
+    },
     {
       "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\.picasa.ini",
       "SourceId": "EkgAnalyzerApi",
@@ -123,6 +144,88 @@
     }
   ],
   "Endpoints": [
+    {
+      "Route": "clinicbrands/1a6a96f9-1e10-4496-8b2f-37b9fdbd64eb.jpeg",
+      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinicbrands\\1a6a96f9-1e10-4496-8b2f-37b9fdbd64eb.jpeg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "84968"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"lKnQk5w+VL9bPccWwehW1KdVXBosBCpus1J+TjR9So8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 20 Dec 2025 13:09:06 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-lKnQk5w+VL9bPccWwehW1KdVXBosBCpus1J+TjR9So8="
+        }
+      ]
+    },
+    {
+      "Route": "clinicbrands/1a6a96f9-1e10-4496-8b2f-37b9fdbd64eb.kc1zowqm3a.jpeg",
+      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinicbrands\\1a6a96f9-1e10-4496-8b2f-37b9fdbd64eb.jpeg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "84968"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"lKnQk5w+VL9bPccWwehW1KdVXBosBCpus1J+TjR9So8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 20 Dec 2025 13:09:06 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "kc1zowqm3a"
+        },
+        {
+          "Name": "label",
+          "Value": "clinicbrands/1a6a96f9-1e10-4496-8b2f-37b9fdbd64eb.jpeg"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-lKnQk5w+VL9bPccWwehW1KdVXBosBCpus1J+TjR9So8="
+        }
+      ]
+    },
     {
       "Route": "uploads/.picasa.ini",
       "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\.picasa.ini",

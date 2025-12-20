@@ -15,7 +15,8 @@ builder.Services.AddScoped<DoctorService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<TokenService>();
-builder.Services.AddScoped<ClinicService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ClinicService>();;
 // DbContext ulash
 builder.Services.AddDbContext<MedDataDB>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -70,6 +71,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowAll");
 app.UseAuthentication();
+app.UseStaticFiles();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
