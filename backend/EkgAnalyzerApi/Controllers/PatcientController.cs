@@ -28,7 +28,7 @@ public class PatcientController : ControllerBase
 
         DateOnly birthDate = DateOnly.Parse(birthdate);
 
-        var patient = await _context.Patients
+        var patient = await _context.Patcients
             .FirstOrDefaultAsync(v =>
                 v.Passport == passport &&
                 v.BirthDate == birthDate
@@ -52,7 +52,7 @@ public class PatcientController : ControllerBase
             return BadRequest(new { message = "Invalid birthdate format" });
 
         // Tekshirish: patient mavjudmi (passport + birthdate)
-        var existingPatient = await _context.Patients
+        var existingPatient = await _context.Patcients
             .FirstOrDefaultAsync(p =>
                 p.Passport == patientDto.passport.ToUpper() &&
                 p.BirthDate == birthDate
@@ -68,7 +68,7 @@ public class PatcientController : ControllerBase
             existingPatient.Phone = patientDto.phone;
             existingPatient.UpdatedAt = DateTime.UtcNow;
 
-            _context.Patients.Update(existingPatient);
+            _context.Patcients.Update(existingPatient);
             await _context.SaveChangesAsync();
 
             return Ok(existingPatient);
@@ -76,7 +76,7 @@ public class PatcientController : ControllerBase
         else
         {
             // ✅ Create yangi patient
-            var newPatient = new Patient
+            var newPatient = new Patcient
             {
                 Passport = patientDto.passport.ToUpper(),
                 BirthDate = birthDate,
@@ -89,7 +89,7 @@ public class PatcientController : ControllerBase
                 UpdatedAt = DateTime.UtcNow
             };
 
-            await _context.Patients.AddAsync(newPatient);
+            await _context.Patcients.AddAsync(newPatient);
             await _context.SaveChangesAsync();
 
             return Ok(newPatient);

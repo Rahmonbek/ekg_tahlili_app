@@ -16,6 +16,6 @@ public class DoctorPosition
 
         [Column("position_id")]
         public int PositionId { get; set; }
-        public Position Position { get; set; } = null!;
+        public Position? Position { get; set; } = null!;
     }
 }

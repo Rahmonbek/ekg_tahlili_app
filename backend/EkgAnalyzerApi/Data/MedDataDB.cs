@@ -23,11 +23,11 @@ namespace EkgAnalyzerApi.Data
         public DbSet<Position> Positions { get; set; }
         public DbSet<ClinicPhoneNumber> ClinicPhoneNumbers { get; set; }
         public DbSet<Clinic> Clinics { get; set; }
+        public DbSet<ECGAnalyses> ECGAnalyse { get; set; }
+        public DbSet<ECGAnalyseDoctors> ECGAnalyseDoctor { get; set; }
+        public DbSet<ECGAnalyseComplaints> ECGAnalyseComplaint { get; set; }
         public DbSet<ClinicDetail> ClinicDetails { get; set; }
-        public DbSet<Patient> Patients { get; set; }
-        
-        public DbSet<PatientAnalysis> PatientAnalysis { get; set; }
-
+        public DbSet<Patcient> Patcients { get; set; }
         public DbSet<Complaints> Complaints { get; set; }
 
         public override int SaveChanges()
@@ -85,8 +85,7 @@ namespace EkgAnalyzerApi.Data
             modelBuilder.Entity<User>()
     .HasOne(u => u.Clinic)    // User navigatsiya property
     .WithMany(c => c.Users)   // Clinic navigatsiya property
-    .HasForeignKey(u => u.ClinicId)
-    .OnDelete(DeleteBehavior.SetNull);
+    .HasForeignKey(u => u.ClinicId);
 
             // Clinic - ClinicDetail (1:1)
             modelBuilder.Entity<Clinic>()

@@ -1,9 +1,9 @@
 import { Button, Checkbox, Col, Form, Input, Row, Select, Tooltip } from 'antd';
 import Cleave from 'cleave.js/react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaFemale, FaMale } from 'react-icons/fa';
-import { FaAddressCard } from 'react-icons/fa6';
+import { FaAddressCard, FaUserDoctor } from 'react-icons/fa6';
 import { IoAlertCircleSharp, IoPerson } from 'react-icons/io5';
 import InputMask from 'react-input-mask';
 import { get_patcient_by_passport, save_patcient_data } from '../../../host/requests/PatcientRequest';
@@ -15,6 +15,7 @@ import EcgResult from '../../../components/results/EcgResult';
 import { MoonLoader } from 'react-spinners';
 import { warningAlert } from '../../../tools/Alerts';
 import { MdLanguage } from 'react-icons/md';
+import { get_doctor_by_clinic_id, get_params_for_add_staff } from '../../../host/requests/DoctorRequest';
 
 export default function EcgAnalyzer() {
   const [loading, setLoading] = useState(false);
@@ -28,6 +29,7 @@ export default function EcgAnalyzer() {
   const [gender, setGender] = useState(true);
   const [lang, setlang] = useState('uz');
   const [select_complaint, setselect_complaint] = useState([]);
+  const [select_doctor, setselect_doctor] = useState([]);
   const [patcient, setPatcient] = useState(null);
   const [passport, setPassport] = useState(null);
   const [birthdate, setBirthdate] = useState(null);
@@ -39,7 +41,28 @@ export default function EcgAnalyzer() {
     const [image, setimage] = useState(null)
     const [file_input, setfile_input] = useState("")
       const [files, setFiles] = useState([]);
-      const {complaints}=useStore()
+      const {complaints, roles, positions, setroles, setpositions,user, doctors, setdoctors}=useStore()
+const [role_id, setrole_id] = useState(null);
+    const [position_ids, setposition_ids] = useState([]);
+    const [position_datas, setposition_datas] = useState([]);
+    const [doctor_datas, setdoctor_datas] = useState([]);
+       useEffect(()=>{
+       if(positions.length==0){
+           getParamsData()
+       }else{
+        if(position_datas.length!=0){
+ let a=positions.filter((item)=>(item.roleId==4))
+           setposition_datas([...a])
+        }
+       
+       }
+       if(doctors.length==0 && user!=null){
+        getDoctorsOfClinic()
+       }else{
+        setdoctor_datas(doctors)
+       }
+       }, [user])
+
       const handleChange = (e) => {
         setshow_btn(true)
     setfile_input(e.target.value)
@@ -47,6 +70,27 @@ export default function EcgAnalyzer() {
     setnumber(number+1)
 };
 
+const getParamsData=async()=>{
+        try{
+           var res=await get_params_for_add_staff()
+           setpositions([...res.data.positions])
+           setroles(res.data.roles)
+           let a=res.data.positions.filter((item)=>(item.roleId==4))
+           setposition_datas([...a])
+        }catch(err){
+
+        }
+    }
+   
+    const getDoctorsOfClinic=async()=>{
+        try{
+           var res1=await get_doctor_by_clinic_id({id:user.clinic.id})
+           setdoctor_datas(res1.data.doctor)
+           setdoctors(res1.data.doctor)
+        }catch(err){
+
+        }
+    }
    
   const searchPatcient = async (val) => {
     try {
@@ -104,6 +148,19 @@ const onChangeComplaints=(val)=>{
       console.log(a)
 }
 
+
+const onChangeDoctors=(val)=>{
+      let x=select_doctor.findIndex((x)=>(x.id==val.id))
+      let a=select_doctor
+      if(x==-1){
+        a.push(val)
+      }else{
+        a.splice(x, 1)
+      }
+      setselect_doctor([...a])
+      console.log(a)
+}
+
  const handleSubmit = async () => {
     console.log(files.length)
     if (files.length === 0) return alert(t("select_file_error"));
@@ -117,7 +174,11 @@ const onChangeComplaints=(val)=>{
       const formData = new FormData();
       files.forEach((f) => formData.append("file", f));
       select_complaint.forEach((f) => formData.append("complaint", f.nameUz));
+      select_complaint.forEach((f) => formData.append("complaint_id", f.id));
+      select_doctor.forEach((f) => formData.append("doctor_id", f.id));
       formData.append('gender', patcient.gender?"erkak":'ayol')
+      formData.append('patcient_id', patcient.id)
+      formData.append('created_doctor_id', user.doctor.id)
       formData.append('lang', lang)
       formData.append('age', calculateAge(patcient.birthDate))
 
@@ -180,6 +241,21 @@ const resetData=()=>{
      form.resetFields();
               form2.resetFields();
 }
+
+const changePositions=(val)=>{
+  
+      setselect_doctor([])
+       if(val.length==0){
+        setdoctor_datas(doctors)
+       }else{
+ const result = doctors.filter(doctor =>
+  doctor.positions.some(pos => val.includes(pos.id))
+);
+      setdoctor_datas([...result])
+       }
+     
+}
+
 
   return (
     <div>
@@ -383,7 +459,7 @@ const resetData=()=>{
                 
               >
               <Row>
-                <Col  className="main_col" lg={8} md={24}>
+                <Col  className="main_col" lg={12} md={24}>
 
                      <Form.Item
   name="select_ecg_file"
@@ -404,7 +480,7 @@ const resetData=()=>{
   </div>
 </Form.Item>
                 </Col>
-                 <Col className="main_col" lg={8} md={24}>
+                 <Col className="main_col" lg={12} md={24}>
                     <Form.Item
                       name="lang"
                       label={t('lang_analyse')}
@@ -424,8 +500,44 @@ const resetData=()=>{
                       />
                     </Form.Item>
                   </Col>
+
+                  
+                                       <Col className="main_col" lg={24} md={24}>
+                                       <Form.Item
+                                        name="positions"
+                                        label={t('position')}
+                                        
+                                      >
+                   <Select
+                   value={position_ids}
+                   onChange={(val)=>{changePositions(val)}}
+                                          style={{ width: '100%' }}
+                                          mode="multiple"
+                                          prefix={<FaUserDoctor />}
+                                          placeholder={t('enter_position_doctor')}
+                                           options={position_datas.map(role => ({
+                      value: role.id,
+                      label: role.nameUz,
+                    }))}
+                                          
+                                        />
+                  
+                                      </Form.Item>
+                                      </Col>
+                   <Col  className="main_col" lg={24} md={24}>
+                <p className='ecg_label'>{t("select_doctor_of_patcient")}</p>
+                <br/>
+                <Row>
+                    {doctor_datas.map((item, key)=>{
+                        return(<Col lg={12} md={24}><div className='complaint_item'>
+                             <Checkbox checked={select_doctor.findIndex(x=>(x.id==item.id))!=-1} onChange={()=>{onChangeDoctors(item)}}><span className='complaint_name'>{item.lastName} {item.firstName}</span></Checkbox>
+                        </div></Col>)
+                    })}
+                    </Row>
+                   <p className='ecg_has_not_label'>{t("has_not_doctor")}</p> 
+                </Col>
                 <Col  className="main_col" lg={24} md={24}>
-                <label>{t("patcient_complaint")}</label>
+                <p className='ecg_label'>{t("patcient_complaint")}</p>
                 <br/>
                 <Row>
                     {complaints.map((item, key)=>{

@@ -1,0 +1,28 @@
+{
+  "digital_measurements": {
+    "HR": "55.7 bpm, sinus bradikardiya, yosh uchun past (patologik)",
+    "PR_interval": "143.6 ms, normal (120-200 ms oralig'ida)",
+    "QRS_duration": "106.5 ms, normal (≤120 ms)",
+    "QT_interval": "454.0 ms, chegaraviy/uzaygan (erkaklarda ≤450 ms), patologik",
+    "QTc_Bazett": "437.4 ms, yuqori chegara (erkaklar uchun ≤440 ms), normal/chegaraviy",
+    "QRS_axis": "57.5 gradus, normal (−30° dan +90° gacha)",
+    "P_wave_duration": "119.4 ms, normal (≤120 ms)",
+    "P_wave_amplitude": "o‘lchab bo‘lmaydi",
+    "R_wave_amplitude": "o‘lchab bo‘lmaydi",
+    "S_wave_amplitude": "o‘lchab bo‘lmaydi",
+    "T_wave_amplitude": "0.25 mV (averej T), normal (≥0.1 mV)",
+    "PR_segment": "o‘lchab bo‘lmaydi",
+    "ST_segment_elevation": "0.05 mV, ko‘tarilish yo‘q, normal",
+    "RR_interval": "1077.6 ms, sinus bradikardiya (HR < 60 bpm)",
+    "heart_rate_variability": "o‘lchab bo‘lmaydi",
+    "P_QRS_T_morphology": "P to‘lqinlar sinxron, QRS komplekslari tor, T to‘lqinlar normal, ST segmentda elevatsiya yo‘q. Anormal depolarizatsiya/repolarizatsiya belgisi yuq."
+  },
+
+  "automatic_analysis": "Yurak urishi ritm turi: Sinus bradikardiya.\nAritmiya: Sinus bradikardiya (HR 55.7 bpm). Sababi: yosh erkakda bradikardiya, lekin simptomatik (bosh aylanishi, hushdan ketish, tez charchash, kuchsizlik, nafas qisishi, ortopnoe).\nQT intervali: biroz uzaygan (ayniqsa simptomlarga ega), Torsades de Pointes uchun xavf yuqorilashi mumkin.\nIshemiya, ST elevatsiya yoki depressiya, Q patologik tishchalar aniqlanmadi, vizual segmentlar stabil. ST segmenti va T to‘lqinlar tipik ishemik yoki perikarditik o‘zgarishsiz.\nO‘tkazuvchanlik buzilishlari: Yuqori darajali AV blok yoki QRS bloklari aniqlanmadi.\nQalinlashuv-gipertrofiya belgisi yo‘q (Sokolow-Lyon indeksi < 3.5 mV, normada). Bo‘lmacha/kamora kengayishi yo‘q.\nElektrolit buzilishlariga xos EKG topilmalari yo‘q: T balandligi, PR yoki QRS kengayishi, U to‘lqinlari yo‘q.\nPerikardit yoki boshqa kardiomiyopatiyalar belgisi yuq.",
+  
+  "automatic_analysis_bool": "3",
+  
+  "AI_recommendations": "Bemor zudlik bilan kardiolog nazoratiga olinsin! Negaki, sizda simptomatik bradikardiya (bosh aylanishi, hushdan ketish, kuchsizlik, nafas qisishi) va QT intervalining chegaraviy/uzaygan holati bor. Bu hayot uchun xavfli aritmiya (masalan, Torsades de Pointes) rivojlanishi xavfini oshiradi. Tez tibbiy yordam va shifoxonaga yotqizish tavsiya etiladi. Qo‘shimcha tekshiruvlar: elektrolitlar (K, Ca, Mg), yurak fermentlari, gormonlar (TSH), EKG monitoring, ECHO.\nJismoniy faollik (hatto engil) vaqtincha cheklansin. To'satdan hushdan ketish/xurujda tez yordam chaqirish zarur.\nAgar bradikardiyaning asosi aniqlansa va og'ir simptomlar bo‘lsa, vaqtincha/yoki doimiy elektrokardiostimulyator qo‘yish ko‘rib chiqiladi.",
+  
+  "final_summary": "24 yoshli erkakda asosan sinus bradikardiya (HR 55.7 bpm), QT intervali chegara/uzaygan, simptomlar — hushdan ketish, bosh aylanishi, tez charchash, nafas qisishi, og‘ir klinalik bo‘lib, hayot uchun xavfli aritmiyalarga sabab bo‘lishi mumkin. EKGda og‘ir ishemik yoki blokiratsiyalovchi/shoshilinch markerlar yo‘q, biroq simptomatik bradikardiya va QT uzayishi mavjudligi tufayli zudlik bilan shifoxonaga yotqizish zarur."
+}

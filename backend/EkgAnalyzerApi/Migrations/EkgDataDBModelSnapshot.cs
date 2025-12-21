@@ -250,7 +250,117 @@ namespace EkgAnalyzerApi.Migrations
                     b.ToTable("doctor_position");
                 });
 
-            modelBuilder.Entity("EkgAnalyzerApi.Models.Patient", b =>
+            modelBuilder.Entity("EkgAnalyzerApi.Models.ECGAnalyseComplaints", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ComplaintId")
+                        .HasColumnType("integer")
+                        .HasColumnName("complaint_id");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("ECGAnalysesId")
+                        .HasColumnType("integer")
+                        .HasColumnName("ecg_analyse_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ECGAnalysesId");
+
+                    b.ToTable("ecg_analyse_complaints");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.ECGAnalyseDoctors", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("integer")
+                        .HasColumnName("doctor_id");
+
+                    b.Property<int>("ECGAnalysesId")
+                        .HasColumnType("integer")
+                        .HasColumnName("ecg_analyse_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ECGAnalysesId");
+
+                    b.ToTable("ecg_analyse_doctors");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.ECGAnalyses", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AIAnswerData")
+                        .HasColumnType("text")
+                        .HasColumnName("ai_answer_data");
+
+                    b.Property<string>("AnalyseFileLink")
+                        .HasColumnType("text")
+                        .HasColumnName("analyse_file_link");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("CreatedDoctorId")
+                        .HasColumnType("integer")
+                        .HasColumnName("created_doctor_id");
+
+                    b.Property<string>("GeneratedFileLink")
+                        .HasColumnType("text")
+                        .HasColumnName("generated_file_link");
+
+                    b.Property<int>("PatcientId")
+                        .HasColumnType("integer")
+                        .HasColumnName("patcient_id");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ecg_analyses");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.Patcient", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -302,49 +412,7 @@ namespace EkgAnalyzerApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("patients");
-                });
-
-            modelBuilder.Entity("EkgAnalyzerApi.Models.PatientAnalysis", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AIAnswerLink")
-                        .HasColumnType("text")
-                        .HasColumnName("ai_answer");
-
-                    b.Property<string>("AIFileLink")
-                        .HasColumnType("text")
-                        .HasColumnName("ai_file_link");
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("PatientFileLink")
-                        .HasColumnType("text")
-                        .HasColumnName("patient_file_link");
-
-                    b.Property<int>("PatientId")
-                        .HasColumnType("integer")
-                        .HasColumnName("patient_id");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer")
-                        .HasColumnName("status");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("patient_analysis");
+                    b.ToTable("patcients");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.Position", b =>
@@ -557,12 +625,33 @@ namespace EkgAnalyzerApi.Migrations
                     b.Navigation("Position");
                 });
 
+            modelBuilder.Entity("EkgAnalyzerApi.Models.ECGAnalyseComplaints", b =>
+                {
+                    b.HasOne("EkgAnalyzerApi.Models.ECGAnalyses", "ECGAnalyse")
+                        .WithMany("Complaints")
+                        .HasForeignKey("ECGAnalysesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ECGAnalyse");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.ECGAnalyseDoctors", b =>
+                {
+                    b.HasOne("EkgAnalyzerApi.Models.ECGAnalyses", "ECGAnalyse")
+                        .WithMany("Doctors")
+                        .HasForeignKey("ECGAnalysesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ECGAnalyse");
+                });
+
             modelBuilder.Entity("EkgAnalyzerApi.Models.User", b =>
                 {
                     b.HasOne("EkgAnalyzerApi.Models.Clinic", "Clinic")
                         .WithMany("Users")
-                        .HasForeignKey("ClinicId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("ClinicId");
 
                     b.HasOne("EkgAnalyzerApi.Models.Role", "Role")
                         .WithMany()
@@ -586,8 +675,7 @@ namespace EkgAnalyzerApi.Migrations
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.Clinic", b =>
                 {
-                    b.Navigation("ClinicDetail")
-                        .IsRequired();
+                    b.Navigation("ClinicDetail");
 
                     b.Navigation("ClinicPhoneNumber");
 
@@ -597,6 +685,13 @@ namespace EkgAnalyzerApi.Migrations
             modelBuilder.Entity("EkgAnalyzerApi.Models.Doctor", b =>
                 {
                     b.Navigation("DoctorPositions");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.ECGAnalyses", b =>
+                {
+                    b.Navigation("Complaints");
+
+                    b.Navigation("Doctors");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.Position", b =>

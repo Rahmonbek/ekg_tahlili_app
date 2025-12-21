@@ -123,7 +123,10 @@
 "position":"Mutaxassislik",
 "enter_new_password_staff":"Xodim uchun parol yarating",
 "enter_username_staff":"Xodim uchun login yarating",
-"edit":"O'zgartirish"
+"edit":"O'zgartirish",
+"select_doctor_of_patcient":"Davolovchi shifokorlarni tanlang",
+"enter_position_doctor":"Davolovchi shifokor mutaxassislikini tanlang",
+"has_not_doctor":"!!!Eslatma. Davolovchi shifokor ro'yhatda mavjud bo'lmasa shifoxona adminiga murojaat qiling"
 
 
 

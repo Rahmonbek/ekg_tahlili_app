@@ -430,6 +430,29 @@
         }
       }
     },
+    "/api/doctor/get-doctors-by-clinic-id": {
+      "get": {
+        "tags": [
+          "Doctor"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "style": "form",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/doctor/get-doctors-by-id": {
       "get": {
         "tags": [

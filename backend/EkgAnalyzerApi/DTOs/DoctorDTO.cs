@@ -13,6 +13,14 @@ public class DoctorDTOResponse
     public DoctorDTOResponseData? Doctor { get; set; }
 }
 
+public class DoctorDTOResponseEcg
+{
+    public bool Status { get; set; }
+    public string? Message { get; set; }
+
+    public List<DoctorDTOResponseEcgData>? Doctor { get; set; }
+}
+
 public class DoctorListDTO
 {
     public List<DoctorDTOResponseData> data { get; set; } = new List<DoctorDTOResponseData>();
@@ -41,8 +49,17 @@ public class DoctorDTORequest
     public List<IdDTO>? Positions { get; set; }
 
 }
+public class DoctorDTOResponseEcgData
+{
+    public int? Id { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
 
-public class DoctorDTOResponseData
+    public List<PositionDto> Positions { get; set; }
+}
+
+
+    public class DoctorDTOResponseData
 {
     public int? Id { get; set; }
     public int? UserId { get; set; }

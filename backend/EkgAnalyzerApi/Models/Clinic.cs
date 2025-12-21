@@ -22,10 +22,10 @@ public class Clinic
         [Column("updated_at")]
         public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        public ClinicDetail ClinicDetail { get; set; } = new();
-        public List<User> Users { get; set; } = new(); // 🔹 Reverse navigation
+        public ClinicDetail? ClinicDetail { get; set; } = new();
+        public List<User>? Users { get; set; } = new(); // 🔹 Reverse navigation
 
         
-        public List<ClinicPhoneNumber> ClinicPhoneNumber { get; set; } = new();
+        public List<ClinicPhoneNumber>? ClinicPhoneNumber { get; set; } = new();
     }
 }

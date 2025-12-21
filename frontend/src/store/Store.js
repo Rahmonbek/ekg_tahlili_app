@@ -9,6 +9,8 @@ export const useStore = create((set) => ({
     setloader: (id) => set({ loader: id }),
     complaints: [],
     setcomplaints: (id) => set({ complaints: id }),
+    doctors: [],
+    setdoctors: (id) => set({ doctors: id }),
     roles: [],
     setroles: (id) => set({ roles: id }),
     positions: [],

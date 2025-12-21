@@ -3,6 +3,8 @@ import io
 import os
 import re
 import math
+from sqlalchemy.orm import Session
+from fastapi import Depends
 from openai import OpenAI
 import base64
 from matplotlib.ticker import MultipleLocator
@@ -22,10 +24,17 @@ import matplotlib
 matplotlib.use('Agg')
 from typing import Dict
 import math
+from database import get_db
+from ecg_analyse import create_ecg_analyse
+from ecg_analyse import update_ecg_analyse
+from fastapi.staticfiles import StaticFiles
+from ecg_analyse_doctors import create_ecg_analyse_doctor
+from ecg_analyse_complaints import create_ecg_analyse_complaint
 import neurokit2 as nk
 import openai
 import warnings
 import json
+from pathlib import Path
 Image.MAX_IMAGE_PIXELS = None
 # Optional for PDF -> image
 try:
@@ -36,8 +45,49 @@ except Exception:
 # For fuzzy lead mapping
 from fuzzywuzzy import process
 
+
+BASE_DIR = Path(__file__).parent  # Loyihangiz papkasi
+UPLOAD_DIR = BASE_DIR / "uploads"
+
+UPLOAD_DIR1 = BASE_DIR / "uploads" / "ecg_analyse_files"
+
+UPLOAD_DIR1.mkdir(parents=True, exist_ok=True)
+
+UPLOAD_DIR2 = BASE_DIR / "uploads" / "ecg_generated_files"
+
+UPLOAD_DIR2.mkdir(parents=True, exist_ok=True)
+
+
+UPLOAD_DIR3 = BASE_DIR / "uploads" / "ecg_ai_answers"
+
+UPLOAD_DIR3.mkdir(parents=True, exist_ok=True)
+
+def save_analyse_file(file_bytes: bytes, filename: str) -> str:
+    safe_name = filename.replace(" ", "_")
+    filepath = UPLOAD_DIR1 / safe_name
+    with open(filepath, "wb") as f:
+        f.write(file_bytes)
+    # Faylga serverdan kirish linki
+    return f"/uploads/ecg_analyse_files/{safe_name}"
+
+def save_generated_file(file_bytes: bytes, filename: str) -> str:
+    safe_name = filename.replace(" ", "_")
+    filepath = UPLOAD_DIR2 / safe_name
+    with open(filepath, "wb") as f:
+        f.write(file_bytes)
+    # Faylga serverdan kirish linki
+    return f"/uploads/ecg_generated_files/{safe_name}"
+
+def save_ai_answer(ai_text: str, filename: str) -> str:
+    safe_name = filename.replace(" ", "_")
+    filepath = UPLOAD_DIR3 / safe_name
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(ai_text)
+    return f"/uploads/ecg_ai_answers/{safe_name}"
+
 # ---------------- FastAPI app init ----------------
 app = FastAPI(title="AI EKG Analyzer")
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -344,6 +394,7 @@ asosiy EKG topilmalar va umumiy klinik baho."
 ---
 
 ### QO‘SHIMCHA TALABLAR:
+- bemorga tashxis qo'yishda EKG parametrlarini va EKG rasmdagi grafikni birinchi o'ringa qo'y
 - "automatic_analysis" bo‘limida faqat BOR patologiyalar yozilsin
 - "automatic_analysis_bool" bo'limida faqat 1 yoki 2 yoki 3 sonlari bo'lsin ortiqcha narsa kerak emas 
 - Agar patologiya yo‘q bo‘lsa, nima sababdan yo‘qligi aniq tushuntirilsin
@@ -676,56 +727,94 @@ def calculate_qrs_axis_robust(leads, fs):
     except Exception as e:
         print(f"Xatolik: {e}")
         return None
-
-def get_st_segment_mv(leads: dict, fs: int) -> float:
+def get_global_st_status(st_results):
     """
-    Returns the median ST deviation (mV) across key leads (V4-V6, I, aVL)
-    Positive → ST elevation
-    Negative → ST depression
-    0 → normal / no significant deviation
+    ST natijalari lug'atidan umumiy xulosaviy qiymatni chiqaradi.
     """
+    values = list(st_results.values())
+    
+    # 1. Maksimal elevatsiya (eng xavfli nuqtani topish uchun)
+    max_elevation = max(values)
+    
+    # 2. Maksimal depressiya (eng past manfiy nuqta)
+    max_depression = min(values)
+    
+    # Odatda eng katta og'ish (absolyut qiymat bo'yicha) olinadi
+    global_st = max_elevation if abs(max_elevation) > abs(max_depression) else max_depression
+    return global_st
+ 
+def get_st_segment_mv(leads_data, fs, gain=1000):
+    st_results = {}
 
-    # Leads to consider (lateral and high-priority)
-    key_leads = ["V4", "V5", "V6", "I", "aVL"]
-    st_devs = []
-
-    for lead in key_leads:
-        if lead not in leads:
-            continue
-
-        signal = leads[lead]
+    for lead_name, signal in leads_data.items():
         try:
-            signals, info = nk.ecg_process(signal, sampling_rate=fs)
-            r_peaks = info["ECG_R_Peaks"]
+            # 1. Signalni mV ga o'tkazish va tozalash
+            sig = np.array(signal) / gain
+            cleaned = nk.ecg_clean(sig, sampling_rate=fs)
+            
+            # 2. Faqat R-cho'qqilarini topamiz (bu eng oson va aniq topiladigan nuqta)
+            _, rpeaks = nk.ecg_peaks(cleaned, sampling_rate=fs)
+            peaks = rpeaks['ECG_R_Peaks']
+            
+            beat_st_levels = []
+            
+            for r_idx in peaks:
+                # Izolinya (Baseline): R cho'qqisidan 80ms oldingi nuqta (PR segmenti)
+                baseline_idx = r_idx - int(fs * 0.08)
+                
+                # ST nuqtasi: R cho'qqisidan 120ms keyingi nuqta (ST segmenti o'rtasi)
+                # (QRS kompleksi odatda 80-100ms davom etadi, shuning uchun 120ms - bu ST boshlanishi)
+                st_idx = r_idx + int(fs * 0.12)
+                
+                # Signal chegarasidan chiqib ketmaslikni tekshiramiz
+                if baseline_idx > 0 and st_idx < len(cleaned):
+                    baseline_val = cleaned[baseline_idx]
+                    st_val = cleaned[st_idx]
+                    
+                    # ST segmenti = ST_nuqtasi - Izolinya
+                    beat_st_levels.append(st_val - baseline_val)
+            
+            if beat_st_levels:
+                st_results[lead_name] = float(np.mean(beat_st_levels))
+            else:
+                st_results[lead_name] = 0.0
+                
+        except Exception:
+            st_results[lead_name] = 0.0
+    print(st_results)
+    summary = get_global_st_status(st_results)       
+    return summary
 
-            st_vals = []
-            pr_vals = []
 
-            for r in r_peaks:
-                j = r + int(0.04 * fs)
-                st = j + int(0.06 * fs)
-                pr = r - int(0.2 * fs)
-
-                if 0 < pr and st < len(signal):
-                    st_vals.append(signal[st])
-                    pr_vals.append(signal[pr])
-
-            if len(st_vals) < 3:
+def check_t_wave_inversion(leads, fs=500):
+    inversion_detected = None
+    critical_leads = ['I', 'II', 'V4', 'V5', 'V6']
+    
+    for lead in critical_leads:
+        if lead in leads and leads[lead] is not None:
+            try:
+                # Signalni tozalash va massivga o'tkazish
+                sig = np.array(nk.ecg_clean(leads[lead], sampling_rate=fs))
+                _, rpeaks = nk.ecg_peaks(sig, sampling_rate=fs)
+                _, waves = nk.ecg_delineate(sig, rpeaks, sampling_rate=fs, method="cwt")
+                
+                # T to'lqini cho'qqilarini olish
+                t_peaks = np.array(waves.get('ECG_T_Peaks', []))
+                
+                # NaN bo'lmagan indekslarni ajratib olish
+                valid_indices = t_peaks[~np.isnan(t_peaks)].astype(int)
+                
+                if len(valid_indices) > 0:
+                    # T-to'lqinlari cho'qqilaridagi o'rtacha qiymat
+                    t_values = sig[valid_indices]
+                    avg_t_val = np.mean(t_values)
+                    inversion_detected=avg_t_val
+            except Exception as e:
+                print(f"Lead {lead} tahlilida xatolik: {e}")
                 continue
-
-            st_level = np.median(st_vals)
-            baseline = np.median(pr_vals)
-
-            st_devs.append(st_level - baseline)
-
-        except:
-            continue
-
-    if not st_devs:
-        return 0.0
-
-    # Median across selected leads → general ST deviation
-    return float(np.median(st_devs)*0.1)
+                
+    return inversion_detected
+    
 
 def compute_full_ecg_v3(leads, fs=500):
     heart_rate_bpm_array=[]
@@ -733,6 +822,8 @@ def compute_full_ecg_v3(leads, fs=500):
     qrs_intervals_ms=[]
     rr_intervals_ms=[]
     qt_intervals_ms=[]
+    p_durations_ms = []  # Yangi
+    t_amplitudes_mv = [] 
     qtc_final=None
     heart_rate_bpm=None
     pr_interval_ms=None
@@ -743,6 +834,8 @@ def compute_full_ecg_v3(leads, fs=500):
         lead_ii = np.asarray(leads[lead])
         lead_ii = nk.ecg_clean(lead_ii, fs)
         r_peaks = detect_r_peaks(lead_ii, fs)
+        _, rpeaks1 = nk.ecg_peaks(lead_ii, sampling_rate=fs)
+        _, waves = nk.ecg_delineate(lead_ii, rpeaks1, sampling_rate=fs, method="cwt")
         rr_intervals = np.diff(r_peaks) / float(fs)  # seconds
         print(rr_intervals)
         if rr_intervals.size > 0:
@@ -771,7 +864,19 @@ def compute_full_ecg_v3(leads, fs=500):
         
         if rr_interval_ms is not None and rr_interval_ms>0:
             rr_intervals_ms.append(rr_interval_ms)
+        if not np.isnan(waves['ECG_P_Onsets']).all():
+            p_dur = np.nanmean(np.array(waves['ECG_P_Offsets']) - np.array(waves['ECG_P_Onsets'])) * (1000/fs)
+            p_durations_ms.append(p_dur)
+            
+        t_peaks_indices = np.array(waves['ECG_T_Peaks'])
 
+        valid_t_indices = t_peaks_indices[~np.isnan(t_peaks_indices)].astype(int)
+
+        if len(valid_t_indices) > 0:
+            t_amp = np.nanmean(lead_ii[valid_t_indices]) / 1000.0
+            t_amplitudes_mv.append(t_amp)
+        else:
+            t_amplitudes_mv.append(0.0)
         
     print(qt_intervals_ms)
     pr_interval_ms=round(float(max(pr_intervals_ms)), 1)
@@ -789,17 +894,38 @@ def compute_full_ecg_v3(leads, fs=500):
     
     qrs_axis_degree=calculate_qrs_axis_robust(leads, fs)
     st_segment=get_st_segment_mv(leads, fs)
-    result = {
-        "heart_rate_bpm": round(heart_rate_bpm, 1) if heart_rate_bpm is not None else None,
+    s_v1 = np.abs(np.min(leads['V1'])) / 1000.0
+    r_v5 = np.max(leads['V5']) / 1000.0
+    sokolow_index = s_v1 + r_v5
+
+    # 2. R-wave Progression (Yangi)
+    r_v1 = float(np.max(np.array(leads.get('V1', [0]))))
+    r_v2 = float(np.max(np.array(leads.get('V2', [0]))))
+    r_v3 = float(np.max(np.array(leads.get('V3', [0]))))
+    r_v4 = float(np.max(np.array(leads.get('V4', [0]))))
+    
+    # 3. T-wave Inversion (Yangi)
+    t_inversion = check_t_wave_inversion(leads, fs)
+    return {
+        "heart_rate_bpm": round(heart_rate_bpm, 1),
         "pr_interval_ms": round(pr_interval_ms,1) if pr_interval_ms is not None else None,
-        "qt_interval_ms": round(qt_interval_ms,1) if qt_interval_ms is not None else None,
-        "qt_c_bazett_ms": round(qtc_final,1) if qtc_final is not None else None,
-        "rr_interval_ms": round(rr_interval_ms, 1) if rr_interval_ms is not None else None,
-        "qrs_duration_ms": round(qrs_interval_ms, 1) if qrs_interval_ms is not None else None,
-        "qrs_axis_degree": round(qrs_axis_degree, 1) if qrs_axis_degree is not None else None,
-        "st_segment_mv": round(st_segment, 2) if st_segment is not None else None,
+        "qt_interval_ms": round(qt_interval_ms, 1),
+        "qt_c_bazett_ms": round(qtc_final, 1),
+        "rr_interval_ms": round(rr_interval_ms, 1),
+        "qrs_duration_ms": round(qrs_interval_ms, 1),
+        "qrs_axis_degree": round(qrs_axis_degree, 1),
+        "st_segment_mv": round(st_segment, 4),
+        # Yangi diagnostik parametrlar
+        "p_wave_duration_ms": round(float(np.mean(p_durations_ms)), 1) if p_durations_ms else 0,
+        "t_wave_amplitude_mv": round(float(np.max(t_amplitudes_mv)), 3) if t_amplitudes_mv else 0,
+        "sokolow_lyon_index_mv": round(sokolow_index, 2),
+        "rv5_sv1_sum_mv": round(sokolow_index, 2), 
+        "r_wave_v1_unit": round(r_v1, 1),
+        "r_wave_v2_unit": round(r_v2, 1),
+        "r_wave_v3_unit": round(r_v3, 1),
+        "r_wave_v4_unit": round(r_v4, 1),
+        "average_T_wave_value": t_inversion
     }
-    return result
 
 
 
@@ -808,17 +934,47 @@ from fastapi import Form
 # ---------------- FastAPI endpoint: analyze ----------------
 @app.post("/api/analyze")
 async def analyze(
+    db: Session = Depends(get_db),
     file: list[UploadFile] = File(...),
     complaint: list[str] | None = Form(None),
+    complaint_id: list[int] | None = Form(None),
+    doctor_id: list[int] | None = Form(None),
+    created_doctor_id: int = Form(...),
+    patcient_id: int = Form(...),
     gender: str = Form(...),
     lang: str = Form(...),
     age: int = Form(...)
 ):
+   
     if OPENAI_API_KEY is None:
         raise HTTPException(status_code=400, detail="Provide OpenAI API key in environment variable 'OPENAI_API_KEY'")
     first_file: UploadFile = file[0]
     content = await first_file.read()
     fname = (first_file.filename or "upload").lower()
+    analyse_file_path = save_analyse_file(content, fname)
+    ecg_analyse = create_ecg_analyse(
+        session=db,
+        patient_id=patcient_id,
+        created_doctor_id=created_doctor_id,
+        status=0,
+        analyse_file_link=analyse_file_path
+    )
+    if doctor_id:
+        for d_id in doctor_id:
+            await create_ecg_analyse_doctor(
+                session=db,
+                ecg_analyse_id=ecg_analyse.id,
+                doctor_id=d_id
+            )
+
+    # --- ECGAnalyseComplaints yozish ---
+    if complaint_id:
+        for c_id in complaint_id:
+            await create_ecg_analyse_complaint(
+                session=db,
+                ecg_analyse_id=ecg_analyse.id,
+                complaint_id=c_id
+            )
 
     is_image = fname.endswith(('.png','.jpg','.jpeg'))
 
@@ -865,8 +1021,17 @@ async def analyze(
         print(leads)
         # --- Generate PNG from leads ---
         png_bytes = render_12_lead_png(leads, fs)
+        
     else:
         png_bytes = content
+    fname1 = f"ecg_{ecg_analyse.id}.png"
+    generated_file_link = save_generated_file(png_bytes, fname1)
+    ecg_analyse = update_ecg_analyse(
+        session=db,
+        status=1,
+        ecg_id=ecg_analyse.id,
+        generated_file_link=generated_file_link
+    )
     digitals = compute_full_ecg_v3(leads, fs)
     print(digitals)
     
@@ -887,6 +1052,7 @@ async def analyze(
     prompt = compose_prompt_for_openai(digitals, age, gender, complaint, lang)
     
     
+    ai_error = False
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)
         resp = client.responses.create(
@@ -900,23 +1066,36 @@ async def analyze(
             }]
         )
         content_out = resp.output_text
+        try:
+            parsed = json.loads(content_out)
+        except Exception:
+            parsed = {"raw": content_out}
+    
+        # --- Matnni bevosita bazaga saqlash ---
+        ai_answer_text = content_out
+        status_to_save = 2
+    
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"OpenAI chat completion failed: {e}")
+        parsed = {"error": str(e)}
+        ai_answer_text = None
+        status_to_save = -1
+        ai_error = True
+    
+    # --- ECGAnalyse yangilash AI natija bilan ---
+    ecg_analyse = update_ecg_analyse(
+        session=db,
+        ecg_id=ecg_analyse.id,
+        status=status_to_save,
+        ai_answer_data=ai_answer_text  # Fayl yo‘li o‘rniga matnni uzatamiz
+    )
 
-    # --- Parse JSON ---
-    try:
-        import json
-        parsed = json.loads(content_out)
-    except Exception:
-        parsed = {"raw": content_out}
+    
 
-    # --- Encode PNG to base64 for frontend ---
-    png_b64 = base64.b64encode(png_bytes).decode('ascii')
-    print(parsed)
     return JSONResponse(content={
-        "openai_file_id": file_id,
+        "ecg_id": ecg_analyse.id,
+        "ecg_png_base64": generated_file_link,
         "ai_response": parsed,
-        "ecg_png_base64": png_b64
+        "ai_error": ai_error
     })
 
 # ---------------- Ground truth endpoint ----------------

@@ -14,6 +14,9 @@ export const get_default_username=(data)=>{
 export const get_doctor_by_id=(data)=>{
     return httpGetRequest("/doctor/get-doctors-by-id/", data)
 }
+export const get_doctor_by_clinic_id=(data)=>{
+    return httpGetRequest("/doctor/get-doctors-by-clinic-id/", data)
+}
 
 export const change_doctor_data=(data)=>{
     return httpPostRequest("/doctor/save-doctor-data/", data)

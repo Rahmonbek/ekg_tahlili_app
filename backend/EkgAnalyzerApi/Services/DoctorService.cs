@@ -11,11 +11,13 @@ namespace EkgAnalyzerApi.Services
         private readonly MedDataDB _context;
         private int _adminRoleId;
         private int _directorRoleId;
+        private int _doctorRoleId;
         private int _superAdminRoleId;
         public DoctorService(MedDataDB context)
         {
             _context = context;
             _adminRoleId = 2;
+            _doctorRoleId = 4;
             _directorRoleId = 3;
             _superAdminRoleId = 1;
 
@@ -100,6 +102,43 @@ namespace EkgAnalyzerApi.Services
                 data = doctors,
                 TotalCount = totalDoctors,
                 TotalPages = totalPages
+            };
+        }
+
+        public async Task<DoctorDTOResponseEcg> GetDoctorsByClinicId(int id)
+        {
+            var doctorsQuery = _context.Users
+                .Where(u => u.RoleId == _doctorRoleId && u.ClinicId == id)
+                .Include(u => u.Doctor)
+                    .ThenInclude(d => d.DoctorPositions)
+                        .ThenInclude(dp => dp.Position);
+
+
+            var doctors = await doctorsQuery
+                .OrderBy(u => u.Id)
+                .Select(u => new DoctorDTOResponseEcgData
+                {
+                    Id = u.Doctor.Id,
+                    FirstName = u.Doctor.FirstName,
+                    LastName = u.Doctor.LastName,
+                    Positions = u.Doctor.DoctorPositions
+                        .Select(dp => new PositionDto
+                        {
+                            Id = dp.Position.Id,
+                            RoleId = dp.Position.RoleId,
+                            NameUz = dp.Position.NameUz,
+                            NameRu = dp.Position.NameRu,
+                            NameEn = dp.Position.NameEn
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
+
+            return new DoctorDTOResponseEcg
+            {
+                Doctor = doctors,
+                Status=true,
+                Message=null
             };
         }
 

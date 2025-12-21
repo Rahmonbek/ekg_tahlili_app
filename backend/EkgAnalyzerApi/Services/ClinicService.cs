@@ -88,7 +88,7 @@ namespace EkgAnalyzerApi.Services
             await file.CopyToAsync(stream);
 
             var req = _http.HttpContext!.Request;
-            return $"{req.Scheme}://{req.Host}/clinic_licenses/{fileName}";
+            return $"/clinic_licenses/{fileName}";
         }
 
         private void DeleteOldLicense(string? licenseUrl)

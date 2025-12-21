@@ -144,7 +144,7 @@ export default function AdminModal() {
                 placeholder={t('enter_surename_staff')}/>
           </Form.Item>
         </Col>
-        <Col className="main_col" lg={24} md={24}>
+        <Col lg={24} md={24}>
                   <Form.Item
                    className=''
                     name="gender"
@@ -166,7 +166,7 @@ export default function AdminModal() {
                   </Form.Item>
                 </Col>
          
-         <Col className="main_col" lg={24} md={24}>
+         <Col lg={24} md={24}>
                     <Form.Item
                       label={t('phone_number')}
                       name="phone"

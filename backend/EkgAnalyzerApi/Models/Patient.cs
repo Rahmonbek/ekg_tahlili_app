@@ -4,8 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EkgAnalyzerApi.Models
 {
-    [Table("patients")]
-    public class Patient
+    [Table("patcients")]
+    public class Patcient
     {
         [Key]
         [Column("id")]

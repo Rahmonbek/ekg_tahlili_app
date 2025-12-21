@@ -225,6 +225,22 @@
   },
   {
     "ContainingType": "DoctorController",
+    "Method": "GetDoctorsByClinicId",
+    "RelativePath": "api/doctor/get-doctors-by-clinic-id",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "DoctorController",
     "Method": "GetDoctorsById",
     "RelativePath": "api/doctor/get-doctors-by-id",
     "HttpMethod": "GET",

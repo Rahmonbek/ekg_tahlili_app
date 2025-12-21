@@ -55,6 +55,12 @@ export default function ClinicInfo() {
         phoneNumber:formatPhoneNumberForForm(item.phoneNumber)
       })
      })
+     if(a.length==0){
+      a=[{
+        id:null,
+        phoneNumber:''
+      }]
+     }
      console.log(a)
      formPhones.setFieldsValue({
       phone_numbers: a
@@ -158,6 +164,7 @@ const onFinishFinish = async (values) => {
     }
 
     await send_clinic_detail(formData);
+    getClinicData()
   } catch (error) {
     console.error(error);
   }
@@ -287,7 +294,7 @@ const onFinishFinish = async (values) => {
       {fields.map(({ key, name, ...restField }) => (
         <div
           key={key}
-          style={{ display: "flex", gap: 8, alignItems: "flex-start" }}
+          style={{ display: "flex", width:'100%', alignItems: "flex-start" }}
         >
          
           {/* ID yashirin holda */}
@@ -308,7 +315,7 @@ const onFinishFinish = async (values) => {
               { required: true },
               { len: 19 }
             ]}
-            
+            style={{width:'95%'}}
           >
             <Cleave
               options={{
@@ -336,7 +343,7 @@ const onFinishFinish = async (values) => {
           </Form.Item>
 
           <MinusCircleOutlined
-            style={{ marginTop: 10 }}
+         style={{ marginTop: 10, fontSize:'20px', marginLeft:'5px' }}
             onClick={() => remove(name)}
           />
         </div>
@@ -410,7 +417,8 @@ const onFinishFinish = async (values) => {
            required: true,
            message: "",
             
-        }
+        },
+        
       ]}
     >
       <InputMask
@@ -452,16 +460,9 @@ const onFinishFinish = async (values) => {
       ]}
     >
   <div className="file-input-wrapper">
-  <Input
- prefix={<AiOutlineFieldNumber />}
- className="login_input"
- readOnly
- value={filename || clinic?.clinicDetail?.license || ""}
- onClick={handleClick}
-/>
+ 
   <input
     type="file"
-    className="hidden-file-input"
     accept=".pdf,.jpg,.png"
     onChange={(e) => {
       const file = e.target.files[0];

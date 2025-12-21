@@ -68,6 +68,22 @@ public class DoctorController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("get-doctors-by-clinic-id")]
+    public async Task<IActionResult> GetDoctorsByClinicId([FromQuery] int id)
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+            return Unauthorized(new { message = "Token invalid" });
+
+        var userId = int.Parse(userIdClaim.Value);
+
+        
+
+        var result = await _doctorService.GetDoctorsByClinicId(id);
+
+        return Ok(result);
+    }
+
     [HttpGet("get-doctors-by-id")]
     public async Task<IActionResult> GetDoctorsById([FromQuery] int id)
     {
