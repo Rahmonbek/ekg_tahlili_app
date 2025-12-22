@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import login_img from '../../../images/doctor2.svg'
 import { IoIosMail, IoMdLock } from 'react-icons/io';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { checkusername, registration, verify_code } from '../../../host/requests/AuthRequest';
 import { dangerAlert, successAlert } from '../../../tools/Alerts';
 import { useStore } from '../../../store/Store';
@@ -14,7 +14,7 @@ export default function Register() {
   const [open, setopen]=useState(false)
   const [loading, setloading]=useState(false)
   const [email, setemail]=useState(null)
- 
+ const navigate =useNavigate()
   const [form] = Form.useForm();
   const {user_id, setuser_id} = useStore()
  const [codeForm] = Form.useForm();
@@ -32,6 +32,7 @@ try{
               setopen(true)
               setuser_id(res.data.userId)
                window.localStorage.setItem("NMED_token", res.data.token)
+               navigate('/')
             }
         }catch(err){
             dangerAlert(t(err.response.data.message));

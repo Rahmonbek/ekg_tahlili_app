@@ -19,6 +19,8 @@ namespace EkgAnalyzerApi.Models
 
         [Column("complaint_id")]
         public int ComplaintId { get; set; }
+        [ForeignKey(nameof(ComplaintId))]
+        public Complaints Complaint { get; set; } = null!;
 
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;

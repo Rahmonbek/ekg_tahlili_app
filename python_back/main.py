@@ -394,7 +394,7 @@ asosiy EKG topilmalar va umumiy klinik baho."
 ---
 
 ### QO‘SHIMCHA TALABLAR:
-- bemorga tashxis qo'yishda EKG parametrlarini va EKG rasmdagi grafikni birinchi o'ringa qo'y
+- bemorga tashxis qo'yishda bemor ma'lumotlarini, EKG parametrlarini va EKG rasmdagi grafikni birinchi o'ringa qo'y, undan kn bemor shikoyatlarini ham inobatga ol
 - "automatic_analysis" bo‘limida faqat BOR patologiyalar yozilsin
 - "automatic_analysis_bool" bo'limida faqat 1 yoki 2 yoki 3 sonlari bo'lsin ortiqcha narsa kerak emas 
 - Agar patologiya yo‘q bo‘lsa, nima sababdan yo‘qligi aniq tushuntirilsin

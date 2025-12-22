@@ -293,6 +293,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "ECGAnalyseController",
+    "Method": "GetECGAnalysesByPatcientId",
+    "RelativePath": "api/ecg-analyses/get-ecg-analyses-by-patcient-id/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "EkgAnalyzerApi.Controllers.MedController",
     "Method": "AnalyzeEkg",
     "RelativePath": "api/Med/analyze",

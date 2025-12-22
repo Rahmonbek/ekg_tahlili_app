@@ -16,6 +16,7 @@ import { MoonLoader } from 'react-spinners';
 import { warningAlert } from '../../../tools/Alerts';
 import { MdLanguage } from 'react-icons/md';
 import { get_doctor_by_clinic_id, get_params_for_add_staff } from '../../../host/requests/DoctorRequest';
+import { get_ecg_analyses_by_patcient_id } from '../../../host/requests/ECGAnalyseRequest';
 
 export default function EcgAnalyzer() {
   const [loading, setLoading] = useState(false);
@@ -29,6 +30,7 @@ export default function EcgAnalyzer() {
   const [gender, setGender] = useState(true);
   const [lang, setlang] = useState('uz');
   const [select_complaint, setselect_complaint] = useState([]);
+  const [old_anylyses, setold_anylyses] = useState([]);
   const [select_doctor, setselect_doctor] = useState([]);
   const [patcient, setPatcient] = useState(null);
   const [passport, setPassport] = useState(null);
@@ -111,12 +113,23 @@ const getParamsData=async()=>{
       });
       setPhoneValue(formatPhoneNumberForForm(res.data.phone));
       setcheck_ecg(true)
+      getOldECGAnaylses(res.data.id)
     } catch (err) {
       setPatcient({});
     } finally {
       setLoading(false);
     }
   };
+
+  const getOldECGAnaylses=async(id)=>{
+    try{
+         var res=await get_ecg_analyses_by_patcient_id({id:id})
+    }catch(err){
+
+    }finally{
+
+    }
+  }
 
   const savePatcient = async (val) => {
     try {
@@ -209,7 +222,7 @@ setResult(parsedResult);
   };
 const retryAnalyse=()=>{
     setPatcient(null);
-             
+             setselect_doctor([])
               setselect_complaint([])
               setFiles([])
               setcheck_ecg(false)
@@ -501,8 +514,7 @@ const changePositions=(val)=>{
                     </Form.Item>
                   </Col>
 
-                  
-                                       <Col className="main_col" lg={24} md={24}>
+                  {doctors.length>0?<><Col className="main_col" lg={24} md={24}>
                                        <Form.Item
                                         name="positions"
                                         label={t('position')}
@@ -535,7 +547,8 @@ const changePositions=(val)=>{
                     })}
                     </Row>
                    <p className='ecg_has_not_label'>{t("has_not_doctor")}</p> 
-                </Col>
+                </Col></>:<></>}
+                                       
                 <Col  className="main_col" lg={24} md={24}>
                 <p className='ecg_label'>{t("patcient_complaint")}</p>
                 <br/>

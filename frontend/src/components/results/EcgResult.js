@@ -7,7 +7,7 @@ export default function EcgResult({error, image, result}) {
 
         {error && <div className="ekg-error">❌ Xatolik: {error}</div>}
       
-       {image!=null?<div className="ekg-image"><Image style={{width:'100%'}} src={`data:image/png;base64,${image}`}/></div>:<></>}
+       {image!=null?<div className="ekg-image"><Image style={{width:'100%'}} src={`http://127.0.0.1:8000${image}`}/></div>:<></>}
       {result && (
         <div  className="ekg-result">
         {result.digital_measurements ? (

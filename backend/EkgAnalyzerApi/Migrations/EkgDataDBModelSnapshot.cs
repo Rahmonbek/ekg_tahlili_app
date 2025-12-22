@@ -277,6 +277,8 @@ namespace EkgAnalyzerApi.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ComplaintId");
+
                     b.HasIndex("ECGAnalysesId");
 
                     b.ToTable("ecg_analyse_complaints");
@@ -308,6 +310,8 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DoctorId");
 
                     b.HasIndex("ECGAnalysesId");
 
@@ -627,22 +631,38 @@ namespace EkgAnalyzerApi.Migrations
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.ECGAnalyseComplaints", b =>
                 {
+                    b.HasOne("EkgAnalyzerApi.Models.Complaints", "Complaint")
+                        .WithMany()
+                        .HasForeignKey("ComplaintId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("EkgAnalyzerApi.Models.ECGAnalyses", "ECGAnalyse")
                         .WithMany("Complaints")
                         .HasForeignKey("ECGAnalysesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Complaint");
+
                     b.Navigation("ECGAnalyse");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.ECGAnalyseDoctors", b =>
                 {
+                    b.HasOne("EkgAnalyzerApi.Models.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("EkgAnalyzerApi.Models.ECGAnalyses", "ECGAnalyse")
                         .WithMany("Doctors")
                         .HasForeignKey("ECGAnalysesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Doctor");
 
                     b.Navigation("ECGAnalyse");
                 });

@@ -19,6 +19,9 @@ namespace EkgAnalyzerApi.Models
 
         [Column("doctor_id")]
         public int DoctorId { get; set; }
+        
+        [ForeignKey(nameof(DoctorId))]
+        public Doctor Doctor { get; set; } = null!;
 
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
