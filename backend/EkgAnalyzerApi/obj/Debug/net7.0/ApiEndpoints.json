@@ -191,14 +191,9 @@
     "Order": 0,
     "Parameters": [
       {
-        "Name": "ClinicId",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "PhoneNumbers",
-        "Type": "System.Collections.Generic.List\u00601[[EkgAnalyzerApi.DTOs.ClinicPhoneNumberDTO, EkgAnalyzerApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "IsRequired": false
+        "Name": "dto",
+        "Type": "EkgAnalyzerApi.DTOs.ClinicPhoneUpsertDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []

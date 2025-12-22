@@ -212,29 +212,19 @@
         ],
         "requestBody": {
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "ClinicId": {
-                    "type": "integer",
-                    "format": "int32"
-                  },
-                  "PhoneNumbers": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/ClinicPhoneNumberDTO"
-                    }
-                  }
-                }
-              },
-              "encoding": {
-                "ClinicId": {
-                  "style": "form"
-                },
-                "PhoneNumbers": {
-                  "style": "form"
-                }
+                "$ref": "#/components/schemas/ClinicPhoneUpsertDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClinicPhoneUpsertDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClinicPhoneUpsertDto"
               }
             }
           }
@@ -622,10 +612,28 @@
         "properties": {
           "id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "phoneNumber": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ClinicPhoneUpsertDto": {
+        "type": "object",
+        "properties": {
+          "clinicId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "phoneNumbers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClinicPhoneNumberDTO"
+            },
             "nullable": true
           }
         },

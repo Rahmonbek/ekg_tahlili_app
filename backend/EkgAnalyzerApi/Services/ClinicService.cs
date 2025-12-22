@@ -110,7 +110,7 @@ namespace EkgAnalyzerApi.Services
 
             // DTO dan kelgan ID lar
             var dtoIds = dto.PhoneNumbers
-                .Where(x => x.Id > 0)
+                .Where(x => x.Id !=null)
                 .Select(x => x.Id)
                 .ToList();
 

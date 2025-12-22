@@ -29,10 +29,10 @@ public class ClinicController : ControllerBase
     }
 
     [HttpPost("update-clinic-phone")]
-    public async Task<IActionResult> UpdateClinicPhoneData([FromForm] ClinicPhoneUpsertDto dto)
+    public async Task<IActionResult> UpdateClinicPhoneData([FromBody] ClinicPhoneUpsertDto dto)
     {
         await _clinicService.UpsertClinicPhonesAsync(dto);
-        return Ok();
+        return Ok(true);
     }
     [HttpPost("create-update-clinic-detail")]
     public async Task<IActionResult> Upsert([FromForm] ClinicDetailUpsertDto dto)

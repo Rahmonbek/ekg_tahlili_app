@@ -11,7 +11,7 @@ export const send_clinic_info=(data)=>{
 }
 
 export const send_clinic_phone=(data)=>{
-    return httpPostRequest("/clinic/update-clinic-phon", data)
+    return httpPostRequest("/clinic/update-clinic-phone", data)
 }
 
 

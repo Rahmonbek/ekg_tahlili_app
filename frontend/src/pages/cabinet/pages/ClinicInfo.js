@@ -10,15 +10,17 @@ import { IoPersonSharp } from 'react-icons/io5'
 import InputMask from "react-input-mask";
 import { BsBank2 } from 'react-icons/bs'
 import Cleave from "cleave.js/react"
-import { get_clinic_by_id, send_clinic_detail, send_clinic_info } from '../../../host/requests/ClinicRequest';
+import { get_clinic_by_id, send_clinic_detail, send_clinic_info, send_clinic_phone } from '../../../host/requests/ClinicRequest';
 import { api, imgApi } from '../../../host/Host';
-import { formatPhoneForCleave } from '../../../tools/formatters';
+import { formatPhoneForCleave, formatPhoneNumber } from '../../../tools/formatters';
 import { useForm } from 'antd/es/form/Form';
 import { formatPhoneNumberForForm } from '../../../tools/formatters';
 export default function ClinicInfo() {
     const {t}=useTranslation()
     const [formPhones]=Form.useForm()
-    const [loading, setloading]=useState(false)
+    const [loadingMain, setloadingMain]=useState(false)
+    const [loadingPhone, setloadingPhone]=useState(false)
+    const [loadingDetail, setloadingDetail]=useState(false)
     const [clinic, setclinic]=useState(null)
     const [phones, setphones]=useState([])
     const {user, loader, setloader}=useStore()
@@ -48,7 +50,7 @@ export default function ClinicInfo() {
           clinicLogo:res.data.clinicLogo
         })
     
-     setphones([...res.data.clinicPhoneNumber])
+     
      var a=res.data.clinicPhoneNumber.map((item,key)=>{
       return({
         id:item.id,
@@ -62,9 +64,12 @@ export default function ClinicInfo() {
       }]
      }
      console.log(a)
+     setphones([...a])
+
      formPhones.setFieldsValue({
-      phone_numbers: a
+      phone_numbers: [...a]
     });
+
      const detail = res.data.clinicDetail;
 
         formSecend.setFieldsValue({
@@ -78,6 +83,9 @@ export default function ClinicInfo() {
         
     
       setloader(false)
+      setloadingMain(false)
+      setloadingDetail(false)
+      setloadingPhone(false)
   }catch(err){
 console.log(err)
   }finally{
@@ -113,6 +121,7 @@ const onFinish =()=>{
 
 const onFinished = async (values) => {
   try {
+    setloadingMain(true)
     const formData = new FormData();
 formData.append("Id", clinic.id);
     formData.append("ClinicName", values.clinicName);
@@ -121,7 +130,7 @@ formData.append("Id", clinic.id);
  }  
 
  const res = await send_clinic_info(formData);
-
+getClinicData()
 console.log( res);
 } catch (error) {
     console.error( error);
@@ -129,9 +138,20 @@ console.log( res);
 
 }
 
- const onFinishPhones=(values)=>{
-         setphones(values.phone_numbers);
-    console.log(values.phone_numbers); 
+ const onFinishPhones=async(values)=>{
+         try{
+          setloadingPhone(true)
+          var b=values.phone_numbers.map((item, key)=>({id:item.id, phoneNumber:formatPhoneNumber(item.phoneNumber)}))
+        var a={
+          ClinicId:clinic.id,
+          PhoneNumbers:b
+        } 
+        var res=await send_clinic_phone(a)
+         getClinicData()
+         }catch(err){
+console.error( err);
+         }
+         
     
     }
 
@@ -140,6 +160,7 @@ console.log( res);
 
 const onFinishFinish = async (values) => {
   try {
+    setloadingDetail(true)
     const formData = new FormData();
 
     if (clinic?.clinicDetail?.id) {
@@ -162,7 +183,7 @@ const onFinishFinish = async (values) => {
     if (licenseFile) {
       formData.append("LicenseFile", licenseFile);
     }
-
+     getClinicData()
     await send_clinic_detail(formData);
     getClinicData()
   } catch (error) {
@@ -171,6 +192,47 @@ const onFinishFinish = async (values) => {
 };
 
 
+const formatUzPhone = (value = "") => {
+  // faqat raqamlar
+  let digits = value.replace(/\D/g, "");
+if(digits.length<=3){
+    return "+998"
+  }
+  // 998 ni olib tashlaymiz (agar foydalanuvchi yozsa ham)
+  if (digits.startsWith("998")) {
+    digits = digits.slice(3);
+  }
+  
+  let result = "+998";
+  console.log(digits, digits.length)
+  // AGAR 1 ta ham raqam bo'lmasa — faqat +998
+  if (digits.length === 0) {
+    return result;
+  }
+
+  // 1–2 raqam bo‘lsa — (9 yoki (91
+  result += " (" + digits.slice(0, 2);
+
+  // qavs faqat 2 ta raqam bo‘lsa yopiladi
+  if (digits.length > 2) {
+    result += ")";
+  }
+
+  // keyingi qismlar
+  if (digits.length > 2) {
+    result += " " + digits.slice(2, 5);
+  }
+
+  if (digits.length > 5) {
+    result += "-" + digits.slice(5, 7);
+  }
+
+  if (digits.length > 7) {
+    result += "-" + digits.slice(7, 9);
+  }
+
+  return result;
+};
 
 
   
@@ -258,7 +320,7 @@ const onFinishFinish = async (values) => {
         span: 24,
       }}
     >
-      <Button className='btn_form' loading={loading} htmlType="submit">
+      <Button className='btn_form' loading={loadingMain} htmlType="submit">
         {t("save_data")}
       </Button>
        
@@ -288,7 +350,7 @@ const onFinishFinish = async (values) => {
     
   >
    
-  <Form.List name="phone_numbers">
+ <Form.List name="phone_numbers">
   {(fields, { add, remove }) => (
     <>
       {fields.map(({ key, name, ...restField }) => (
@@ -299,7 +361,6 @@ const onFinishFinish = async (values) => {
          
           {/* ID yashirin holda */}
           <Form.Item
-            form={formPhone}
             {...restField}
             name={[name, "id"]}
             hidden
@@ -355,10 +416,7 @@ const onFinishFinish = async (values) => {
           block
           icon={<PlusOutlined />}
           onClick={() =>
-            add({
-              id: null,
-              phoneNumber: ""
-            })
+            add({ id: null, phoneNumber: "" })
           }
         >
           Telefon qo‘shish
@@ -375,7 +433,7 @@ const onFinishFinish = async (values) => {
         span: 24,
       }}
     >
-      <Button className='btn_form' loading={loading} htmlType="submit">
+      <Button className='btn_form' loading={loadingPhone} htmlType="submit">
         {t("save_data")}
       </Button>
        
@@ -574,7 +632,7 @@ const onFinishFinish = async (values) => {
         span: 24,
       }}
     >
-      <Button className='btn_form' loading={loading} htmlType="submit">
+      <Button className='btn_form' loading={loadingDetail} htmlType="submit">
         {t("save_data")}
       </Button>
        
