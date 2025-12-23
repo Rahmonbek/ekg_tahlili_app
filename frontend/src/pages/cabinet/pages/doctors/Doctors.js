@@ -98,6 +98,7 @@ export default function Doctors() {
                 <div className='main_card_btn'>
             <Link to={"/doctor/create"} className='btn_form'>{t("add_new_staff")}</Link>
         </div>
+        <div className='doctors_table'>
                    <Table
                    loading={loading}
                    pagination={{
@@ -105,6 +106,7 @@ export default function Doctors() {
                     pageSize:10,
                     total:total,
                    }} dataSource={doctors} columns={columns} />
+                   </div>
                </div>
             </div>
     </div>

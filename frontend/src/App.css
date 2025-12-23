@@ -1,11 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 
 :root{
+  --big_main_padding_for_media:4vw;
   --big_main_padding:2vw;
   --main_padding:1vw;
   --main_mini_padding:0.5vw;
   --mini_size:14px;
   --small_size:16px;
+  --center_size:17px;
   --medium_size:18px;
   --large_size:20px;
   --extra_large_size:24px;
@@ -318,7 +320,18 @@ height: 100% !important;
   .closed_menu{width: 0px !important; position: absolute !important; z-index: 0 !important; opacity: 0 !important; }
   .sidebar{position: absolute; z-index: 1000; background-color: white;  overflow: hidden !important; }
   .menu_close.open{margin-left: 355px !important;}
+.main_card{
+  margin-left: var(--main_padding);
+}
 
+.input_img_box{
+  width: 13vw !important; height: 13vw !important;
+}
+.ant-input-affix-wrapper >input.ant-input{
+font-size: var( --center_size) !important;
+}
+.ant-form-item-label >label{font-size:var( --medium_size) !important ;}
+.create_doctor_box{padding:   var(--big_main_padding_for_media)!important; }
 }
 
 
@@ -333,9 +346,12 @@ height: 100% !important;
   .auth_navbar{
     padding: 20px 2.5%;
   }
+  .main_card{ margin: var(--main_padding) !important;}
 .auth_brand img{margin-right: 5px;}
 .selected_lang{width: 85px;}
-
+.main_header{
+  height: 8vh !important;
+}
 .login_form h1{    font-size: var(--medium_size) !important;}
 .login_form_box{padding: 0px 5% ;}
 .login_form_form{padding: 0px 30px !important;}
@@ -343,4 +359,15 @@ height: 100% !important;
 .login_box{height: 95vh;}
 .sidebar_head h1{    font-size: var(--large_size) !important;}
 .sidebar_head{ padding-top: 10px;}
+.main_card_btn{padding-left: 50% !important;}
+.main_card_btn .btn_form{font-size: var(--small_size);}
+.exit_icon{padding: 0px 30px 0px 60px !important;}
+:where(.css-dev-only-do-not-override-ac2jek).ant-col{width: 100% !important;}
+.ant-input-affix-wrapper >input.ant-input{font-size: var(--medium_size) !important;}
+.main_card_content{padding:var(  --big_main_padding) ;}
+.input_img_box{width: 40vw !important; height: 40vw !important;}
+.ant-form-item-label >label{font-size: var( --medium_size) !important; margin-top:  var(--main_padding) !important;}
+.doctors_table{width: 100vw !important; overflow: hidden !important; overflow-x: auto !important;}
+:where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper table{width: 140vw !important;}
+
 }

@@ -165,7 +165,7 @@ changeRole(form.getFieldValue('role'))
         <h1>{t('add_new_staff')} <Tooltip placement="bottomRight" title={t("alert_staff_change")}>
                 <span className='alert_icon'><IoAlertCircleSharp /></span>
             </Tooltip></h1>
-        <div className="main_card_content">
+        <div className="main_card_content  create_doctor_box">
             <Form
                 form={form}
                 name="basic1"
@@ -175,7 +175,7 @@ changeRole(form.getFieldValue('role'))
                 onFinish={saveData}
               >
                 <Row>
-                    <Col className="main_col" lg={8} md={24}>
+                    <Col className="main_col" lg={8} md={24} >
                     <Form.Item
     name="username"
     label={t("username")}
