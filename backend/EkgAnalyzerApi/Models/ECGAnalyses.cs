@@ -13,9 +13,13 @@ namespace EkgAnalyzerApi.Models
 
         [Column("created_doctor_id")]
         public int CreatedDoctorId { get; set; }
+        [ForeignKey(nameof(CreatedDoctorId))]
+        public Doctor CreatedDoctor { get; set; } = null!;
 
         [Column("patcient_id")]
         public int PatcientId { get; set; }
+        [ForeignKey(nameof(PatcientId))]
+        public Patcient Patcient { get; set; } = null!;
 
         [Column("status")]
         public int? Status { get; set; } = 0;
@@ -25,6 +29,9 @@ namespace EkgAnalyzerApi.Models
 
         [Column("generated_file_link")]
         public string? GeneratedFileLink { get; set; }
+        
+        [Column("generated_short_file_link")]
+        public string? GeneratedShortFileLink { get; set; }
 
         [Column("ai_answer_data", TypeName = "text")]
         public string? AIAnswerData { get; set; }

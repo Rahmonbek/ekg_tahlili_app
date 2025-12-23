@@ -294,8 +294,8 @@
   },
   {
     "ContainingType": "ECGAnalyseController",
-    "Method": "GetECGAnalysesByPatcientId",
-    "RelativePath": "api/ecg-analyses/get-ecg-analyses-by-patcient-id/{id}",
+    "Method": "GetECGAnalysesByPatientId",
+    "RelativePath": "api/ecg-analyses/get-ecg-analyses-by-patcient-id",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -303,7 +303,12 @@
       {
         "Name": "id",
         "Type": "System.Int32",
-        "IsRequired": true
+        "IsRequired": false
+      },
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []

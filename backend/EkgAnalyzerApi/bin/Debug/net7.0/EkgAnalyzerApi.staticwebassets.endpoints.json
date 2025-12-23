@@ -85,6 +85,88 @@
       ]
     },
     {
+      "Route": "clinic_licenses/babbfcbe-4cd0-4f72-9969-672657cc65cb.d4eelqf1qz.pdf",
+      "AssetFile": "clinic_licenses/babbfcbe-4cd0-4f72-9969-672657cc65cb.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "101813"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"/Uvfu6zJMDN+7on9z9QjSVtkxg/qp3NojM61oWFlgBI=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 22 Dec 2025 17:45:57 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "d4eelqf1qz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-/Uvfu6zJMDN+7on9z9QjSVtkxg/qp3NojM61oWFlgBI="
+        },
+        {
+          "Name": "label",
+          "Value": "clinic_licenses/babbfcbe-4cd0-4f72-9969-672657cc65cb.pdf"
+        }
+      ]
+    },
+    {
+      "Route": "clinic_licenses/babbfcbe-4cd0-4f72-9969-672657cc65cb.pdf",
+      "AssetFile": "clinic_licenses/babbfcbe-4cd0-4f72-9969-672657cc65cb.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "101813"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"/Uvfu6zJMDN+7on9z9QjSVtkxg/qp3NojM61oWFlgBI=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 22 Dec 2025 17:45:57 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-/Uvfu6zJMDN+7on9z9QjSVtkxg/qp3NojM61oWFlgBI="
+        }
+      ]
+    },
+    {
       "Route": "clinic_licenses/e5d4183a-1c26-46a2-abff-369760ca5dd2.f3y8c1k1kj.pdf",
       "AssetFile": "clinic_licenses/e5d4183a-1c26-46a2-abff-369760ca5dd2.pdf",
       "Selectors": [],
@@ -327,6 +409,88 @@
         {
           "Name": "label",
           "Value": "clinicbrands/1a6a96f9-1e10-4496-8b2f-37b9fdbd64eb.jpeg"
+        }
+      ]
+    },
+    {
+      "Route": "clinicbrands/2585627e-cd56-4e73-adbe-4d8a3aafe999.png",
+      "AssetFile": "clinicbrands/2585627e-cd56-4e73-adbe-4d8a3aafe999.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1259289"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"0gzkHAbFAt0yjcm0jb9RXn6SI26uz+eBFJFOmhRspSA=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 22 Dec 2025 17:45:17 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-0gzkHAbFAt0yjcm0jb9RXn6SI26uz+eBFJFOmhRspSA="
+        }
+      ]
+    },
+    {
+      "Route": "clinicbrands/2585627e-cd56-4e73-adbe-4d8a3aafe999.uxx01wsuca.png",
+      "AssetFile": "clinicbrands/2585627e-cd56-4e73-adbe-4d8a3aafe999.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1259289"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"0gzkHAbFAt0yjcm0jb9RXn6SI26uz+eBFJFOmhRspSA=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 22 Dec 2025 17:45:17 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uxx01wsuca"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-0gzkHAbFAt0yjcm0jb9RXn6SI26uz+eBFJFOmhRspSA="
+        },
+        {
+          "Name": "label",
+          "Value": "clinicbrands/2585627e-cd56-4e73-adbe-4d8a3aafe999.png"
         }
       ]
     },

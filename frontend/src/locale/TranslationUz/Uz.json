@@ -126,7 +126,11 @@
 "edit":"O'zgartirish",
 "select_doctor_of_patcient":"Davolovchi shifokorlarni tanlang",
 "enter_position_doctor":"Davolovchi shifokor mutaxassislikini tanlang",
-"has_not_doctor":"!!!Eslatma. Davolovchi shifokor ro'yhatda mavjud bo'lmasa shifoxona adminiga murojaat qiling"
+"has_not_doctor":"!!!Eslatma. Davolovchi shifokor ro'yhatda mavjud bo'lmasa shifoxona adminiga murojaat qiling",
+"normal":"Yaxshi",
+"avarage":"O'rtacha",
+"danger":"Yomon",
+"unknown":"Aniqmas"
 
 
 

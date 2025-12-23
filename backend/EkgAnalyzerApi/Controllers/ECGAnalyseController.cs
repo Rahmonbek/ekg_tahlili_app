@@ -12,58 +12,23 @@ using System.Security.Claims;
 public class ECGAnalyseController : ControllerBase
 {
     private readonly MedDataDB _context;
+    private readonly ECGAnalyseService _ecgService;
 
-    public ECGAnalyseController(MedDataDB context)
+    public ECGAnalyseController(MedDataDB context, ECGAnalyseService ecgService)
     {
         _context = context;
+        _ecgService = ecgService;
     }
 
 
-    [HttpGet("get-ecg-analyses-by-patcient-id/{id}")]
-    public async Task<IActionResult> GetECGAnalysesByPatcientId(int id)
+    [HttpGet("get-ecg-analyses-by-patcient-id")]
+    public async Task<IActionResult> GetECGAnalysesByPatientId(int id, int page = 1)
     {
-        // 1. Validate User Claim
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
             return Unauthorized(new { message = "Token invalid" });
 
-        // 2. Query and Map to DTO in one step
-        var results = await _context.ECGAnalyse
-            .Where(e => e.PatcientId == id)
-            .Select(e => new ECGAnalyseDTO
-            {
-                Id = e.Id,
-                CreatedDoctorId = e.CreatedDoctorId,
-                PatcientId = e.PatcientId,
-                Status = e.Status,
-                AnalyseFileLink = e.AnalyseFileLink,
-                GeneratedFileLink = e.GeneratedFileLink,
-                AIAnswerData = e.AIAnswerData,
-                CreatedAt = e.CreatedAt,
-                UpdatedAt = e.UpdatedAt,
-
-                // Accessing through the newly added navigation property: ed.Doctor
-                Doctors = e.Doctors.Select(ed => new DoctorForECGData
-                {
-                    Id = ed.Doctor.Id,
-                    FirstName = ed.Doctor.FirstName ?? "",
-                    LastName = ed.Doctor.LastName ?? "",
-                    SureName = ed.Doctor.SureName ?? "",
-                    Phone = ed.Doctor.Phone ?? ""
-                }).ToList(),
-
-                // Accessing through the newly added navigation property: ec.Complaint
-                Complaints = e.Complaints.Select(ec => new Complaints
-                {
-                    Id = ec.Complaint.Id,
-                    NameUz = ec.Complaint.NameUz,
-                    NameRu = ec.Complaint.NameRu,
-                    NameEn = ec.Complaint.NameEn,
-                    CreatedAt = ec.Complaint.CreatedAt,
-                    UpdatedAt = ec.Complaint.UpdatedAt
-                }).ToList()
-            })
-            .ToListAsync();
+        var results = await _ecgService.GetECGAnalysesByPatientIdAsync(id, page, 5);
 
         return Ok(results);
     }

@@ -1,13 +1,17 @@
 import { Image } from 'antd'
 import React from 'react'
 
-export default function EcgResult({error, image, result}) {
+export default function EcgResult({error, image, image_short, result}) {
   return (
     <div>
 
         {error && <div className="ekg-error">❌ Xatolik: {error}</div>}
       
-       {image!=null?<div className="ekg-image"><Image style={{width:'100%'}} src={`http://127.0.0.1:8000${image}`}/></div>:<></>}
+       {image!=null?<div className="ekg-image"><Image style={{width:'100%'}}
+        preview={{
+         src:`http://127.0.0.1:8000${image}`
+    }}
+       src={`http://127.0.0.1:8000${image_short}`}/></div>:<></>}
       {result && (
         <div  className="ekg-result">
         {result.digital_measurements ? (

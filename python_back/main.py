@@ -58,32 +58,45 @@ UPLOAD_DIR2 = BASE_DIR / "uploads" / "ecg_generated_files"
 UPLOAD_DIR2.mkdir(parents=True, exist_ok=True)
 
 
-UPLOAD_DIR3 = BASE_DIR / "uploads" / "ecg_ai_answers"
+UPLOAD_DIR3 = BASE_DIR / "uploads" / "ecg_generated_short_files"
 
 UPLOAD_DIR3.mkdir(parents=True, exist_ok=True)
 
-def save_analyse_file(file_bytes: bytes, filename: str) -> str:
+def get_unique_filename(directory: Path, filename: str) -> str:
     safe_name = filename.replace(" ", "_")
+    filepath = directory / safe_name
+    if not filepath.exists():
+        return safe_name
+    
+    # Fayl mavjud bo‘lsa, index qo‘shib unik nom yaratish
+    name, ext = os.path.splitext(safe_name)
+    counter = 1
+    while True:
+        new_name = f"{name}_{counter}{ext}"
+        new_filepath = directory / new_name
+        if not new_filepath.exists():
+            return new_name
+        counter += 1
+def save_analyse_file(file_bytes: bytes, filename: str) -> str:
+    safe_name = get_unique_filename(UPLOAD_DIR1, filename)
     filepath = UPLOAD_DIR1 / safe_name
     with open(filepath, "wb") as f:
         f.write(file_bytes)
-    # Faylga serverdan kirish linki
     return f"/uploads/ecg_analyse_files/{safe_name}"
 
 def save_generated_file(file_bytes: bytes, filename: str) -> str:
-    safe_name = filename.replace(" ", "_")
+    safe_name = get_unique_filename(UPLOAD_DIR2, filename)
     filepath = UPLOAD_DIR2 / safe_name
     with open(filepath, "wb") as f:
         f.write(file_bytes)
-    # Faylga serverdan kirish linki
     return f"/uploads/ecg_generated_files/{safe_name}"
 
-def save_ai_answer(ai_text: str, filename: str) -> str:
-    safe_name = filename.replace(" ", "_")
+def save_generated_short_file(file_bytes: bytes, filename: str) -> str:
+    safe_name = get_unique_filename(UPLOAD_DIR3, filename)
     filepath = UPLOAD_DIR3 / safe_name
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.write(ai_text)
-    return f"/uploads/ecg_ai_answers/{safe_name}"
+    with open(filepath, "wb") as f:
+        f.write(file_bytes)
+    return f"/uploads/ecg_generated_short_files/{safe_name}"
 
 # ---------------- FastAPI app init ----------------
 app = FastAPI(title="AI EKG Analyzer")
@@ -927,7 +940,14 @@ def compute_full_ecg_v3(leads, fs=500):
         "average_T_wave_value": t_inversion
     }
 
-
+def convert_png_to_jpeg(png_bytes: bytes, quality: int = 10) -> bytes:
+    buf = io.BytesIO(png_bytes)
+    img = Image.open(buf)
+    
+    out_buf = io.BytesIO()
+    img.convert('RGB').save(out_buf, format='JPEG', quality=quality)
+    out_buf.seek(0)
+    return out_buf.read()
 
 from fastapi import Form
 
@@ -1024,13 +1044,16 @@ async def analyze(
         
     else:
         png_bytes = content
+    png_short_bytes=convert_png_to_jpeg(png_bytes)
     fname1 = f"ecg_{ecg_analyse.id}.png"
     generated_file_link = save_generated_file(png_bytes, fname1)
+    generated_short_file_link = save_generated_short_file(png_short_bytes, fname1)
     ecg_analyse = update_ecg_analyse(
         session=db,
         status=1,
         ecg_id=ecg_analyse.id,
-        generated_file_link=generated_file_link
+        generated_file_link=generated_file_link,
+        generated_short_file_link=generated_short_file_link
     )
     digitals = compute_full_ecg_v3(leads, fs)
     print(digitals)
@@ -1094,6 +1117,7 @@ async def analyze(
     return JSONResponse(content={
         "ecg_id": ecg_analyse.id,
         "ecg_png_base64": generated_file_link,
+        "ecg_png_base64_short": generated_short_file_link,
         "ai_response": parsed,
         "ai_error": ai_error
     })
