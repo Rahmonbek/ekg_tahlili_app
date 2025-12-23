@@ -346,7 +346,7 @@ font-size: var( --center_size) !important;
   .auth_navbar{
     padding: 20px 2.5%;
   }
-  .main_card{ margin: var(--main_padding) !important;}
+
 .auth_brand img{margin-right: 5px;}
 .selected_lang{width: 85px;}
 .main_header{
