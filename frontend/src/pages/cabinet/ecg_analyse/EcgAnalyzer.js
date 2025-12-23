@@ -290,7 +290,7 @@ const changePositions=(val)=>{
             onFinish={searchPatcient}
           >
             <Row>
-              <Col className="main_col" lg={8} md={24}>
+              <Col className="main_col" lg={8} md={12}>
                 <Form.Item
                   name="passport"
                   label={t('passport_seria')}
@@ -325,7 +325,7 @@ const changePositions=(val)=>{
                 </Form.Item>
               </Col>
 
-              <Col className="main_col" lg={8} md={24}>
+              <Col className="main_col" lg={8} md={12}>
                 <Form.Item
                   name="birthdate"
                   label={t('birthdate')}
@@ -335,13 +335,16 @@ const changePositions=(val)=>{
                 </Form.Item>
               </Col>
 
-              <Col className="main_col" lg={6} md={24}>
+
+        
+              <Col className="main_col" lg={6} md={12}>
                 <div className="form_div">
                   <Button className="btn_form" loading={loading} htmlType="submit">
                     {t('search_patcient')}
                   </Button>
                 </div>
               </Col>
+            
             </Row>
           </Form>
 

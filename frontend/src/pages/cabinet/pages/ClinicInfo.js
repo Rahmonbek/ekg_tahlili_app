@@ -15,6 +15,7 @@ import { api, imgApi } from '../../../host/Host';
 import { formatPhoneForCleave, formatPhoneNumber } from '../../../tools/formatters';
 import { useForm } from 'antd/es/form/Form';
 import { formatPhoneNumberForForm } from '../../../tools/formatters';
+import { dangerAlert, successAlert } from '../../../tools/Alerts';
 export default function ClinicInfo() {
     const {t}=useTranslation()
     const [formPhones]=Form.useForm()
@@ -130,10 +131,12 @@ formData.append("Id", clinic.id);
  }  
 
  const res = await send_clinic_info(formData);
+ successAlert(t("data_saved"))
 getClinicData()
 console.log( res);
 } catch (error) {
     console.error( error);
+    dangerAlert(t("server_error"))
  }
 
 }
@@ -147,9 +150,11 @@ console.log( res);
           PhoneNumbers:b
         } 
         var res=await send_clinic_phone(a)
+        successAlert(t("data_saved"))
          getClinicData()
          }catch(err){
 console.error( err);
+dangerAlert(t("server_error"))
          }
          
     
@@ -185,9 +190,12 @@ const onFinishFinish = async (values) => {
     }
      getClinicData()
     await send_clinic_detail(formData);
+    successAlert(t("data_saved"))
     getClinicData()
+
   } catch (error) {
     console.error(error);
+    dangerAlert(t("server_error"))
   }
 };
 
