@@ -188,7 +188,6 @@ const onFinishFinish = async (values) => {
     if (licenseFile) {
       formData.append("LicenseFile", licenseFile);
     }
-     getClinicData()
     await send_clinic_detail(formData);
     successAlert(t("data_saved"))
     getClinicData()
