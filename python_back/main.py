@@ -434,7 +434,6 @@ def compose_prompt_for_openai_for_img(age, gender, complaint, lang) -> str:
     
     prompt_header += f"""
     Siz tajribali kardiolog va aritmolog shifokorsiz. Yuborilgan EKG rasmni tahlil qiling. Javob quyidagi JSON shaklida taqdim eting ortiqcha belgilarni yozmang.
-    Ekg parametrlari qiymatini rasmdan aniqlab ol. Aniqlashda adashib ketmaslikka harakat qil. 
     Hech qaysi parametr qiymatini taxmin qilma. Faqat aniq aniqlash imkoni bor parametrlardan foydalan.
     {
  """{ "digital_measurements": {
@@ -462,7 +461,7 @@ def compose_prompt_for_openai_for_img(age, gender, complaint, lang) -> str:
 
   "AI_recommendations": "Oddiy tilda bemor uchun tavsiyalar:
 — qo‘shimcha tekshiruv zarurati
-- rasmda ekg aparat aniqlagan qiymatlar mavjud bo'lsa shulardan foydalan
+- rasmda ekg aparat aniqlagan qiymatlar mavjud bo'lsa shulardan foydalan yo'qlarini o'zing aniqlashga urinib ko'r
 — jismoniy faollik bo‘yicha ko‘rsatma
 — shifokorga murojaat qilish zarurati
 Agar kasallik aniqlansa, umumiy davolash yo‘nalishi qisqacha yozilsin.",
