@@ -176,7 +176,8 @@ input:-webkit-autofill:active {
 .complaint_item{margin: 10px 0px;}
 .complaint_name{font-size: var(--small_size); color: var(--text_color); user-select: none !important;}
 .mini_loader{width: 100%; display: flex; justify-content: center; padding: 20px;}
-.ekg-image{padding: 0px 25%;}
+.ekg-image{padding: 0px 25%; min-height: 190px;}
+.ekg-image .ant-image{width: 100%;}
 :where(.css-dev-only-do-not-override-ac2jek) .ant-image-preview-operations, :where(.css-dev-only-do-not-override-ac2jek) .ant-image-preview-close{background-color: var(--text_color);}
 .ant-image-preview-operations-operation span{color: white !important;} 
 
@@ -297,10 +298,12 @@ height: 100% !important;
 .ecg_has_not_label{
   font-size: var(--mini_size); color: var(--grey_color); padding: 10px;
 }
-
-
-
-
+.main_card h1 p span{font-size: var(--extra_large_size); display: flex; align-items: center; justify-content: center; height: 25px; margin-left: 10px;}
+.main_card h1 p{display: flex; align-items: center; line-height: var(--extra_large_size);}
+.avarage_analyse h1{background: linear-gradient(#f3bd09, #c49300) }
+.danger_analyse h1{background: linear-gradient(#d14f4f, #a72a2a)}
+.unknown_analyse h1{background: linear-gradient(#009aff, #0062b4)}
+.old_analyse h1{cursor: pointer;}
 
   @media (max-width:1700px){
       .login_img img{width: 70%;}

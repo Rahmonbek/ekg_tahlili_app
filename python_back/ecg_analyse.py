@@ -5,6 +5,7 @@ import datetime
 def create_ecg_analyse(session: Session, patient_id: int, created_doctor_id: int, status: int,
                        analyse_file_link: bytes = None,
                        generated_file_link: bytes = None,
+                       generated_short_file_link: bytes = None,
                        ai_answer_data: bytes = None) -> ECGAnalyse:
     new_ecg = ECGAnalyse(
         patcient_id=patient_id,
@@ -12,6 +13,7 @@ def create_ecg_analyse(session: Session, patient_id: int, created_doctor_id: int
         status=status,
         analyse_file_link=analyse_file_link,
         generated_file_link=generated_file_link,
+        generated_short_file_link=generated_short_file_link,
         ai_answer_data=ai_answer_data,
         created_at=datetime.datetime.utcnow(),
         updated_at=datetime.datetime.utcnow()
@@ -25,6 +27,7 @@ def update_ecg_analyse(session: Session, ecg_id: int,
                        status: int = None,
                        analyse_file_link: bytes = None,
                        generated_file_link: bytes = None,
+                       generated_short_file_link: bytes = None,
                        ai_answer_data: bytes = None) -> ECGAnalyse | None:
     ecg = session.query(ECGAnalyse).filter(ECGAnalyse.id == ecg_id).first()
     if not ecg:
@@ -36,6 +39,8 @@ def update_ecg_analyse(session: Session, ecg_id: int,
         ecg.analyse_file_link = analyse_file_link
     if generated_file_link is not None:
         ecg.generated_file_link = generated_file_link
+    if generated_short_file_link is not None:
+        ecg.generated_short_file_link = generated_short_file_link
     if ai_answer_data is not None:
         ecg.ai_answer_data = ai_answer_data
 

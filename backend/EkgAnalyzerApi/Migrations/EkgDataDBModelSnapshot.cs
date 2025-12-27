@@ -347,6 +347,10 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("generated_file_link");
 
+                    b.Property<string>("GeneratedShortFileLink")
+                        .HasColumnType("text")
+                        .HasColumnName("generated_short_file_link");
+
                     b.Property<int>("PatcientId")
                         .HasColumnType("integer")
                         .HasColumnName("patcient_id");
@@ -360,6 +364,10 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedDoctorId");
+
+                    b.HasIndex("PatcientId");
 
                     b.ToTable("ecg_analyses");
                 });
@@ -665,6 +673,25 @@ namespace EkgAnalyzerApi.Migrations
                     b.Navigation("Doctor");
 
                     b.Navigation("ECGAnalyse");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.ECGAnalyses", b =>
+                {
+                    b.HasOne("EkgAnalyzerApi.Models.Doctor", "CreatedDoctor")
+                        .WithMany()
+                        .HasForeignKey("CreatedDoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EkgAnalyzerApi.Models.Patcient", "Patcient")
+                        .WithMany()
+                        .HasForeignKey("PatcientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedDoctor");
+
+                    b.Navigation("Patcient");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.User", b =>

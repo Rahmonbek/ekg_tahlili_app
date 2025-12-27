@@ -17,11 +17,14 @@ import { warningAlert } from '../../../tools/Alerts';
 import { MdLanguage } from 'react-icons/md';
 import { get_doctor_by_clinic_id, get_params_for_add_staff } from '../../../host/requests/DoctorRequest';
 import { get_ecg_analyses_by_patcient_id } from '../../../host/requests/ECGAnalyseRequest';
+import EcgOldResult from '../../../components/results/EcgOldResult';
 
 export default function EcgAnalyzer() {
   const [loading, setLoading] = useState(false);
   const [loading1, setLoading1] = useState(false);
   const [loading3, setLoading3] = useState(false);
+  const [page, setpage] = useState(1);
+  const [total_page, settotal_page] = useState(1);
   const [check_ecg, setcheck_ecg] = useState(false);
     const [show_btn, setshow_btn] = useState(true);
     const [result, setResult] = useState(null);
@@ -41,6 +44,7 @@ export default function EcgAnalyzer() {
     const [phoneValue, setPhoneValue] = useState('');
   const [form2] = Form.useForm(); 
     const [image, setimage] = useState(null)
+    const [image_short, setimage_short] = useState(null)
     const [file_input, setfile_input] = useState("")
       const [files, setFiles] = useState([]);
       const {complaints, roles, positions, setroles, setpositions,user, doctors, setdoctors}=useStore()
@@ -123,7 +127,9 @@ const getParamsData=async()=>{
 
   const getOldECGAnaylses=async(id)=>{
     try{
-         var res=await get_ecg_analyses_by_patcient_id({id:id})
+         var res=await get_ecg_analyses_by_patcient_id({id:id, page:page})
+         setold_anylyses(res.data.items)
+         settotal_page(res.data.totalPages)
     }catch(err){
 
     }finally{
@@ -182,6 +188,7 @@ const onChangeDoctors=(val)=>{
     setResult(null);
     setError(null);
     setimage(null)
+    setimage_short(null)
 
     try {
       const formData = new FormData();
@@ -199,10 +206,13 @@ const onChangeDoctors=(val)=>{
       console.log(res)
       setshow_btn(false)
       setimage(res.ecg_png_base64)
+      setimage_short(res.ecg_png_base64_short)
       let parsedResult;
      try {
   // agar string bo'lsa JSON.parse qilamiz
-  parsedResult = typeof res.ai_response === "string" 
+  parsedResult =res.ai_response.raw?  typeof res.ai_response.raw === "string" 
+    ? JSON.parse(res.ai_response.raw) 
+    : res.ai_response.raw: typeof res.ai_response === "string" 
     ? JSON.parse(res.ai_response) 
     : res.ai_response;
 } catch (e) {
@@ -230,6 +240,10 @@ const retryAnalyse=()=>{
               setResult(null);
     setError(null);
     setimage(null)
+    setpage(1)
+    settotal_page(1)
+    setold_anylyses([])
+    setimage_short(null)
     setLoading(false)
     setLoading1(false)
     setLoading3(false)
@@ -237,10 +251,9 @@ const retryAnalyse=()=>{
               form1.resetFields();
               form2.resetFields();
 }
-
 const resetData=()=>{
     setPatcient(null);
-             
+             setselect_doctor([])
               setselect_complaint([])
               setFiles([])
               setcheck_ecg(false)
@@ -248,12 +261,18 @@ const resetData=()=>{
               setResult(null);
     setError(null);
     setimage(null)
+    setpage(1)
+    settotal_page(1)
+    setold_anylyses([])
+    setimage_short(null)
     setLoading(false)
     setLoading1(false)
     setLoading3(false)
-     form.resetFields();
+    
+              form.resetFields();
               form2.resetFields();
 }
+
 
 const changePositions=(val)=>{
   
@@ -296,7 +315,7 @@ const changePositions=(val)=>{
                   label={t('passport_seria')}
                   rules={[
                     { required: true, message: '' },
-                    { len: 10, message: '' },
+                    
                   ]}
                 >
                   <InputMask
@@ -579,7 +598,7 @@ const changePositions=(val)=>{
         <div className="main_card_content">
             {loading3?<div className='mini_loader'><MoonLoader size={50} color={"#4FD1C5"} /></div>:
             <>
-            <EcgResult error={error} result={result} image={image} />
+            <EcgResult error={error} result={result} image={image} image_short={image_short} />
             <br/>
             <Row>
             <Col lg={9} md={24}></Col>
@@ -593,7 +612,12 @@ const changePositions=(val)=>{
             }
             <br/>
             </div></div>:<></>}
+
+            {old_anylyses.map((item, key)=>{
+              return <EcgOldResult data={item}/>
+            })}
             <br/>
+           
             <br/>
             <br/>
     </div>

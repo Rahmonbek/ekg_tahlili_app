@@ -478,7 +478,7 @@
         }
       }
     },
-    "/api/ecg-analyses/get-ecg-analyses-by-patcient-id/{id}": {
+    "/api/ecg-analyses/get-ecg-analyses-by-patcient-id": {
       "get": {
         "tags": [
           "ECGAnalyse"
@@ -486,12 +486,21 @@
         "parameters": [
           {
             "name": "id",
-            "in": "path",
-            "required": true,
-            "style": "simple",
+            "in": "query",
+            "style": "form",
             "schema": {
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "style": "form",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
             }
           }
         ],
