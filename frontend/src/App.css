@@ -177,6 +177,7 @@ input:-webkit-autofill:active {
 .complaint_name{font-size: var(--small_size); color: var(--text_color); user-select: none !important;}
 .mini_loader{width: 100%; display: flex; justify-content: center; padding: 20px;}
 .ekg-image{padding: 0px 25%; min-height: 190px;}
+.ekg-image .ant-image{width: 100%;}
 :where(.css-dev-only-do-not-override-ac2jek) .ant-image-preview-operations, :where(.css-dev-only-do-not-override-ac2jek) .ant-image-preview-close{background-color: var(--text_color);}
 .ant-image-preview-operations-operation span{color: white !important;} 
 

@@ -17,7 +17,7 @@ namespace EkgAnalyzerApi.Services
         public async Task<PagedResult<ECGAnalyseDTO>> GetECGAnalysesByPatientIdAsync(
             int patientId,
             int page = 1,
-            int pageSize = 5)
+            int pageSize = 20)
         {
             var baseQuery = _context.ECGAnalyse
                 .Where(e => e.PatcientId == patientId);

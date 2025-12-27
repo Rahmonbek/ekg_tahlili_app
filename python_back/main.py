@@ -17,7 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 import pandas as pd
 from scipy.signal import find_peaks
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError
 from scipy.signal import butter, filtfilt, find_peaks, medfilt
 import matplotlib.pyplot as plt
 import matplotlib
@@ -110,7 +110,7 @@ app.add_middleware(
 )
 
 # ---------------- OpenAI API key ----------------
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = "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"
 if not OPENAI_API_KEY:
     raise RuntimeError("OPENAI_API_KEY muhit o'zgaruvchisi topilmadi.")
 
@@ -306,20 +306,22 @@ def compose_prompt_for_openai(digitals, age, gender, complaint, lang) -> str:
     if complaint and len(complaint) > 0:
         complaint_str = "\n".join([f"- {c}" for c in complaint])
         prompt_header += f"\n\nBemorning shikoyatlari:\n{complaint_str}"
+    
+    if digitals is not None:
+        # EKG parametrlar
+        if isinstance(digitals, dict):
+            digitals_str = json.dumps(digitals, ensure_ascii=False, indent=2)
+        else:
+            digitals_str = str(digitals)
 
-    # EKG parametrlar
-    if isinstance(digitals, dict):
-        digitals_str = json.dumps(digitals, ensure_ascii=False, indent=2)
-    else:
-        digitals_str = str(digitals)
-
-    prompt_header += f"\n\nEKG aparatdan olingan ekg parametrlari qiymatlari:\n{digitals_str}"
+        prompt_header += f"\n\nEKG aparatdan olingan ekg parametrlari qiymatlari:\n{digitals_str}"
+        print(digitals_str)
 
     
         
     
     
-    print(digitals_str)
+    
     prompt_header += f"""
     
     Siz tajribali kardiolog shifokorsiz.
@@ -336,6 +338,12 @@ Vazifa:
 EKG grafiklarini, bemor shikoyatlarini, bemor ma'lumotlarini va berilgan raqamli EKG parametrlarini birgalikda tahlil qiling.
 Grafikdagi vizual (paralogik) o‘zgarishlarni ham inobatga oling. 
 Tahlilda bemorning ma'lumotlari va shikoyatlarini ham inobatga oling.
+
+Vazifa:
+- Kardiolog va aritmolog shifokorlar ishlatadigan PROFESSIONAL tibbiy terminlar bilan yozing
+- Tashxisni aniq, qisqa va klinik asoslangan qilib yozing
+- Agar xavfli holat aniqlansa, alohida qayd eting
+- Tashxisdan so‘ng qisqa "Xulosa" bo‘limini yozing
 
 ❗️JAVOB QOIDALARI:
 - Javob FAQAT quyida berilgan JSON formatida bo‘lsin
@@ -369,28 +377,7 @@ Tahlilda bemorning ma'lumotlari va shikoyatlarini ham inobatga oling.
     "P_QRS_T_morphology": "P, QRS va T to‘lqin shakllari haqida qisqa tavsif"
   },
 
-  "automatic_analysis": "EKG, bemor ma'lumotlari, bemor shikoyatlari va raqamli parametrlar asosida ANIQLANGAN kasalliklarni yoki patologik holatlarni yoz.
-Agar hech qanday kasallik aniqlanmasa, alohida tushuntir:
-— qaysi EKG ko‘rsatkichlari normal bo‘lgani sababli kasallik mavjud emasligi xulosa qilingan.
-
-Quyidagi guruhlardan faqat mavjud bo‘lganlarini yoz:
-- Yurak urishi ritm turi
-- Ishemik yurak kasalliklari (ST elevatsiyasi (STEMI — to‘liq o‘tkazuvchi tromb), ST depressiyasi (NSTEMI, stenokardiya), T tishchasi inversiyasi, Q patologik tishcha (o‘tkazilgan MI belgisi), Reciprocal o‘zgarishlar, Wellens sindromi (kuchli LAD stenoz), De Winter changes (LAD akut o‘tkazuvchi lekin ST ko‘tarilmagan), Prinzmetal stenokardiyasi (spazm))
-- Aritmiyalar (Sinus taxikardiya / bradikardiya, AV tugunidan chiqadigan ritemlar, Atrial fibrillyatsiya, Atrial flutter, Supraventrikulyar taxikardiya (AVNRT, AVRT), Ventrikulyar taxikardiya, Ventrikulyar fibrillyatsiya, Premature beats (PAC, PVC), Torsades de pointes)
-- O‘tkazuvchanlik buzilishlari (SA blok, AV bloklar (I, II — Mobitz I/II, III), His shoxi bloklari (LBBB, RBBB), Fascicular bloklar (LAHB/LPHB), Wolff-Parkinson-White (WPW), O‘tkir transmural MI da yangi LBBB xavf belgisidir)
-- Bo‘lmacha va qorincha gipertrofiyasi/kengayishi (Chap bo‘lmacha kengayishi (P mitrale), O‘ng bo‘lmacha kengayishi (P pulmonale), Chap qorincha gipertrofiyasi (LVH) + strain, O‘ng qorincha gipertrofiyasi (RVH))
-- Klapan kasalliklari oqibatlari (Mitral stenoz → P-mitrale, AF, RVH, Mitral yetishmovchiligi → LVH, P-mitrale, Aorta stenoz → LVH + repolyarizatsiya buzilishi, Aorta yetishmovchiligi → LVH, Trikuspid patologiyalar → P-pulmonale, RVH)
-- Perikard kasalliklari (Perikardit → diffuz ST elevatsiyasi + PR depressiyasi, Perikard tamponadasi → past voltaj, elektr alternans)
-- Miyokardit va kardiomiopatiyalar (Dilatatsion KMP → QRS keng, sintetik o‘zgarishlar, AF/V, Gipertrofik KMP → LVH, Q chuqur, aritmiyalar, ARVD (o‘ng qorincha displazi) → epsilon to‘lqin V1-V3)
-- Elektrolit buzilishlari:
-    -Kaliy, Giperkalemiya (T baland va uchi o‘tkir (tented T), PR uzaygan, QRS kengaygan → sine-wave → asistoliya xavfi, Gipokalemiya:, U tishchasi paydo bo‘ladi, T yassi / inversiya, ST depressiyasi, Torsades xavfi ↑ (QT uzayishi))
-    -Kalsiy, Giperkalsemiya (QT qisqaradi, Gipokalsemiya:, QT uzayadi → Torsades xavfi)
-- Dori toksikligi (Digoksin: Scooping ST depressiyasi, Antiaritmiklarga xos:, Amiodaron → QT uzayishi, Lidokain → QRS kengayishi, TCA toksikligi → QRS keng + arritmiyalar)
-- O‘tkir o‘pka emboliyasi belgisi (S1Q3T3 belgisi, Sinus taxikardiya, RVH va o‘ngga og‘ish, RBBB)
-- Metabolik holatlar (Gipotermiya → Osborn (J) to‘lqin, Gipotiroidizm → past voltaj, Sepsis → sinus taxikardiya, Anemiya → taxikardiya, Vagus tonusi yuqori → sinus bradi)
-- Yana boshqa aniqlash mumkin bo'lgan kassalik belgilari
-
-❗️YO‘Q holatlarni SANAB O‘TMA.",
+  "automatic_analysis": "EKG, bemor ma'lumotlari, bemor shikoyatlari va raqamli parametrlar asosida ANIQLANGAN kasalliklarni yoki patologik holatlarni yoz.",
 
   "automatic_analysis_bool": "Holat jiddiyligi darajasi: 1 = yengil, 2 = o‘rtacha, 3 = og‘ir",
 
@@ -408,7 +395,7 @@ asosiy EKG topilmalar va umumiy klinik baho."
 
 ### QO‘SHIMCHA TALABLAR:
 - bemorga tashxis qo'yishda bemor ma'lumotlarini, EKG parametrlarini va EKG rasmdagi grafikni birinchi o'ringa qo'y, undan kn bemor shikoyatlarini ham inobatga ol
-- "automatic_analysis" bo‘limida faqat BOR patologiyalar yozilsin
+- "automatic_analysis" bo‘limida faqat BOR patologiyalar yozilsin va yo'qlari haqida ma'lumot shart emas
 - "automatic_analysis_bool" bo'limida faqat 1 yoki 2 yoki 3 sonlari bo'lsin ortiqcha narsa kerak emas 
 - Agar patologiya yo‘q bo‘lsa, nima sababdan yo‘qligi aniq tushuntirilsin
 - EKG apparatida yo‘q bo‘lgan parametrlar grafikdan o‘lchab chiqilsin
@@ -423,6 +410,70 @@ asosiy EKG topilmalar va umumiy klinik baho."
     """
     return prompt_header
 
+
+def compose_prompt_for_openai_for_img(age, gender, complaint, lang) -> str:
+    prompt_header = ""
+    language = (
+    "O'ZBEK" if lang == 'uz'
+    else "RUS" if lang == 'ru'
+    else "INGLIZ" if lang == 'en'
+    else "O'ZBEK"
+    )
+    # Bemor ma'lumotlari
+    if age is not None or gender is not None:
+        prompt_header += "Bemor ma'lumotlari:"
+        if age is not None:
+            prompt_header += f"\n - Yoshi {age}"
+        if gender is not None:
+            prompt_header += f"\n - Jinsi {gender}"
+
+    # Shikoyatlar
+    if complaint and len(complaint) > 0:
+        complaint_str = "\n".join([f"- {c}" for c in complaint])
+        prompt_header += f"\n\nBemorning shikoyatlari:\n{complaint_str}"
+    
+    prompt_header += f"""
+    Siz tajribali kardiolog va aritmolog shifokorsiz. Yuborilgan EKG rasmni tahlil qiling. Javob quyidagi JSON shaklida taqdim eting ortiqcha belgilarni yozmang.
+    Ekg parametrlari qiymatini rasmdan aniqlab ol. Aniqlashda adashib ketmaslikka harakat qil. 
+    Hech qaysi parametr qiymatini taxmin qilma. Faqat aniq aniqlash imkoni bor parametrlardan foydalan.
+    {
+ """{ "digital_measurements": {
+    "HR": "Yurak urish tezligi (bpm), raqamli qiymat + tibbiy baho (normal/patologik)",
+    "PR_interval": "PR interval (ms), raqamli qiymat + izoh",
+    "QRS_duration": "QRS davomiyligi (ms), raqamli qiymat + izoh",
+    "QT_interval": "QT interval (ms), raqamli qiymat + izoh",
+    "QTc_Bazett": "QTc (Bazett) (ms), raqamli qiymat + izoh",
+    "QRS_axis": "QRS o‘qi (gradus), raqamli qiymat + izoh",
+    "P_wave_duration": "P to‘lqin davomiyligi (ms), raqamli qiymat + izoh",
+    "P_wave_amplitude": "P to‘lqin amplitudasi (mV), raqamli qiymat + izoh",
+    "R_wave_amplitude": "R to‘lqin amplitudasi (mV), raqamli qiymat + izoh",
+    "S_wave_amplitude": "S to‘lqin amplitudasi (mV), raqamli qiymat + izoh",
+    "T_wave_amplitude": "T to‘lqin amplitudasi (mV), raqamli qiymat + izoh",
+    "PR_segment": "PR segment (ms), raqamli qiymat + izoh",
+    "ST_segment_elevation": "ST segment ko‘tarilishi yoki tushishi (mV), raqamli qiymat + izoh",
+    "RR_interval": "RR interval (ms), raqamli qiymat + izoh",
+    "heart_rate_variability": "HRV (ms), raqamli qiymat + izoh",
+    "P_QRS_T_morphology": "P, QRS va T to‘lqin shakllarining qisqa professional tavsifi"
+  },
+
+  "automatic_analysis": "EKG, bemor ma’lumotlari va bemor shikoyatlari asosida ANIQLANGAN patologik holatlar yoki kasalliklar.",
+  
+  "automatic_analysis_bool": "Holat jiddiyligi: 1 = yengil, 2 = o‘rtacha, 3 = og‘ir",
+
+  "AI_recommendations": "Oddiy tilda bemor uchun tavsiyalar:
+— qo‘shimcha tekshiruv zarurati
+- rasmda ekg aparat aniqlagan qiymatlar mavjud bo'lsa shulardan foydalan
+— jismoniy faollik bo‘yicha ko‘rsatma
+— shifokorga murojaat qilish zarurati
+Agar kasallik aniqlansa, umumiy davolash yo‘nalishi qisqacha yozilsin.",
+"final_summary": "Tibbiy asoslangan yakuniy xulosa:
+asosiy EKG topilmalar va umumiy klinik baho."
+}"""}
+
+
+❗️Javob FAQAT JSON bo‘lsin va {language} tilida bo‘lsin.
+    """
+    return prompt_header
 
 
 
@@ -940,15 +991,40 @@ def compute_full_ecg_v3(leads, fs=500):
         "average_T_wave_value": t_inversion
     }
 
-def convert_png_to_jpeg(png_bytes: bytes, quality: int = 10) -> bytes:
-    buf = io.BytesIO(png_bytes)
-    img = Image.open(buf)
-    
-    out_buf = io.BytesIO()
-    img.convert('RGB').save(out_buf, format='JPEG', quality=quality)
-    out_buf.seek(0)
-    return out_buf.read()
 
+from PIL import Image
+import io
+
+def compress_image_bytes(file_bytes: bytes, max_width=500, max_height=500, quality=90, output_format="PNG") -> bytes:
+    img = Image.open(io.BytesIO(file_bytes))
+    
+    # Proportsional kichraytirish
+    orig_width, orig_height = img.size
+    ratio = min(max_width / orig_width, max_height / orig_height, 1)
+    if ratio < 1:
+        new_size = (int(orig_width * ratio), int(orig_height * ratio))
+        img = img.resize(new_size, Image.Resampling.LANCZOS)  # <-- Yangilandi
+    
+    # Bytesga saqlash
+    output_bytes = io.BytesIO()
+    if output_format.upper() == "JPEG":
+        img = img.convert("RGB")
+        img.save(output_bytes, format="JPEG", quality=quality, optimize=True)
+    else:
+        img.save(output_bytes, format="PNG", optimize=True)
+    
+    return output_bytes.getvalue()
+
+def jpg_bytes_to_png_bytes(file_bytes: bytes) -> bytes:
+    img = Image.open(io.BytesIO(file_bytes))
+    if img.mode != "RGB":
+        img = img.convert("RGB")
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG", optimize=True)
+    buf.seek(0)
+    return buf.read()
+    
 from fastapi import Form
 
 # ---------------- FastAPI endpoint: analyze ----------------
@@ -1041,10 +1117,14 @@ async def analyze(
         print(leads)
         # --- Generate PNG from leads ---
         png_bytes = render_12_lead_png(leads, fs)
-        
+        digitals = compute_full_ecg_v3(leads, fs)
+        print(digitals)
+        prompt = compose_prompt_for_openai(digitals, age, gender, complaint, lang)
     else:
-        png_bytes = content
-    png_short_bytes=convert_png_to_jpeg(png_bytes)
+        png_bytes = jpg_bytes_to_png_bytes(content)
+        digitals=None
+        prompt = compose_prompt_for_openai_for_img(age, gender, complaint, lang)
+    png_short_bytes=compress_image_bytes(png_bytes)
     fname1 = f"ecg_{ecg_analyse.id}.png"
     generated_file_link = save_generated_file(png_bytes, fname1)
     generated_short_file_link = save_generated_short_file(png_short_bytes, fname1)
@@ -1055,8 +1135,7 @@ async def analyze(
         generated_file_link=generated_file_link,
         generated_short_file_link=generated_short_file_link
     )
-    digitals = compute_full_ecg_v3(leads, fs)
-    print(digitals)
+    
     
     try:
         file_id = openai_upload_file(
@@ -1072,14 +1151,14 @@ async def analyze(
         })
    
     # --- Compose prompt ---
-    prompt = compose_prompt_for_openai(digitals, age, gender, complaint, lang)
+    print(file_id)
     
     
     ai_error = False
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)
         resp = client.responses.create(
-            model="gpt-4.1",
+            model="gpt-5.2",
             input=[{
                 "role": "user",
                 "content": [

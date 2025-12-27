@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "pMo5kuaEDdctLGayvhGZkfqzHFpNrnPTeXhey5s/EmU=",
+  "Hash": "jOGPMC0WBnTGChuH14BxRhPgCQIPRHLHKuKjOAlBE7M=",
   "Source": "EkgAnalyzerApi",
   "BasePath": "_content/EkgAnalyzerApi",
   "Mode": "Default",
@@ -16,6 +16,27 @@
     }
   ],
   "Assets": [
+    {
+      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinic_licenses\\27a75261-0de1-4e06-b1cd-f68186c47c43.png",
+      "SourceId": "EkgAnalyzerApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
+      "BasePath": "_content/EkgAnalyzerApi",
+      "RelativePath": "clinic_licenses/27a75261-0de1-4e06-b1cd-f68186c47c43#[.{fingerprint}]?.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "dj578qlc18",
+      "Integrity": "N+gAb+4P10yilGyf3cNDUOTHmh0e8NgSm7sr03rDYoU=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\clinic_licenses\\27a75261-0de1-4e06-b1cd-f68186c47c43.png"
+    },
     {
       "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinic_licenses\\4f45e080-bdf6-4dd6-b3b1-7bd9b8221aa6.jpg",
       "SourceId": "EkgAnalyzerApi",
@@ -38,6 +59,27 @@
       "OriginalItemSpec": "wwwroot\\clinic_licenses\\4f45e080-bdf6-4dd6-b3b1-7bd9b8221aa6.jpg"
     },
     {
+      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinic_licenses\\ba06c39a-1ef9-4bda-a752-a6e1be384ed8.jpg",
+      "SourceId": "EkgAnalyzerApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
+      "BasePath": "_content/EkgAnalyzerApi",
+      "RelativePath": "clinic_licenses/ba06c39a-1ef9-4bda-a752-a6e1be384ed8#[.{fingerprint}]?.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "q7mfrtcqaj",
+      "Integrity": "yhIfHbrkh1Pa9BWXoHWdAmxZTXqqyyn0WcCFIClbavo=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\clinic_licenses\\ba06c39a-1ef9-4bda-a752-a6e1be384ed8.jpg"
+    },
+    {
       "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinic_licenses\\babbfcbe-4cd0-4f72-9969-672657cc65cb.pdf",
       "SourceId": "EkgAnalyzerApi",
       "SourceType": "Discovered",
@@ -57,6 +99,27 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\clinic_licenses\\babbfcbe-4cd0-4f72-9969-672657cc65cb.pdf"
+    },
+    {
+      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinic_licenses\\c5854b24-3df6-4a72-a52b-b6e8c131bab0.jpg",
+      "SourceId": "EkgAnalyzerApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
+      "BasePath": "_content/EkgAnalyzerApi",
+      "RelativePath": "clinic_licenses/c5854b24-3df6-4a72-a52b-b6e8c131bab0#[.{fingerprint}]?.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "spn78gxf63",
+      "Integrity": "0IuVUsRKgkoRey8YTqLI7swQoK2XTUv/+EdRWJYVHB8=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\clinic_licenses\\c5854b24-3df6-4a72-a52b-b6e8c131bab0.jpg"
     },
     {
       "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinic_licenses\\e5d4183a-1c26-46a2-abff-369760ca5dd2.pdf",
@@ -143,6 +206,27 @@
       "OriginalItemSpec": "wwwroot\\clinicbrands\\2585627e-cd56-4e73-adbe-4d8a3aafe999.png"
     },
     {
+      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinicbrands\\51a8971b-ae7a-464e-b073-2507a328c412.jpg",
+      "SourceId": "EkgAnalyzerApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
+      "BasePath": "_content/EkgAnalyzerApi",
+      "RelativePath": "clinicbrands/51a8971b-ae7a-464e-b073-2507a328c412#[.{fingerprint}]?.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "cg0jhzhzdz",
+      "Integrity": "DHZRmmcMmAN5hUj9p+Deqh09igznGpYHUgMPZvaKzIc=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\clinicbrands\\51a8971b-ae7a-464e-b073-2507a328c412.jpg"
+    },
+    {
       "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinicbrands\\6c4043a3-5cf7-4005-ab0b-eec533c18a9b.png",
       "SourceId": "EkgAnalyzerApi",
       "SourceType": "Discovered",
@@ -164,12 +248,12 @@
       "OriginalItemSpec": "wwwroot\\clinicbrands\\6c4043a3-5cf7-4005-ab0b-eec533c18a9b.png"
     },
     {
-      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinicbrands\\80addbb3-d59e-4ee6-b848-b8419c1ba1fa.png",
+      "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinicbrands\\941ff3b4-f0b3-4ea2-a779-9dd612e9db07.jpg",
       "SourceId": "EkgAnalyzerApi",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\",
       "BasePath": "_content/EkgAnalyzerApi",
-      "RelativePath": "clinicbrands/80addbb3-d59e-4ee6-b848-b8419c1ba1fa#[.{fingerprint}]?.png",
+      "RelativePath": "clinicbrands/941ff3b4-f0b3-4ea2-a779-9dd612e9db07#[.{fingerprint}]?.jpg",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -178,11 +262,11 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "mdt87kdaln",
-      "Integrity": "RjIO/+o6beLZg/dJDdmzMBmpMU8FPkH0WppoI33v2O0=",
+      "Fingerprint": "q7mfrtcqaj",
+      "Integrity": "yhIfHbrkh1Pa9BWXoHWdAmxZTXqqyyn0WcCFIClbavo=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\clinicbrands\\80addbb3-d59e-4ee6-b848-b8419c1ba1fa.png"
+      "OriginalItemSpec": "wwwroot\\clinicbrands\\941ff3b4-f0b3-4ea2-a779-9dd612e9db07.jpg"
     },
     {
       "Identity": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinicbrands\\d04f4e90-42c1-41ce-b15d-f629304ea37e.png",
@@ -313,6 +397,88 @@
   ],
   "Endpoints": [
     {
+      "Route": "clinic_licenses/27a75261-0de1-4e06-b1cd-f68186c47c43.dj578qlc18.png",
+      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinic_licenses\\27a75261-0de1-4e06-b1cd-f68186c47c43.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "261475"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"N+gAb+4P10yilGyf3cNDUOTHmh0e8NgSm7sr03rDYoU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 23 Dec 2025 18:10:29 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "dj578qlc18"
+        },
+        {
+          "Name": "label",
+          "Value": "clinic_licenses/27a75261-0de1-4e06-b1cd-f68186c47c43.png"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-N+gAb+4P10yilGyf3cNDUOTHmh0e8NgSm7sr03rDYoU="
+        }
+      ]
+    },
+    {
+      "Route": "clinic_licenses/27a75261-0de1-4e06-b1cd-f68186c47c43.png",
+      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinic_licenses\\27a75261-0de1-4e06-b1cd-f68186c47c43.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "261475"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"N+gAb+4P10yilGyf3cNDUOTHmh0e8NgSm7sr03rDYoU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 23 Dec 2025 18:10:29 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-N+gAb+4P10yilGyf3cNDUOTHmh0e8NgSm7sr03rDYoU="
+        }
+      ]
+    },
+    {
       "Route": "clinic_licenses/4f45e080-bdf6-4dd6-b3b1-7bd9b8221aa6.cg0jhzhzdz.jpg",
       "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinic_licenses\\4f45e080-bdf6-4dd6-b3b1-7bd9b8221aa6.jpg",
       "Selectors": [],
@@ -395,6 +561,88 @@
       ]
     },
     {
+      "Route": "clinic_licenses/ba06c39a-1ef9-4bda-a752-a6e1be384ed8.jpg",
+      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinic_licenses\\ba06c39a-1ef9-4bda-a752-a6e1be384ed8.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "10425"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"yhIfHbrkh1Pa9BWXoHWdAmxZTXqqyyn0WcCFIClbavo=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 23 Dec 2025 18:17:38 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-yhIfHbrkh1Pa9BWXoHWdAmxZTXqqyyn0WcCFIClbavo="
+        }
+      ]
+    },
+    {
+      "Route": "clinic_licenses/ba06c39a-1ef9-4bda-a752-a6e1be384ed8.q7mfrtcqaj.jpg",
+      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinic_licenses\\ba06c39a-1ef9-4bda-a752-a6e1be384ed8.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "10425"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"yhIfHbrkh1Pa9BWXoHWdAmxZTXqqyyn0WcCFIClbavo=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 23 Dec 2025 18:17:38 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "q7mfrtcqaj"
+        },
+        {
+          "Name": "label",
+          "Value": "clinic_licenses/ba06c39a-1ef9-4bda-a752-a6e1be384ed8.jpg"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-yhIfHbrkh1Pa9BWXoHWdAmxZTXqqyyn0WcCFIClbavo="
+        }
+      ]
+    },
+    {
       "Route": "clinic_licenses/babbfcbe-4cd0-4f72-9969-672657cc65cb.d4eelqf1qz.pdf",
       "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinic_licenses\\babbfcbe-4cd0-4f72-9969-672657cc65cb.pdf",
       "Selectors": [],
@@ -473,6 +721,88 @@
         {
           "Name": "integrity",
           "Value": "sha256-/Uvfu6zJMDN+7on9z9QjSVtkxg/qp3NojM61oWFlgBI="
+        }
+      ]
+    },
+    {
+      "Route": "clinic_licenses/c5854b24-3df6-4a72-a52b-b6e8c131bab0.jpg",
+      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinic_licenses\\c5854b24-3df6-4a72-a52b-b6e8c131bab0.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "139568"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"0IuVUsRKgkoRey8YTqLI7swQoK2XTUv/+EdRWJYVHB8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 23 Dec 2025 18:11:53 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-0IuVUsRKgkoRey8YTqLI7swQoK2XTUv/+EdRWJYVHB8="
+        }
+      ]
+    },
+    {
+      "Route": "clinic_licenses/c5854b24-3df6-4a72-a52b-b6e8c131bab0.spn78gxf63.jpg",
+      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinic_licenses\\c5854b24-3df6-4a72-a52b-b6e8c131bab0.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "139568"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"0IuVUsRKgkoRey8YTqLI7swQoK2XTUv/+EdRWJYVHB8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 23 Dec 2025 18:11:53 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "spn78gxf63"
+        },
+        {
+          "Name": "label",
+          "Value": "clinic_licenses/c5854b24-3df6-4a72-a52b-b6e8c131bab0.jpg"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-0IuVUsRKgkoRey8YTqLI7swQoK2XTUv/+EdRWJYVHB8="
         }
       ]
     },
@@ -805,6 +1135,88 @@
       ]
     },
     {
+      "Route": "clinicbrands/51a8971b-ae7a-464e-b073-2507a328c412.cg0jhzhzdz.jpg",
+      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinicbrands\\51a8971b-ae7a-464e-b073-2507a328c412.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "264586"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"DHZRmmcMmAN5hUj9p+Deqh09igznGpYHUgMPZvaKzIc=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 23 Dec 2025 18:02:48 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "cg0jhzhzdz"
+        },
+        {
+          "Name": "label",
+          "Value": "clinicbrands/51a8971b-ae7a-464e-b073-2507a328c412.jpg"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-DHZRmmcMmAN5hUj9p+Deqh09igznGpYHUgMPZvaKzIc="
+        }
+      ]
+    },
+    {
+      "Route": "clinicbrands/51a8971b-ae7a-464e-b073-2507a328c412.jpg",
+      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinicbrands\\51a8971b-ae7a-464e-b073-2507a328c412.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "264586"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"DHZRmmcMmAN5hUj9p+Deqh09igznGpYHUgMPZvaKzIc=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 23 Dec 2025 18:02:48 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-DHZRmmcMmAN5hUj9p+Deqh09igznGpYHUgMPZvaKzIc="
+        }
+      ]
+    },
+    {
       "Route": "clinicbrands/6c4043a3-5cf7-4005-ab0b-eec533c18a9b.mdt87kdaln.png",
       "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinicbrands\\6c4043a3-5cf7-4005-ab0b-eec533c18a9b.png",
       "Selectors": [],
@@ -887,8 +1299,8 @@
       ]
     },
     {
-      "Route": "clinicbrands/80addbb3-d59e-4ee6-b848-b8419c1ba1fa.mdt87kdaln.png",
-      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinicbrands\\80addbb3-d59e-4ee6-b848-b8419c1ba1fa.png",
+      "Route": "clinicbrands/941ff3b4-f0b3-4ea2-a779-9dd612e9db07.jpg",
+      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinicbrands\\941ff3b4-f0b3-4ea2-a779-9dd612e9db07.jpg",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -897,64 +1309,19 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1325081"
+          "Value": "10425"
         },
         {
           "Name": "Content-Type",
-          "Value": "image/png"
+          "Value": "image/jpeg"
         },
         {
           "Name": "ETag",
-          "Value": "\"RjIO/+o6beLZg/dJDdmzMBmpMU8FPkH0WppoI33v2O0=\""
+          "Value": "\"yhIfHbrkh1Pa9BWXoHWdAmxZTXqqyyn0WcCFIClbavo=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 22 Dec 2025 16:03:35 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "fingerprint",
-          "Value": "mdt87kdaln"
-        },
-        {
-          "Name": "label",
-          "Value": "clinicbrands/80addbb3-d59e-4ee6-b848-b8419c1ba1fa.png"
-        },
-        {
-          "Name": "integrity",
-          "Value": "sha256-RjIO/+o6beLZg/dJDdmzMBmpMU8FPkH0WppoI33v2O0="
-        }
-      ]
-    },
-    {
-      "Route": "clinicbrands/80addbb3-d59e-4ee6-b848-b8419c1ba1fa.png",
-      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinicbrands\\80addbb3-d59e-4ee6-b848-b8419c1ba1fa.png",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "1325081"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "image/png"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"RjIO/+o6beLZg/dJDdmzMBmpMU8FPkH0WppoI33v2O0=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Mon, 22 Dec 2025 16:03:35 GMT"
+          "Value": "Tue, 23 Dec 2025 18:08:58 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -964,7 +1331,52 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-RjIO/+o6beLZg/dJDdmzMBmpMU8FPkH0WppoI33v2O0="
+          "Value": "sha256-yhIfHbrkh1Pa9BWXoHWdAmxZTXqqyyn0WcCFIClbavo="
+        }
+      ]
+    },
+    {
+      "Route": "clinicbrands/941ff3b4-f0b3-4ea2-a779-9dd612e9db07.q7mfrtcqaj.jpg",
+      "AssetFile": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinicbrands\\941ff3b4-f0b3-4ea2-a779-9dd612e9db07.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "10425"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"yhIfHbrkh1Pa9BWXoHWdAmxZTXqqyyn0WcCFIClbavo=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 23 Dec 2025 18:08:58 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "q7mfrtcqaj"
+        },
+        {
+          "Name": "label",
+          "Value": "clinicbrands/941ff3b4-f0b3-4ea2-a779-9dd612e9db07.jpg"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-yhIfHbrkh1Pa9BWXoHWdAmxZTXqqyyn0WcCFIClbavo="
         }
       ]
     },
