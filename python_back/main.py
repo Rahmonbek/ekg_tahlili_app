@@ -461,6 +461,7 @@ def compose_prompt_for_openai_for_img(age, gender, complaint, lang) -> str:
 
   "AI_recommendations": "Oddiy tilda bemor uchun tavsiyalar:
 — qo‘shimcha tekshiruv zarurati
+- "digital_measurements" bo'limida aniqlash imkoni yo'q parametrlarga null qiymat ber 
 - rasmda ekg aparat aniqlagan qiymatlar mavjud bo'lsa shulardan foydalan yo'qlarini o'zing aniqlashga urinib ko'r
 — jismoniy faollik bo‘yicha ko‘rsatma
 — shifokorga murojaat qilish zarurati
@@ -1199,6 +1200,121 @@ async def analyze(
         "ai_response": parsed,
         "ai_error": ai_error
     })
+
+@app.post("/api/analyze-save")
+async def analyze(
+    db: Session = Depends(get_db),
+    file: list[UploadFile] = File(...),
+    complaint: list[str] | None = Form(None),
+    complaint_id: list[int] | None = Form(None),
+    doctor_id: list[int] | None = Form(None),
+    created_doctor_id: int = Form(...),
+    patcient_id: int = Form(...),
+    gender: str = Form(...),
+    lang: str = Form(...),
+    age: int = Form(...)
+):
+   
+    if OPENAI_API_KEY is None:
+        raise HTTPException(status_code=400, detail="Provide OpenAI API key in environment variable 'OPENAI_API_KEY'")
+    first_file: UploadFile = file[0]
+    content = await first_file.read()
+    fname = (first_file.filename or "upload").lower()
+    analyse_file_path = save_analyse_file(content, fname)
+    ecg_analyse = create_ecg_analyse(
+        session=db,
+        patient_id=patcient_id,
+        created_doctor_id=created_doctor_id,
+        status=0,
+        analyse_file_link=analyse_file_path
+    )
+    if doctor_id:
+        for d_id in doctor_id:
+            await create_ecg_analyse_doctor(
+                session=db,
+                ecg_analyse_id=ecg_analyse.id,
+                doctor_id=d_id
+            )
+
+    # --- ECGAnalyseComplaints yozish ---
+    if complaint_id:
+        for c_id in complaint_id:
+            await create_ecg_analyse_complaint(
+                session=db,
+                ecg_analyse_id=ecg_analyse.id,
+                complaint_id=c_id
+            )
+
+    is_image = fname.endswith(('.png','.jpg','.jpeg'))
+
+    if not is_image:
+        leads = {}
+        fs = None
+        # --- Parse file according to extension ---
+        try:
+            if fname.endswith(('.csv','.txt','.tsv')):
+                leads, fs = parse_table_bytes(content)
+            elif fname.endswith('.xml'):
+                leads, fs = parse_xml_bytes(content)
+            elif fname.endswith('.pdf'):
+                if convert_from_bytes is None:
+                    raise HTTPException(status_code=500, detail="pdf2image not installed or poppler missing")
+                pages = convert_from_bytes(content, first_page=1, last_page=1)
+                pil = pages[0]
+                img_bytes = io.BytesIO()
+                pil.save(img_bytes, format='PNG')
+                img_bytes.seek(0)
+                leads, fs = extract_image_bytes_as_signal(img_bytes.read())
+            else:
+                try:
+                    leads, fs = parse_table_bytes(content)
+                except Exception:
+                    leads, fs = parse_xml_bytes(content)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Could not parse file: {e}")
+
+        # --- Map fuzzy lead names to canonical leads ---
+        mapped = {}
+        mapping = map_leads(list(leads.keys()))
+        for orig, arr in leads.items():
+            name = mapping.get(orig) or orig
+            mapped[name] = arr
+        leads = mapped
+
+        # --- Fill missing leads with zeros ---
+        expected_seconds = 10
+        expected_samples = int(fs * expected_seconds)
+        for ln in CANONICAL_LEADS:
+            if ln not in leads:
+                leads[ln] = np.zeros(expected_samples, dtype=float)
+        print(leads)
+        # --- Generate PNG from leads ---
+        png_bytes = render_12_lead_png(leads, fs)
+        digitals = compute_full_ecg_v3(leads, fs)
+        print(digitals)
+        prompt = compose_prompt_for_openai(digitals, age, gender, complaint, lang)
+    else:
+        png_bytes = jpg_bytes_to_png_bytes(content)
+        digitals=None
+        prompt = compose_prompt_for_openai_for_img(age, gender, complaint, lang)
+    png_short_bytes=compress_image_bytes(png_bytes)
+    fname1 = f"ecg_{ecg_analyse.id}.png"
+    generated_file_link = save_generated_file(png_bytes, fname1)
+    generated_short_file_link = save_generated_short_file(png_short_bytes, fname1)
+    ecg_analyse = update_ecg_analyse(
+        session=db,
+        status=1,
+        ecg_id=ecg_analyse.id,
+        generated_file_link=generated_file_link,
+        generated_short_file_link=generated_short_file_link
+    )
+    
+    return JSONResponse(content={
+        "ecg_id": ecg_analyse.id,
+        "ecg_png_base64": generated_file_link,
+        "ecg_png_base64_short": generated_short_file_link
+    })
+
 
 # ---------------- Ground truth endpoint ----------------
 class GroundTruth(BaseModel):

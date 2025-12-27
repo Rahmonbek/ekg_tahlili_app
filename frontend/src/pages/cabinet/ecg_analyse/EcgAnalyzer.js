@@ -10,10 +10,10 @@ import { get_patcient_by_passport, save_patcient_data } from '../../../host/requ
 import { calculateAge, formatPhoneNumber, formatPhoneNumberForForm } from '../../../tools/formatters';
 import { useStore } from '../../../store/Store';
 import { select } from 'react-cookies';
-import { analyzeEkgFile } from '../../../host/EkgService';
+import { analyzeEkgFile, analyzeEkgFileSave } from '../../../host/EkgService';
 import EcgResult from '../../../components/results/EcgResult';
 import { MoonLoader } from 'react-spinners';
-import { warningAlert } from '../../../tools/Alerts';
+import { successAlert, warningAlert } from '../../../tools/Alerts';
 import { MdLanguage } from 'react-icons/md';
 import { get_doctor_by_clinic_id, get_params_for_add_staff } from '../../../host/requests/DoctorRequest';
 import { get_ecg_analyses_by_patcient_id } from '../../../host/requests/ECGAnalyseRequest';
@@ -21,6 +21,8 @@ import EcgOldResult from '../../../components/results/EcgOldResult';
 
 export default function EcgAnalyzer() {
   const [loading, setLoading] = useState(false);
+  const [ekg_saved, setekg_saved] = useState(false);
+  const [check_ai, setcheck_ai] = useState(false);
   const [loading1, setLoading1] = useState(false);
   const [loading3, setLoading3] = useState(false);
   const [page, setpage] = useState(1);
@@ -183,7 +185,12 @@ const onChangeDoctors=(val)=>{
  const handleSubmit = async () => {
     console.log(files.length)
     if (files.length === 0) return alert(t("select_file_error"));
-    warningAlert(t("please_wait"))
+    if(check_ai){
+      warningAlert(t("please_wait"))
+    }else{
+      warningAlert(t("please_wait_save"))
+    }
+    
     setLoading3(true);
     setResult(null);
     setError(null);
@@ -201,12 +208,10 @@ const onChangeDoctors=(val)=>{
       formData.append('created_doctor_id', user.doctor.id)
       formData.append('lang', lang)
       formData.append('age', calculateAge(patcient.birthDate))
-
-      const res = await analyzeEkgFile(formData);
+      var res
+      if(check_ai){
+          res = await analyzeEkgFile(formData);
       console.log(res)
-      setshow_btn(false)
-      setimage(res.ecg_png_base64)
-      setimage_short(res.ecg_png_base64_short)
       let parsedResult;
      try {
   // agar string bo'lsa JSON.parse qilamiz
@@ -222,7 +227,18 @@ const onChangeDoctors=(val)=>{
 }
 
 setResult(parsedResult);
-
+      
+      }else{
+       res = await analyzeEkgFileSave(formData);
+      }
+      setshow_btn(false)
+      setimage(res.ecg_png_base64)
+      setimage_short(res.ecg_png_base64_short)
+      setekg_saved(true)
+      if(!check_ai){
+        successAlert(t("analyse_saved"))
+        retryAnalyse()
+      }
     } catch (err) {
         console.log(err)
       setError(err.message);
@@ -232,6 +248,7 @@ setResult(parsedResult);
   };
 const retryAnalyse=()=>{
     setPatcient(null);
+    setekg_saved(false)
              setselect_doctor([])
               setselect_complaint([])
               setFiles([])
@@ -239,6 +256,7 @@ const retryAnalyse=()=>{
               setshow_btn(false)
               setResult(null);
     setError(null);
+    setcheck_ai(false)
     setimage(null)
     setpage(1)
     settotal_page(1)
@@ -253,6 +271,7 @@ const retryAnalyse=()=>{
 }
 const resetData=()=>{
     setPatcient(null);
+    setekg_saved(false)
              setselect_doctor([])
               setselect_complaint([])
               setFiles([])
@@ -262,6 +281,7 @@ const resetData=()=>{
     setError(null);
     setimage(null)
     setpage(1)
+    setcheck_ai(false)
     settotal_page(1)
     setold_anylyses([])
     setimage_short(null)
@@ -507,10 +527,10 @@ const changePositions=(val)=>{
       type="file"
       
       onChange={handleChange}
-      accept=".dat,.hea,.csv,.xml,.jpg,.png,.pdf,.edf,.mat"
+      accept=".xml,.jpg,.png"
     />
     <p className='file_input_bottom_text'>
-      {t("access_file_types")}: dat, hea, csv, xml, jpg, png, pdf, edf, mat
+      {t("access_file_types")}: xml, jpg, png
     </p>
   </div>
 </Form.Item>
@@ -535,7 +555,15 @@ const changePositions=(val)=>{
                       />
                     </Form.Item>
                   </Col>
-
+<Col lg={24} md={24}>
+<Form.Item
+                      name="check_ai"
+                      
+                    >
+ <div className='complaint_item'>
+                             <Checkbox value={check_ai} onChange={(val)=>{setcheck_ai(val)}} ><span className='complaint_name'>{t("check_by_ai")}</span></Checkbox>
+                        </div>
+                        </Form.Item></Col>
                   {doctors.length>0?<><Col className="main_col" lg={24} md={24}>
                                        <Form.Item
                                         name="positions"
@@ -582,18 +610,23 @@ const changePositions=(val)=>{
                     })}
                     </Row>
                 </Col>
+
+
+
                 <Col lg={9} md={24}></Col>
                 <Col lg={6} md={24}>
                 {show_btn?<Button onClick={handleSubmit} loading={loading3} htmlType='button'  className="btn_form">
           {t("check")}
         </Button>:<></>}
+        
                 </Col>
                 <Col lg={9} md={24}></Col>
+
               </Row>
               </Form>
         </div>
         </div>:<></>}
-       {result!=null || loading3?<div className="main_card">
+       {(result!=null || loading3) && check_ai?<div className="main_card">
         <h1>{t('ecg_last_result')}</h1>
         <div className="main_card_content">
             {loading3?<div className='mini_loader'><MoonLoader size={50} color={"#4FD1C5"} /></div>:

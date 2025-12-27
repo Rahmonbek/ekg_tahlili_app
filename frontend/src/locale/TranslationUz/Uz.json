@@ -130,7 +130,12 @@
 "normal":"Yaxshi",
 "avarage":"O'rtacha",
 "danger":"Yomon",
-"unknown":"Aniqmas"
+"unknown":"Aniqmas",
+"check_by_ai":"EKG faylni AI orqali tahlil qilish",
+"please_wait_save":"Ma'lumot saqlanishi kuting.",
+"retry_ecg_save":"Yangi bemor EKG sini saqlash",
+"analyse_saved":"EKG ma'lumot saqlandi. Keyingi bemor EKG faylini yuborishingiz mumkin",
+"not_analysed":"Tahlil qilinmagan"
 
 
 

@@ -41,12 +41,12 @@ setresult(parsedResult);
   }
 }
   return (
-result!=null && data!=null?<div className={`old_analyse main_card ${open?"opened_main_card":"closed_main_card"} ${String(result.automatic_analysis_bool).indexOf('1')!=-1?"normal_analyse":String(result.automatic_analysis_bool).indexOf('2')!=-1?'avarage_analyse':String(result.automatic_analysis_bool).indexOf('3')!=-1?"danger_analyse":"unknown_analyse"}`}>
+data!=null?<div className={`old_analyse main_card ${open?"opened_main_card":"closed_main_card"} ${result!=null?String(result.automatic_analysis_bool).indexOf('1')!=-1?"normal_analyse":String(result.automatic_analysis_bool).indexOf('2')!=-1?'avarage_analyse':String(result.automatic_analysis_bool).indexOf('3')!=-1?"danger_analyse":"unknown_analyse":"unknown_analyse"}`}>
         <h1  onClick={()=>{setopen(!open)}}><p>
           
           {formatDateTime(data.createdAt)}  </p>
           <p>
-{String(result.automatic_analysis_bool).indexOf('1')!=-1?t("normal"):String(result.automatic_analysis_bool).indexOf('2')!=-1?t("avarage"):String(result.automatic_analysis_bool).indexOf('3')!=-1?t("danger"):t('unknown')}
+{result!=null?String(result.automatic_analysis_bool).indexOf('1')!=-1?t("normal"):String(result.automatic_analysis_bool).indexOf('2')!=-1?t("avarage"):String(result.automatic_analysis_bool).indexOf('3')!=-1?t("danger"):t('unknown'):t('not_analysed')}
  <span>{open?<IoIosArrowDown />:<IoIosArrowBack />}</span>
 </p>
         </h1>
