@@ -29,7 +29,8 @@ public class ECGAnalyseDTO
     public string? GeneratedShortFileLink { get; set; }
 
     public string? AIAnswerData { get; set; }
-
+    public DoctorForECGData? CreatedDoctor { get; set; }
+    public PatcientForECG? Patcient { get; set; }
     public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -45,6 +46,16 @@ public class DoctorForECGData
     public string LastName { get; set; }
     public string SureName { get; set; }
     public string Phone { get; set; }
+    public RolesDTO Role { get; set; }
+
+
+}
+
+public class PatcientForECG
+{
+    public int? Id { get; set; }
+    public DateOnly BirthDate { get; set; }
+    public bool Gender { get; set; }
 
 
 }

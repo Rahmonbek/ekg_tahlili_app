@@ -21,12 +21,13 @@ import EcgOldResult from '../../../components/results/EcgOldResult';
 
 export default function EcgAnalyzer() {
   const [loading, setLoading] = useState(false);
+  const [old_loading, setold_loading] = useState(false);
   const [ekg_saved, setekg_saved] = useState(false);
   const [check_ai, setcheck_ai] = useState(false);
   const [loading1, setLoading1] = useState(false);
   const [loading3, setLoading3] = useState(false);
   const [page, setpage] = useState(1);
-  const [total_page, settotal_page] = useState(1);
+  const [total_page, settotal_page] = useState(0);
   const [check_ecg, setcheck_ecg] = useState(false);
     const [show_btn, setshow_btn] = useState(true);
     const [result, setResult] = useState(null);
@@ -72,6 +73,10 @@ const [role_id, setrole_id] = useState(null);
        }, [user])
 
       const handleChange = (e) => {
+         setold_anylyses([])
+         settotal_page(0)
+         setpage(1)
+         getOldECGAnaylses(patcient.id, 'first')
         setshow_btn(true)
     setfile_input(e.target.value)
     setFiles(Array.from(e.target.files));
@@ -127,15 +132,23 @@ const getParamsData=async()=>{
     }
   };
 
-  const getOldECGAnaylses=async(id)=>{
+  const getOldECGAnaylses=async(id, type)=>{
     try{
-         var res=await get_ecg_analyses_by_patcient_id({id:id, page:page})
-         setold_anylyses(res.data.items)
+      setold_loading(true)
+         var res=await get_ecg_analyses_by_patcient_id({id:id, page:type=="first"?1:page})
+         if(type=="first"){
+          setpage(2)
+setold_anylyses([...res.data.items])
+         }else{
+          setpage(page+1)
+setold_anylyses([...old_anylyses, ...res.data.items])
+         }
+         
          settotal_page(res.data.totalPages)
     }catch(err){
 
     }finally{
-
+setold_loading(false)
     }
   }
 
@@ -259,7 +272,7 @@ const retryAnalyse=()=>{
     setcheck_ai(false)
     setimage(null)
     setpage(1)
-    settotal_page(1)
+    settotal_page(0)
     setold_anylyses([])
     setimage_short(null)
     setLoading(false)
@@ -282,7 +295,7 @@ const resetData=()=>{
     setimage(null)
     setpage(1)
     setcheck_ai(false)
-    settotal_page(1)
+    settotal_page(0)
     setold_anylyses([])
     setimage_short(null)
     setLoading(false)
@@ -649,8 +662,11 @@ const changePositions=(val)=>{
             {old_anylyses.map((item, key)=>{
               return <EcgOldResult data={item}/>
             })}
+            
+           {page<=total_page?<Button onClick={()=>{getOldECGAnaylses(patcient.id)}} loading={old_loading} htmlType='button'  className="btn_form mini_btn_main">
+          {t("get_other_results")}
+        </Button>:<></>}
             <br/>
-           
             <br/>
             <br/>
     </div>

@@ -7,6 +7,8 @@ export const useStore = create((set) => ({
     setopen_admin_modal: (id) => set({ open_admin_modal: id }),
     loader: false,
     setloader: (id) => set({ loader: id }),
+    ecg_btn_loading: false,
+    setecg_btn_loading: (id) => set({ ecg_btn_loading: id }),
     complaints: [],
     setcomplaints: (id) => set({ complaints: id }),
     doctors: [],

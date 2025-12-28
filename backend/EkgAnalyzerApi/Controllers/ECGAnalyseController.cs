@@ -28,7 +28,7 @@ public class ECGAnalyseController : ControllerBase
         if (userIdClaim == null)
             return Unauthorized(new { message = "Token invalid" });
 
-        var results = await _ecgService.GetECGAnalysesByPatientIdAsync(id, page, 20);
+        var results = await _ecgService.GetECGAnalysesByPatientIdAsync(id, page, 5);
 
         return Ok(results);
     }

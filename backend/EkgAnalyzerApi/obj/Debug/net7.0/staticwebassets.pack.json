@@ -5,6 +5,10 @@
       "PackagePath": "staticwebassets\\clinic_licenses\\27a75261-0de1-4e06-b1cd-f68186c47c43.png"
     },
     {
+      "Id": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinic_licenses\\4773caff-2ae6-47cf-bb21-4ddf2eb72daa.jpg",
+      "PackagePath": "staticwebassets\\clinic_licenses\\4773caff-2ae6-47cf-bb21-4ddf2eb72daa.jpg"
+    },
+    {
       "Id": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinic_licenses\\4f45e080-bdf6-4dd6-b3b1-7bd9b8221aa6.jpg",
       "PackagePath": "staticwebassets\\clinic_licenses\\4f45e080-bdf6-4dd6-b3b1-7bd9b8221aa6.jpg"
     },
@@ -45,6 +49,10 @@
       "PackagePath": "staticwebassets\\clinicbrands\\6c4043a3-5cf7-4005-ab0b-eec533c18a9b.png"
     },
     {
+      "Id": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinicbrands\\91a9f265-9c40-4dd2-88ca-ce01ffff2db9.jpg",
+      "PackagePath": "staticwebassets\\clinicbrands\\91a9f265-9c40-4dd2-88ca-ce01ffff2db9.jpg"
+    },
+    {
       "Id": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\clinicbrands\\941ff3b4-f0b3-4ea2-a779-9dd612e9db07.jpg",
       "PackagePath": "staticwebassets\\clinicbrands\\941ff3b4-f0b3-4ea2-a779-9dd612e9db07.jpg"
     },
@@ -71,10 +79,6 @@
     {
       "Id": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\wwwroot\\uploads\\ekg4.JPG",
       "PackagePath": "staticwebassets\\uploads\\ekg4.JPG"
-    },
-    {
-      "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.EkgAnalyzerApi.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
-      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
     },
     {
       "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.EkgAnalyzerApi.Microsoft.AspNetCore.StaticWebAssets.props",

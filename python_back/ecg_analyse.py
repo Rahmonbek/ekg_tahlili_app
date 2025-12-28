@@ -2,6 +2,14 @@ from sqlalchemy.orm import Session
 from models import ECGAnalyse
 import datetime
 
+def get_ecg_analyse_by_id(session: Session, ecg_id: int) -> ECGAnalyse | None:
+    """
+    Ma'lum ID bo'yicha ECGAnalyse yozuvini qaytaradi.
+    Agar yozuv topilmasa, None qaytaradi.
+    """
+    ecg = session.query(ECGAnalyse).filter(ECGAnalyse.id == ecg_id).first()
+    return ecg
+
 def create_ecg_analyse(session: Session, patient_id: int, created_doctor_id: int, status: int,
                        analyse_file_link: bytes = None,
                        generated_file_link: bytes = None,

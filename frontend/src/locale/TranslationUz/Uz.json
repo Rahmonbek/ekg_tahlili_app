@@ -135,7 +135,14 @@
 "please_wait_save":"Ma'lumot saqlanishi kuting.",
 "retry_ecg_save":"Yangi bemor EKG sini saqlash",
 "analyse_saved":"EKG ma'lumot saqlandi. Keyingi bemor EKG faylini yuborishingiz mumkin",
-"not_analysed":"Tahlil qilinmagan"
+"not_analysed":"Tahlil qilinmagan",
+"doctor_of_created":"EKG ma'lumotini kiritgan xodim",
+"doctor_of_patcient":"Davolovchi shifokor",
+"complaints":"Bemor shikoyatlari",
+"ecg-image":"EKG rasmi",
+"check_by_ai":"AI orqali tahlil qilish",
+"api_error":"Server bilan bog'lanishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring",
+"get_other_results":"Ko'proq natijalarni olish"
 
 
 

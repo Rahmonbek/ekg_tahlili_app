@@ -17,7 +17,7 @@ namespace EkgAnalyzerApi.Services
         public async Task<PagedResult<ECGAnalyseDTO>> GetECGAnalysesByPatientIdAsync(
             int patientId,
             int page = 1,
-            int pageSize = 20)
+            int pageSize = 5)
         {
             var baseQuery = _context.ECGAnalyse
                 .Where(e => e.PatcientId == patientId);
@@ -26,11 +26,17 @@ namespace EkgAnalyzerApi.Services
             var totalCount = await baseQuery.CountAsync();
 
             var items = await baseQuery
+                .Include(e => e.Patcient)
                 .Include(e => e.CreatedDoctor)
+                    .ThenInclude(c => c.User)
+                    .ThenInclude(c => c.Role)
+
                 .Include(e => e.Complaints)
                     .ThenInclude(c => c.Complaint)
                 .Include(e => e.Doctors)
                     .ThenInclude(c => c.Doctor)
+                     .ThenInclude(c => c.User)
+                    .ThenInclude(c => c.Role)
                 .OrderByDescending(e => e.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -46,6 +52,28 @@ namespace EkgAnalyzerApi.Services
                     Status = e.Status,
                     PatcientId = e.PatcientId,
                     CreatedDoctorId = e.CreatedDoctorId,
+                    Patcient = new PatcientForECG
+                    {
+                        Id = e.Patcient.Id,
+                        BirthDate = e.Patcient.BirthDate,
+                        Gender = e.Patcient.Gender
+
+                    },
+                    CreatedDoctor = new DoctorForECGData
+                    {
+                        Id = e.CreatedDoctor.Id,
+                        FirstName = e.CreatedDoctor.FirstName,
+                        LastName = e.CreatedDoctor.LastName,
+                        SureName = e.CreatedDoctor.SureName,
+                        Phone = e.CreatedDoctor.Phone,
+                        Role = new RolesDTO
+                        {
+                            Id = e.CreatedDoctor.User.Role.Id,
+                            NameUz = e.CreatedDoctor.User.Role.NameUz,
+                            NameEn = e.CreatedDoctor.User.Role.NameEn,
+                            NameRu = e.CreatedDoctor.User.Role.NameRu
+                        }
+                    },
                     Complaints = e.Complaints.Select(c => new Complaints
                     {
                         Id = c.Complaint.Id,
@@ -59,7 +87,14 @@ namespace EkgAnalyzerApi.Services
                         FirstName = c.Doctor.FirstName,
                         LastName = c.Doctor.LastName,
                         SureName = c.Doctor.SureName,
-                        Phone = c.Doctor.Phone
+                        Phone = c.Doctor.Phone,
+                        Role = new RolesDTO
+                        {
+                            Id = c.Doctor.User.Role.Id,
+                            NameUz = c.Doctor.User.Role.NameUz,
+                            NameEn = c.Doctor.User.Role.NameEn,
+                            NameRu = c.Doctor.User.Role.NameRu
+                        }
                     }).ToList()
                 })
                 .ToListAsync();

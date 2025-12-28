@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from fastapi import Depends
 from openai import OpenAI
 import base64
+import requests
 from matplotlib.ticker import MultipleLocator
 from typing import Dict, Optional, Tuple
 import xml.etree.ElementTree as ET
@@ -26,6 +27,7 @@ from typing import Dict
 import math
 from database import get_db
 from ecg_analyse import create_ecg_analyse
+from ecg_analyse import get_ecg_analyse_by_id
 from ecg_analyse import update_ecg_analyse
 from fastapi.staticfiles import StaticFiles
 from ecg_analyse_doctors import create_ecg_analyse_doctor
@@ -110,7 +112,7 @@ app.add_middleware(
 )
 
 # ---------------- OpenAI API key ----------------
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = "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"
 if not OPENAI_API_KEY:
     raise RuntimeError("OPENAI_API_KEY muhit o'zgaruvchisi topilmadi.")
 
@@ -397,6 +399,7 @@ asosiy EKG topilmalar va umumiy klinik baho."
 - bemorga tashxis qo'yishda bemor ma'lumotlarini, EKG parametrlarini va EKG rasmdagi grafikni birinchi o'ringa qo'y, undan kn bemor shikoyatlarini ham inobatga ol
 - "automatic_analysis" bo‘limida faqat BOR patologiyalar yozilsin va yo'qlari haqida ma'lumot shart emas
 - "automatic_analysis_bool" bo'limida faqat 1 yoki 2 yoki 3 sonlari bo'lsin ortiqcha narsa kerak emas 
+- "digital_measurements" bo'limida aniqlash imkoni yo'q parametrlarga null qiymat ber 
 - Agar patologiya yo‘q bo‘lsa, nima sababdan yo‘qligi aniq tushuntirilsin
 - EKG apparatida yo‘q bo‘lgan parametrlar grafikdan o‘lchab chiqilsin
 - Har bir raqam yonida birliklar (bpm, ms, mV, gradus) bo‘lsin
@@ -1141,7 +1144,7 @@ async def analyze(
         file_id = openai_upload_file(
             OPENAI_API_KEY,
             png_bytes,
-            filename=fname if fname.endswith('.png') else 'ecg.png'
+            filename=fname1 if fname1.endswith('.png') else 'ecg.png'
         )
     except Exception as e:
         b64 = base64.b64encode(png_bytes).decode('ascii')
@@ -1202,7 +1205,7 @@ async def analyze(
     })
 
 @app.post("/api/analyze-save")
-async def analyze(
+async def analyze_save(
     db: Session = Depends(get_db),
     file: list[UploadFile] = File(...),
     complaint: list[str] | None = Form(None),
@@ -1290,13 +1293,9 @@ async def analyze(
         print(leads)
         # --- Generate PNG from leads ---
         png_bytes = render_12_lead_png(leads, fs)
-        digitals = compute_full_ecg_v3(leads, fs)
-        print(digitals)
-        prompt = compose_prompt_for_openai(digitals, age, gender, complaint, lang)
     else:
         png_bytes = jpg_bytes_to_png_bytes(content)
-        digitals=None
-        prompt = compose_prompt_for_openai_for_img(age, gender, complaint, lang)
+       
     png_short_bytes=compress_image_bytes(png_bytes)
     fname1 = f"ecg_{ecg_analyse.id}.png"
     generated_file_link = save_generated_file(png_bytes, fname1)
@@ -1313,6 +1312,194 @@ async def analyze(
         "ecg_id": ecg_analyse.id,
         "ecg_png_base64": generated_file_link,
         "ecg_png_base64_short": generated_short_file_link
+    })
+
+@app.post("/api/analyze-retry")
+async def analyze_retry(
+    db: Session = Depends(get_db),
+    complaint: list[str] | None = Form(None),
+    id: str = Form(...),
+    gender: str = Form(...),
+    lang: str = Form(...),
+    age: int = Form(...)
+):
+    if OPENAI_API_KEY is None:
+        raise HTTPException(status_code=400, detail="Provide OpenAI API key in environment variable 'OPENAI_API_KEY'")
+
+    # ECGAnalyse yozuvini olish
+    analyse_data = get_ecg_analyse_by_id(db, id)
+    if not analyse_data:
+        raise HTTPException(status_code=404, detail="ECG Analyse not found")
+
+    # Faylni link orqali olish
+    if analyse_data.analyse_file_link:
+        file_path = BASE_DIR / analyse_data.analyse_file_link.lstrip("/")
+
+        if file_path.exists():
+            with open(file_path, "rb") as f:
+                file_bytes = f.read()
+            fname = file_path.name.lower()
+        else:
+            raise HTTPException(status_code=404, detail="Analyse file topilmadi")
+    else:
+        raise HTTPException(status_code=404, detail="Analyse file link mavjud emas")
+
+    # Fayl turi tekshirish
+    is_image = fname.endswith(('.png', '.jpg', '.jpeg'))
+
+    if not is_image:
+        leads = {}
+        fs = None
+        # --- Parse file according to extension ---
+        try:
+            if fname.endswith(('.csv','.txt','.tsv')):
+                leads, fs = parse_table_bytes(file_bytes)
+            elif fname.endswith('.xml'):
+                leads, fs = parse_xml_bytes(file_bytes)
+            elif fname.endswith('.pdf'):
+                if convert_from_bytes is None:
+                    raise HTTPException(status_code=500, detail="pdf2image not installed or poppler missing")
+                pages = convert_from_bytes(file_bytes, first_page=1, last_page=1)
+                pil = pages[0]
+                img_bytes = io.BytesIO()
+                pil.save(img_bytes, format='PNG')
+                img_bytes.seek(0)
+                leads, fs = extract_image_bytes_as_signal(img_bytes.read())
+            else:
+                try:
+                    leads, fs = parse_table_bytes(file_bytes)
+                except Exception:
+                    leads, fs = parse_xml_bytes(file_bytes)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Could not parse file: {e}")
+
+        # --- Map fuzzy lead names to canonical leads ---
+        mapped = {}
+        mapping = map_leads(list(leads.keys()))
+        for orig, arr in leads.items():
+            name = mapping.get(orig) or orig
+            mapped[name] = arr
+        leads = mapped
+
+        # --- Fill missing leads with zeros ---
+        expected_seconds = 10
+        expected_samples = int(fs * expected_seconds)
+        for ln in CANONICAL_LEADS:
+            if ln not in leads:
+                leads[ln] = np.zeros(expected_samples, dtype=float)
+        print(leads)
+        digitals = compute_full_ecg_v3(leads, fs)
+        print(digitals)
+        prompt = compose_prompt_for_openai(digitals, age, gender, complaint, lang)
+        if analyse_data.generated_file_link==None:
+            png_bytes = render_12_lead_png(leads, fs)
+            png_short_bytes=compress_image_bytes(png_bytes)
+            fname1 = f"ecg_{analyse_data.id}.png"
+            generated_file_link = save_generated_file(png_bytes, fname1)
+            generated_short_file_link = save_generated_short_file(png_short_bytes, fname1)
+            ecg_analyse = update_ecg_analyse(
+                session=db,
+                status=1,
+                ecg_id=analyse_data.id,
+                generated_file_link=generated_file_link,
+                generated_short_file_link=generated_short_file_link
+            )
+        else:
+            generated_file_link = analyse_data.generated_file_link
+            generated_short_file_link = analyse_data.generated_short_file_link
+
+    else:
+        if analyse_data.generated_file_link==None:
+            png_bytes = jpg_bytes_to_png_bytes(file_bytes)
+            png_short_bytes=compress_image_bytes(png_bytes)
+            fname1 = f"ecg_{analyse_data.id}.png"
+            generated_file_link = save_generated_file(png_bytes, fname1)
+            generated_short_file_link = save_generated_short_file(png_short_bytes, fname1)
+            ecg_analyse = update_ecg_analyse(
+                session=db,
+                status=1,
+                ecg_id=analyse_data.id,
+                generated_file_link=generated_file_link,
+                generated_short_file_link=generated_short_file_link
+            )
+        else:
+            generated_file_link = analyse_data.generated_file_link
+            generated_short_file_link = analyse_data.generated_short_file_link
+        digitals=None
+        prompt = compose_prompt_for_openai_for_img(age, gender, complaint, lang)
+    if analyse_data.generated_file_link:
+        file_path = BASE_DIR / analyse_data.generated_file_link.lstrip("/")
+
+        if file_path.exists():
+            with open(file_path, "rb") as f:
+                png_bytes = f.read()
+            fname1 = file_path.name.lower()
+        else:
+            raise HTTPException(status_code=404, detail="Generate file topilmadi")
+    else:
+        raise HTTPException(status_code=404, detail="Generate file link mavjud emas")
+    
+    try:
+        file_id = openai_upload_file(
+            OPENAI_API_KEY,
+            png_bytes,
+            filename=fname if fname.endswith('.png') else 'ecg.png'
+        )
+    except Exception as e:
+        b64 = base64.b64encode(png_bytes).decode('ascii')
+        return JSONResponse(content={
+            "error": f"OpenAI upload failed: {e}",
+            "png_base64": b64
+        })
+   
+    # --- Compose prompt ---
+    print(file_id)
+    
+    
+    ai_error = False
+    try:
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        resp = client.responses.create(
+            model="gpt-5.2",
+            input=[{
+                "role": "user",
+                "content": [
+                    {"type": "input_text", "text": prompt},
+                    {"type": "input_image", "file_id": file_id}
+                ]
+            }]
+        )
+        content_out = resp.output_text
+        try:
+            parsed = json.loads(content_out)
+        except Exception:
+            parsed = {"raw": content_out}
+    
+        # --- Matnni bevosita bazaga saqlash ---
+        ai_answer_text = content_out
+        status_to_save = 2
+    
+    except Exception as e:
+        parsed = {"error": str(e)}
+        ai_answer_text = None
+        status_to_save = -1
+        ai_error = True
+    
+    analyse_data = update_ecg_analyse(
+        session=db,
+        ecg_id=analyse_data.id,
+        status=status_to_save,
+        ai_answer_data=ai_answer_text  
+    )
+
+    
+
+    return JSONResponse(content={
+        "ecg_id": analyse_data.id,
+        "ecg_png_base64": generated_file_link,
+        "ecg_png_base64_short": generated_short_file_link,
+        "ai_response": parsed,
+        "ai_error": ai_error
     })
 
 
