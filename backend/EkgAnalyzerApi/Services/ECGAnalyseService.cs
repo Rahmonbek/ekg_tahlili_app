@@ -74,7 +74,7 @@ namespace EkgAnalyzerApi.Services
                             NameRu = e.CreatedDoctor.User.Role.NameRu
                         }
                     },
-                    Complaints = e.Complaints.Select(c => new Complaints
+                    Complaints = e.Complaints.OrderBy(ce => ce.Complaint.NameUz).Select(c => new Complaints
                     {
                         Id = c.Complaint.Id,
                         NameUz = c.Complaint.NameUz,
