@@ -437,7 +437,7 @@ def compose_prompt_for_openai_for_img(age, gender, complaint, lang) -> str:
     
     prompt_header += f"""
     Siz tajribali kardiolog va aritmolog shifokorsiz. Yuborilgan EKG rasmni tahlil qiling. Javob quyidagi JSON shaklida taqdim eting ortiqcha belgilarni yozmang.
-    Hech qaysi parametr qiymatini taxmin qilma. Faqat aniq aniqlash imkoni bor parametrlardan foydalan.
+    Hech qaysi parametr qiymatini taxmin qilma. Faqat aniq aniqlash imkoni bor parametrlardan foydalan. Tahlilda grafikdagi vizual (paralogik) o‘zgarishlarni ham inobatga oling.
     {
  """{ "digital_measurements": {
     "HR": "Yurak urish tezligi (bpm), raqamli qiymat + tibbiy baho (normal/patologik)",
