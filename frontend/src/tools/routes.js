@@ -1,6 +1,7 @@
 import { FaHeartbeat, FaHome } from "react-icons/fa";
 import { FaPeopleGroup, FaUserDoctor } from "react-icons/fa6";
 import { IoIosCard, IoIosPeople, IoMdSettings } from "react-icons/io";
+import { MdOutlineMedicalInformation } from "react-icons/md";
 
 export const routers=[
     {
@@ -39,5 +40,12 @@ export const routers=[
         title:"organization_info",
         tools:"settings",
         role_id:[2, 3]
+    },
+     {
+        path:'/diagnoses',
+        icon:< MdOutlineMedicalInformation />,
+        title:"patient_diagnostics",
+        tools:"settings",
+        role_id:[]
     }
 ]

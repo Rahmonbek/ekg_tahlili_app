@@ -97,8 +97,11 @@
 "enter_firstname_staff": "Введите имя сотрудника",
 "enter_surename_staff": "Введите отчество сотрудника",
 "saveDataStaff": "Сохранить данные сотрудника",
-"user_not_found": "Неверный логин. Пожалуйста, попробуйте снова"
-
+"user_not_found": "Неверный логин. Пожалуйста, попробуйте снова",
+"patient_diagnostics":"Диагностика пациента",
+"download_diagnosis": "Скачать диагноз пациента",
+"select_diagnosis_file": "Выберите диагностический файл",
+"owner_diagnosis": "Врач, поставивший диагноз"
 
 
 

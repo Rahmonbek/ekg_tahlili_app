@@ -493,10 +493,10 @@ if(digits.length<=3){
   beforeMaskedValueChange={(newState, oldState, userInput) => {
     let { value } = newState;
 
-    // Belgilarni siljishidan himoya
+
     if (userInput === "") {
       if (oldState.value && oldState.value.length > value.length) {
-        // eski qiymatni qaytarib qo'yamiz
+
         return oldState;
       }
     }

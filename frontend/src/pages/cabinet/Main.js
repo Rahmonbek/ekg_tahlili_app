@@ -10,6 +10,7 @@ import { get_complaints_data } from '../../host/requests/ComplaintsRequest'
 import AdminModal from '../../components/AdminModal'
 import Doctors from './pages/doctors/Doctors'
 import CreateUpdateDoctor from './pages/doctors/create/CreateUpdateDoctor'
+import Diagnosis from './pages/Diagnosis'
 
 export default function Main() {
     const {t}=useTranslation()
@@ -45,6 +46,7 @@ export default function Main() {
                     
                     {user.roleId!=2 && user.roleId!=3?<Route path="" element={<EcgAnalyzer/>} />:<></>}
                     <Route path="analyse-ecg" element={<EcgAnalyzer/>} />
+                    <Route path="diagnoses" element={<Diagnosis/>} />
                 </Routes>
             </div>:<></>}
         </div>
