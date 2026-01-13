@@ -86,7 +86,7 @@ def get_unique_filename(directory: Path, filename: str) -> str:
         counter += 1
         
 def save_diagnose_file(file_bytes: bytes, filename: str) -> str:
-    safe_name = get_unique_filename(UPLOAD_DIR1, filename)
+    safe_name = get_unique_filename(UPLOAD_DIR_DIAGNOSE, filename)
     filepath = UPLOAD_DIR_DIAGNOSE / safe_name
     with open(filepath, "wb") as f:
         f.write(file_bytes)
@@ -1516,7 +1516,7 @@ async def analyze_retry(
     })
 
 @app.post("/api/med-diagnoses-save")
-async def analyze_save(
+async def diagnose_save(
     db: Session = Depends(get_db),
     file: list[UploadFile] = File(...),
     created_doctor_id: int = Form(...),
@@ -1537,7 +1537,7 @@ async def analyze_save(
     )
 
     return JSONResponse(content={
-        "data":ecg_analyse
+        "status":True
     })
 # ---------------- Ground truth endpoint ----------------
 class GroundTruth(BaseModel):

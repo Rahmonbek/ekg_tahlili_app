@@ -21,6 +21,13 @@ export const routers=[
         role_id:[]
     },
      {
+        path:'/diagnoses',
+        icon:< MdOutlineMedicalInformation />,
+        title:"patient_diagnostics",
+        tools:"diagnoses",
+        role_id:[]
+    },
+     {
         path:'/patcients',
         icon:<FaPeopleGroup />,
         title:"patcients",
@@ -41,11 +48,5 @@ export const routers=[
         tools:"settings",
         role_id:[2, 3]
     },
-     {
-        path:'/diagnoses',
-        icon:< MdOutlineMedicalInformation />,
-        title:"patient_diagnostics",
-        tools:"settings",
-        role_id:[]
-    }
+    
 ]

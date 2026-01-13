@@ -9,7 +9,7 @@ import { get_patcient_by_passport, save_patcient_data } from '../../../host/requ
 import { calculateAge, formatPhoneNumber, formatPhoneNumberForForm } from '../../../tools/formatters';
 import { get_ecg_analyses_by_patcient_id } from '../../../host/requests/ECGAnalyseRequest';
 import { FaUserDoctor } from 'react-icons/fa6';
-import { analyzeEkgFile, analyzeEkgFileSave } from '../../../host/EkgService';
+import { diagnoseFileSave } from '../../../host/EkgService';
 import { successAlert, warningAlert } from '../../../tools/Alerts';
 import { get_doctor_by_clinic_id, get_params_for_add_staff } from '../../../host/requests/DoctorRequest';
 import { MdLanguage } from 'react-icons/md';
@@ -21,7 +21,6 @@ export default function Diagnoses() {
   const [loading, setLoading] = useState(false);
   const [old_loading, setold_loading] = useState(false);
   const [ekg_saved, setekg_saved] = useState(false);
-  const [check_ai, setcheck_ai] = useState(false);
   const [loading1, setLoading1] = useState(false);
   const [loading3, setLoading3] = useState(false);
   const [page, setpage] = useState(1);
@@ -30,12 +29,11 @@ export default function Diagnoses() {
     const [show_btn, setshow_btn] = useState(true);
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
+    const [selected_doctor, setselected_doctor] = useState(null);
   const { t } = useTranslation();
   const [gender, setGender] = useState(true);
   const [lang, setlang] = useState('uz');
-  const [select_complaint, setselect_complaint] = useState([]);
   const [old_anylyses, setold_anylyses] = useState([]);
-  const [select_doctor, setselect_doctor] = useState([]);
   const [patcient, setPatcient] = useState(null);
   const [passport, setPassport] = useState(null);
   const [birthdate, setBirthdate] = useState(null);
@@ -48,21 +46,13 @@ export default function Diagnoses() {
     const [image_short, setimage_short] = useState(null)
     const [file_input, setfile_input] = useState("")
       const [files, setFiles] = useState([]);
-      const {complaints, roles, positions, setroles, setpositions,user, doctors, setdoctors}=useStore()
-const [role_id, setrole_id] = useState(null);
+      const {user, doctors, setdoctors}=useStore()
+
     const [position_ids, setposition_ids] = useState([]);
     const [position_datas, setposition_datas] = useState([]);
     const [doctor_datas, setdoctor_datas] = useState([]);
        useEffect(()=>{
-       if(positions.length==0){
-           getParamsData()
-       }else{
-        if(position_datas.length!=0){
- let a=positions.filter((item)=>(item.roleId==4))
-           setposition_datas([...a])
-        }
-       
-       }
+      
        if(doctors.length==0 && user!=null){
         getDoctorsOfClinic()
        }else{
@@ -81,17 +71,7 @@ const [role_id, setrole_id] = useState(null);
     setnumber(number+1)
 };
 
-const getParamsData=async()=>{
-        try{
-           var res=await get_params_for_add_staff()
-           setpositions([...res.data.positions])
-           setroles(res.data.roles)
-           let a=res.data.positions.filter((item)=>(item.roleId==4))
-           setposition_datas([...a])
-        }catch(err){
 
-        }
-    }
    
     const getDoctorsOfClinic=async()=>{
         try{
@@ -168,39 +148,13 @@ setold_loading(false)
     }
   };
 
-const onChangeComplaints=(val)=>{
-      let x=select_complaint.findIndex((x)=>(x.id==val.id))
-      let a=select_complaint
-      if(x==-1){
-        a.push(val)
-      }else{
-        a.splice(x, 1)
-      }
-      setselect_complaint([...a])
-      console.log(a)
-}
-
-
-const onChangeDoctors=(val)=>{
-      let x=select_doctor.findIndex((x)=>(x.id==val.id))
-      let a=select_doctor
-      if(x==-1){
-        a.push(val)
-      }else{
-        a.splice(x, 1)
-      }
-      setselect_doctor([...a])
-      console.log(a)
-}
 
  const handleSubmit = async () => {
     console.log(files.length)
     if (files.length === 0) return alert(t("select_file_error"));
-    if(check_ai){
-      warningAlert(t("please_wait"))
-    }else{
+    
       warningAlert(t("please_wait_save"))
-    }
+ 
     
     setLoading3(true);
     setResult(null);
@@ -211,45 +165,21 @@ const onChangeDoctors=(val)=>{
     try {
       const formData = new FormData();
       files.forEach((f) => formData.append("file", f));
-      select_complaint.forEach((f) => formData.append("complaint", f.nameUz));
-      select_complaint.forEach((f) => formData.append("complaint_id", f.id));
-      select_doctor.forEach((f) => formData.append("doctor_id", f.id));
-      formData.append('gender', patcient.gender?"erkak":'ayol')
       formData.append('patcient_id', patcient.id)
       formData.append('created_doctor_id', user.doctor.id)
-      formData.append('lang', lang)
-      formData.append('age', calculateAge(patcient.birthDate))
+      formData.append('main_doctor_id', selected_doctor)
       var res
-      if(check_ai){
-          res = await analyzeEkgFile(formData);
-      console.log(res)
-      let parsedResult;
-     try {
-  // agar string bo'lsa JSON.parse qilamiz
-  parsedResult =res.ai_response.raw?  typeof res.ai_response.raw === "string" 
-    ? JSON.parse(res.ai_response.raw) 
-    : res.ai_response.raw: typeof res.ai_response === "string" 
-    ? JSON.parse(res.ai_response) 
-    : res.ai_response;
-} catch (e) {
-       console.log(e)
-  // parse bo‘lmasa, shunchaki original qiymatni o‘rnatamiz
-  parsedResult = res.ai_response;
-}
-
-setResult(parsedResult);
       
-      }else{
-       res = await analyzeEkgFileSave(formData);
-      }
+       res = await diagnoseFileSave(formData);
+      
       setshow_btn(false)
       setimage(res.ecg_png_base64)
       setimage_short(res.ecg_png_base64_short)
       setekg_saved(true)
-      if(!check_ai){
+      
         successAlert(t("analyse_saved"))
         retryAnalyse()
-      }
+    
     } catch (err) {
         console.log(err)
       setError(err.message);
@@ -260,14 +190,11 @@ setResult(parsedResult);
 const retryAnalyse=()=>{
     setPatcient(null);
     setekg_saved(false)
-             setselect_doctor([])
-              setselect_complaint([])
               setFiles([])
               setcheck_ecg(false)
               setshow_btn(false)
               setResult(null);
     setError(null);
-    setcheck_ai(false)
     setimage(null)
     setpage(1)
     settotal_page(0)
@@ -283,8 +210,6 @@ const retryAnalyse=()=>{
 const resetData=()=>{
     setPatcient(null);
     setekg_saved(false)
-             setselect_doctor([])
-              setselect_complaint([])
               setFiles([])
               setcheck_ecg(false)
               setshow_btn(false)
@@ -292,7 +217,6 @@ const resetData=()=>{
     setError(null);
     setimage(null)
     setpage(1)
-    setcheck_ai(false)
     settotal_page(0)
     setold_anylyses([])
     setimage_short(null)
@@ -305,19 +229,6 @@ const resetData=()=>{
 }
 
 
-const changePositions=(val)=>{
-  
-      setselect_doctor([])
-       if(val.length==0){
-        setdoctor_datas(doctors)
-       }else{
- const result = doctors.filter(doctor =>
-  doctor.positions.some(pos => val.includes(pos.id))
-);
-      setdoctor_datas([...result])
-       }
-     
-}
 
   return (
     <div>
@@ -537,100 +448,51 @@ rules={[{ required: true, message: '' }]}
     type="file"
     
     onChange={handleChange}
-    accept=".xml,.jpg,.png"
+    accept=".xml,.jpg,.png,.pdf,.doc,.docx"
   />
   <p className='file_input_bottom_text'>
-    {t("access_file_types")}: xml, jpg, png
+    {t("access_file_types")}: xml, jpg, png, pdf, doc, docx
   </p>
 </div>
 </Form.Item>
               </Col>
-              
-
-
-              <Col className="main_col" lg={12} md={24}>
-                  <Form.Item
-                    name="owner_diagnosis"
-                    label={t('owner_diagnosis')}
-                    normalize={(value) => value?.toUpperCase()}
-                    rules={[{ required: true, message: '' }]}
-                  >
-                    <Input
-                      prefix={<IoPerson />}
-                      className="login_input"
-                      placeholder={t('select_diagnose_doctor')}
-                    />
-                  </Form.Item>
-                </Col>
+             
 
 
 
-
-            
-
-
-<Col lg={24} md={24}>
-<Form.Item
-                    name="check_ai"
-                    
-                  >
-<div className='complaint_item'>
-                           <Checkbox value={check_ai} onChange={(val)=>{setcheck_ai(val)}} ><span className='complaint_name'>{t("check_by_ai")}</span></Checkbox>
-                      </div>
-                      </Form.Item></Col>
-                {doctors.length>0?<><Col className="main_col" lg={24} md={24}>
+                <Col className="main_col" lg={12} md={24}>
                                      <Form.Item
-                                      name="positions"
-                                      label={t('position')}
+                                      name="main_doctor"
+                                      label={t('owner')}
                                       
                                     >
                  <Select
-                 value={position_ids}
-                 onChange={(val)=>{changePositions(val)}}
+                 
+                 value={selected_doctor}
+                 onChange={(val)=>{setselected_doctor(val)}}
                                         style={{ width: '100%' }}
-                                        mode="multiple"
+                                       
                                         prefix={<FaUserDoctor />}
-                                        placeholder={t('enter_position_doctor')}
-                                         options={position_datas.map(role => ({
+                                        placeholder={t('owner_diagnosis')}
+                                         options={doctors.map(role => ({
                     value: role.id,
-                    label: role.nameUz,
+                    label: role.lastName+" "+role.firstName,
                   }))}
                                         
                                       />
                 
                                     </Form.Item>
                                     </Col>
-                 <Col  className="main_col" lg={24} md={24}>
-              <p className='ecg_label'>{t("select_doctor_of_patcient")}</p>
-              <br/>
-              <Row>
-                  {doctor_datas.map((item, key)=>{
-                      return(<Col lg={12} md={24}><div className='complaint_item'>
-                           <Checkbox checked={select_doctor.findIndex(x=>(x.id==item.id))!=-1} onChange={()=>{onChangeDoctors(item)}}><span className='complaint_name'>{item.lastName} {item.firstName}</span></Checkbox>
-                      </div></Col>)
-                  })}
-                  </Row>
-                 <p className='ecg_has_not_label'>{t("has_not_doctor")}</p> 
-              </Col></>:<></>}
+                
                                      
-              <Col  className="main_col" lg={24} md={24}>
-              <p className='ecg_label'>{t("patcient_complaint")}</p>
-              <br/>
-              <Row>
-                  {complaints.map((item, key)=>{
-                      return(<Col lg={12} md={24}><div className='complaint_item'>
-                           <Checkbox checked={select_complaint.findIndex(x=>(x.id==item.id))!=-1} onChange={()=>{onChangeComplaints(item)}}><span className='complaint_name'>{item[`name${t("data_lang")}`]}</span></Checkbox>
-                      </div></Col>)
-                  })}
-                  </Row>
-              </Col>
+             
 
 
 
               <Col lg={9} md={24}></Col>
               <Col lg={6} md={24}>
               {show_btn?<Button onClick={handleSubmit} loading={loading3} htmlType='button'  className="btn_form">
-        {t("check")}
+        {t("save")}
       </Button>:<></>}
       
               </Col>
@@ -640,7 +502,7 @@ rules={[{ required: true, message: '' }]}
             </Form>
       </div>
       </div>:<></>}
-     {(result!=null || loading3) && check_ai?<div className="main_card">
+     {(result!=null || loading3)?<div className="main_card">
       <h1>{t('ecg_last_result')}</h1>
       <div className="main_card_content">
           {loading3?<div className='mini_loader'><MoonLoader size={50} color={"#4FD1C5"} /></div>:

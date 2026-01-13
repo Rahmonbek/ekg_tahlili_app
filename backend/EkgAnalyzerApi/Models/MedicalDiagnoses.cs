@@ -27,7 +27,7 @@ namespace EkgAnalyzerApi.Models
         public Patcient Patcient { get; set; } = null!;
 
         [Column("diagnose_file_link")]
-        public string? AnalyseFileLink { get; set; }
+        public string? DiagnoseFileLink { get; set; }
 
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;

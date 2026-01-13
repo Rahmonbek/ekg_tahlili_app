@@ -546,6 +546,39 @@
         }
       }
     },
+    "/api/med-diagnose/get-diognose-by-patcient-id": {
+      "get": {
+        "tags": [
+          "MedicalDiagnose"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "style": "form",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "style": "form",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/patcient/get-patient-by-passport": {
       "get": {
         "tags": [

@@ -314,6 +314,27 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "MedicalDiagnoseController",
+    "Method": "GetECGAnalysesByPatientId",
+    "RelativePath": "api/med-diagnose/get-diognose-by-patcient-id",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "EkgAnalyzerApi.Controllers.MedController",
     "Method": "AnalyzeEkg",
     "RelativePath": "api/Med/analyze",
