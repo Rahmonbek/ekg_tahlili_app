@@ -123,70 +123,7 @@ setold_loading(false)
     }
   };
 
-const handleSubmit = async () => {
-    console.log(files.length)
-    if (files.length === 0) return alert(t("select_file_error"));
-    if(check_ai){
-      warningAlert(t("please_wait"))
-    }else{
-      warningAlert(t("please_wait_save"))
-    }
-    
-    setLoading3(true);
-    setResult(null);
-    setError(null);
-    setimage(null)
-    setimage_short(null)
 
-    try {
-      const formData = new FormData();
-      files.forEach((f) => formData.append("file", f));
-      select_complaint.forEach((f) => formData.append("complaint", f.nameUz));
-      select_complaint.forEach((f) => formData.append("complaint_id", f.id));
-      select_doctor.forEach((f) => formData.append("doctor_id", f.id));
-      formData.append('gender', patcient.gender?"erkak":'ayol')
-      formData.append('patcient_id', patcient.id)
-      formData.append('created_doctor_id', user.doctor.id)
-      formData.append('lang', lang)
-      formData.append('age', calculateAge(patcient.birthDate))
-      var res
-      if(check_ai){
-          res = await analyzeEkgFile(formData);
-      console.log(res)
-      let parsedResult;
-     try {
-  // agar string bo'lsa JSON.parse qilamiz
-  parsedResult =res.ai_response.raw?  typeof res.ai_response.raw === "string" 
-    ? JSON.parse(res.ai_response.raw) 
-    : res.ai_response.raw: typeof res.ai_response === "string" 
-    ? JSON.parse(res.ai_response) 
-    : res.ai_response;
-} catch (e) {
-       console.log(e)
-  // parse bo‘lmasa, shunchaki original qiymatni o‘rnatamiz
-  parsedResult = res.ai_response;
-}
-
-setResult(parsedResult);
-      
-      }else{
-       res = await analyzeEkgFileSave(formData);
-      }
-      setshow_btn(false)
-      setimage(res.ecg_png_base64)
-      setimage_short(res.ecg_png_base64_short)
-      setekg_saved(true)
-      if(!check_ai){
-        successAlert(t("analyse_saved"))
-        retryAnalyse()
-      }
-    } catch (err) {
-        console.log(err)
-      setError(err.message);
-    } finally {
-      setLoading3(false);
-    }
-  };
 
 
 const resetData=()=>{
