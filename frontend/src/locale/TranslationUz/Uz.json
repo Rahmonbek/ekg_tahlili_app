@@ -143,11 +143,11 @@
 "check_by_ai":"AI orqali tahlil qilish",
 "api_error":"Server bilan bog'lanishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring",
 "get_other_results":"Ko'proq natijalarni olish",
-"patient_diagnostics":"Bemor tashxisi",
+
 "download_diagnosis":"Bemor tashxisi yuklash",
 "select_diagnosis_file":"Tashxis faylini tanlang",
 "owner_diagnosis":"Tashxisni kiritgan shifokor",
-"select_diagnose_doctor": "Tashxis qo'ygan shifokorni tanlang"
+"select_diagnose_doctor": "Tashxis qo'ygan shifokorni kiriting"
 
 
 

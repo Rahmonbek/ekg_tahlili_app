@@ -101,7 +101,7 @@
 "patient_diagnostics":"Patient diagnosis",
 "download_diagnosis": "Download patient diagnosis",
 "select_diagnosis_file": "Select diagnostic file",
-"owner_diagnosis": "Doctor who entered the diagnosis"
+"select_diagnose_doctor": "Enter the doctor who made the diagnosis"
 
 
 
