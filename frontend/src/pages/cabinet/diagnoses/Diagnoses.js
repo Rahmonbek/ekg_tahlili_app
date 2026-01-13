@@ -397,14 +397,7 @@ style={{ width: '100%' }}
 
                     </Form.Item>
                     </Col>
-<Col lg={9} md={24}></Col>
-                <Col lg={6} md={24}>
-                {show_btn?<Button onClick={handleSubmit} loading={loading3} htmlType='button'  className="btn_form">
-          {t("check")}
-        </Button>:<></>}
-        
-                </Col>
-                <Col lg={9} md={24}></Col>
+
         </Row>
       </Form>
     </div>
