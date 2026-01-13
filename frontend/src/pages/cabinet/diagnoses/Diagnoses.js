@@ -9,7 +9,7 @@ import { get_patcient_by_passport, save_patcient_data } from '../../../host/requ
 import { formatPhoneNumber, formatPhoneNumberForForm } from '../../../tools/formatters';
 import { get_ecg_analyses_by_patcient_id } from '../../../host/requests/ECGAnalyseRequest';
 import { FaUserDoctor } from 'react-icons/fa6';
-export default function Diagnosis() {
+export default function Diagnoses() {
   const [loading, setLoading] = useState(false);
   const [old_loading, setold_loading] = useState(false);
   const [ekg_saved, setekg_saved] = useState(false);
@@ -123,7 +123,70 @@ setold_loading(false)
     }
   };
 
+const handleSubmit = async () => {
+    console.log(files.length)
+    if (files.length === 0) return alert(t("select_file_error"));
+    if(check_ai){
+      warningAlert(t("please_wait"))
+    }else{
+      warningAlert(t("please_wait_save"))
+    }
+    
+    setLoading3(true);
+    setResult(null);
+    setError(null);
+    setimage(null)
+    setimage_short(null)
 
+    try {
+      const formData = new FormData();
+      files.forEach((f) => formData.append("file", f));
+      select_complaint.forEach((f) => formData.append("complaint", f.nameUz));
+      select_complaint.forEach((f) => formData.append("complaint_id", f.id));
+      select_doctor.forEach((f) => formData.append("doctor_id", f.id));
+      formData.append('gender', patcient.gender?"erkak":'ayol')
+      formData.append('patcient_id', patcient.id)
+      formData.append('created_doctor_id', user.doctor.id)
+      formData.append('lang', lang)
+      formData.append('age', calculateAge(patcient.birthDate))
+      var res
+      if(check_ai){
+          res = await analyzeEkgFile(formData);
+      console.log(res)
+      let parsedResult;
+     try {
+  // agar string bo'lsa JSON.parse qilamiz
+  parsedResult =res.ai_response.raw?  typeof res.ai_response.raw === "string" 
+    ? JSON.parse(res.ai_response.raw) 
+    : res.ai_response.raw: typeof res.ai_response === "string" 
+    ? JSON.parse(res.ai_response) 
+    : res.ai_response;
+} catch (e) {
+       console.log(e)
+  // parse bo‘lmasa, shunchaki original qiymatni o‘rnatamiz
+  parsedResult = res.ai_response;
+}
+
+setResult(parsedResult);
+      
+      }else{
+       res = await analyzeEkgFileSave(formData);
+      }
+      setshow_btn(false)
+      setimage(res.ecg_png_base64)
+      setimage_short(res.ecg_png_base64_short)
+      setekg_saved(true)
+      if(!check_ai){
+        successAlert(t("analyse_saved"))
+        retryAnalyse()
+      }
+    } catch (err) {
+        console.log(err)
+      setError(err.message);
+    } finally {
+      setLoading3(false);
+    }
+  };
 
 
 const resetData=()=>{
@@ -385,20 +448,26 @@ const resetData=()=>{
 
     <Col className="main_col" lg={12} md={24}>
                      <Form.Item
-                      name="positions"
+                      name="main_doctor"
                       label={t('owner_diagnosis')}
                       rules={[{ required: true, message: '' }]}
                     >
  <Select
 style={{ width: '100%' }}
-                        mode="multiple"
-                        prefix={<FaUserDoctor />}
-                        placeholder={t('enter_position_staff')}
+                       prefix={<FaUserDoctor />}
+                        placeholder={t('select_diagnose_doctor')}
     />
 
                     </Form.Item>
                     </Col>
-
+<Col lg={9} md={24}></Col>
+                <Col lg={6} md={24}>
+                {show_btn?<Button onClick={handleSubmit} loading={loading3} htmlType='button'  className="btn_form">
+          {t("check")}
+        </Button>:<></>}
+        
+                </Col>
+                <Col lg={9} md={24}></Col>
         </Row>
       </Form>
     </div>

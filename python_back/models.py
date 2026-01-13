@@ -16,6 +16,17 @@ class ECGAnalyse(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+class MedicalDiagnoses(Base):
+    __tablename__ = "medical_diagnoses" # Bazadagi mavjud jadval nomi
+
+    id = Column(Integer, primary_key=True, index=True)
+    patcient_id = Column(Integer)
+    created_doctor_id = Column(Integer)
+    main_doctor_id = Column(Integer)
+    diagnose_file_link = Column(Text)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow)
+
 class ECGAnalyseDoctors(Base):
     __tablename__ = "ecg_analyse_doctors" # Bazadagi mavjud jadval nomi
 

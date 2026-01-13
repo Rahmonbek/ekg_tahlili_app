@@ -27,6 +27,7 @@ from typing import Dict
 import math
 from database import get_db
 from ecg_analyse import create_ecg_analyse
+from medical_diagnoses import create_medical_diagnose
 from ecg_analyse import get_ecg_analyse_by_id
 from ecg_analyse import update_ecg_analyse
 from fastapi.staticfiles import StaticFiles
@@ -50,6 +51,10 @@ from fuzzywuzzy import process
 
 BASE_DIR = Path(__file__).parent  # Loyihangiz papkasi
 UPLOAD_DIR = BASE_DIR / "uploads"
+
+UPLOAD_DIR_DIAGNOSE = BASE_DIR / "uploads" / "medical_diagnoses"
+
+UPLOAD_DIR_DIAGNOSE.mkdir(parents=True, exist_ok=True)
 
 UPLOAD_DIR1 = BASE_DIR / "uploads" / "ecg_analyse_files"
 
@@ -79,6 +84,14 @@ def get_unique_filename(directory: Path, filename: str) -> str:
         if not new_filepath.exists():
             return new_name
         counter += 1
+        
+def save_diagnose_file(file_bytes: bytes, filename: str) -> str:
+    safe_name = get_unique_filename(UPLOAD_DIR1, filename)
+    filepath = UPLOAD_DIR_DIAGNOSE / safe_name
+    with open(filepath, "wb") as f:
+        f.write(file_bytes)
+    return f"/uploads/medical_diagnoses/{safe_name}"
+
 def save_analyse_file(file_bytes: bytes, filename: str) -> str:
     safe_name = get_unique_filename(UPLOAD_DIR1, filename)
     filepath = UPLOAD_DIR1 / safe_name
@@ -1502,7 +1515,30 @@ async def analyze_retry(
         "ai_error": ai_error
     })
 
+@app.post("/api/med-diagnoses-save")
+async def analyze_save(
+    db: Session = Depends(get_db),
+    file: list[UploadFile] = File(...),
+    created_doctor_id: int = Form(...),
+    patcient_id: int = Form(...),
+    main_doctor_id: int = Form(...),
+):
+   
+    first_file: UploadFile = file[0]
+    content = await first_file.read()
+    fname = (first_file.filename or "upload").lower()
+    analyse_file_path = save_diagnose_file(content, fname)
+    ecg_analyse = create_medical_diagnose(
+        session=db,
+        patient_id=patcient_id,
+        created_doctor_id=created_doctor_id,
+        main_doctor_id=main_doctor_id,
+        diagnose_file_link=analyse_file_path
+    )
 
+    return JSONResponse(content={
+        "data":ecg_analyse
+    })
 # ---------------- Ground truth endpoint ----------------
 class GroundTruth(BaseModel):
     filename: str

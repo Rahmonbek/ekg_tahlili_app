@@ -1,6 +1,6 @@
 ﻿<Project>
   <ItemGroup>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\1a6a96f9-1e10-4496-8b2f-37b9fdbd64eb.jpeg))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\1a6a96f9-1e10-4496-8b2f-37b9fdbd64eb.jpeg'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -12,11 +12,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>kc1zowqm3a</Fingerprint>
+      <Integrity>lKnQk5w+VL9bPccWwehW1KdVXBosBCpus1J+TjR9So8=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\1a6a96f9-1e10-4496-8b2f-37b9fdbd64eb.jpeg))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\1a6a96f9-1e10-4496-8b2f-37b9fdbd64eb.jpeg'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\2585627e-cd56-4e73-adbe-4d8a3aafe999.png))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\2585627e-cd56-4e73-adbe-4d8a3aafe999.png'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -28,11 +30,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>uxx01wsuca</Fingerprint>
+      <Integrity>0gzkHAbFAt0yjcm0jb9RXn6SI26uz+eBFJFOmhRspSA=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\2585627e-cd56-4e73-adbe-4d8a3aafe999.png))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\2585627e-cd56-4e73-adbe-4d8a3aafe999.png'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\51a8971b-ae7a-464e-b073-2507a328c412.jpg))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\51a8971b-ae7a-464e-b073-2507a328c412.jpg'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -44,11 +48,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>cg0jhzhzdz</Fingerprint>
+      <Integrity>DHZRmmcMmAN5hUj9p+Deqh09igznGpYHUgMPZvaKzIc=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\51a8971b-ae7a-464e-b073-2507a328c412.jpg))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\51a8971b-ae7a-464e-b073-2507a328c412.jpg'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\6c4043a3-5cf7-4005-ab0b-eec533c18a9b.png))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\6c4043a3-5cf7-4005-ab0b-eec533c18a9b.png'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -60,11 +66,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>mdt87kdaln</Fingerprint>
+      <Integrity>RjIO/+o6beLZg/dJDdmzMBmpMU8FPkH0WppoI33v2O0=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\6c4043a3-5cf7-4005-ab0b-eec533c18a9b.png))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\6c4043a3-5cf7-4005-ab0b-eec533c18a9b.png'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\91a9f265-9c40-4dd2-88ca-ce01ffff2db9.jpg))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\91a9f265-9c40-4dd2-88ca-ce01ffff2db9.jpg'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -76,11 +84,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>5p21zc7el7</Fingerprint>
+      <Integrity>6WYD3j0334YfFdp+RUkpQM8KJYNUXl/UXjiBdIYSlCo=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\91a9f265-9c40-4dd2-88ca-ce01ffff2db9.jpg))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\91a9f265-9c40-4dd2-88ca-ce01ffff2db9.jpg'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\941ff3b4-f0b3-4ea2-a779-9dd612e9db07.jpg))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\941ff3b4-f0b3-4ea2-a779-9dd612e9db07.jpg'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -92,11 +102,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>q7mfrtcqaj</Fingerprint>
+      <Integrity>yhIfHbrkh1Pa9BWXoHWdAmxZTXqqyyn0WcCFIClbavo=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\941ff3b4-f0b3-4ea2-a779-9dd612e9db07.jpg))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\941ff3b4-f0b3-4ea2-a779-9dd612e9db07.jpg'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\d04f4e90-42c1-41ce-b15d-f629304ea37e.png))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\d04f4e90-42c1-41ce-b15d-f629304ea37e.png'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -108,11 +120,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>kuzh2578nv</Fingerprint>
+      <Integrity>vLUTBa5R8d19u5WViQDGKxPa3h6tSzLK6BBLbfwMguc=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\d04f4e90-42c1-41ce-b15d-f629304ea37e.png))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinicbrands\d04f4e90-42c1-41ce-b15d-f629304ea37e.png'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\27a75261-0de1-4e06-b1cd-f68186c47c43.png))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\27a75261-0de1-4e06-b1cd-f68186c47c43.png'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -124,11 +138,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>dj578qlc18</Fingerprint>
+      <Integrity>N+gAb+4P10yilGyf3cNDUOTHmh0e8NgSm7sr03rDYoU=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\27a75261-0de1-4e06-b1cd-f68186c47c43.png))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\27a75261-0de1-4e06-b1cd-f68186c47c43.png'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\4773caff-2ae6-47cf-bb21-4ddf2eb72daa.jpg))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\4773caff-2ae6-47cf-bb21-4ddf2eb72daa.jpg'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -140,11 +156,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>5p21zc7el7</Fingerprint>
+      <Integrity>6WYD3j0334YfFdp+RUkpQM8KJYNUXl/UXjiBdIYSlCo=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\4773caff-2ae6-47cf-bb21-4ddf2eb72daa.jpg))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\4773caff-2ae6-47cf-bb21-4ddf2eb72daa.jpg'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\4f45e080-bdf6-4dd6-b3b1-7bd9b8221aa6.jpg))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\4f45e080-bdf6-4dd6-b3b1-7bd9b8221aa6.jpg'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -156,11 +174,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>cg0jhzhzdz</Fingerprint>
+      <Integrity>DHZRmmcMmAN5hUj9p+Deqh09igznGpYHUgMPZvaKzIc=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\4f45e080-bdf6-4dd6-b3b1-7bd9b8221aa6.jpg))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\4f45e080-bdf6-4dd6-b3b1-7bd9b8221aa6.jpg'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\ba06c39a-1ef9-4bda-a752-a6e1be384ed8.jpg))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\ba06c39a-1ef9-4bda-a752-a6e1be384ed8.jpg'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -172,11 +192,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>q7mfrtcqaj</Fingerprint>
+      <Integrity>yhIfHbrkh1Pa9BWXoHWdAmxZTXqqyyn0WcCFIClbavo=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\ba06c39a-1ef9-4bda-a752-a6e1be384ed8.jpg))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\ba06c39a-1ef9-4bda-a752-a6e1be384ed8.jpg'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\babbfcbe-4cd0-4f72-9969-672657cc65cb.pdf))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\babbfcbe-4cd0-4f72-9969-672657cc65cb.pdf'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -188,11 +210,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>d4eelqf1qz</Fingerprint>
+      <Integrity>/Uvfu6zJMDN+7on9z9QjSVtkxg/qp3NojM61oWFlgBI=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\babbfcbe-4cd0-4f72-9969-672657cc65cb.pdf))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\babbfcbe-4cd0-4f72-9969-672657cc65cb.pdf'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\c5854b24-3df6-4a72-a52b-b6e8c131bab0.jpg))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\c5854b24-3df6-4a72-a52b-b6e8c131bab0.jpg'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -204,11 +228,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>spn78gxf63</Fingerprint>
+      <Integrity>0IuVUsRKgkoRey8YTqLI7swQoK2XTUv/+EdRWJYVHB8=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\c5854b24-3df6-4a72-a52b-b6e8c131bab0.jpg))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\c5854b24-3df6-4a72-a52b-b6e8c131bab0.jpg'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\e5d4183a-1c26-46a2-abff-369760ca5dd2.pdf))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\e5d4183a-1c26-46a2-abff-369760ca5dd2.pdf'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -220,11 +246,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>f3y8c1k1kj</Fingerprint>
+      <Integrity>ZfFfI76JKLe/HTpO1ADPgWqrpkEEzCfwDLUh0oJN3+4=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\e5d4183a-1c26-46a2-abff-369760ca5dd2.pdf))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\e5d4183a-1c26-46a2-abff-369760ca5dd2.pdf'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\f9bd9547-d87c-4f59-ae88-3f483e7c4f5a.pdf))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\f9bd9547-d87c-4f59-ae88-3f483e7c4f5a.pdf'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -236,11 +264,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>d4eelqf1qz</Fingerprint>
+      <Integrity>/Uvfu6zJMDN+7on9z9QjSVtkxg/qp3NojM61oWFlgBI=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\f9bd9547-d87c-4f59-ae88-3f483e7c4f5a.pdf))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\clinic_licenses\f9bd9547-d87c-4f59-ae88-3f483e7c4f5a.pdf'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\.picasa.ini))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\.picasa.ini'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -252,11 +282,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>paqz0172xz</Fingerprint>
+      <Integrity>H/wIcV09n0evKB3I7NHvLk9lj3v5BJNZTuCcLqJeKM8=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\.picasa.ini))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\.picasa.ini'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\ekg.jpg))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\ekg.jpg'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -268,11 +300,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>ualaxxxoiy</Fingerprint>
+      <Integrity>qoB6YeQtiTq0o08GE/EM7ABGGzJmDjvpv7fzpPVUSQw=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\ekg.jpg))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\ekg.jpg'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\ekg2.jpg))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\ekg2.jpg'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -284,11 +318,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>fssamhuriv</Fingerprint>
+      <Integrity>PwpTeEDx6B8pm1T+dVvwyxmzdYZ0Tn2qSW/ApDNQh2Y=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\ekg2.jpg))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\ekg2.jpg'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\ekg3.jpg))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\ekg3.jpg'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -300,11 +336,13 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>s14v99xte9</Fingerprint>
+      <Integrity>wBzjkD5jgP2gctF9UT6SSdNXTuZhT0Mm5b5TC6/Rc7I=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\ekg3.jpg))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\ekg3.jpg'))</OriginalItemSpec>
     </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\ekg4.JPG))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\ekg4.JPG'))">
       <SourceType>Package</SourceType>
       <SourceId>EkgAnalyzerApi</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
@@ -316,9 +354,11 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>nu4f7qalmt</Fingerprint>
+      <Integrity>sUpRo+IuoPyD7TlXlloFiGrpTrgju3WcunsqQ7Vc+N0=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\ekg4.JPG))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\uploads\ekg4.JPG'))</OriginalItemSpec>
     </StaticWebAsset>
   </ItemGroup>
 </Project>

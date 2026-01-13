@@ -81,6 +81,10 @@
       "PackagePath": "staticwebassets\\uploads\\ekg4.JPG"
     },
     {
+      "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.EkgAnalyzerApi.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
+    },
+    {
       "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.EkgAnalyzerApi.Microsoft.AspNetCore.StaticWebAssets.props",
       "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
     },
