@@ -387,8 +387,7 @@ const changePositions=(val)=>{
                 </Form.Item>
               </Col>
 
-
-        
+                  <div className="ekg_div_box">
               <Col className="main_col" lg={6} md={12}>
                 <div className="form_div">
                   <Button className="btn_form" loading={loading} htmlType="submit">
@@ -396,7 +395,7 @@ const changePositions=(val)=>{
                   </Button>
                 </div>
               </Col>
-            
+              </div>
             </Row>
           </Form>
 

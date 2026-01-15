@@ -343,9 +343,15 @@ height: 100% !important;
   .closed_menu{width: 0px !important; position: absolute !important; z-index: 0 !important; opacity: 0 !important; }
   .sidebar{position: absolute; z-index: 1000; background-color: white;  overflow: hidden !important; }
   .menu_close.open{margin-left: 355px !important;}
-.main_card{
-  margin-left: var(--main_padding);
+.main_card{margin-left:  var(--main_padding);}
+.input_img_box{
+  width: 15vw; height: 15vw;
 }
+.ant-form-item-label >label{font-size:  var(--small_size) !important;}
+.ant-input-affix-wrapper >input.ant-input{
+  font-size: var(--small_size) !important;
+}
+.ekg_div_box{width: 100% !important; display: flex !important; justify-content: center !important;}
 
 .input_img_box{
   width: 13vw !important; height: 13vw !important;
