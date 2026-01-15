@@ -147,7 +147,8 @@
 "download_diagnosis":"Bemor tashxisi yuklash",
 "select_diagnosis_file":"Tashxis faylini tanlang",
 "owner_diagnosis":"Tashxisni qo'ygan shifokor",
-"select_diagnose_doctor": "Tashxis qo'ygan shifokorni kiriting"
+"select_diagnose_doctor": "Tashxis qo'ygan shifokorni kiriting",
+"doctor_of_created_diagnoses":"Tashxis qo'ygan shifokor:"
 
 
 

@@ -101,7 +101,8 @@
 "patient_diagnostics":"Диагностика пациента",
 "download_diagnosis": "Скачать диагноз пациента",
 "select_diagnosis_file": "Выберите диагностический файл",
-"select_diagnose_doctor": "Введите врача, поставившего диагноз"
+"select_diagnose_doctor": "Введите врача, поставившего диагноз",
+"doctor_of_created_diagnoses": "Врач, поставивший диагноз:"
 
 
 

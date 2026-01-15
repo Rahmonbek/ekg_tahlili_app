@@ -18,6 +18,7 @@ import EcgResult from '../../../components/results/EcgResult';
 import EcgOldResult from '../../../components/results/EcgOldResult';
 import { useStore } from '../../../store/Store';
 import { get_med_diagnoses_by_patcient_id } from '../../../host/requests/DiagnoseRequest';
+import DiagnosesResult from '../../../components/results/DiagnosesResult';
 export default function Diagnoses() {
   const [loading, setLoading] = useState(false);
   const [old_loading, setold_loading] = useState(false);
@@ -524,7 +525,7 @@ rules={[{ required: true, message: '' }]}
           </div></div>:<></>}
 
           {old_anylyses.map((item, key)=>{
-            return <EcgOldResult data={item}/>
+            return <DiagnosesResult data={item}/>
           })}
           
          {page<=total_page?<Button onClick={()=>{getOldECGAnaylses(patcient.id)}} loading={old_loading} htmlType='button'  className="btn_form mini_btn_main">

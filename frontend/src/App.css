@@ -323,7 +323,11 @@ height: 100% !important;
 .ekg-item-info-text b{font-size: var(--small_size);margin-right: 5px;  font-weight: 700; color: var(--text_color);}
 .mini_btn_main{width: auto; padding-left: 30px; padding-right: 30px;  margin: 30px auto 10px !important;}
 
-
+.doctor_of_created_diagnoses{display: flex; align-items: center; border-bottom: 2px solid var(--grey_color);}
+.ecg_label2{color: black;}
+.doctor_of_created_diagnoses .ecg_label{border-bottom: none;}
+.see_diagnos_file{ width: 100%; display: flex; justify-content: center;}
+.see_diagnos_file button{}
 
   @media (max-width:1700px){
       .login_img img{width: 70%;}
