@@ -17,6 +17,7 @@ import { MoonLoader } from 'react-spinners';
 import EcgResult from '../../../components/results/EcgResult';
 import EcgOldResult from '../../../components/results/EcgOldResult';
 import { useStore } from '../../../store/Store';
+import { get_med_diagnoses_by_patcient_id } from '../../../host/requests/DiagnoseRequest';
 export default function Diagnoses() {
   const [loading, setLoading] = useState(false);
   const [old_loading, setold_loading] = useState(false);
@@ -113,7 +114,7 @@ export default function Diagnoses() {
   const getOldECGAnaylses=async(id, type)=>{
     try{
       setold_loading(true)
-         var res=await get_ecg_analyses_by_patcient_id({id:id, page:type=="first"?1:page})
+         var res=await get_med_diagnoses_by_patcient_id({id:id, page:type=="first"?1:page})
          if(type=="first"){
           setpage(2)
 setold_anylyses([...res.data.items])
