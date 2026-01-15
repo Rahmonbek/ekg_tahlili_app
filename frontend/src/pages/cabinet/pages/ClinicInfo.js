@@ -16,6 +16,7 @@ import { formatPhoneForCleave, formatPhoneNumber } from '../../../tools/formatte
 import { useForm } from 'antd/es/form/Form';
 import { formatPhoneNumberForForm } from '../../../tools/formatters';
 import { dangerAlert, successAlert } from '../../../tools/Alerts';
+import { LiaDownloadSolid } from "react-icons/lia";
 export default function ClinicInfo() {
     const {t}=useTranslation()
     const [formPhones]=Form.useForm()
@@ -33,12 +34,13 @@ export default function ClinicInfo() {
     const [licenseFile, setLicenseFile] = useState(null);
     const [clinicLogoFile, setClinicLogoFile] = useState(null);
     const [logoPreview, setLogoPreview] = useState(null);
-
+const [licenseUrl, setLicenseUrl] = useState(null);
     const fileRef = useRef(null);
     useEffect(()=>{
          setloader(true)
          getClinicData()
     }, [user])
+    
 
     const getClinicData = async () => {
       try {
@@ -58,7 +60,7 @@ export default function ClinicInfo() {
         phoneNumber:formatPhoneNumberForForm(item.phoneNumber)
       })
      })
-     if(a.length==0){
+      if(a.length==0){
       a=[{
         id:null,
         phoneNumber:''
@@ -82,7 +84,7 @@ export default function ClinicInfo() {
           address: detail.address,
         });
         
-    
+      setLicenseUrl(detail.license);
       setloader(false)
       setloadingMain(false)
       setloadingDetail(false)
@@ -341,6 +343,7 @@ if(digits.length<=3){
                     
                     <div className='main_card_content'>
                           <Form 
+                          
                           form={formPhones}
     name="basic"
     labelCol={{
@@ -397,17 +400,16 @@ if(digits.length<=3){
               value={phones[name]?.phoneNumber || ""}
               onChange={(e) => {
     const value = e.target.value;
-
     setphones((prev) =>
       prev.map((item, index) =>
         index === name
           ? { ...item, phoneNumber: value }
           : item
-      )
-    );
-  }}
-              placeholder="+998 (__) ___-__-__"
-            />
+           )
+          );
+         }}
+         placeholder="+998 (__) ___-__-__"
+         />
           </Form.Item>
 
           <MinusCircleOutlined
@@ -524,8 +526,7 @@ if(digits.length<=3){
         }
       ]}
     >
-  <div className="file-input-wrapper">
- 
+ <div className="file-input-wrapper">
   <input
     type="file"
     accept=".pdf,.jpg,.png"
@@ -537,7 +538,25 @@ if(digits.length<=3){
       }
     }}
   />
+
+  <div className="download_button">
+    <button
+      type="button"
+      disabled={!licenseUrl}
+   onClick={() => {
+  if (!licenseUrl) return;
+  const a = document.createElement("a");
+  a.href = licenseUrl;
+  a.download = "license.pdf"; 
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}}>
+      <LiaDownloadSolid />
+    </button>
+  </div>
 </div>
+
 
 
     </Form.Item>

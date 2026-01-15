@@ -281,6 +281,20 @@ max-height: 0px;
   .file-input-wrapper {
     position: relative;
     width: 100%;
+    display: flex; 
+    align-items: center;
+  }
+  .download_button button{
+font-size: 20px;
+padding: 8px;
+display: flex;
+justify-content: center;
+color: var(--back_hover_color) ;
+align-items: center;
+background-color: transparent;
+border: 1px solid var(--back_hover_color); 
+border-radius: 50%;
+cursor: pointer;
   }
   .login_input{
     cursor: pointer !important;
