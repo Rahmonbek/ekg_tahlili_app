@@ -1,8 +1,8 @@
 import axios from "axios"
 
-export const api="http://10.162.159.154:5000/api"
+export const api="http://10.34.82.154:5000/api"
 export const apiEcg="http://127.0.0.1:8000"
-export const imgApi="http://10.162.159.154:5000"
+export const imgApi="http://10.34.82.154:5000"
 
 export const getTokenAccess=()=>{
     var token=window.localStorage.getItem("NMED_token")
