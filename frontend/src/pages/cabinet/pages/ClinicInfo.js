@@ -12,7 +12,7 @@ import { BsBank2 } from 'react-icons/bs'
 import Cleave from "cleave.js/react"
 import { get_clinic_by_id, send_clinic_detail, send_clinic_info, send_clinic_phone } from '../../../host/requests/ClinicRequest';
 import { api, imgApi } from '../../../host/Host';
-import { formatPhoneForCleave, formatPhoneNumber } from '../../../tools/formatters';
+import { formatPhoneForCleave, formatPhoneNumber, formatPhoneNumberForForm2 } from '../../../tools/formatters';
 import { useForm } from 'antd/es/form/Form';
 import { formatPhoneNumberForForm } from '../../../tools/formatters';
 import { dangerAlert, successAlert } from '../../../tools/Alerts';
@@ -390,10 +390,9 @@ if(digits.length<=3){
           >
             <Cleave
               options={{
-                prefix: "+998",
+              prefix: phones[name]?.phoneNumber ? "" : "+998",
                 delimiters: [" (", ") ", "-", "-"],
                 blocks: [4, 2, 3, 2, 2],
-                numericOnly: true
               }}
               className="ant-input claveInput"
                         style={{ width: '100%' }}
@@ -404,10 +403,7 @@ if(digits.length<=3){
       prev.map((item, index) =>
         index === name
           ? { ...item, phoneNumber: value }
-          : item
-           )
-          );
-         }}
+          : item )); }}
          placeholder="+998 (__) ___-__-__"
          />
           </Form.Item>
@@ -539,22 +535,40 @@ if(digits.length<=3){
     }}
   />
 
-  <div className="download_button">
-    <button
-      type="button"
-      disabled={!licenseUrl}
-   onClick={() => {
-  if (!licenseUrl) return;
-  const a = document.createElement("a");
-  a.href = licenseUrl;
-  a.download = "license.pdf"; 
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}}>
-      <LiaDownloadSolid />
-    </button>
-  </div>
+ <div className="download_button">
+  <button
+    type="button"
+
+    disabled={!licenseUrl} 
+    onClick={async () => {
+      if (!licenseUrl) return;
+
+      const fullUrl = `${api.replace('/api', '')}${licenseUrl}`;
+
+      try {
+        const response = await fetch(fullUrl);
+        if (!response.ok) throw new Error("Serverdan faylni olib bo'lmadi");
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        const fileName = licenseUrl.split('/').pop() || "license.pdf";
+        a.download = fileName; 
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(blobUrl);
+
+      } catch (error) {
+        console.error("Xatolik:", error);
+ 
+        window.open(fullUrl, "_blank");
+      }
+    }}
+  >
+    <LiaDownloadSolid />
+  </button>
+</div>
 </div>
 
 

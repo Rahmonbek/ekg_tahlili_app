@@ -285,17 +285,20 @@ max-height: 0px;
     align-items: center;
   }
   .download_button button{
-font-size: 20px;
-padding: 8px;
+font-size: 23px;
+padding: 7px;
 display: flex;
 justify-content: center;
-color: var(--back_hover_color) ;
+color:white ;
 align-items: center;
-background-color: transparent;
-border: 1px solid var(--back_hover_color); 
-border-radius: 50%;
+background: linear-gradient(var(--back_color), var(--back_hover_color));
+border-radius: 10px;
 cursor: pointer;
+
   }
+    .download_button button:hover{
+ background: linear-gradient(var(--back_hover_color), var(--back_hover_color)) !important;
+}
   .login_input{
     cursor: pointer !important;
   }

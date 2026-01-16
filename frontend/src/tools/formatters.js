@@ -32,7 +32,17 @@ return displayName
 
 
 
-
+export const formatPhoneNumberForForm2 = (phone) => {
+    if (!phone) return "";
+    // 1. Faqat raqamlarni qoldiramiz: "+998901234567" -> "998901234567"
+    let cleaned = phone.replace(/\D/g, ''); 
+    
+    // 2. Agar 998 bilan boshlansa, uni kesamiz: "998901234567" -> "901234567"
+    if (cleaned.startsWith('998')) {
+        cleaned = cleaned.slice(3);
+    }
+    return cleaned; 
+}
 
 
 
