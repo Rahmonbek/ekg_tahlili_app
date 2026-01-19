@@ -1,5 +1,6 @@
 import { Image } from 'antd'
 import React from 'react'
+import { apiEcg } from '../../host/Host'
 
 export default function EcgResult({error, image, image_short, result}) {
   return (
@@ -9,9 +10,9 @@ export default function EcgResult({error, image, image_short, result}) {
       
        {image!=null?<div className="ekg-image"><Image style={{width:'100%'}}
         preview={{
-         src:`http://127.0.0.1:8000${image}`
+         src:`${apiEcg}${image}`
     }}
-       src={`http://127.0.0.1:8000${image_short}`}/></div>:<></>}
+       src={`${apiEcg}${image_short}`}/></div>:<></>}
       {result && (
         <div  className="ekg-result">
         {result.digital_measurements ? (

@@ -7,6 +7,7 @@ import { IoIosArrowBack, IoIosArrowDown } from 'react-icons/io'
 import { dangerAlert, warningAlert } from '../../tools/Alerts'
 import { analyzeEkgFileRetry } from '../../host/EkgService'
 import { useStore } from '../../store/Store'
+import { apiEcg } from '../../host/Host'
 
 export default function EcgOldResult({data}) {
   const [result, setresult]=useState(null)
@@ -138,9 +139,9 @@ data!=null?<div className={`old_analyse main_card ${open?"opened_main_card":"clo
         <p className='ecg_label'>{t("ecg-image")}</p>
         <div className="ekg-image"><Image style={{width:'100%'}}
         preview={{
-         src:`http://127.0.0.1:8000${image}`
+         src:`${apiEcg}${image}`
     }}
-       src={`http://127.0.0.1:8000${image_short}`}/></div></>
+       src={`${apiEcg}${image_short}`}/></div></>
        :<></>}
 
        {!(data.aiAnswerData!=null || result!=null)?

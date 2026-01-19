@@ -1,9 +1,31 @@
+# Web Framework va Server
 fastapi
 uvicorn
+python-multipart
 pydantic
+
+# Ma'lumotlar bazasi
+sqlalchemy
+psycopg2-binary
+
+# Ma'lumotlar tahlili va Matematika
 numpy
 pandas
-matplotlib
-Pillow
+scipy
 neurokit2
+matplotlib
+
+# Tasvirlar bilan ishlash
+Pillow
+pdf2image
+
+# AI va API klentlar
 openai
+requests
+
+# Matn va Qidiruv
+fuzzywuzzy
+python-Levenshtein
+
+# Boshqalar
+python-dotenv

@@ -987,25 +987,26 @@ def compute_full_ecg_v3(leads, fs=500):
     # 3. T-wave Inversion (Yangi)
     t_inversion = check_t_wave_inversion(leads, fs)
     return {
-        "heart_rate_bpm": round(heart_rate_bpm, 1),
-        "pr_interval_ms": round(pr_interval_ms,1) if pr_interval_ms is not None else None,
-        "qt_interval_ms": round(qt_interval_ms, 1),
-        "qt_c_bazett_ms": round(qtc_final, 1),
-        "rr_interval_ms": round(rr_interval_ms, 1),
-        "qrs_duration_ms": round(qrs_interval_ms, 1),
-        "qrs_axis_degree": round(qrs_axis_degree, 1),
-        "st_segment_mv": round(st_segment, 4),
-        # Yangi diagnostik parametrlar
-        "p_wave_duration_ms": round(float(np.mean(p_durations_ms)), 1) if p_durations_ms else 0,
-        "t_wave_amplitude_mv": round(float(np.max(t_amplitudes_mv)), 3) if t_amplitudes_mv else 0,
-        "sokolow_lyon_index_mv": round(sokolow_index, 2),
-        "rv5_sv1_sum_mv": round(sokolow_index, 2), 
-        "r_wave_v1_unit": round(r_v1, 1),
-        "r_wave_v2_unit": round(r_v2, 1),
-        "r_wave_v3_unit": round(r_v3, 1),
-        "r_wave_v4_unit": round(r_v4, 1),
-        "average_T_wave_value": t_inversion
-    }
+    "heart_rate_bpm": round(heart_rate_bpm, 1) if heart_rate_bpm is not None else 0,
+    "pr_interval_ms": round(pr_interval_ms, 1) if pr_interval_ms is not None else None,
+    "qt_interval_ms": round(qt_interval_ms, 1) if qt_interval_ms is not None else 0,
+    "qt_c_bazett_ms": round(qtc_final, 1) if qtc_final is not None else 0,
+    "rr_interval_ms": round(rr_interval_ms, 1) if rr_interval_ms is not None else 0,
+    "qrs_duration_ms": round(qrs_interval_ms, 1) if qrs_interval_ms is not None else 0,
+    "qrs_axis_degree": round(qrs_axis_degree, 1) if qrs_axis_degree is not None else None,
+    "st_segment_mv": round(st_segment, 4) if st_segment is not None else 0,
+    
+    # Yangi diagnostik parametrlar
+    "p_wave_duration_ms": round(float(np.mean(p_durations_ms)), 1) if p_durations_ms else 0,
+    "t_wave_amplitude_mv": round(float(np.max(t_amplitudes_mv)), 3) if t_amplitudes_mv else 0,
+    "sokolow_lyon_index_mv": round(sokolow_index, 2) if sokolow_index is not None else 0,
+    "rv5_sv1_sum_mv": round(sokolow_index, 2) if sokolow_index is not None else 0, 
+    "r_wave_v1_unit": round(r_v1, 1) if r_v1 is not None else 0,
+    "r_wave_v2_unit": round(r_v2, 1) if r_v2 is not None else 0,
+    "r_wave_v3_unit": round(r_v3, 1) if r_v3 is not None else 0,
+    "r_wave_v4_unit": round(r_v4, 1) if r_v4 is not None else 0,
+    "average_T_wave_value": t_inversion
+}
 
 
 from PIL import Image
@@ -1311,19 +1312,19 @@ async def analyze_save(
        
     png_short_bytes=compress_image_bytes(png_bytes)
     fname1 = f"ecg_{ecg_analyse.id}.png"
-    generated_file_link = save_generated_file(png_bytes, fname1)
+    # generated_file_link = save_generated_file(png_bytes, fname1)
     generated_short_file_link = save_generated_short_file(png_short_bytes, fname1)
     ecg_analyse = update_ecg_analyse(
         session=db,
         status=1,
         ecg_id=ecg_analyse.id,
-        generated_file_link=generated_file_link,
+        generated_file_link=analyse_file_path,
         generated_short_file_link=generated_short_file_link
     )
     
     return JSONResponse(content={
         "ecg_id": ecg_analyse.id,
-        "ecg_png_base64": generated_file_link,
+        "ecg_png_base64": analyse_file_path,
         "ecg_png_base64_short": generated_short_file_link
     })
 
@@ -1539,6 +1540,9 @@ async def diagnose_save(
     return JSONResponse(content={
         "status":True
     })
+
+
+
 # ---------------- Ground truth endpoint ----------------
 class GroundTruth(BaseModel):
     filename: str

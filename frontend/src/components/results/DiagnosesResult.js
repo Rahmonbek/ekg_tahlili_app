@@ -3,6 +3,7 @@ import { IoIosArrowBack, IoIosArrowDown } from 'react-icons/io'
 import { formatDateTime } from '../../tools/formatters'
 import { useTranslation } from 'react-i18next'
 import { Button } from 'antd'
+import { apiEcg } from '../../host/Host'
 
 export default function DiagnosesResult({ data }) {
     const [open, setopen]=useState(false)
@@ -42,7 +43,7 @@ export default function DiagnosesResult({ data }) {
       </div>
         <div className='see_diagnos_file'> 
    
-  <a target='blank' href={"http://127.0.0.1:8000"+data.diagnoseFileLink} className="btn_form mini_btn_main" >Tashxis faylini ko'rish</a>
+  <a target='blank' href={`${apiEcg}`+data.diagnoseFileLink} className="btn_form mini_btn_main" >Tashxis faylini ko'rish</a>
 
       </div>
       </div>
