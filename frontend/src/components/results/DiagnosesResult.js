@@ -42,7 +42,7 @@ export default function DiagnosesResult({ data }) {
       </div>
         <div className='see_diagnos_file'> 
    
-  <Button  className="btn_form mini_btn_main" onClick={handleDownload}>Tashxis faylini ko'rish</Button>
+  <a target='blank' href={"http://127.0.0.1:8000"+data.diagnoseFileLink} className="btn_form mini_btn_main" >Tashxis faylini ko'rish</a>
 
       </div>
       </div>

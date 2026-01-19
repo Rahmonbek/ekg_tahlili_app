@@ -352,6 +352,16 @@
   },
   {
     "ContainingType": "PatcientController",
+    "Method": "GetAllPatient",
+    "RelativePath": "api/patcient/get-all-patients",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PatcientController",
     "Method": "GetPatientByPassport",
     "RelativePath": "api/patcient/get-patient-by-passport",
     "HttpMethod": "GET",

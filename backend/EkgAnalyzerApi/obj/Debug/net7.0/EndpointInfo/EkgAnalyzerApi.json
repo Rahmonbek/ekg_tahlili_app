@@ -640,6 +640,18 @@
         }
       }
     },
+    "/api/patcient/get-all-patients": {
+      "get": {
+        "tags": [
+          "Patcient"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/user/get-user-by-token": {
       "get": {
         "tags": [

@@ -95,4 +95,27 @@ public class PatcientController : ControllerBase
             return Ok(newPatient);
         }
     }
+
+
+
+
+    [HttpGet("get-all-patients")]
+    public async Task<IActionResult> GetAllPatient()
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+            return Unauthorized(new { message = "Token invalid" });
+
+        var patients = await _context.Patcients.ToListAsync();
+
+        if (patients == null || !patients.Any())
+            return NotFound(new { message = "Patients not found" });
+
+        return Ok(patients);
+    }
+
+
+
+
+
 }

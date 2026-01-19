@@ -424,7 +424,7 @@ const resetData=()=>{
       </div>
     </div>
     {check_ecg?<div className="main_card">
-      <h1>{t('ecg_analyse')} <Tooltip placement="bottomRight" title={t("alert_ecg")}>
+      <h1>{t('patient_diagnostics')} <Tooltip placement="bottomRight" title={t("alert_ecg")}>
               <span className='alert_icon'><IoAlertCircleSharp /></span>
           </Tooltip></h1>
       <div className="main_card_content">
@@ -465,7 +465,7 @@ rules={[{ required: true, message: '' }]}
                 <Col className="main_col" lg={12} md={24}>
                                      <Form.Item
                                       name="main_doctor"
-                                      label={t('owner')}
+                                      label={t('owner_diagnosis')}
                                       
                                     >
                  <Select

@@ -34,13 +34,13 @@ export const routers=[
         tools:"patcients",
         role_id:[]
     },
-    {
-        path:'/billings',
-        icon:<IoIosCard />,
-        title:"billings",
-        tools:"billings",
-        role_id:[2, 3]
-    },
+    // {
+    //     path:'/billings',
+    //     icon:<IoIosCard />,
+    //     title:"billings",
+    //     tools:"billings",
+    //     role_id:[2, 3]
+    // },
     {
         path:'/settings',
         icon:<IoMdSettings />,

@@ -47,6 +47,7 @@ public class DoctorForECGData
     public string SureName { get; set; }
     public string Phone { get; set; }
     public RolesDTO Role { get; set; }
+    
 
 
 }
