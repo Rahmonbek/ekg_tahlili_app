@@ -9,7 +9,7 @@
  "enter_new_password":"Parolingizni yarating",
  "login":"Tizimga kirish",
  "register":"Ro'yhatdan o'tish",
- "main_title":"N MED - shifokorlar uchun AI diagnostika tizimi",
+ "main_title":"NMED - Tibbiyot diagnostikasi uchun AI yordamchisi",
  "not_empty":"Maydon bo'sh bo'lishi mumkin emas",
  "ymed_login":"N MED tizimiga kirish",
  "ymed_register":"N MED tizimida ro'yhatdan o'tish",
@@ -147,7 +147,8 @@
 "download_diagnosis":"Shifokor xulosasi yuklash",
 "select_diagnosis_file":"Xulosa faylini tanlang",
 "owner_diagnosis":"Xulosa bergan shifokor",
-"doctor_of_created_diagnoses":"Xulosa bergan shifokor:"
+"doctor_of_created_diagnoses":"Xulosa bergan shifokor:",
+"save_diagnose":"Xulosani saqlash"
 
 
 

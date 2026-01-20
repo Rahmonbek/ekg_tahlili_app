@@ -430,6 +430,7 @@ const resetData=()=>{
       <div className="main_card_content">
             <Form
             form={form2}
+            onFinish={handleSubmit}
               name="basic2"
               labelCol={{ span: 24 }}
               wrapperCol={{ span: 24 }}
@@ -466,7 +467,12 @@ rules={[{ required: true, message: '' }]}
                                      <Form.Item
                                       name="main_doctor"
                                       label={t('owner_diagnosis')}
-                                      
+                                      rules={[
+        {
+          required: true,
+          message: "",
+        },
+      ]}
                                     >
                  <Select
                  
@@ -493,8 +499,8 @@ rules={[{ required: true, message: '' }]}
 
               <Col lg={9} md={24}></Col>
               <Col lg={6} md={24}>
-              {show_btn?<Button onClick={handleSubmit} loading={loading3} htmlType='button'  className="btn_form">
-        {t("save")}
+              {show_btn?<Button  loading={loading3} htmlType='submit'  className="btn_form">
+        {t("save_diagnose")}
       </Button>:<></>}
       
               </Col>

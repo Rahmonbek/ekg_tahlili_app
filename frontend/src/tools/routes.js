@@ -27,13 +27,13 @@ export const routers=[
         tools:"diagnoses",
         role_id:[]
     },
-     {
-        path:'/patcients',
-        icon:<FaPeopleGroup />,
-        title:"patcients",
-        tools:"patcients",
-        role_id:[]
-    },
+    //  {
+    //     path:'/patcients',
+    //     icon:<FaPeopleGroup />,
+    //     title:"patcients",
+    //     tools:"patcients",
+    //     role_id:[]
+    // },
     // {
     //     path:'/billings',
     //     icon:<IoIosCard />,
