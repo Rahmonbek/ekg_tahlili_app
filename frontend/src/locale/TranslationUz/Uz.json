@@ -148,8 +148,10 @@
 "select_diagnosis_file":"Xulosa faylini tanlang",
 "owner_diagnosis":"Xulosa bergan shifokor",
 "doctor_of_created_diagnoses":"Xulosa bergan shifokor:",
-"save_diagnose":"Xulosani saqlash"
-
+"save_diagnose":"Xulosani saqlash",
+"diagnoses_file": "Xulosa fayli",
+"diagnoses_update": "Xulosa kiritilgan sana",
+"see_diagnoses_file":"Xulosa faylini ko'rish"
 
 
 

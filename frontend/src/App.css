@@ -330,8 +330,18 @@ height: 100% !important;
 .ecg_label2{color: black;}
 .doctor_of_created_diagnoses .ecg_label{border-bottom: none;}
 .see_diagnos_file{ width: 100%; display: flex; justify-content: center;}
-.see_diagnos_file button{}
-
+.see_diagnoses{
+  width: 13%;
+font-size: 23px;
+    padding: 7px;
+    display: flex;
+    justify-content: center;
+    color: white;
+    align-items: center;border-radius: 10px;
+    cursor: pointer;
+    background: linear-gradient(var(--back_color), var(--back_hover_color));
+}
+.see_diagnoses:hover{color: white;}
   @media (max-width:1700px){
       .login_img img{width: 70%;}
     }

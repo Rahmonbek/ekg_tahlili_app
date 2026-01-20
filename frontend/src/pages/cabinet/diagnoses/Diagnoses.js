@@ -1,4 +1,4 @@
-import { Button, Checkbox, Col, Form, Input, Row, Select, Tooltip } from 'antd';
+import { Button, Checkbox, Col, Form, Input, Row, Select, Table, Tooltip } from 'antd';
 import Cleave from 'cleave.js/react';
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next';
@@ -6,7 +6,7 @@ import { FaAddressCard, FaFemale, FaMale } from 'react-icons/fa';
 import { IoAlertCircleSharp, IoPerson } from 'react-icons/io5';
 import InputMask from 'react-input-mask';
 import { get_patcient_by_passport, save_patcient_data } from '../../../host/requests/PatcientRequest';
-import { calculateAge, formatPhoneNumber, formatPhoneNumberForForm } from '../../../tools/formatters';
+import { calculateAge, formatDate, formatPhoneNumber, formatPhoneNumberForForm } from '../../../tools/formatters';
 import { get_ecg_analyses_by_patcient_id } from '../../../host/requests/ECGAnalyseRequest';
 import { FaUserDoctor } from 'react-icons/fa6';
 import { diagnoseFileSave } from '../../../host/EkgService';
@@ -18,7 +18,8 @@ import EcgResult from '../../../components/results/EcgResult';
 import EcgOldResult from '../../../components/results/EcgOldResult';
 import { useStore } from '../../../store/Store';
 import { get_med_diagnoses_by_patcient_id } from '../../../host/requests/DiagnoseRequest';
-import DiagnosesResult from '../../../components/results/DiagnosesResult';
+import { LiaDownloadSolid } from 'react-icons/lia';
+import { apiEcg } from '../../../host/Host';
 export default function Diagnoses() {
   const [loading, setLoading] = useState(false);
   const [old_loading, setold_loading] = useState(false);
@@ -112,25 +113,31 @@ export default function Diagnoses() {
     }
   };
 
-  const getOldECGAnaylses=async(id, type)=>{
-    try{
-      setold_loading(true)
-         var res=await get_med_diagnoses_by_patcient_id({id:id, page:type=="first"?1:page})
-         if(type=="first"){
-          setpage(2)
-setold_anylyses([...res.data.items])
-         }else{
-          setpage(page+1)
-setold_anylyses([...old_anylyses, ...res.data.items])
-         }
-         
-         settotal_page(res.data.totalPages)
-    }catch(err){
+  const getOldECGAnaylses = async (id, type, targetPage = 1) => {
+  try {
+    setold_loading(true);
+ 
+    const currentPage = type === "first" ? 1 : targetPage;
+    
+    var res = await get_med_diagnoses_by_patcient_id({
+      id: id, 
+      page: currentPage
+    });
 
-    }finally{
-setold_loading(false)
+    if (type === "first") {
+      setpage(1);
+      setold_anylyses(res.data.items); 
+    } else {
+      setold_anylyses(res.data.items);
+      setpage(currentPage);
     }
+   settotal_page(res.data.totalPages);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setold_loading(false);
   }
+};
 
   const savePatcient = async (val) => {
     try {
@@ -230,6 +237,40 @@ const resetData=()=>{
               form2.resetFields();
 }
 
+const pageSize = 5;
+
+const columns = [
+  {
+    title: '#',
+    key: 'index',
+    align: 'center',
+    render: (_, __, index) => (page - 1) * pageSize + index + 1,
+  },
+  {
+    title: t("owner_diagnosis"),
+    dataIndex: 'createdDoctor',
+    key: 'fio',
+    render: (doctor) =>
+      doctor ? `${doctor.lastName || ""} ${doctor.firstName || ""}` : "---",
+  },
+  {
+    title: t("diagnoses_file"),
+    dataIndex: 'diagnoseFileLink',
+    key: 'file',
+    render: (link) =>
+      link ? (
+        <a className='see_diagnoses' href={`${apiEcg}${link}`} target="_blank" rel="noreferrer">
+          <LiaDownloadSolid />
+        </a>
+      ) : "",
+  },
+  {
+    title: t("diagnoses_update"),
+    dataIndex: 'updatedAt',
+    key: 'updatedAt',
+    render: (date) => (date ? formatDate(date) : "---"),
+  },
+];
 
 
   return (
@@ -529,14 +570,26 @@ rules={[{ required: true, message: '' }]}
           }
           <br/>
           </div></div>:<></>}
+{old_anylyses.length > 0 && (
+<Table
+  dataSource={old_anylyses}
+  rowKey="id"
+  columns={columns}
+  loading={old_loading}
+  pagination={{
+    current: page,
+    pageSize: 5,
+    total: total_page * 5,
+    onChange: (newPage) => {
+      setpage(newPage);
+      getOldECGAnaylses(patcient.id, "pagination", newPage);
+    }
+  }}
+/>
 
-          {old_anylyses.map((item, key)=>{
-            return <DiagnosesResult data={item}/>
-          })}
-          
-         {page<=total_page?<Button onClick={()=>{getOldECGAnaylses(patcient.id)}} loading={old_loading} htmlType='button'  className="btn_form mini_btn_main">
-        {t("get_other_results")}
-      </Button>:<></>}
+)}
+
+   
           <br/>
           <br/>
           <br/>

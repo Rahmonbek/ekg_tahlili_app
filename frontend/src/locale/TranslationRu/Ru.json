@@ -143,7 +143,12 @@
   "download_diagnosis": "Скачать заключение врача",
   "select_diagnosis_file": "Выберите файл заключения",
   "owner_diagnosis": "Врач, выдавший заключение",
-  "doctor_of_created_diagnoses": "Врач, выдавший заключение:"
+  "doctor_of_created_diagnoses": "Врач, выдавший заключение:",
+  "diagnoses_file": "Файл заключения",
+"diagnoses_update": "Дата внесения заключения",
+"see_diagnoses_file": "Просмотреть файл заключения"
+
+
 
 
   

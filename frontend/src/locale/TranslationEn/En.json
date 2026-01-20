@@ -102,7 +102,12 @@
 "download_diagnosis": "Download patient diagnosis",
 "select_diagnosis_file": "Select diagnostic file",
 "select_diagnose_doctor": "Enter the doctor who made the diagnosis",
-"doctor_of_created_diagnoses": "Doctor who made the diagnosis:"
+"doctor_of_created_diagnoses": "Doctor who made the diagnosis:",
+"diagnoses_file": "Conclusion file",
+"diagnoses_update": "Conclusion date",
+"see_diagnoses_file": "View conclusion file"
+
+
 
 
 
