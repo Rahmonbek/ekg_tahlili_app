@@ -105,9 +105,11 @@
 "doctor_of_created_diagnoses": "Doctor who made the diagnosis:",
 "diagnoses_file": "Conclusion file",
 "diagnoses_update": "Conclusion date",
-"see_diagnoses_file": "View conclusion file"
+"see_diagnoses_file": "View conclusion file",
 
 
+"save_diagnose": "Save diagnosis",
+"save_ecg": "Save data"
 
 
 

@@ -9,6 +9,7 @@ import { login } from '../../../host/requests/AuthRequest';
 import { dangerAlert, successAlert } from '../../../tools/Alerts';
 import { useStore } from '../../../store/Store';
 import { IoPerson } from 'react-icons/io5';
+import Cookies from "js-cookie";
 export default function Login() {
   const [loading, setloading]=useState(false)
   const {user_id, setuser_id} = useStore()
@@ -30,7 +31,12 @@ export default function Login() {
                 if(res.status==200){
                   successAlert(t(res.data.message))
                
-               window.localStorage.setItem("NMED_token", res.data.token)
+               Cookies.set("NMED_token", res.data.token, {
+  expires: 1,
+  path: "/",
+});
+                navigate('/cabinet')
+
                setuser_id(res.data.userId)
                 }
             }catch(err){
@@ -59,16 +65,16 @@ export default function Login() {
 
    
         <Form
-    name="basic"
+        id="login-form"
+    name="login"
+    autoComplete="on"   
     labelCol={{
       span: 24,
     }}
     wrapperCol={{
       span: 24,
     }}
-   initialValues={{
-      remember: true,
-    }}
+   
     onFinish={onFinish}
     // onFinishFailed={onFinishFailed}
     
@@ -83,11 +89,11 @@ export default function Login() {
            message: "",
          }
       ]}
-      normalize={(value) => {
-        return value ? value.replace(/[.,!? ]/g, '') : '';
-      }}
+      // normalize={(value) => {
+      //   return value ? value.replace(/[.,!? ]/g, '') : '';
+      // }}
     >
-      <Input prefix={<IoPerson />}   autoComplete="username" className='login_input' placeholder={t("enter_username")} />
+      <Input name="username"  autoComplete="username" prefix={<IoPerson />} className='login_input' placeholder={t("enter_username")} />
     </Form.Item>
 
     <Form.Item
@@ -101,7 +107,7 @@ export default function Login() {
       ]}
      
     >
-      <Input.Password prefix={<IoMdLock />} className='login_input'  placeholder={t("enter_password")} autoComplete="current-password"/>
+      <Input.Password name="password" autoComplete="current-password" prefix={<IoMdLock />} className='login_input'  placeholder={t("enter_password")}/>
     </Form.Item>
    {/* <div className="reset_pass_text">
     <Link to={"/change_password"}>{t("reset_password")}</Link>

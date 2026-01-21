@@ -50,7 +50,7 @@ export default function EcgAnalyzer() {
     const [image_short, setimage_short] = useState(null)
     const [file_input, setfile_input] = useState("")
       const [files, setFiles] = useState([]);
-      const {complaints, roles, positions, setroles, setpositions,user, doctors, setdoctors}=useStore()
+      const {complaints, roles, positions, setroles, setpositions,user, doctors, setdoctors, setloader}=useStore()
 const [role_id, setrole_id] = useState(null);
     const [position_ids, setposition_ids] = useState([]);
     const [position_datas, setposition_datas] = useState([]);
@@ -89,7 +89,8 @@ const getParamsData=async()=>{
            setpositions([...res.data.positions])
            setroles(res.data.roles)
            let a=res.data.positions.filter((item)=>(item.roleId==4))
-           setposition_datas([...a])
+           
+           setposition_datas(a)
         }catch(err){
 
         }
@@ -203,7 +204,7 @@ const onChangeDoctors=(val)=>{
     }else{
       warningAlert(t("please_wait_save"))
     }
-    
+    setloader(true)
     setLoading3(true);
     setResult(null);
     setError(null);
@@ -257,6 +258,7 @@ setResult(parsedResult);
       setError(err.message);
     } finally {
       setLoading3(false);
+      setloader(false)
     }
   };
 const retryAnalyse=()=>{
@@ -573,7 +575,7 @@ const changePositions=(val)=>{
                       
                     >
  <div className='complaint_item'>
-                             <Checkbox value={check_ai} onChange={(val)=>{setcheck_ai(val)}} ><span className='complaint_name'>{t("check_by_ai")}</span></Checkbox>
+                             <Checkbox value={check_ai} onChange={(val)=>{setcheck_ai(val.target.checked)}} ><span className='complaint_name'>{t("check_by_ai")}</span></Checkbox>
                         </div>
                         </Form.Item></Col>
                   {doctors.length>0?<><Col className="main_col" lg={24} md={24}>
@@ -583,19 +585,18 @@ const changePositions=(val)=>{
                                         
                                       >
                    <Select
-                   value={position_ids}
                    onChange={(val)=>{changePositions(val)}}
                                           style={{ width: '100%' }}
                                           mode="multiple"
                                           prefix={<FaUserDoctor />}
                                           placeholder={t('enter_position_doctor')}
-                                           options={position_datas.map(role => ({
-                      value: role.id,
-                      label: role.nameUz,
+                                          options={position_datas.map(item => ({
+                      value: item.id,
+                      label: item[`name${t("data_lang")}`],
                     }))}
-                                          
+                                    
                                         />
-                  
+                                       
                                       </Form.Item>
                                       </Col>
                    <Col  className="main_col" lg={24} md={24}>
@@ -628,7 +629,7 @@ const changePositions=(val)=>{
                 <Col lg={9} md={24}></Col>
                 <Col lg={6} md={24}>
                 {show_btn?<Button onClick={handleSubmit} loading={loading3} htmlType='button'  className="btn_form">
-          {t("check")}
+           {check_ai?t("check"):t("save_ecg")}
         </Button>:<></>}
         
                 </Col>

@@ -8,7 +8,7 @@ import { checkusername, registration, verify_code } from '../../../host/requests
 import { dangerAlert, successAlert } from '../../../tools/Alerts';
 import { useStore } from '../../../store/Store';
 import { IoPerson } from 'react-icons/io5';
-
+import Cookies from "js-cookie";
 
 export default function Register() {
   const [open, setopen]=useState(false)
@@ -31,7 +31,10 @@ try{
               successAlert(t(res.data.message))
               setopen(true)
               setuser_id(res.data.userId)
-               window.localStorage.setItem("NMED_token", res.data.token)
+               Cookies.set("NMED_token", res.data.token, {
+                 expires: 1,
+                 path: "/",
+               });
                navigate('/')
             }
         }catch(err){

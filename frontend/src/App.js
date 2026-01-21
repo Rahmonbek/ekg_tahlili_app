@@ -7,7 +7,7 @@ import './locale/i18next'
 import { useStore } from './store/Store'
 import Main from './pages/cabinet/Main'
 import OpenAI from "openai";
-import { deleteTokenAccess } from './host/Host'
+import { deleteTokenAccess, getTokenAccess } from './host/Host'
 import {useNavigate} from 'react-router-dom'
 import { get_user_data } from './host/requests/UserRequest';
 import Loader from './components/Loader';
@@ -21,7 +21,7 @@ export default function App() {
   
   useEffect(()=>{
 
-    const token=window.localStorage.getItem("NMED_token")
+    const token=getTokenAccess()
     if(token!=null){
       if(user==null || !open_admin_modal){
 getUserData()
@@ -53,8 +53,6 @@ getUserData()
          }
       }catch(err){
         console.log(err)
-            deleteTokenAccess()
-            navigate('/')
       }finally{
 
       }

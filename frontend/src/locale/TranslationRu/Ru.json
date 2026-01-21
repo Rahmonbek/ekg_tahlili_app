@@ -146,9 +146,11 @@
   "doctor_of_created_diagnoses": "Врач, выдавший заключение:",
   "diagnoses_file": "Файл заключения",
 "diagnoses_update": "Дата внесения заключения",
-"see_diagnoses_file": "Просмотреть файл заключения"
+"see_diagnoses_file": "Просмотреть файл заключения",
 
 
+  "save_diagnose": "Сохранить заключение",
+"save_ecg": "Сохранить данные"
 
 
   
