@@ -50,10 +50,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("*") // Faqat localhost:3000 yoki "*"
-               .AllowAnyMethod()
-               .AllowAnyHeader()
-               .AllowCredentials();
+        policy.WithOrigins("http://localhost:3000", "https://nmed.uz") // Aniq manzillar
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials(); // Endi xatolik bermaydi
     });
 });
 
