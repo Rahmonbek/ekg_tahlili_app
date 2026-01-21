@@ -1,13 +1,21 @@
-import React, { use } from 'react'
+import React, { use, useEffect } from 'react'
 import logo from '../images/logo.png'
 import { routers } from '../tools/routes'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router-dom'
 import { useStore } from '../store/Store'
+
 export default function SideBar() {
     const {t}=useTranslation()
     const location=useLocation()
     const {open_menu, user}=useStore()
+
+const { initMenu } = useStore();
+useEffect(() => {
+  initMenu();
+}, []);
+
+    
   return (
     <div className={`sidebar ${!open_menu?"closed_menu":''}`}>
         <div className='sidebar_head'>

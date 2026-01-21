@@ -394,7 +394,7 @@ font-size: var( --center_size) !important;
   }
 
 .auth_brand img{margin-right: 5px;}
-.selected_lang{width: 85px;}
+.selected_lang{width: 85px; }
 .main_header{
   height: 8vh !important;
 }
@@ -407,13 +407,25 @@ font-size: var( --center_size) !important;
 .sidebar_head{ padding-top: 10px;}
 .main_card_btn{padding-left: 50% !important;}
 .main_card_btn .btn_form{font-size: var(--small_size);}
-.exit_icon{padding: 0px 30px 0px 60px !important;}
-:where(.css-dev-only-do-not-override-ac2jek).ant-col{width: 100% !important;}
+.exit_icon{padding: 0px 15px 0px 30px !important;}
+:where(.css-dev-only-do-not-override-ac2jek).ant-col{width: 100% !important; }
 .ant-input-affix-wrapper >input.ant-input{font-size: var(--medium_size) !important;}
 .main_card_content{padding:var(  --big_main_padding) ;}
 .input_img_box{width: 40vw !important; height: 40vw !important;}
 .ant-form-item-label >label{font-size: var( --medium_size) !important; margin-top:  var(--main_padding) !important;}
 .doctors_table{width: 100vw !important; overflow: hidden !important; overflow-x: auto !important;}
-:where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper table{width: 140vw !important;}
+:where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper table{width: 210vw !important; padding-right: 4vw ;}
+.ant-modal-content {padding: 35px 14px 10px 14px !important;}
+.ant-col:has(.ant-form-item-required){padding-bottom: 2px !important;}
+:where(.css-dev-only-do-not-override-ac2jek).ant-modal-root .ant-modal-wrap{padding: 0px !important;}
 
+.btn_form{margin-top: 10px !important;}
+.see_diagnoses{width: 10vw;}
+
+.diagnoses_table{
+  width: 100vw !important; overflow: hidden !important; overflow-x: auto !important; padding-left: 2vw !important; background-color: white !important;
+}
+.diagnoses_table .ant-table-wrapper table{
+  width: 160vw !important; padding-right: 2vw !important;
+}
 }

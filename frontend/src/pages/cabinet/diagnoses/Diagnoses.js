@@ -570,6 +570,7 @@ rules={[{ required: true, message: '' }]}
           }
           <br/>
           </div></div>:<></>}
+          <div className=' diagnoses_table'>
 {old_anylyses.length > 0 && (
 <Table
   dataSource={old_anylyses}
@@ -588,7 +589,7 @@ rules={[{ required: true, message: '' }]}
 />
 
 )}
-
+</div>
    
           <br/>
           <br/>
