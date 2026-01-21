@@ -35,10 +35,10 @@ public class AuthService
             .OrderByDescending(x => x.Id)
             .FirstOrDefaultAsync();
     }
-    public async Task<bool> CheckUsernameAsync(string username, int? user_id)
+    public async Task<bool> CheckUsernameAsync(string username, int? user_id, string? email)
     {
         return await _context.Users
-            .AnyAsync(x => x.Username.ToLower() == username.ToLower() && ((user_id!=null && x.Id!=user_id) || (user_id==null)) );
+            .AnyAsync(x => x.Username.ToLower() == username.ToLower() && ((user_id != null && x.Id != user_id) || (user_id == null)) && ((email != null && x.Email != email) || (email == null)));
     }
     private async Task<VerificationCode?> GetActiveCodeByEmailAsync(string email)
     {
@@ -64,10 +64,9 @@ public class AuthService
         _context.VerificationCodes.Add(verification);
         await _context.SaveChangesAsync();
 
-        await _emailService.SendAsync(
+        await _emailService.SendVerificationCodeAsync(
             user.Email,
-            "Verification Code",
-            $"Your code: {code}"
+            code
         );
     }
 
@@ -75,51 +74,106 @@ public class AuthService
 
     public async Task RegisterAsync(RegisterDto dto)
     {
-        if (await _context.Users.AnyAsync(x => x.Username == dto.Username))
+        var existingUser = await _context.Users
+        .Include(x => x.Clinic)
+        .FirstOrDefaultAsync(x => x.Email == dto.Email);
+        if (await _context.Users.AnyAsync(x =>
+        x.Username == dto.Username &&
+        (existingUser == null || x.Id != existingUser.Id)))
+        {
             throw new Exception("username_already_exists");
+        }
 
-        if (await _context.Users.AnyAsync(x => x.Email == dto.Email))
+        // Email mavjud va aktiv bo‘lsa
+        if (existingUser != null && existingUser.Status == true)
+        {
             throw new Exception("email_already_exists");
+        }
 
         using var transaction = await _context.Database.BeginTransactionAsync();
 
         try
         {
-            var clinic = new Clinic
-            {
-                ClinicName = ""
-            };
+            User user;
+            Doctor doctor;
 
-            var user = new User
+            // 🔁 Email bor, lekin status = false → UPDATE
+            if (existingUser != null && existingUser.Status == false)
             {
-                Username = dto.Username,
-                Email = dto.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                PasswordPlain = dto.Password,
-                Status = false,
-                RoleId = 2,
-                Clinic = clinic   // 🔥 MUHIM
-            };
+                user = existingUser;
 
-            var doctor = new Doctor
+                user.Username = dto.Username;
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+                user.PasswordPlain = dto.Password;
+                user.RoleId = 2;
+
+                if (user.Clinic == null)
+                {
+                    user.Clinic = new Clinic
+                    {
+                        ClinicName = ""
+                    };
+                }
+
+                doctor = await _context.Doctors
+                    .FirstOrDefaultAsync(d => d.UserId == user.Id);
+
+                if (doctor == null)
+                {
+                    doctor = new Doctor
+                    {
+                        User = user,
+                        Gender = true
+                    };
+                    _context.Doctors.Add(doctor);
+                }
+            }
+            else
             {
-                User = user,      // 🔥 MUHIM
-                Gender = true
-            };
+                // 🆕 Yangi user
+                var clinic = new Clinic
+                {
+                    ClinicName = ""
+                };
 
-            _context.Clinics.Add(clinic);
-            _context.Users.Add(user);
-            _context.Doctors.Add(doctor);
+                user = new User
+                {
+                    Username = dto.Username,
+                    Email = dto.Email,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                    PasswordPlain = dto.Password,
+                    Status = false,
+                    RoleId = 2,
+                    Clinic = clinic
+                };
+
+                doctor = new Doctor
+                {
+                    User = user,
+                    Gender = true
+                };
+
+                _context.Clinics.Add(clinic);
+                _context.Users.Add(user);
+                _context.Doctors.Add(doctor);
+            }
+
             await _context.SaveChangesAsync();
-            var doctor_position = new DoctorPosition
+
+            // DoctorPosition bo‘lmasa qo‘shiladi
+            bool hasPosition = await _context.DoctorPositions
+                .AnyAsync(x => x.DoctorId == doctor.Id);
+
+            if (!hasPosition)
             {
-                DoctorId = doctor.Id,      // 🔥 MUHIM
-                PositionId = 77
-            };
+                _context.DoctorPositions.Add(new DoctorPosition
+                {
+                    DoctorId = doctor.Id,
+                    PositionId = 77
+                });
 
-            _context.DoctorPositions.Add(doctor_position);
-            await _context.SaveChangesAsync();
-
+                await _context.SaveChangesAsync();
+            }
 
             await transaction.CommitAsync();
 
