@@ -19,7 +19,11 @@ export const useStore = create((set) => ({
     setpositions: (id) => set({ positions: id }),
     open_menu: true,
     setopen_menu: (id) => set({ open_menu: id }),
-    user: null,
+    initMenu: () =>
+    set({
+    open_menu: window.innerWidth > 768,
+     }),
+     user: null,
     setuser: (id) => set({ user: id }),
     
 }))

@@ -330,17 +330,24 @@ changeRole(form.getFieldValue('role'))
                       label={t('position')}
                       rules={[{ required: true, message: '' }]}
                     >
- <Select
- value={position_ids}
- onChange={(val)=>{setposition_ids(val); console.log(val)}}
+                     <Select
+                   value={position_ids}
+                        onChange={(val)=>{setposition_ids(val); console.log(val)}}
                         style={{ width: '100%' }}
                         mode="multiple"
+                          showSearch
+                        optionFilterProp="label"
                         prefix={<FaUserDoctor />}
                         placeholder={t('enter_position_staff')}
-                         options={position_datas.map(role => ({
+                       options={position_datas.map(role => ({
     value: role.id,
     label: role.nameUz,
   }))}
+  filterOption={(input, option) =>
+    option?.label?.toLowerCase().includes(input.toLowerCase())
+
+
+}
                         
                       />
 
