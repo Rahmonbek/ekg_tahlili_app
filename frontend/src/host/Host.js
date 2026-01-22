@@ -2,13 +2,13 @@ import axios from "axios"
 
 import axiosInstance from "./Api";
 import Cookies from "js-cookie";
-// export const api="https://api.nmed.uz/api"
-// export const apiEcg="https://analyse.nmed.uz"
-// export const imgApi="https://api.nmed.uz"
-
-export const api="http://localhost:5000/api"
+export const api="https://api.nmed.uz/api"
 export const apiEcg="https://analyse.nmed.uz"
-export const imgApi="http://localhost:5000"
+export const imgApi="https://api.nmed.uz"
+
+// export const api="http://localhost:5000/api"
+// export const apiEcg="https://analyse.nmed.uz"
+// export const imgApi="http://localhost:5000"
 
 export const getTokenAccess=()=>{
     var token=Cookies.get("NMED_token")

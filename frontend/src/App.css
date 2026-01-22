@@ -379,7 +379,7 @@ font-size: var( --center_size) !important;
 .ant-form-item-label >label{font-size:var( --medium_size) !important ;}
 .create_doctor_box{padding:   var(--big_main_padding_for_media)!important; }
 }
-
+.ant-select-selection-search-input{border-radius: 0px !important;}
 
 @media (max-width: 760px){
   .auth_brand img{
