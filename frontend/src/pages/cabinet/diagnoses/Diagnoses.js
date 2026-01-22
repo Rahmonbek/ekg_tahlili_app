@@ -6,16 +6,13 @@ import { FaAddressCard, FaFemale, FaMale } from 'react-icons/fa';
 import { IoAlertCircleSharp, IoPerson } from 'react-icons/io5';
 import InputMask from 'react-input-mask';
 import { get_patcient_by_passport, save_patcient_data } from '../../../host/requests/PatcientRequest';
-import { calculateAge, formatDate, formatPhoneNumber, formatPhoneNumberForForm } from '../../../tools/formatters';
-import { get_ecg_analyses_by_patcient_id } from '../../../host/requests/ECGAnalyseRequest';
+import {  formatDate, formatPhoneNumber, formatPhoneNumberForForm } from '../../../tools/formatters';
+
 import { FaUserDoctor } from 'react-icons/fa6';
 import { diagnoseFileSave } from '../../../host/EkgService';
 import { successAlert, warningAlert } from '../../../tools/Alerts';
-import { get_doctor_by_clinic_id, get_params_for_add_staff } from '../../../host/requests/DoctorRequest';
-import { MdLanguage } from 'react-icons/md';
-import { MoonLoader } from 'react-spinners';
-import EcgResult from '../../../components/results/EcgResult';
-import EcgOldResult from '../../../components/results/EcgOldResult';
+import { get_doctor_by_clinic_id } from '../../../host/requests/DoctorRequest';
+
 import { useStore } from '../../../store/Store';
 import { get_med_diagnoses_by_patcient_id } from '../../../host/requests/DiagnoseRequest';
 import { LiaDownloadSolid } from 'react-icons/lia';
@@ -23,43 +20,33 @@ import { apiEcg } from '../../../host/Host';
 export default function Diagnoses() {
   const [loading, setLoading] = useState(false);
   const [old_loading, setold_loading] = useState(false);
-  const [ekg_saved, setekg_saved] = useState(false);
   const [loading1, setLoading1] = useState(false);
   const [loading3, setLoading3] = useState(false);
   const [page, setpage] = useState(1);
   const [total_page, settotal_page] = useState(0);
   const [check_ecg, setcheck_ecg] = useState(false);
     const [show_btn, setshow_btn] = useState(true);
-    const [result, setResult] = useState(null);
-    const [error, setError] = useState(null);
     const [selected_doctor, setselected_doctor] = useState(null);
   const { t } = useTranslation();
   const [gender, setGender] = useState(true);
-  const [lang, setlang] = useState('uz');
   const [old_anylyses, setold_anylyses] = useState([]);
   const [patcient, setPatcient] = useState(null);
   const [passport, setPassport] = useState(null);
   const [birthdate, setBirthdate] = useState(null);
+  const [file_input, setfile_input] = useState(null);
   const [number, setnumber] = useState(0);
   const [form] = Form.useForm(); 
   const [form1] = Form.useForm(); 
     const [phoneValue, setPhoneValue] = useState('');
   const [form2] = Form.useForm(); 
-    const [image, setimage] = useState(null)
-    const [image_short, setimage_short] = useState(null)
-    const [file_input, setfile_input] = useState("")
       const [files, setFiles] = useState([]);
       const {user, doctors, setdoctors}=useStore()
 
-    const [position_ids, setposition_ids] = useState([]);
-    const [position_datas, setposition_datas] = useState([]);
-    const [doctor_datas, setdoctor_datas] = useState([]);
+   
        useEffect(()=>{
       
        if(doctors.length==0 && user!=null){
         getDoctorsOfClinic()
-       }else{
-        setdoctor_datas(doctors)
        }
        }, [user])
 
@@ -69,7 +56,7 @@ export default function Diagnoses() {
          setpage(1)
          getOldECGAnaylses(patcient.id, 'first')
         setshow_btn(true)
-    setfile_input(e.target.value)
+        setfile_input(e.target.value)
     setFiles(Array.from(e.target.files));
     setnumber(number+1)
 };
@@ -79,7 +66,7 @@ export default function Diagnoses() {
     const getDoctorsOfClinic=async()=>{
         try{
            var res1=await get_doctor_by_clinic_id({id:user.clinic.id})
-           setdoctor_datas(res1.data.doctor)
+      
            setdoctors(res1.data.doctor)
         }catch(err){
 
@@ -105,7 +92,7 @@ export default function Diagnoses() {
       });
       setPhoneValue(formatPhoneNumberForForm(res.data.phone));
       setcheck_ecg(true)
-      getOldECGAnaylses(res.data.id)
+      getOldECGAnaylses(res.data.id, 'first')
     } catch (err) {
       setPatcient({});
     } finally {
@@ -166,10 +153,6 @@ export default function Diagnoses() {
  
     
     setLoading3(true);
-    setResult(null);
-    setError(null);
-    setimage(null)
-    setimage_short(null)
 
     try {
       const formData = new FormData();
@@ -181,54 +164,37 @@ export default function Diagnoses() {
       
        res = await diagnoseFileSave(formData);
       
-      setshow_btn(false)
-      setimage(res.ecg_png_base64)
-      setimage_short(res.ecg_png_base64_short)
-      setekg_saved(true)
+        
       
         successAlert(t("analyse_saved"))
-        retryAnalyse()
+      retryAnalyse()
     
     } catch (err) {
         console.log(err)
-      setError(err.message);
     } finally {
       setLoading3(false);
     }
   };
 const retryAnalyse=()=>{
-    setPatcient(null);
-    setekg_saved(false)
+   
               setFiles([])
-              setcheck_ecg(false)
               setshow_btn(false)
-              setResult(null);
-    setError(null);
-    setimage(null)
     setpage(1)
     settotal_page(0)
-    setold_anylyses([])
-    setimage_short(null)
-    setLoading(false)
-    setLoading1(false)
+    setfile_input(null)
     setLoading3(false)
-     form.resetFields();
-              form1.resetFields();
-              form2.resetFields();
+    form2.resetFields();
+     getOldECGAnaylses(patcient.id, 'first')
 }
 const resetData=()=>{
     setPatcient(null);
-    setekg_saved(false)
               setFiles([])
               setcheck_ecg(false)
               setshow_btn(false)
-              setResult(null);
-    setError(null);
-    setimage(null)
     setpage(1)
     settotal_page(0)
+    setfile_input(null)
     setold_anylyses([])
-    setimage_short(null)
     setLoading(false)
     setLoading1(false)
     setLoading3(false)
@@ -248,10 +214,17 @@ const columns = [
   },
   {
     title: t("owner_diagnosis"),
-    dataIndex: 'createdDoctor',
+    dataIndex: 'mainDoctor',
     key: 'fio',
     render: (doctor) =>
-      doctor ? `${doctor.lastName || ""} ${doctor.firstName || ""}` : "---",
+      doctor ? `${doctor.lastName || ""} ${doctor.firstName || ""}` : "-",
+  },
+   {
+    title: t("doctor_positions"),
+    dataIndex: 'mainDoctor',
+    key: 'fio',
+    render: (doctor) =>
+      doctor ? doctor.positions.map((item=>(item[`name${t('data_lang')}`]))).join(", ") : "-",
   },
   {
     title: t("diagnoses_file"),
@@ -268,7 +241,7 @@ const columns = [
     title: t("diagnoses_update"),
     dataIndex: 'updatedAt',
     key: 'updatedAt',
-    render: (date) => (date ? formatDate(date) : "---"),
+    render: (date) => (date ? formatDate(date) : "-"),
   },
 ];
 
@@ -490,7 +463,7 @@ rules={[{ required: true, message: '' }]}
   <input
     className='file_input'
     type="file"
-    
+     value={file_input}
     onChange={handleChange}
     accept=".xml,.jpg,.png,.pdf,.doc,.docx"
   />
@@ -551,25 +524,7 @@ rules={[{ required: true, message: '' }]}
             </Form>
       </div>
       </div>:<></>}
-     {(result!=null || loading3)?<div className="main_card">
-      <h1>{t('ecg_last_result')}</h1>
-      <div className="main_card_content">
-          {loading3?<div className='mini_loader'><MoonLoader size={50} color={"#4FD1C5"} /></div>:
-          <>
-          <EcgResult error={error} result={result} image={image} image_short={image_short} />
-          <br/>
-          <Row>
-          <Col lg={9} md={24}></Col>
-              <Col lg={6} md={24}>
-              {<Button onClick={retryAnalyse} loading={loading3} htmlType='button'  className="btn_form">
-        {t("retry_ecg_analyse")}
-      </Button>}
-              </Col>
-              <Col lg={9} md={24}></Col>
-          </Row></>
-          }
-          <br/>
-          </div></div>:<></>}
+     
           <div className=' diagnoses_table'>
 {old_anylyses.length > 0 && (
 <Table

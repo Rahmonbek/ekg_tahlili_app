@@ -331,9 +331,8 @@ height: 100% !important;
 .doctor_of_created_diagnoses .ecg_label{border-bottom: none;}
 .see_diagnos_file{ width: 100%; display: flex; justify-content: center;}
 .see_diagnoses{
-  width: 13%;
-font-size: 23px;
-    padding: 7px;
+    width: 40px; height: 40px;
+font-size: var(--extra_large_size);
     display: flex;
     justify-content: center;
     color: white;
@@ -341,7 +340,7 @@ font-size: 23px;
     cursor: pointer;
     background: linear-gradient(var(--back_color), var(--back_hover_color));
 }
-.see_diagnoses:hover{color: white;}
+.see_diagnoses:hover{color: white; background: linear-gradient(var(--back_hover_color), var(--back_hover_color));}
   @media (max-width:1700px){
       .login_img img{width: 70%;}
     }
@@ -420,7 +419,7 @@ font-size: var( --center_size) !important;
 :where(.css-dev-only-do-not-override-ac2jek).ant-modal-root .ant-modal-wrap{padding: 0px !important;}
 
 .btn_form{margin-top: 10px !important;}
-.see_diagnoses{width: 10vw;}
+
 
 .diagnoses_table{
   width: 100vw !important; overflow: hidden !important; overflow-x: auto !important; padding-left: 2vw !important; background-color: white !important;
