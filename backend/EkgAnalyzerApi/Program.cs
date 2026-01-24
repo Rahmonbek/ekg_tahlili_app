@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -11,6 +13,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<LabAnalyseService>();
 builder.Services.AddScoped<DoctorService>();
 builder.Services.AddScoped<ECGAnalyseService>();
 builder.Services.AddScoped<MedicalDiagnoseService>();
@@ -65,7 +68,22 @@ builder.WebHost.ConfigureKestrel(options =>
 
 var app = builder.Build();
 
-
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<MedDataDB>();
+        if (context.Database.GetPendingMigrations().Any())
+        {
+            context.Database.Migrate();
+        }
+    }
+    catch (Exception ex)
+    {
+        // Xatolikni log qilish mumkin
+    }
+}
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

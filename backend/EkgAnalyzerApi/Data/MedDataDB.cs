@@ -24,12 +24,17 @@ namespace EkgAnalyzerApi.Data
         public DbSet<Position> Positions { get; set; }
         public DbSet<ClinicPhoneNumber> ClinicPhoneNumbers { get; set; }
         public DbSet<Clinic> Clinics { get; set; }
+        public DbSet<LabAnalyses> LabAnalyse { get; set; }
         public DbSet<ECGAnalyses> ECGAnalyse { get; set; }
         public DbSet<ECGAnalyseDoctors> ECGAnalyseDoctor { get; set; }
         public DbSet<ECGAnalyseComplaints> ECGAnalyseComplaint { get; set; }
+        public DbSet<LabAnalyseCategories> LabAnalyseCategories { get; set; }
         public DbSet<ClinicDetail> ClinicDetails { get; set; }
         public DbSet<Patcient> Patcients { get; set; }
         public DbSet<Complaints> Complaints { get; set; }
+        public DbSet<LabCategories> LabCategories { get; set; }
+        public DbSet<LabValueTypes> LabValueTypes { get; set; }
+        public DbSet<LabBigCategories> LabBigCategories { get; set; }
 
         public override int SaveChanges()
         {

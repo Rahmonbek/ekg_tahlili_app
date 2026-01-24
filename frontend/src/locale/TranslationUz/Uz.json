@@ -140,7 +140,6 @@
 "doctor_of_patcient":"Davolovchi shifokor",
 "complaints":"Bemor shikoyatlari",
 "ecg-image":"EKG rasmi",
-"check_by_ai":"AI orqali tahlil qilish",
 "api_error":"Server bilan bog'lanishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring",
 "get_other_results":"Ko'proq natijalarni olish",
 "patient_diagnostics":"Shifokor xulosasi",
@@ -153,7 +152,13 @@
 "diagnoses_update": "Xulosa kiritilgan sana",
 "see_diagnoses_file":"Xulosa faylini ko'rish",
 "save_ecg":"Ma'lumotni saqlash",
-"doctor_positions":"Shifokor mutaxasisliki"
+"doctor_positions":"Shifokor mutaxasisliki",
+"analyse_lab":"Labaratoriya tahlili",
+"lab_analyse":"Laboratoriya tahlil qilish",
+"select_lab_file":"Labaratoriya natijasi faylini tanlang",
+"select_lab_category_type":"Qaysi tahlillar topshirilganini tanlang",
+"lab_categories":"Labaratoriya tahlil turlari",
+"please_wait_lab":"Labaratoriya tahlil uzoqroq vaqt talab qilishi mumkin. Iltimos natijani kuting va browser oynasini yangilamang."
 
 
 

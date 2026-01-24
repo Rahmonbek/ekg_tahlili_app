@@ -341,6 +341,10 @@ font-size: var(--extra_large_size);
     background: linear-gradient(var(--back_color), var(--back_hover_color));
 }
 .see_diagnoses:hover{color: white; background: linear-gradient(var(--back_hover_color), var(--back_hover_color));}
+.title_complaint_item{margin-top: var(--main_padding);
+   margin-bottom: var(--mini_main_padding); padding: 0 5px; font-size: var(--large_size); font-weight: 700; color: var(--text_color);}
+ .ekg-item-text:has(.see_diagnoses){display: flex; align-items: center; margin-bottom: var(--main_padding);}  
+
   @media (max-width:1700px){
       .login_img img{width: 70%;}
     }

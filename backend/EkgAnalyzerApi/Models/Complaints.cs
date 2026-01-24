@@ -12,13 +12,13 @@ namespace EkgAnalyzerApi.Models
         public int Id { get; set; }
 
         [Column("name_uz")]
-        public string NameUz { get; set; }
+        public string? NameUz { get; set; }
 
         [Column("name_ru")]
-        public string NameRu { get; set; }
+        public string? NameRu { get; set; }
 
         [Column("name_en")]
-        public string NameEn { get; set; }
+        public string? NameEn { get; set; }
 
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;

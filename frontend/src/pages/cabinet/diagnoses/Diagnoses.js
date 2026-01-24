@@ -8,7 +8,7 @@ import InputMask from 'react-input-mask';
 import { get_patcient_by_passport, save_patcient_data } from '../../../host/requests/PatcientRequest';
 import {  formatDate, formatPhoneNumber, formatPhoneNumberForForm } from '../../../tools/formatters';
 
-import { FaUserDoctor } from 'react-icons/fa6';
+import { FaDownload, FaUserDoctor } from 'react-icons/fa6';
 import { diagnoseFileSave } from '../../../host/EkgService';
 import { successAlert, warningAlert } from '../../../tools/Alerts';
 import { get_doctor_by_clinic_id } from '../../../host/requests/DoctorRequest';
@@ -233,7 +233,7 @@ const columns = [
     render: (link) =>
       link ? (
         <a className='see_diagnoses' href={`${apiEcg}${link}`} target="_blank" rel="noreferrer">
-          <LiaDownloadSolid />
+          <FaDownload />
         </a>
       ) : "",
   },

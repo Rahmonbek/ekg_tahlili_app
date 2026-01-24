@@ -11,14 +11,19 @@ import AdminModal from '../../components/AdminModal'
 import Doctors from './pages/doctors/Doctors'
 import CreateUpdateDoctor from './pages/doctors/create/CreateUpdateDoctor'
 import Diagnoses from './diagnoses/Diagnoses'
+import LabAnalyzer from './lab_analyse/LabAnalyzer'
+import { get_lab_values_data } from '../../host/requests/LabValueTypesRequest'
 
 
 export default function Main() {
     const {t}=useTranslation()
-    const {complaints, setcomplaints, user}=useStore()
+    const {complaints, setcomplaints, user,  setlab_values, lab_values}=useStore()
     useEffect(()=>{
          if(complaints.length==0){
             getComplaints()
+         }
+          if(lab_values.length==0){
+            getLabValuesTypes()
          }
     }, [])
     const getComplaints=async()=>{
@@ -26,6 +31,15 @@ export default function Main() {
              var res=await get_complaints_data()
              console.log(res)
              setcomplaints(res.data)
+        }catch(err){
+            console.log(err)
+        }
+    }
+    const getLabValuesTypes=async()=>{
+        try{
+             var res=await get_lab_values_data()
+             console.log(res)
+             setlab_values(res.data)
         }catch(err){
             console.log(err)
         }
@@ -48,6 +62,7 @@ export default function Main() {
                     
                     {user.roleId!=2 && user.roleId!=3?<><Route path="" element={<EcgAnalyzer/>} /><Route path="/cabinet" element={<EcgAnalyzer/>} /></>:<></>}
                     <Route path="analyse-ecg" element={<EcgAnalyzer/>} />
+                    <Route path="analyse-lab" element={<LabAnalyzer/>} />
                     <Route path="diagnoses" element={<Diagnoses/>} />
                 </Routes>
             </div>:<></>}

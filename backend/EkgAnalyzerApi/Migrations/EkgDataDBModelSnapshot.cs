@@ -152,17 +152,14 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("NameEn")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name_en");
 
                     b.Property<string>("NameRu")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name_ru");
 
                     b.Property<string>("NameUz")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name_uz");
 
@@ -372,6 +369,378 @@ namespace EkgAnalyzerApi.Migrations
                     b.ToTable("ecg_analyses");
                 });
 
+            modelBuilder.Entity("EkgAnalyzerApi.Models.LabAnalyseCategories", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("integer")
+                        .HasColumnName("category_id");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("LabAnalysesId")
+                        .HasColumnType("integer")
+                        .HasColumnName("lab_analyse_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("LabAnalysesId");
+
+                    b.ToTable("lab_analyse_categories");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.LabAnalyses", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AIAnswerData")
+                        .HasColumnType("text")
+                        .HasColumnName("ai_answer_data");
+
+                    b.Property<string>("AnalyseFileLink")
+                        .HasColumnType("text")
+                        .HasColumnName("analyse_file_link");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("CreatedDoctorId")
+                        .HasColumnType("integer")
+                        .HasColumnName("created_doctor_id");
+
+                    b.Property<int>("PatcientId")
+                        .HasColumnType("integer")
+                        .HasColumnName("patcient_id");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<decimal?>("albumin")
+                        .HasColumnType("numeric")
+                        .HasColumnName("albumin");
+
+                    b.Property<decimal?>("alt")
+                        .HasColumnType("numeric")
+                        .HasColumnName("alt");
+
+                    b.Property<decimal?>("ast")
+                        .HasColumnType("numeric")
+                        .HasColumnName("ast");
+
+                    b.Property<decimal?>("bilirubin_direct")
+                        .HasColumnType("numeric")
+                        .HasColumnName("bilirubin_direct");
+
+                    b.Property<decimal?>("bilirubin_total")
+                        .HasColumnType("numeric")
+                        .HasColumnName("bilirubin_total");
+
+                    b.Property<decimal?>("calcium")
+                        .HasColumnType("numeric")
+                        .HasColumnName("calcium");
+
+                    b.Property<decimal?>("cholesterol")
+                        .HasColumnType("numeric")
+                        .HasColumnName("cholesterol");
+
+                    b.Property<decimal?>("creatinine")
+                        .HasColumnType("numeric")
+                        .HasColumnName("creatinine");
+
+                    b.Property<decimal?>("daily_calcium")
+                        .HasColumnType("numeric")
+                        .HasColumnName("daily_calcium");
+
+                    b.Property<decimal?>("daily_creatinine")
+                        .HasColumnType("numeric")
+                        .HasColumnName("daily_creatinine");
+
+                    b.Property<decimal?>("daily_protein")
+                        .HasColumnType("numeric")
+                        .HasColumnName("daily_protein");
+
+                    b.Property<decimal?>("daily_sodium")
+                        .HasColumnType("numeric")
+                        .HasColumnName("daily_sodium");
+
+                    b.Property<decimal?>("esr")
+                        .HasColumnType("numeric")
+                        .HasColumnName("esr");
+
+                    b.Property<decimal?>("free_t4")
+                        .HasColumnType("numeric")
+                        .HasColumnName("free_t4");
+
+                    b.Property<decimal?>("glucose")
+                        .HasColumnType("numeric")
+                        .HasColumnName("glucose");
+
+                    b.Property<decimal?>("hb")
+                        .HasColumnType("numeric")
+                        .HasColumnName("hb");
+
+                    b.Property<decimal?>("hct")
+                        .HasColumnType("numeric")
+                        .HasColumnName("hct");
+
+                    b.Property<decimal?>("insulin")
+                        .HasColumnType("numeric")
+                        .HasColumnName("insulin");
+
+                    b.Property<decimal?>("iron")
+                        .HasColumnType("numeric")
+                        .HasColumnName("iron");
+
+                    b.Property<decimal?>("mch")
+                        .HasColumnType("numeric")
+                        .HasColumnName("mch");
+
+                    b.Property<decimal?>("mchc")
+                        .HasColumnType("numeric")
+                        .HasColumnName("mchc");
+
+                    b.Property<decimal?>("mcv")
+                        .HasColumnType("numeric")
+                        .HasColumnName("mcv");
+
+                    b.Property<decimal?>("plt")
+                        .HasColumnType("numeric")
+                        .HasColumnName("plt");
+
+                    b.Property<decimal?>("potassium")
+                        .HasColumnType("numeric")
+                        .HasColumnName("potassium");
+
+                    b.Property<decimal?>("rbc")
+                        .HasColumnType("numeric")
+                        .HasColumnName("rbc");
+
+                    b.Property<decimal?>("sodium")
+                        .HasColumnType("numeric")
+                        .HasColumnName("sodium");
+
+                    b.Property<decimal?>("total_protein")
+                        .HasColumnType("numeric")
+                        .HasColumnName("total_protein");
+
+                    b.Property<decimal?>("tsh")
+                        .HasColumnType("numeric")
+                        .HasColumnName("tsh");
+
+                    b.Property<decimal?>("urea")
+                        .HasColumnType("numeric")
+                        .HasColumnName("urea");
+
+                    b.Property<decimal?>("urine_bilirubin")
+                        .HasColumnType("numeric")
+                        .HasColumnName("urine_bilirubin");
+
+                    b.Property<decimal?>("urine_density")
+                        .HasColumnType("numeric")
+                        .HasColumnName("urine_density");
+
+                    b.Property<decimal?>("urine_glucose")
+                        .HasColumnType("numeric")
+                        .HasColumnName("urine_glucose");
+
+                    b.Property<decimal?>("urine_ketones")
+                        .HasColumnType("numeric")
+                        .HasColumnName("urine_ketones");
+
+                    b.Property<decimal?>("urine_ph")
+                        .HasColumnType("numeric")
+                        .HasColumnName("urine_ph");
+
+                    b.Property<decimal?>("urine_protein")
+                        .HasColumnType("numeric")
+                        .HasColumnName("urine_protein");
+
+                    b.Property<decimal?>("urine_rbc")
+                        .HasColumnType("numeric")
+                        .HasColumnName("urine_rbc");
+
+                    b.Property<decimal?>("urine_volume")
+                        .HasColumnType("numeric")
+                        .HasColumnName("urine_volume");
+
+                    b.Property<decimal?>("urine_wbc")
+                        .HasColumnType("numeric")
+                        .HasColumnName("urine_wbc");
+
+                    b.Property<decimal?>("urobilinogen")
+                        .HasColumnType("numeric")
+                        .HasColumnName("urobilinogen");
+
+                    b.Property<decimal?>("wbc")
+                        .HasColumnType("numeric")
+                        .HasColumnName("wbc");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedDoctorId");
+
+                    b.HasIndex("PatcientId");
+
+                    b.ToTable("lab_analyses");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.LabBigCategories", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("NameEn")
+                        .HasColumnType("text")
+                        .HasColumnName("name_en");
+
+                    b.Property<string>("NameRu")
+                        .HasColumnType("text")
+                        .HasColumnName("name_ru");
+
+                    b.Property<string>("NameUz")
+                        .HasColumnType("text")
+                        .HasColumnName("name_uz");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("lab_big_categories");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.LabCategories", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BigCategoryId")
+                        .HasColumnType("integer")
+                        .HasColumnName("big_category_id");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("NameEn")
+                        .HasColumnType("text")
+                        .HasColumnName("name_en");
+
+                    b.Property<string>("NameRu")
+                        .HasColumnType("text")
+                        .HasColumnName("name_ru");
+
+                    b.Property<string>("NameUz")
+                        .HasColumnType("text")
+                        .HasColumnName("name_uz");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BigCategoryId");
+
+                    b.ToTable("lab_categories");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.LabValueTypes", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ColumnName")
+                        .HasColumnType("text")
+                        .HasColumnName("column_name");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Measure")
+                        .HasColumnType("text")
+                        .HasColumnName("measure");
+
+                    b.Property<string>("NameEn")
+                        .HasColumnType("text")
+                        .HasColumnName("name_en");
+
+                    b.Property<string>("NameRu")
+                        .HasColumnType("text")
+                        .HasColumnName("name_ru");
+
+                    b.Property<string>("NameUz")
+                        .HasColumnType("text")
+                        .HasColumnName("name_uz");
+
+                    b.Property<double?>("NormalMaxFemale")
+                        .HasColumnType("double precision")
+                        .HasColumnName("normal_max_female");
+
+                    b.Property<double?>("NormalMaxMale")
+                        .HasColumnType("double precision")
+                        .HasColumnName("normal_max_male");
+
+                    b.Property<double?>("NormalMinFemale")
+                        .HasColumnType("double precision")
+                        .HasColumnName("normal_min_female");
+
+                    b.Property<double?>("NormalMinMale")
+                        .HasColumnType("double precision")
+                        .HasColumnName("normal_min_male");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("lab_value_types");
+                });
+
             modelBuilder.Entity("EkgAnalyzerApi.Models.MedicalDiagnoses", b =>
                 {
                     b.Property<int>("Id")
@@ -381,10 +750,6 @@ namespace EkgAnalyzerApi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AnalyseFileLink")
-                        .HasColumnType("text")
-                        .HasColumnName("diagnose_file_link");
-
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -392,6 +757,10 @@ namespace EkgAnalyzerApi.Migrations
                     b.Property<int>("CreatedDoctorId")
                         .HasColumnType("integer")
                         .HasColumnName("created_doctor_id");
+
+                    b.Property<string>("DiagnoseFileLink")
+                        .HasColumnType("text")
+                        .HasColumnName("diagnose_file_link");
 
                     b.Property<int>("MainDoctorId")
                         .HasColumnType("integer")
@@ -738,6 +1107,55 @@ namespace EkgAnalyzerApi.Migrations
                     b.Navigation("Patcient");
                 });
 
+            modelBuilder.Entity("EkgAnalyzerApi.Models.LabAnalyseCategories", b =>
+                {
+                    b.HasOne("EkgAnalyzerApi.Models.LabCategories", "LabCategory")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EkgAnalyzerApi.Models.LabAnalyses", "LabAnalyse")
+                        .WithMany("Categories")
+                        .HasForeignKey("LabAnalysesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LabAnalyse");
+
+                    b.Navigation("LabCategory");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.LabAnalyses", b =>
+                {
+                    b.HasOne("EkgAnalyzerApi.Models.Doctor", "CreatedDoctor")
+                        .WithMany()
+                        .HasForeignKey("CreatedDoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EkgAnalyzerApi.Models.Patcient", "Patcient")
+                        .WithMany()
+                        .HasForeignKey("PatcientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedDoctor");
+
+                    b.Navigation("Patcient");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.LabCategories", b =>
+                {
+                    b.HasOne("EkgAnalyzerApi.Models.LabBigCategories", "BigCategory")
+                        .WithMany("Categories")
+                        .HasForeignKey("BigCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BigCategory");
+                });
+
             modelBuilder.Entity("EkgAnalyzerApi.Models.MedicalDiagnoses", b =>
                 {
                     b.HasOne("EkgAnalyzerApi.Models.Doctor", "CreatedDoctor")
@@ -810,6 +1228,16 @@ namespace EkgAnalyzerApi.Migrations
                     b.Navigation("Complaints");
 
                     b.Navigation("Doctors");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.LabAnalyses", b =>
+                {
+                    b.Navigation("Categories");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.LabBigCategories", b =>
+                {
+                    b.Navigation("Categories");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.Position", b =>

@@ -2,7 +2,7 @@ import { FaHeartbeat, FaHome } from "react-icons/fa";
 import { FaPeopleGroup, FaUserDoctor } from "react-icons/fa6";
 import { IoIosCard, IoIosPeople, IoMdSettings } from "react-icons/io";
 import { MdOutlineMedicalInformation } from "react-icons/md";
-
+import { GiTestTubes } from "react-icons/gi";
 export const routers=[
     {
         path:'/doctor',
@@ -13,11 +13,19 @@ export const routers=[
     },
 
     
-    {
+   
+     {
         path:'/analyse-ecg',
         icon:<FaHeartbeat />,
         title:"analyse_ecg",
         tools:"analyse-ecg",
+        role_id:[]
+    },
+     {
+        path:'/analyse-lab',
+        icon:<GiTestTubes />,
+        title:"analyse_lab",
+        tools:"analyse-lab",
         role_id:[]
     },
      {
