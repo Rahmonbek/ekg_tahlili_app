@@ -2,7 +2,7 @@ import { Button, Form, Input } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import logo from '../../../images/logo.png'
-import login_img from '../../../images/doctor3.svg'
+import login_img from '../../../images/login.png'
 import { IoIosMail, IoMdLock } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../../../host/requests/AuthRequest';

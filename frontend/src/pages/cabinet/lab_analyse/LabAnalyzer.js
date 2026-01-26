@@ -478,10 +478,10 @@ const resetData=()=>{
       type="file"
       
       onChange={handleChange}
-      accept=".pdf"
+      accept=".pdf,.jpg,.png"
     />
     <p className='file_input_bottom_text'>
-      {t("access_file_types")}: pdf
+      {t("access_file_types")}: pdf, jpg, png
     </p>
   </div>
 </Form.Item>

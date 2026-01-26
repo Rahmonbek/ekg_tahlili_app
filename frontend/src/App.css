@@ -50,7 +50,7 @@ body{background-color: #F7FAFC;}
 }
 .login_form_form{ padding: 10px 30px 10px; }
 .login_img, .login_form_box{width: 50%; display: flex; align-items: center; justify-content: center; height: 100%; overflow: hidden;}
-.login_img img{width: 80%;  transform: rotateY(180deg);}
+.login_img img{width: 100%;}
 .login_img{  background: linear-gradient(var(--back_color), var(--back_gradient_color));}
 .login_form_box{background-color: white; flex-direction: column; position: relative; }
 .login_bottom{position: absolute; bottom: 30px; width: 100%; display: flex; flex-wrap: wrap; justify-content: center;}
@@ -346,7 +346,7 @@ font-size: var(--extra_large_size);
  .ekg-item-text:has(.see_diagnoses){display: flex; align-items: center; margin-bottom: var(--main_padding);}  
 
   @media (max-width:1700px){
-      .login_img img{width: 70%;}
+      .login_img img{width: 100%;}
     }
     
 

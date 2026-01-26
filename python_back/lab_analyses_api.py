@@ -135,10 +135,10 @@ daily_sodium - 24 soatlik natriy (mmol/24h)
     
   },
 
-  "automatic_analysis": "Laboratoriya natijasining avtomatik tahlili va AI xulosasi",
+  "automatic_analysis": "Labaratoriya natijasi faylidagi mavjud parametrlardan qaysilari normada emas ekanligi yozilsin. Normasi qancha bo'lishini yozma",
 
   "automatic_analysis_bool": "Holat jiddiyligi darajasi: 1 = yengil, 2 = o‘rtacha, 3 = og‘ir",
-   "final_summary": "Tibbiy asoslangan yakuniy xulosa va tavsiyalar"
+   "final_summary": "Tibbiy asoslangan yakuniy xulosa"
 }"""}
 
 ---

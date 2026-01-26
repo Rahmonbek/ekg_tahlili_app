@@ -134,14 +134,14 @@ data!=null?<div className={`old_analyse main_card ${open?"opened_main_card":"clo
                     <FaDownload />
                   </a></div> 
   
-        {result.digital_measurements && result.digital_measurements!={} ? (
+        {data && data!={} ? (
   <>
    
   <div className="ekg-item-text"><b>⭐ Raqamli o‘lchovlar: </b></div>
     <ul>
 {lab_values.map((lab_value)=>{{
-          if(result.digital_measurements!=null && result.digital_measurements[lab_value.columnName]!=null){
-            return (<li key={lab_value.id}><b>{lab_value[`name${t('data_lang')}`]}</b><span> - {result.digital_measurements[lab_value.columnName].value} {result.digital_measurements[lab_value.columnName].unit}</span></li>
+          if(data!=null && data[lab_value.columnName]!=null){
+            return (<li key={lab_value.id}><b>{lab_value[`name${t('data_lang')}`]}</b><span> - {data[lab_value.columnName].value} {data[lab_value.columnName].unit}</span></li>
             )
           }
 }})}
