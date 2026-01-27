@@ -31,6 +31,11 @@ public class ClinicDetail
 
         [Column("address")]
         public string? Address { get; set; }
+        
+        [Column("district_id")]
+        public int? DistrictId { get; set; }
+
+        public Districts? District { get; set; } = null!;
 
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;

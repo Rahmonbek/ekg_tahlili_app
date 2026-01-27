@@ -23,6 +23,7 @@ public class ClinicDetailUpsertDto
     public int Id { get; set; }
 
     public int ClinicId { get; set; }
+    public int DistrictId { get; set; }
 
     public string? BankAccaunt { get; set; }
 
@@ -65,6 +66,9 @@ public class ClinicDetailDTO
     public string? License { get; set; }
 
     public string? Address { get; set; }
+    
+    public Districts? District { get; set; }
+    public Regions? Region { get; set; }
 
 
 }

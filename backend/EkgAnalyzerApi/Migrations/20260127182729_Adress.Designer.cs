@@ -3,6 +3,7 @@ using System;
 using EkgAnalyzerApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EkgAnalyzerApi.Migrations
 {
     [DbContext(typeof(MedDataDB))]
-    partial class EkgDataDBModelSnapshot : ModelSnapshot
+    [Migration("20260127182729_Adress")]
+    partial class Adress
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -81,10 +84,6 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<int?>("DistrictId")
-                        .HasColumnType("integer")
-                        .HasColumnName("district_id");
-
                     b.Property<string>("INN")
                         .HasColumnType("text")
                         .HasColumnName("inn");
@@ -105,8 +104,6 @@ namespace EkgAnalyzerApi.Migrations
 
                     b.HasIndex("ClinicId")
                         .IsUnique();
-
-                    b.HasIndex("DistrictId");
 
                     b.ToTable("clinic_details");
                 });
@@ -1089,12 +1086,6 @@ namespace EkgAnalyzerApi.Migrations
                         .HasForeignKey("EkgAnalyzerApi.Models.ClinicDetail", "ClinicId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("EkgAnalyzerApi.Models.Districts", "District")
-                        .WithMany()
-                        .HasForeignKey("DistrictId");
-
-                    b.Navigation("District");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.ClinicPhoneNumber", b =>

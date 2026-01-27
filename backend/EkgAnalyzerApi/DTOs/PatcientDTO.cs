@@ -12,6 +12,8 @@ public class PatcientDTO
     public string passport { get; set; }
     public string phone { get; set; }
     public string birthdate { get; set; }
+    public string? address { get; set; }
+    public int district_id { get; set; }
     public bool gender { get; set; }
 
 }

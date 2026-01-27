@@ -229,7 +229,7 @@ namespace EkgAnalyzerApi.Services
             if (user.RoleId != _adminRoleId && user.RoleId != _directorRoleId)
                 return new ClinicDTO();
 
-            var clinic = await _context.Clinics
+            var clinic = await _context.Clinics.Include(c => c.ClinicDetail).ThenInclude(x=>x.District).ThenInclude(r => r.Region)
     .Where(c => c.Id == id)
     .Select(c => new ClinicDTO
     {
@@ -246,7 +246,9 @@ namespace EkgAnalyzerApi.Services
             BankName = c.ClinicDetail.BankName,
             INN = c.ClinicDetail.INN,
             License = c.ClinicDetail.License,
-            Address = c.ClinicDetail.Address
+            Address = c.ClinicDetail.Address,
+            Region=c.ClinicDetail.District.Region,
+            District = c.ClinicDetail.District
         },
 
         ClinicPhoneNumber = c.ClinicPhoneNumber

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Drawing;
 
 namespace EkgAnalyzerApi.Models
 {
@@ -31,6 +32,16 @@ namespace EkgAnalyzerApi.Models
 
         [Column("phone")]
         public string Phone { get; set; }
+
+
+        [Column("address")]
+        public string? Address { get; set; }
+
+        [Column("district_id")]
+        public int? DistrictId { get; set; }
+
+        public Districts? District { get; set; } = null!;
+
 
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;

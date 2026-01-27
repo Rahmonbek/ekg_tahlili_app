@@ -28,7 +28,7 @@ public class PatcientController : ControllerBase
 
         DateOnly birthDate = DateOnly.Parse(birthdate);
 
-        var patient = await _context.Patcients
+        var patient = await _context.Patcients.Include(x => x.District).ThenInclude(d => d.Region)
             .FirstOrDefaultAsync(v =>
                 v.Passport == passport &&
                 v.BirthDate == birthDate
@@ -62,6 +62,8 @@ public class PatcientController : ControllerBase
         {
             // ✅ Update mavjud patient
             existingPatient.FirstName = patientDto.firstname;
+            existingPatient.Address = patientDto.address;
+            existingPatient.DistrictId = patientDto.district_id;
             existingPatient.LastName = patientDto.lastname;
             existingPatient.SureName = patientDto.surename;
             existingPatient.Gender = patientDto.gender;
@@ -81,6 +83,8 @@ public class PatcientController : ControllerBase
                 Passport = patientDto.passport.ToUpper(),
                 BirthDate = birthDate,
                 FirstName = patientDto.firstname,
+                Address = patientDto.address,
+                DistrictId = patientDto.district_id,
                 LastName = patientDto.lastname,
                 SureName = patientDto.surename,
                 Gender = patientDto.gender,

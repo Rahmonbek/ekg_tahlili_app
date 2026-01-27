@@ -16,6 +16,7 @@ public class Clinic
         [Column("clinic_logo")]
         public string? ClinicLogo { get; set; }
 
+
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 
