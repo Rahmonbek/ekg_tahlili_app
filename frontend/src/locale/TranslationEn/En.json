@@ -182,7 +182,15 @@
   "lab_analyse": "Perform laboratory analysis",
   "select_lab_file": "Select laboratory result file",
   "select_lab_category_type": "Select performed test types",
-  "lab_categories": "Laboratory test categories"
+  "lab_categories": "Laboratory test categories",
+
+  "addres": "Address",
+"enter_addres": "Enter address",
+
+"region": "Region",
+"enter_region": "Select the patient's region"
+
+
 
 
 

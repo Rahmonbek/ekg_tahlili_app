@@ -158,7 +158,12 @@
 "select_lab_file":"Labaratoriya natijasi faylini tanlang",
 "select_lab_category_type":"Qaysi tahlillar topshirilganini tanlang",
 "lab_categories":"Labaratoriya tahlil turlari",
-"please_wait_lab":"Labaratoriya tahlil uzoqroq vaqt talab qilishi mumkin. Iltimos natijani kuting va browser oynasini yangilamang."
+"please_wait_lab":"Labaratoriya tahlil uzoqroq vaqt talab qilishi mumkin. Iltimos natijani kuting va browser oynasini yangilamang.",
+"addres":"Manzil",
+"enter_addres":"Manzil kiriting",
+
+"region":"Viloyat",
+"enter_region":"Bemorning viloyatini tanlang"
 
 
 

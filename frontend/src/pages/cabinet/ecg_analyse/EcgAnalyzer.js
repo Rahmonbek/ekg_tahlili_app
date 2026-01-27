@@ -502,6 +502,61 @@ const changePositions=(val)=>{
                   </Col>
 
                   <Col className="main_col" lg={8} md={24}>
+                    <Form.Item
+                      name="region"
+                      label={t('region')}
+                      rules={[{ required: true, message: '' }]}
+                    >
+                      <Select
+                        style={{ width: '100%' }}
+                        value={gender}
+                        placeholder={t('enter_region')}
+                        onChange={(value) => setGender(value)}
+                        options={[
+                          { value: true, label: <> {t('male')}</> },
+                          { value: false, label: <>{t('female')}</> },
+                        ]}
+                      />
+                    </Form.Item>
+                  </Col>
+
+                  <Col className="main_col" lg={8} md={24}>
+                    <Form.Item
+                      name="gender"
+                      label={t('gender')}
+                      rules={[{ required: true, message: '' }]}
+                    >
+                      <Select
+                        style={{ width: '100%' }}
+                        value={gender}
+                        placeholder={t('enter_gender')}
+                        onChange={(value) => setGender(value)}
+                        options={[
+                          { value: true, label: <> {t('male')}</> },
+                          { value: false, label: <>{t('female')}</> },
+                        ]}
+                      />
+                    </Form.Item>
+                  </Col>
+
+                  <Col className="main_col" lg={16} md={24}>
+                    <Form.Item
+                      name="addres"
+                      label={t('addres')}
+                      normalize={(value) => value?.toUpperCase()}
+                      rules={[{ required: true, message: '' }]}
+                    >
+                      <Input
+                        prefix={<IoPerson />}
+                        className="login_input"
+                        placeholder={t('enter_addres')}
+                      />
+                    </Form.Item>
+                  </Col>
+
+
+
+                  <Col className="main_col" lg={8} md={24}>
                     <div className="form_div">
                       <Button className="btn_form" loading={loading1} htmlType="submit">
                         {t('saveData')}
