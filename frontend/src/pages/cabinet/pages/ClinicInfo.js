@@ -1,11 +1,11 @@
-import { Button, Col, Form, Input, Row, Space, Upload } from 'antd'
+import { Button, Col, Form, Input, Row, Select, Space, Upload } from 'antd'
 import React, { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FaBuilding, FaLocationDot, FaPlus } from 'react-icons/fa6'
 import { MinusCircleOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom'
 import { useStore } from '../../../store/Store'
-import { AiOutlineFieldNumber } from 'react-icons/ai'
+import { AiFillHome, AiOutlineFieldNumber } from 'react-icons/ai'
 import { IoPersonSharp } from 'react-icons/io5'
 import InputMask from "react-input-mask";
 import { BsBank2 } from 'react-icons/bs'
@@ -17,6 +17,8 @@ import { useForm } from 'antd/es/form/Form';
 import { formatPhoneNumberForForm } from '../../../tools/formatters';
 import { dangerAlert, successAlert } from '../../../tools/Alerts';
 import { LiaDownloadSolid } from "react-icons/lia";
+import i18n from '../../../locale/i18next';
+import { get_districts_data, get_region_data } from '../../../host/requests/RegionRequest';
 export default function ClinicInfo() {
     const {t}=useTranslation()
     const [formPhones]=Form.useForm()
@@ -34,10 +36,19 @@ export default function ClinicInfo() {
     const [licenseFile, setLicenseFile] = useState(null);
     const [clinicLogoFile, setClinicLogoFile] = useState(null);
     const [logoPreview, setLogoPreview] = useState(null);
+
+    
+    const [region, setRegion]=useState([])
+   const [regioname, setRegioname]=useState([])
+const [ districts,  setDistricts]=useState([])
+const [districtname, setDistrictname] = useState(null);
+
+
 const [licenseUrl, setLicenseUrl] = useState(null);
     const fileRef = useRef(null);
     useEffect(()=>{
          setloader(true)
+         getRegions()
          getClinicData()
     }, [user])
     
@@ -180,7 +191,8 @@ const onFinishFinish = async (values) => {
     formData.append("BankAccaunt", values.bankAccount?.replace(/\s/g, ""));
     formData.append("BankName", values.bankName);
     formData.append("Mfo", values.mfo);
-
+  
+  
   
     formData.append("Inn", values.inn);
     formData.append("Address", values.address);
@@ -241,6 +253,30 @@ if(digits.length<=3){
   }
 
   return result;
+};
+
+const getRegions = async () => {
+  try {
+    const res = await get_region_data()
+    console.log(res.data)
+    setRegion(res.data)
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+
+const getDistricts = async (id) => {
+  try {
+    const res = await get_districts_data({ region_id: id }); 
+    
+    console.log("Tumanlar kelyapti:", res.data); 
+    if (res.data) {
+      setDistricts(res.data); 
+    }
+  } catch (err) {
+    console.log("Tumanlarni yuklashda xatolik:", err);
+  }
 };
 
 
@@ -575,6 +611,62 @@ if(digits.length<=3){
 
     </Form.Item>
                          </Col>
+
+
+
+
+      <Col className="main_col" lg={12} md={24}>
+                   <Form.Item
+  name="regioname"
+  label={t('region')}
+  rules={[{ required: true, message: '' }]}
+>
+  <Select
+    style={{ width: '100%' }}
+    value={regioname}
+    placeholder={t('enter_region')}
+onChange={(value) => {
+    setRegioname(value); 
+    form.setFieldsValue({ districtname: undefined }); 
+    getDistricts(Number(value));
+}}
+    options={region?.map((item) => {
+      const currentLang = i18n.language; 
+      let labelText = item.nameUz;
+      if (currentLang === 'ru') labelText = item.nameRu;
+      if (currentLang === 'en') labelText = item.nameEn;
+      return {
+        value: item.id,
+        label: labelText
+      };
+    })}
+  />
+</Form.Item>
+
+                  </Col>
+
+                <Col className="main_col" lg={12} md={24}>
+  <Form.Item  
+    name="districtname"
+    label={t('district')}
+    rules={[{ required: true, message: '' }]}
+  >
+    <Select
+      style={{ width: '100%' }}
+      placeholder={t('enter_district')}
+      labelInValue
+      options={districts?.map((item) => ({
+        value: item.id, 
+        label: i18n.language === 'ru' ? item.nameRu : (i18n.language === 'en' ? item.nameEn : item.nameUz)
+      }))}
+    />
+  </Form.Item>
+</Col>
+
+
+              
+
+
 
                          <Col className='main_col' lg={24} md={24} sm={24}>
                          <Form.Item
