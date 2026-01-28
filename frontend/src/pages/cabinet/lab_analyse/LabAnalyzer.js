@@ -102,28 +102,24 @@ const [districtname, setDistrictname] = useState(null);
       console.log(res);
 
       setPatcient(res.data);
-      form.setFieldsValue({
-        districtname: {
-    value: res.data.district.id, 
-    label:  i18n.language === 'ru' 
-           ? res.data.district.nameRu 
-           :  i18n.language === 'en' 
-             ? res.data.district.nameEn 
-             : res.data.district.nameUz
-  },
-
-  regioname:  i18n.language === 'ru' 
-             ? res.data.district.region.nameRu 
-             : i18n.language === 'en' 
-               ? res.data.district.region.nameEn 
-               : res.data.district.region.nameUz,
-         address: res.data.address ||'',
+      let new_data={
+        address: res.data.address ||'',
         firstname: res.data.firstName || '',
         lastname: res.data.lastName || '',
         surename: res.data.sureName || '',
         gender: res.data.gender,
         phone: formatPhoneNumberForForm(res.data.phone),
-      });
+      }
+      if(res.data!=null && res.data.district!=null){
+        new_data.districtname={
+               value: res.data.district.id, 
+               label: res.data.district[`name${t("data_lang")}`]
+        }
+  if(res.data.district.region!=null){
+     new_data.regioname=res.data.district.region[`name${t("data_lang")}`]
+  }
+      }
+      form.setFieldsValue(new_data);
       setPhoneValue(formatPhoneNumberForForm(res.data.phone));
       setcheck_ecg(true)
       getOldECGAnaylses(res.data.id)

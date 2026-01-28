@@ -160,7 +160,11 @@
 "region": "Регион",
 "enter_region": "Выберите регион пациента",
 "district": "Город / Район",
-"enter_district": "Выберите район пациента"
+"enter_district": "Выберите район пациента",
+"enter_district_clinic": "Выберите область",
+"enter_region_clinic": "Выберите город или район",
+  "name_clinic": "Больница"
+
 
 
 

@@ -106,6 +106,19 @@ data!=null?<div className={`old_analyse main_card ${open?"opened_main_card":"clo
           open?
         
         <div className="main_card_content">
+
+             
+       {data.clinic!=null?<div>
+          <p className='ecg_label'>{t("name_clinic")}</p>
+          <div className="ekg-item-info-text">
+          <b>{t("name")} </b>
+          <p>{data.clinic.clinicName} </p>
+        </div>
+        <div className="ekg-item-info-text">
+          <b>{t("place")} </b>
+      
+        </div>
+        </div>:<></>} 
         
        {data.createdDoctor!=null?<div>
           <p className='ecg_label'>{t("doctor_of_created")}</p>

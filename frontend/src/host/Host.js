@@ -5,9 +5,9 @@ import Cookies from "js-cookie";
 //export const apiEcg="https://analyse.nmed.uz"
 //export const imgApi="https://api.nmed.uz"
 
-export const api="http://172.22.22.25:5000/api"
+export const api="http://10.35.198.154:5000/api"
 export const apiEcg="http://127.0.0.1:8000"
-export const imgApi="http://172.22.22.25:5000"
+export const imgApi="http://10.35.198.154:5000"
 
 
 export const getTokenAccess=()=>{

@@ -86,15 +86,28 @@ const [licenseUrl, setLicenseUrl] = useState(null);
 
      const detail = res.data.clinicDetail;
 
-        formSecend.setFieldsValue({
-          bankAccount: formatBankAccount(detail.bankAccaunt), 
-          mfo: detail.mfo,
-          bankName: detail.bankName,
-          inn: detail.inn,
-          license: detail.license,
-          address: detail.address,
-        });
-        
+       let new_data={
+        bankAccount: formatBankAccount(detail.bankAccaunt), 
+        mfo: detail.mfo,
+        bankName: detail.bankName,
+        inn: detail.inn,
+        license: detail.license,
+        address: detail.address,
+       
+       }
+      
+      if(res.data!=null && detail.district!=null){
+        new_data. districtname={
+          value: detail.district.id, 
+          label: detail.district[`name${t("data_lang")}`] 
+        }
+    if(detail.district.region!=null){
+       new_data.regioname=detail.district.region[`name${t("data_lang")}`]
+        }
+      }
+         
+       
+        formSecend.setFieldsValue(new_data);
       setLicenseUrl(detail.license);
       setloader(false)
       setloadingMain(false)
@@ -185,20 +198,20 @@ const onFinishFinish = async (values) => {
       formData.append("Id", clinic.clinicDetail.id);
     }
 
- 
     formData.append("ClinicId", clinic.id);
 
     formData.append("BankAccaunt", values.bankAccount?.replace(/\s/g, ""));
     formData.append("BankName", values.bankName);
     formData.append("Mfo", values.mfo);
   
-  
-  
+    formData.append("DistrictId", values.districtname?.value);
+
+
     formData.append("Inn", values.inn);
     formData.append("Address", values.address);
     formData.append("License", values.license);
-
-
+  
+console.log("district", values.districtname?.value )
     if (licenseFile) {
       formData.append("LicenseFile", licenseFile);
     }
@@ -624,10 +637,9 @@ const getDistricts = async (id) => {
   <Select
     style={{ width: '100%' }}
     value={regioname}
-    placeholder={t('enter_region')}
+    placeholder={t('enter_region_clinic')}
 onChange={(value) => {
     setRegioname(value); 
-    form.setFieldsValue({ districtname: undefined }); 
     getDistricts(Number(value));
 }}
     options={region?.map((item) => {
@@ -653,7 +665,7 @@ onChange={(value) => {
   >
     <Select
       style={{ width: '100%' }}
-      placeholder={t('enter_district')}
+      placeholder={t('enter_district_clinic')}
       labelInValue
       options={districts?.map((item) => ({
         value: item.id, 

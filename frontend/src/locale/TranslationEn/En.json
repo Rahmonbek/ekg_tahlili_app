@@ -190,7 +190,11 @@
 "region": "Region",
 "enter_region": "Select the patient's region",
 "district": "City / District",
-"enter_district": "Select the patient's district"
+"enter_district": "Select the patient's district",
+"enter_district_clinic": "Select a region",
+"enter_region_clinic": "Select a city or district",
+"name_clinic": "Hospital"
+
 
 
 
