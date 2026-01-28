@@ -1055,6 +1055,7 @@ async def analyze(
     complaint_id: list[int] | None = Form(None),
     doctor_id: list[int] | None = Form(None),
     created_doctor_id: int = Form(...),
+    clinic_id: int = Form(...),
     patcient_id: int = Form(...),
     gender: str = Form(...),
     lang: str = Form(...),
@@ -1071,6 +1072,7 @@ async def analyze(
         session=db,
         patient_id=patcient_id,
         created_doctor_id=created_doctor_id,
+        clinic_id=clinic_id,
         status=0,
         analyse_file_link=analyse_file_path
     )
@@ -1228,6 +1230,7 @@ async def analyze_save(
     complaint_id: list[int] | None = Form(None),
     doctor_id: list[int] | None = Form(None),
     created_doctor_id: int = Form(...),
+    clinic_id: int = Form(...),
     patcient_id: int = Form(...),
     gender: str = Form(...),
     lang: str = Form(...),
@@ -1244,6 +1247,7 @@ async def analyze_save(
         session=db,
         patient_id=patcient_id,
         created_doctor_id=created_doctor_id,
+        clinic_id=clinic_id,
         status=0,
         analyse_file_link=analyse_file_path
     )
@@ -1523,6 +1527,7 @@ async def diagnose_save(
     db: Session = Depends(get_db),
     file: list[UploadFile] = File(...),
     created_doctor_id: int = Form(...),
+    clinic_id: int = Form(...),
     patcient_id: int = Form(...),
     main_doctor_id: int = Form(...),
 ):
@@ -1535,6 +1540,7 @@ async def diagnose_save(
         session=db,
         patient_id=patcient_id,
         created_doctor_id=created_doctor_id,
+        clinic_id=clinic_id,
         main_doctor_id=main_doctor_id,
         diagnose_file_link=analyse_file_path
     )

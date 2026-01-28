@@ -13,6 +13,7 @@ import CreateUpdateDoctor from './pages/doctors/create/CreateUpdateDoctor'
 import Diagnoses from './diagnoses/Diagnoses'
 import LabAnalyzer from './lab_analyse/LabAnalyzer'
 import { get_lab_values_data } from '../../host/requests/LabValueTypesRequest'
+import Patcients from './pages/patcients/Patcients'
 
 
 export default function Main() {
@@ -64,6 +65,7 @@ export default function Main() {
                     <Route path="analyse-ecg" element={<EcgAnalyzer/>} />
                     <Route path="analyse-lab" element={<LabAnalyzer/>} />
                     <Route path="diagnoses" element={<Diagnoses/>} />
+                    <Route path="patcients" element={<Patcients/>} />
                 </Routes>
             </div>:<></>}
         </div>

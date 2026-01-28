@@ -158,6 +158,7 @@ async def analyze(
     file: list[UploadFile] = File(...),
     lab_category_id: list[int] | None = Form(None),
     created_doctor_id: int = Form(...),
+    clinic_id: int = Form(...),
     patcient_id: int = Form(...),
     gender: str = Form(...),
     lang: str = Form(...),
@@ -177,6 +178,7 @@ async def analyze(
         session=db,
         patient_id=patcient_id,
         created_doctor_id=created_doctor_id,
+        clinic_id=clinic_id,
         status=0,
         analyse_file_link=analyse_file_path
     )

@@ -17,7 +17,7 @@ public class MedicalDiagnoseDTO
 
 
     public string? DiagnoseFileLink { get; set; }
-
+    public ClinicForECG? Clinic { get; set; }
     public DoctorForECGData? CreatedDoctor { get; set; }
     public DoctorForECGData? MainDoctor { get; set; }
     public PatcientForECG? Patcient { get; set; }

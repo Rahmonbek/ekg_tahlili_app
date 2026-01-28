@@ -8,6 +8,7 @@ class ECGAnalyse(Base):
     id = Column(Integer, primary_key=True, index=True)
     patcient_id = Column(Integer)
     created_doctor_id = Column(Integer)
+    clinic_id = Column(Integer)
     status = Column(Integer)
     analyse_file_link = Column(Text)
     generated_file_link = Column(Text)
@@ -20,7 +21,7 @@ class LabAnalyses(Base):
     __tablename__ = "lab_analyses"
 
     id = Column(Integer, primary_key=True, index=True)
-
+    clinic_id = Column(Integer)
     patcient_id = Column(Integer)
     created_doctor_id = Column(Integer)
 
@@ -80,8 +81,9 @@ class LabAnalyses(Base):
 
 class MedicalDiagnoses(Base):
     __tablename__ = "medical_diagnoses" # Bazadagi mavjud jadval nomi
-
+    
     id = Column(Integer, primary_key=True, index=True)
+    clinic_id = Column(Integer)
     patcient_id = Column(Integer)
     created_doctor_id = Column(Integer)
     main_doctor_id = Column(Integer)

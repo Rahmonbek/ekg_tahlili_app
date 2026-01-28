@@ -246,6 +246,7 @@ const onChangeDoctors=(val)=>{
       formData.append('gender', patcient.gender?"erkak":'ayol')
       formData.append('patcient_id', patcient.id)
       formData.append('created_doctor_id', user.doctor.id)
+      formData.append('clinic_id', user.clinic.id)
       formData.append('lang', lang)
       formData.append('age', calculateAge(patcient.birthDate))
       var res

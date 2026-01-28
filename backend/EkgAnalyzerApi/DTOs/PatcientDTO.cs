@@ -17,3 +17,18 @@ public class PatcientDTO
     public bool gender { get; set; }
 
 }
+
+public class PatcientDTOResponse
+{
+    public bool Status { get; set; }
+    public string? Message { get; set; }
+
+    public Patcient? Patcients { get; set; }
+}
+
+public class PatcientListDTO
+{
+    public List<Patcient> data { get; set; } = new List<Patcient>();
+    public int TotalCount { get; set; }       // umumiy doktorlar soni
+    public int TotalPages { get; set; }       // sahifalar soni
+}

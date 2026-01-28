@@ -31,6 +31,7 @@ public class ECGAnalyseDTO
     public string? AIAnswerData { get; set; }
     public DoctorForECGData? CreatedDoctor { get; set; }
     public PatcientForECG? Patcient { get; set; }
+    public ClinicForECG? Clinic { get; set; }
     public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -39,7 +40,15 @@ public class ECGAnalyseDTO
     public List<Complaints>? Complaints { get; set; }
 }
 
-public class DoctorForECGData
+public class ClinicForECG
+{
+    public int? Id { get; set; }
+    public string? ClinicName { get; set; }
+    public string? ClinicLogo { get; set; }
+    public Districts? District { get; set; }
+}
+
+    public class DoctorForECGData
 {
     public int? Id { get; set; }
     public string FirstName { get; set; }

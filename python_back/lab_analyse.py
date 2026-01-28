@@ -15,6 +15,7 @@ def create_lab_analyse(
     session: Session,
     patient_id: int,
     created_doctor_id: int,
+    clinic_id: int,
     status: int = 0,
     analyse_file_link: Optional[str] = None,
     ai_answer_data: Optional[str] = None,
@@ -65,6 +66,7 @@ def create_lab_analyse(
     new_lab = LabAnalyses(
         patcient_id=patient_id,
         created_doctor_id=created_doctor_id,
+        clinic_id=clinic_id,
         status=status,
         analyse_file_link=analyse_file_link,
         ai_answer_data=ai_answer_data,

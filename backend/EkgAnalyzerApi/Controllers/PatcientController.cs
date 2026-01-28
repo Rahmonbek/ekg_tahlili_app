@@ -12,12 +12,29 @@ using System.Security.Claims;
 public class PatcientController : ControllerBase
 {
     private readonly MedDataDB _context;
+    private readonly PatcientService _patcientService;
 
-    public PatcientController(MedDataDB context)
+    public PatcientController(MedDataDB context, PatcientService patcientService)
     {
         _context = context;
+        _patcientService = patcientService;
     }
 
+    [HttpGet("get-patcients-of-clinic")]
+    public async Task<IActionResult> GetDoctors([FromQuery] int page = 1)
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+            return Unauthorized(new { message = "Token invalid" });
+
+        var userId = int.Parse(userIdClaim.Value);
+
+        if (page < 1) page = 1;
+
+        var result = await _patcientService.GetPatcientsAsync(page, userId);
+
+        return Ok(result);
+    }
 
     [HttpGet("get-patient-by-passport")]
     public async Task<IActionResult> GetPatientByPassport(string passport, string birthdate)

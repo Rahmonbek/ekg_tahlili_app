@@ -26,6 +26,10 @@ namespace EkgAnalyzerApi.Services
             var totalCount = await baseQuery.CountAsync();
 
             var items = await baseQuery
+                .Include(e => e.Clinic)
+                .ThenInclude(c=>c.ClinicDetail)
+                .ThenInclude(c=>c.District)
+                .ThenInclude(c=>c.Region)
                 .Include(e => e.Patcient)
                 .Include(e => e.CreatedDoctor)
                     .ThenInclude(c => c.User)
@@ -52,6 +56,14 @@ namespace EkgAnalyzerApi.Services
                     Status = e.Status,
                     PatcientId = e.PatcientId,
                     CreatedDoctorId = e.CreatedDoctorId,
+                    Clinic=new ClinicForECG
+                    {
+                        Id = e.Clinic.Id,
+                        ClinicLogo = e.Clinic.ClinicLogo,
+                        ClinicName = e.Clinic.ClinicName,
+                        District = e.Clinic.ClinicDetail.District
+                        
+                    },
                     Patcient = new PatcientForECG
                     {
                         Id = e.Patcient.Id,

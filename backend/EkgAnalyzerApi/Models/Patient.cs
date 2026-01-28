@@ -48,5 +48,9 @@ namespace EkgAnalyzerApi.Models
 
         [Column("updated_at")]
         public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        public List<ECGAnalyses>? ECGAnalyses { get; set; } = new();
+        public List<LabAnalyses>? LabAnalyses { get; set; } = new();
+        public List<MedicalDiagnoses>? MedicalDiagnoses { get; set; } = new();
     }
 }

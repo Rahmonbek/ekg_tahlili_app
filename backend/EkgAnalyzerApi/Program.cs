@@ -13,6 +13,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<PatcientService>();
 builder.Services.AddScoped<LabAnalyseService>();
 builder.Services.AddScoped<DoctorService>();
 builder.Services.AddScoped<ECGAnalyseService>();

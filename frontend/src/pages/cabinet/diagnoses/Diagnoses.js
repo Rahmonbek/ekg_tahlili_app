@@ -183,6 +183,7 @@ export default function Diagnoses() {
       files.forEach((f) => formData.append("file", f));
       formData.append('patcient_id', patcient.id)
       formData.append('created_doctor_id', user.doctor.id)
+      formData.append('clinic_id', user.clinic.id)
       formData.append('main_doctor_id', selected_doctor)
       var res
       

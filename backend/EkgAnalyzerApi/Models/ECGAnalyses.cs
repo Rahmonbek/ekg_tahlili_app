@@ -16,6 +16,11 @@ namespace EkgAnalyzerApi.Models
         [ForeignKey(nameof(CreatedDoctorId))]
         public Doctor CreatedDoctor { get; set; } = null!;
 
+
+        [Column("clinic_id")]
+        public int? ClinicId { get; set; }
+        public Clinic Clinic { get; set; } = null!;
+
         [Column("patcient_id")]
         public int PatcientId { get; set; }
         [ForeignKey(nameof(PatcientId))]

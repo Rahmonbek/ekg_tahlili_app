@@ -10,7 +10,7 @@ def get_ecg_analyse_by_id(session: Session, ecg_id: int) -> ECGAnalyse | None:
     ecg = session.query(ECGAnalyse).filter(ECGAnalyse.id == ecg_id).first()
     return ecg
 
-def create_ecg_analyse(session: Session, patient_id: int, created_doctor_id: int, status: int,
+def create_ecg_analyse(session: Session, patient_id: int, created_doctor_id: int, clinic_id: int, status: int,
                        analyse_file_link: bytes = None,
                        generated_file_link: bytes = None,
                        generated_short_file_link: bytes = None,
@@ -18,6 +18,7 @@ def create_ecg_analyse(session: Session, patient_id: int, created_doctor_id: int
     new_ecg = ECGAnalyse(
         patcient_id=patient_id,
         created_doctor_id=created_doctor_id,
+        clinic_id=clinic_id,
         status=status,
         analyse_file_link=analyse_file_link,
         generated_file_link=generated_file_link,

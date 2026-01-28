@@ -62,6 +62,7 @@ public class LabAnalyseDTO
     public decimal? daily_sodium { get; set; } // mmol/24h
     public DoctorForECGData? CreatedDoctor { get; set; }
     public PatcientForECG? Patcient { get; set; }
+    public ClinicForECG? Clinic { get; set; }
     public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;

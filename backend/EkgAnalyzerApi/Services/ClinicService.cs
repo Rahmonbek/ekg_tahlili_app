@@ -38,6 +38,7 @@ namespace EkgAnalyzerApi.Services
                     BankAccaunt = dto.BankAccaunt,
                     MFO = dto.MFO,
                     BankName = dto.BankName,
+                    DistrictId=dto.DistrictId,
                     INN = dto.INN,
                     Address = dto.Address,
                     License = dto.LicenseFile != null
@@ -58,6 +59,7 @@ namespace EkgAnalyzerApi.Services
                 detail.MFO = dto.MFO;
                 detail.BankName = dto.BankName;
                 detail.INN = dto.INN;
+                detail.DistrictId = dto.DistrictId;
                 detail.Address = dto.Address;
                 detail.UpdatedAt = DateTime.UtcNow;
 

@@ -44,6 +44,7 @@ public class ClinicController : ControllerBase
             detail.Id,
             detail.ClinicId,
             detail.BankAccaunt,
+            detail.DistrictId,
             detail.MFO,
             detail.BankName,
             detail.INN,
