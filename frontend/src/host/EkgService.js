@@ -27,3 +27,11 @@ export const diagnoseFileSave = async (formData) => {
   });
   return res.data;
 };
+
+
+
+
+
+
+
+

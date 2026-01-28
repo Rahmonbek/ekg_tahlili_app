@@ -18,7 +18,9 @@ import { MdLanguage } from 'react-icons/md';
 import { get_doctor_by_clinic_id, get_params_for_add_staff } from '../../../host/requests/DoctorRequest';
 import { get_ecg_analyses_by_patcient_id } from '../../../host/requests/ECGAnalyseRequest';
 import EcgOldResult from '../../../components/results/EcgOldResult';
-
+import { get_districts_data, get_region_data } from '../../../host/requests/RegionRequest';
+import i18n from '../../../locale/i18next';
+import { AiFillHome, AiOutlineHome } from "react-icons/ai";
 export default function EcgAnalyzer() {
   const [loading, setLoading] = useState(false);
   const [old_loading, setold_loading] = useState(false);
@@ -55,6 +57,13 @@ const [role_id, setrole_id] = useState(null);
     const [position_ids, setposition_ids] = useState([]);
     const [position_datas, setposition_datas] = useState([]);
     const [doctor_datas, setdoctor_datas] = useState([]);
+
+    const [region, setRegion]=useState([])
+   const [regioname, setRegioname]=useState([])
+const [ districts,  setDistricts]=useState([])
+const [districtname, setDistrictname] = useState(null);
+
+
        useEffect(()=>{
        if(positions.length==0){
            getParamsData()
@@ -65,6 +74,7 @@ const [role_id, setrole_id] = useState(null);
         }
        
        }
+        getRegions()
        if(doctors.length==0 && user!=null){
         getDoctorsOfClinic()
        }else{
@@ -82,6 +92,9 @@ const [role_id, setrole_id] = useState(null);
     setFiles(Array.from(e.target.files));
     setnumber(number+1)
 };
+
+
+
 
 const getParamsData=async()=>{
         try{
@@ -110,13 +123,28 @@ const getParamsData=async()=>{
     try {
       setLoading(true);
       setPassport(val.passport);
-      setBirthdate(val.birthdate);
+      setBirthdate(val.birthdate); 
 
       const res = await get_patcient_by_passport(val);
       console.log(res);
 
       setPatcient(res.data);
       form.setFieldsValue({
+districtname: {
+    value: res.data.district.id, 
+    label:  i18n.language === 'ru' 
+           ? res.data.district.nameRu 
+           :  i18n.language === 'en' 
+             ? res.data.district.nameEn 
+             : res.data.district.nameUz
+  },
+
+  regioname:  i18n.language === 'ru' 
+             ? res.data.district.region.nameRu 
+             : i18n.language === 'en' 
+               ? res.data.district.region.nameEn 
+               : res.data.district.region.nameUz,
+         address: res.data.address ||'',
         firstname: res.data.firstName || '',
         lastname: res.data.lastName || '',
         surename: res.data.sureName || '',
@@ -158,8 +186,10 @@ setold_loading(false)
       setLoading1(true);
       const res = await save_patcient_data({
         ...val,
+       district_id: val.districtname.value,
         passport,
         birthdate,
+        address: val.address, 
         phone: formatPhoneNumber(val.phone),
       });
       setPatcient(res.data);
@@ -322,6 +352,37 @@ const changePositions=(val)=>{
        }
      
 }
+
+
+
+
+
+
+const getRegions = async () => {
+  try {
+    const res = await get_region_data()
+    console.log(res.data)
+    setRegion(res.data)
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+
+const getDistricts = async (id) => {
+  try {
+    const res = await get_districts_data({ region_id: id }); 
+    
+    console.log("Tumanlar kelyapti:", res.data); 
+    if (res.data) {
+      setDistricts(res.data); 
+    }
+  } catch (err) {
+    console.log("Tumanlarni yuklashda xatolik:", err);
+  }
+};
+
+
 
 
   return (
@@ -502,12 +563,80 @@ const changePositions=(val)=>{
                   </Col>
 
                   <Col className="main_col" lg={8} md={24}>
+                   <Form.Item
+  name="regioname"
+  label={t('region')}
+  rules={[{ required: true, message: '' }]}
+>
+  <Select
+    style={{ width: '100%' }}
+    value={regioname}
+    placeholder={t('enter_region')}
+onChange={(value) => {
+    setRegioname(value); 
+    form.setFieldsValue({ districtname: undefined }); 
+    getDistricts(Number(value));
+}}
+    options={region?.map((item) => {
+      const currentLang = i18n.language; 
+      let labelText = item.nameUz;
+      if (currentLang === 'ru') labelText = item.nameRu;
+      if (currentLang === 'en') labelText = item.nameEn;
+      return {
+        value: item.id,
+        label: labelText
+      };
+    })}
+  />
+</Form.Item>
+
+                  </Col>
+
+                <Col className="main_col" lg={8} md={24}>
+  <Form.Item  
+    name="districtname"
+    label={t('district')}
+    rules={[{ required: true, message: '' }]}
+  >
+    <Select
+      style={{ width: '100%' }}
+      placeholder={t('enter_district')}
+      labelInValue
+      options={districts?.map((item) => ({
+        value: item.id, 
+        label: i18n.language === 'ru' ? item.nameRu : (i18n.language === 'en' ? item.nameEn : item.nameUz)
+      }))}
+    />
+  </Form.Item>
+</Col>
+
+
+                  <Col className="main_col" lg={16} md={24}>
+                <Form.Item
+  name="address"
+  label={t('addres')}
+  normalize={(value) => value?.toUpperCase()}
+  rules={[{ required: true, message: '' }]}
+>
+  <Input
+    prefix={<AiFillHome />}
+    className="login_input"
+    placeholder={t('enter_addres')}
+  />
+</Form.Item>
+
+                  </Col>
+
+
+          <div className='save-pat-data'>
+                  <Col className="main_col" lg={8} md={24}>
                     <div className="form_div">
                       <Button className="btn_form" loading={loading1} htmlType="submit">
                         {t('saveData')}
                       </Button>
                     </div>
                   </Col>
+        </div>
                 </Row>
               </Form>
             </div>

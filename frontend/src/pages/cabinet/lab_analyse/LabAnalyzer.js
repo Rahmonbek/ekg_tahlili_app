@@ -21,6 +21,9 @@ import { get_lab_categories_data } from '../../../host/requests/LabCategories';
 import LabResult from '../../../components/results/lab_analyse/LabResult';
 import { get_lab_analyses_by_patcient_id } from '../../../host/requests/LabAnalyseRequest';
 import LabOldResult from '../../../components/results/lab_analyse/LabOldResult';
+import { AiFillHome } from 'react-icons/ai';
+import i18n from '../../../locale/i18next';
+import { get_districts_data, get_region_data } from '../../../host/requests/RegionRequest';
 
 export default function LabAnalyzer() {
   const [loading, setLoading] = useState(false);
@@ -52,8 +55,17 @@ export default function LabAnalyzer() {
     const [image_short, setimage_short] = useState(null)
     const [file_input, setfile_input] = useState("")
       const [files, setFiles] = useState([]);
+
+
+    const [region, setRegion]=useState([])
+   const [regioname, setRegioname]=useState([])
+const [ districts,  setDistricts]=useState([])
+const [districtname, setDistrictname] = useState(null);
+
+
       const {lab_categories, setlab_categories, user, setloader}=useStore()
        useEffect(()=>{
+        getRegions()
          if(lab_categories.length==0){
             getLabCategories()
          }
@@ -91,6 +103,21 @@ export default function LabAnalyzer() {
 
       setPatcient(res.data);
       form.setFieldsValue({
+        districtname: {
+    value: res.data.district.id, 
+    label:  i18n.language === 'ru' 
+           ? res.data.district.nameRu 
+           :  i18n.language === 'en' 
+             ? res.data.district.nameEn 
+             : res.data.district.nameUz
+  },
+
+  regioname:  i18n.language === 'ru' 
+             ? res.data.district.region.nameRu 
+             : i18n.language === 'en' 
+               ? res.data.district.region.nameEn 
+               : res.data.district.region.nameUz,
+         address: res.data.address ||'',
         firstname: res.data.firstName || '',
         lastname: res.data.lastName || '',
         surename: res.data.sureName || '',
@@ -132,6 +159,8 @@ setold_loading(false)
       setLoading1(true);
       const res = await save_patcient_data({
         ...val,
+           address: val.address, 
+            district_id: val.districtname.value,
         passport,
         birthdate,
         phone: formatPhoneNumber(val.phone),
@@ -259,6 +288,30 @@ const resetData=()=>{
 }
 
 
+
+const getRegions = async () => {
+  try {
+    const res = await get_region_data()
+    console.log(res.data)
+    setRegion(res.data)
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+
+const getDistricts = async (id) => {
+  try {
+    const res = await get_districts_data({ region_id: id }); 
+    
+    console.log("Tumanlar kelyapti:", res.data); 
+    if (res.data) {
+      setDistricts(res.data); 
+    }
+  } catch (err) {
+    console.log("Tumanlarni yuklashda xatolik:", err);
+  }
+};
 
 
   return (
@@ -438,6 +491,72 @@ const resetData=()=>{
                     </Form.Item>
                   </Col>
 
+
+                        <Col className="main_col" lg={8} md={24}>
+                   <Form.Item
+  name="regioname"
+  label={t('region')}
+  rules={[{ required: true, message: '' }]}
+>
+  <Select
+    style={{ width: '100%' }}
+    value={regioname}
+    placeholder={t('enter_region')}
+onChange={(value) => {
+    setRegioname(value); 
+    form.setFieldsValue({ districtname: undefined }); 
+    getDistricts(Number(value));
+}}
+    options={region?.map((item) => {
+      const currentLang = i18n.language; 
+      let labelText = item.nameUz;
+      if (currentLang === 'ru') labelText = item.nameRu;
+      if (currentLang === 'en') labelText = item.nameEn;
+      return {
+        value: item.id,
+        label: labelText
+      };
+    })}
+  />
+</Form.Item>
+
+                  </Col>
+
+                <Col className="main_col" lg={8} md={24}>
+  <Form.Item  
+    name="districtname"
+    label={t('district')}
+    rules={[{ required: true, message: '' }]}
+  >
+    <Select
+      style={{ width: '100%' }}
+      placeholder={t('enter_district')}
+      labelInValue
+      options={districts?.map((item) => ({
+        value: item.id, 
+        label: i18n.language === 'ru' ? item.nameRu : (i18n.language === 'en' ? item.nameEn : item.nameUz)
+      }))}
+    />
+  </Form.Item>
+</Col>
+
+
+                  <Col className="main_col" lg={16} md={24}>
+                <Form.Item
+  name="address"
+  label={t('addres')}
+  normalize={(value) => value?.toUpperCase()}
+  rules={[{ required: true, message: '' }]}
+>
+  <Input
+    prefix={<AiFillHome />}
+    className="login_input"
+    placeholder={t('enter_addres')}
+  />
+</Form.Item>
+
+                  </Col>
+     <div className='save-pat-data'>
                   <Col className="main_col" lg={8} md={24}>
                     <div className="form_div">
                       <Button className="btn_form" loading={loading1} htmlType="submit">
@@ -445,6 +564,7 @@ const resetData=()=>{
                       </Button>
                     </div>
                   </Col>
+                  </div>
                 </Row>
               </Form>
             </div>
