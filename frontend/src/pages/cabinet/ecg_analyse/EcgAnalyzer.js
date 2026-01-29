@@ -137,15 +137,22 @@ const getParamsData=async()=>{
         gender: res.data.gender,
         phone: formatPhoneNumberForForm(res.data.phone),
       }
-      if(res.data!=null && res.data.district!=null){
-        new_data.districtname={
-               value: res.data.district.id, 
-               label: res.data.district[`name${t("data_lang")}`]
-        }
-  if(res.data.district.region!=null){
-     new_data.regioname=res.data.district.region[`name${t("data_lang")}`]
-  }
-      }
+if (res.data?.district?.region) {
+  const regionId = res.data.district.region.id;
+
+  // regionni set qilamiz
+  new_data.regioname = regionId;
+
+  // shu region bo‘yicha districtlarni oldindan yuklaymiz
+  await getDistricts(regionId);
+
+  // districtni set qilamiz
+  new_data.districtname = {
+    value: res.data.district.id,
+    label: res.data.district[`name${t("data_lang")}`],
+  };
+}
+
       form.setFieldsValue(new_data);
       setPhoneValue(formatPhoneNumberForForm(res.data.phone));
       setcheck_ecg(true)

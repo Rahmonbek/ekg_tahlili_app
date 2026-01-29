@@ -163,7 +163,10 @@
 "enter_district": "Выберите район пациента",
 "enter_district_clinic": "Выберите область",
 "enter_region_clinic": "Выберите город или район",
-  "name_clinic": "Больница"
+  "name_clinic": "Больница",
+  "name": "Название:",
+"place": "Адрес:"
+
 
 
 
