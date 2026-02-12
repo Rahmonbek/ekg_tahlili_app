@@ -116,8 +116,8 @@ data!=null?<div className={`old_analyse main_card ${open?"opened_main_card":"clo
         </div>
         <div className="ekg-item-info-text">
           <b>{t("place")} </b>
-      
-        </div>
+          <p>{data.clinic.district} </p>
+       </div>
         </div>:<></>} 
         
        {data.createdDoctor!=null?<div>
