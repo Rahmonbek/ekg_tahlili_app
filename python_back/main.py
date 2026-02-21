@@ -39,6 +39,8 @@ import warnings
 import json
 from pathlib import Path
 from lab_analyses_api import router as lab_router
+from holter_analyses_api import router as holter_router
+from smad_analyses_api import router as smad_router
 Image.MAX_IMAGE_PIXELS = None
 # Optional for PDF -> image
 try:
@@ -117,6 +119,8 @@ def save_generated_short_file(file_bytes: bytes, filename: str) -> str:
 # ---------------- FastAPI app init ----------------
 app = FastAPI(title="AI EKG Analyzer")
 app.include_router(lab_router)
+app.include_router(holter_router)
+app.include_router(smad_router)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 app.add_middleware(
     CORSMiddleware,

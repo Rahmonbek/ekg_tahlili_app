@@ -14,6 +14,8 @@ import Diagnoses from './diagnoses/Diagnoses'
 import LabAnalyzer from './lab_analyse/LabAnalyzer'
 import { get_lab_values_data } from '../../host/requests/LabValueTypesRequest'
 import Patcients from './pages/patcients/Patcients'
+import HolterAnalyzer from './holter_analyse/HolterAnalyzer'
+import SmadAnalyzer from './smad_analyse/SmadAnalyzer'
 
 
 export default function Main() {
@@ -63,6 +65,8 @@ export default function Main() {
                     
                     {user.roleId!=2 && user.roleId!=3?<><Route path="" element={<EcgAnalyzer/>} /><Route path="/cabinet" element={<EcgAnalyzer/>} /></>:<></>}
                     <Route path="analyse-ecg" element={<EcgAnalyzer/>} />
+                    <Route path="analyse-holter" element={<HolterAnalyzer/>} />
+                    <Route path="analyse-smad" element={<SmadAnalyzer/>} />
                     <Route path="analyse-lab" element={<LabAnalyzer/>} />
                     <Route path="diagnoses" element={<Diagnoses/>} />
                     <Route path="patcients" element={<Patcients/>} />

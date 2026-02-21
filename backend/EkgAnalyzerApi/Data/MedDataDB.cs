@@ -18,6 +18,8 @@ namespace EkgAnalyzerApi.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<Regions> Regions { get; set; }
         public DbSet<Districts> Districts { get; set; }
+        public DbSet<SmadAnalyses> SmadAnalyses { get; set; }
+        public DbSet<HolterAnalyses> HolterAnalyses { get; set; }
         public DbSet<MedicalDiagnoses> MedicalDiagnose { get; set; }
 
         public DbSet<Doctor> Doctors { get; set; }

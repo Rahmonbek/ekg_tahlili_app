@@ -1,8 +1,9 @@
-import { FaHeartbeat, FaHome } from "react-icons/fa";
+import { FaChartLine, FaHeartbeat, FaHome } from "react-icons/fa";
 import { FaPeopleGroup, FaUserDoctor } from "react-icons/fa6";
 import { IoIosCard, IoIosPeople, IoMdSettings } from "react-icons/io";
 import { MdOutlineMedicalInformation } from "react-icons/md";
 import { GiTestTubes } from "react-icons/gi";
+import {RiPulseLine } from 'react-icons/ri'
 export const routers=[
     {
         path:'/doctor',
@@ -19,6 +20,20 @@ export const routers=[
         icon:<FaHeartbeat />,
         title:"analyse_ecg",
         tools:"analyse-ecg",
+        role_id:[]
+    },
+    {
+        path:'/analyse-holter',
+        icon:<RiPulseLine />,
+        title:"analyse_holter",
+        tools:"analyse-holter",
+        role_id:[]
+    },
+    {
+        path:'/analyse-smad',
+        icon:<FaChartLine />,
+        title:"analyse_smad",
+        tools:"analyse-smad",
         role_id:[]
     },
      {

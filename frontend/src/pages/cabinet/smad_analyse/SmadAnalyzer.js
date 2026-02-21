@@ -3,32 +3,29 @@ import Cleave from 'cleave.js/react';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaFemale, FaMale } from 'react-icons/fa';
-import { FaAddressCard } from 'react-icons/fa6';
+import { FaAddressCard, FaUserDoctor } from 'react-icons/fa6';
 import { IoAlertCircleSharp, IoPerson } from 'react-icons/io5';
 import InputMask from 'react-input-mask';
 import { get_patcient_by_passport, save_patcient_data } from '../../../host/requests/PatcientRequest';
 import { calculateAge, formatPhoneNumber, formatPhoneNumberForForm } from '../../../tools/formatters';
 import { useStore } from '../../../store/Store';
-import { select } from 'react-cookies';
-import { analyzeLabFile } from '../../../host/LabService';
-import EcgResult from '../../../components/results/EcgResult';
+import { analyzeSmadFile } from '../../../host/smadService';
 import { MoonLoader } from 'react-spinners';
-import { successAlert, warningAlert } from '../../../tools/Alerts';
+import {warningAlert } from '../../../tools/Alerts';
 import { MdLanguage } from 'react-icons/md';
-import { get_ecg_analyses_by_patcient_id } from '../../../host/requests/ECGAnalyseRequest';
-import EcgOldResult from '../../../components/results/EcgOldResult';
-import { get_lab_categories_data } from '../../../host/requests/LabCategories';
-import LabResult from '../../../components/results/lab_analyse/LabResult';
-import { get_lab_analyses_by_patcient_id } from '../../../host/requests/LabAnalyseRequest';
-import LabOldResult from '../../../components/results/lab_analyse/LabOldResult';
+import SmadResult from '../../../components/results/smad_analyse/SmadResult';
+import { get_smad_analyses_by_patcient_id } from '../../../host/requests/SmadAnalyseRequest';
+import SmadOldResult from '../../../components/results/smad_analyse/SmadOldResult';
 import { AiFillHome } from 'react-icons/ai';
 import i18n from '../../../locale/i18next';
 import { get_districts_data, get_region_data } from '../../../host/requests/RegionRequest';
+import { get_doctor_by_clinic_id } from '../../../host/requests/DoctorRequest';
 
-export default function LabAnalyzer() {
+export default function SmadAnalyzer() {
   const [loading, setLoading] = useState(false);
   const [old_loading, setold_loading] = useState(false);
   const [ekg_saved, setekg_saved] = useState(false);
+  const [selected_doctor, setselected_doctor] = useState(null);
 
   const [loading1, setLoading1] = useState(false);
   const [loading3, setLoading3] = useState(false);
@@ -41,7 +38,6 @@ export default function LabAnalyzer() {
   const { t } = useTranslation();
   const [gender, setGender] = useState(true);
   const [lang, setlang] = useState('uz');
-  const [select_lab_category, setselect_lab_category] = useState([]);
   const [old_anylyses, setold_anylyses] = useState([]);
   const [patcient, setPatcient] = useState(null);
   const [passport, setPassport] = useState(null);
@@ -52,32 +48,29 @@ export default function LabAnalyzer() {
     const [phoneValue, setPhoneValue] = useState('');
   const [form2] = Form.useForm(); 
     const [image, setimage] = useState(null)
-    const [image_short, setimage_short] = useState(null)
-    const [file_input, setfile_input] = useState("")
       const [files, setFiles] = useState([]);
 
 
     const [region, setRegion]=useState([])
    const [regioname, setRegioname]=useState([])
 const [ districts,  setDistricts]=useState([])
-const [districtname, setDistrictname] = useState(null);
 
 
-      const {lab_categories, setlab_categories, user, setloader}=useStore()
+      const {user, setloader, doctors, setdoctors}=useStore()
        useEffect(()=>{
         getRegions()
-         if(lab_categories.length==0){
-            getLabCategories()
-         }
+         if(doctors.length==0 && user!=null){
+        getDoctorsOfClinic()
+       }
        }, [])
 
- const getLabCategories=async()=>{
+ const getDoctorsOfClinic=async()=>{
         try{
-             var res=await get_lab_categories_data()
-             console.log(res)
-             setlab_categories(res.data)
+           var res1=await get_doctor_by_clinic_id({id:user.clinic.id})
+           
+           setdoctors(res1.data.doctor)
         }catch(err){
-            console.log(err)
+
         }
     }
       const handleChange = (e) => {
@@ -86,7 +79,6 @@ const [districtname, setDistrictname] = useState(null);
          setpage(1)
          getOldECGAnaylses(patcient.id, 'first')
         setshow_btn(true)
-    setfile_input(e.target.value)
     setFiles(Array.from(e.target.files));
     setnumber(number+1)
 };
@@ -137,7 +129,7 @@ const [districtname, setDistrictname] = useState(null);
   const getOldECGAnaylses=async(id, type)=>{
     try{
       setold_loading(true)
-         var res=await get_lab_analyses_by_patcient_id({id:id, page:type=="first"?1:page})
+         var res=await get_smad_analyses_by_patcient_id({id:id, page:type=="first"?1:page})
          if(type=="first"){
           setpage(2)
 setold_anylyses([...res.data.items])
@@ -174,19 +166,6 @@ setold_loading(false)
     }
   };
 
-const onChangeCategory=(val)=>{
-      let x=select_lab_category.findIndex((x)=>(x.id==val.id))
-      let a=select_lab_category
-      if(x==-1){
-        a.push(val)
-      }else{
-        a.splice(x, 1)
-      }
-      setselect_lab_category([...a])
-      console.log(a)
-}
-
-
 
  const handleSubmit = async () => {
     console.log(files.length)
@@ -199,22 +178,20 @@ const onChangeCategory=(val)=>{
     setResult(null);
     setError(null);
     setimage(null)
-    setimage_short(null)
 
     try {
       const formData = new FormData();
       files.forEach((f) => formData.append("file", f));
-      select_lab_category.forEach((f) => formData.append("lab_category_id", f.id));
-     
       formData.append('gender', patcient.gender?"erkak":'ayol')
       formData.append('patcient_id', patcient.id)
       formData.append('created_doctor_id', user.doctor.id)
+      formData.append('main_doctor_id', selected_doctor)
       formData.append('clinic_id', user.clinic.id)
       formData.append('lang', lang)
       formData.append('age', calculateAge(patcient.birthDate))
       var res
       
-          res = await analyzeLabFile(formData);
+          res = await analyzeSmadFile(formData);
       console.log(res)
       let parsedResult;
      try {
@@ -247,7 +224,7 @@ const retryAnalyse=()=>{
     setPatcient(null);
     setekg_saved(false)
             
-              setselect_lab_category([])
+             
               setFiles([])
               setcheck_ecg(false)
               setshow_btn(false)
@@ -257,7 +234,6 @@ const retryAnalyse=()=>{
     setpage(1)
     settotal_page(0)
     setold_anylyses([])
-    setimage_short(null)
     setLoading(false)
     setLoading1(false)
     setLoading3(false)
@@ -269,7 +245,7 @@ const resetData=()=>{
     setPatcient(null);
     setekg_saved(false)
          
-              setselect_lab_category([])
+           
               setFiles([])
               setcheck_ecg(false)
               setshow_btn(false)
@@ -279,7 +255,6 @@ const resetData=()=>{
     setpage(1)
     settotal_page(0)
     setold_anylyses([])
-    setimage_short(null)
     setLoading(false)
     setLoading1(false)
     setLoading3(false)
@@ -573,7 +548,7 @@ onChange={(value) => {
         </div>
       </div>
       {check_ecg?<div className="main_card">
-        <h1>{t('lab_analyse')} <Tooltip placement="bottomRight" title={t("alert_ecg")}>
+        <h1>{t('smad_analyse')} <Tooltip placement="bottomRight" title={t("alert_ecg")}>
                 <span className='alert_icon'><IoAlertCircleSharp /></span>
             </Tooltip></h1>
         <div className="main_card_content">
@@ -590,7 +565,7 @@ onChange={(value) => {
 
                      <Form.Item
   name="select_lab_file"
-  label={t('select_lab_file')}
+  label={t('select_smad_file')}
   rules={[{ required: true, message: '' }]}
 >
   <div>
@@ -599,10 +574,10 @@ onChange={(value) => {
       type="file"
       
       onChange={handleChange}
-      accept=".pdf,.jpg,.png"
+      accept=".pdf"
     />
     <p className='file_input_bottom_text'>
-      {t("access_file_types")}: pdf, jpg, png
+      {t("access_file_types")}: pdf
     </p>
   </div>
 </Form.Item>
@@ -628,28 +603,27 @@ onChange={(value) => {
                     </Form.Item>
                   </Col>
 
+                   <Col className="main_col" lg={12} md={24}>
+                    <Form.Item
+                      name="main_doctor"
+                      label={t('smad_doctor')}
+                      rules={[{ required: true, message: '' }]}
+                    >
+                      <Select
+                        style={{ width: '100%' }}
+                        value={selected_doctor}
+                        prefix={<FaUserDoctor />}
+                        defaultValue={selected_doctor}
+                        onChange={(value) => setselected_doctor(value)}
+                        options={doctors.map((item, key)=>({value:item.id, label:item.lastName+" "+item.firstName}))}
+                      />
+                    </Form.Item>
+                  </Col>
+
                  
                                        
-                <Col  className="main_col" lg={24} md={24}>
-                <p className='ecg_label'>{t("select_lab_category_type")}</p>
-                <br/>
-                {lab_categories.map((item1, key)=>{
-                    return(<>
-                    <h2 className='title_complaint_item'>{item1[`name${t("data_lang")}`]}</h2>
-                    <Row>
-                    {item1.categories.map((item, key)=>{
-                        return(<Col lg={12} md={24}><div className='complaint_item'>
-                             <Checkbox checked={select_lab_category.findIndex(x=>(x.id==item.id))!=-1} onChange={()=>{onChangeCategory(item)}}><span className='complaint_name'>{item[`name${t("data_lang")}`]}</span></Checkbox>
-                        </div></Col>)
-                    })}
-                    </Row></> )
-                })}
                
-                </Col>
-
-
-
-                <Col lg={9} md={24}></Col>
+                <Col lg={12} md={24}></Col>  <Col lg={9} md={24}></Col>
                 <Col lg={6} md={24}>
                 {show_btn?<Button onClick={handleSubmit} loading={loading3} htmlType='button'  className="btn_form">
            {t("check")}
@@ -663,17 +637,17 @@ onChange={(value) => {
         </div>
         </div>:<></>}
        {(result!=null || loading3)?<div className="main_card">
-        <h1>{t('lab_last_result')}</h1>
+        <h1>{t('smad_last_result')}</h1>
         <div className="main_card_content">
             {loading3?<div className='mini_loader'><MoonLoader size={50} color={"#4FD1C5"} /></div>:
             <>
-            <LabResult error={error} result={result} image={image} />
+            <SmadResult error={error} result={result} image={image} />
             <br/>
             <Row>
             <Col lg={9} md={24}></Col>
                 <Col lg={6} md={24}>
                 {<Button onClick={retryAnalyse} loading={loading3} htmlType='button'  className="btn_form">
-          {t("retry_lab_analyse")}
+          {t("retry_smad_analyse")}
         </Button>}
                 </Col>
                 <Col lg={9} md={24}></Col>
@@ -683,7 +657,7 @@ onChange={(value) => {
             </div></div>:<></>}
 
             {old_anylyses.map((item, key)=>{
-              return <LabOldResult data={item}/>
+              return <SmadOldResult data={item}/>
             })}
             
            {page<=total_page?<Button onClick={()=>{getOldECGAnaylses(patcient.id)}} loading={old_loading} htmlType='button'  className="btn_form mini_btn_main">

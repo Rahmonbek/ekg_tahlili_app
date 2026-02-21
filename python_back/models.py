@@ -79,6 +79,44 @@ class LabAnalyses(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
+class HolterAnalyses(Base):
+    __tablename__ = "holter_analyses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    clinic_id = Column(Integer)
+    patcient_id = Column(Integer)
+    created_doctor_id = Column(Integer)
+    main_doctor_id = Column(Integer)
+
+    status = Column(Integer, default=0)
+
+    analyse_file_link = Column(String, nullable=True)
+    ai_answer_data = Column(String, nullable=True)  # text
+
+
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+class SmadAnalyses(Base):
+    __tablename__ = "smad_analyses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    clinic_id = Column(Integer)
+    patcient_id = Column(Integer)
+    created_doctor_id = Column(Integer)
+    main_doctor_id = Column(Integer)
+
+    status = Column(Integer, default=0)
+
+    analyse_file_link = Column(String, nullable=True)
+    ai_answer_data = Column(String, nullable=True)  # text
+
+
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+
+
 class MedicalDiagnoses(Base):
     __tablename__ = "medical_diagnoses" # Bazadagi mavjud jadval nomi
     
