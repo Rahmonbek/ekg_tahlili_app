@@ -19,14 +19,17 @@ import SmadOldResult from '../../../components/results/smad_analyse/SmadOldResul
 import { AiFillHome } from 'react-icons/ai';
 import i18n from '../../../locale/i18next';
 import { get_districts_data, get_region_data } from '../../../host/requests/RegionRequest';
-import { get_doctor_by_clinic_id } from '../../../host/requests/DoctorRequest';
+import { get_doctor_by_clinic_id, get_params_for_add_staff } from '../../../host/requests/DoctorRequest';
 
 export default function SmadAnalyzer() {
   const [loading, setLoading] = useState(false);
   const [old_loading, setold_loading] = useState(false);
   const [ekg_saved, setekg_saved] = useState(false);
   const [selected_doctor, setselected_doctor] = useState(null);
-
+ const [position_ids, setposition_ids] = useState([]);
+    const [position_datas, setposition_datas] = useState([]);
+    const [select_doctor, setselect_doctor] = useState([]);
+    const [doctor_datas, setdoctor_datas] = useState([]);
   const [loading1, setLoading1] = useState(false);
   const [loading3, setLoading3] = useState(false);
   const [page, setpage] = useState(1);
@@ -56,23 +59,74 @@ export default function SmadAnalyzer() {
 const [ districts,  setDistricts]=useState([])
 
 
-      const {user, setloader, doctors, setdoctors}=useStore()
+      const {user, setloader, doctors, setdoctors,  setroles, setpositions, positions}=useStore()
        useEffect(()=>{
+          console.log(positions)
+         if(positions.length==0){
+           getParamsData()
+       }else{
+      
+ let a=positions.filter((item)=>(item.roleId==4))
+           setposition_datas([...a])
+        
+       
+       }
         getRegions()
+        if(doctors.length==0 && user!=null){
+        getDoctorsOfClinic()
+       }else{
+        setdoctor_datas(doctors)
+       }
          if(doctors.length==0 && user!=null){
         getDoctorsOfClinic()
        }
-       }, [])
+       }, [user])
+const getParamsData=async()=>{
+        try{
+           var res=await get_params_for_add_staff()
+           setpositions([...res.data.positions])
+           setroles(res.data.roles)
+           let a=res.data.positions.filter((item)=>(item.roleId==4))
+           
+           setposition_datas(a)
+        }catch(err){
 
+        }
+    }
  const getDoctorsOfClinic=async()=>{
         try{
            var res1=await get_doctor_by_clinic_id({id:user.clinic.id})
-           
+           setdoctor_datas(res1.data.doctor)
            setdoctors(res1.data.doctor)
         }catch(err){
 
         }
     }
+const changePositions=(val)=>{
+  
+      setselect_doctor([])
+       if(val.length==0){
+        setdoctor_datas(doctors)
+       }else{
+ const result = doctors.filter(doctor =>
+  doctor.positions.some(pos => val.includes(pos.id))
+);
+      setdoctor_datas([...result])
+       }
+     
+}
+    const onChangeDoctors=(val)=>{
+      let x=select_doctor.findIndex((x)=>(x.id==val.id))
+      let a=select_doctor
+      if(x==-1){
+        a.push(val)
+      }else{
+        a.splice(x, 1)
+      }
+      setselect_doctor([...a])
+      console.log(a)
+}
+ 
       const handleChange = (e) => {
          setold_anylyses([])
          settotal_page(0)
@@ -182,6 +236,7 @@ setold_loading(false)
     try {
       const formData = new FormData();
       files.forEach((f) => formData.append("file", f));
+      select_doctor.forEach((f) => formData.append("doctor_id", f.id));
       formData.append('gender', patcient.gender?"erkak":'ayol')
       formData.append('patcient_id', patcient.id)
       formData.append('created_doctor_id', user.doctor.id)
@@ -223,7 +278,8 @@ setResult(parsedResult);
 const retryAnalyse=()=>{
     setPatcient(null);
     setekg_saved(false)
-            
+             setdoctor_datas(doctors)
+             setselect_doctor([])
              
               setFiles([])
               setcheck_ecg(false)
@@ -244,8 +300,8 @@ const retryAnalyse=()=>{
 const resetData=()=>{
     setPatcient(null);
     setekg_saved(false)
-         
-           
+         setselect_doctor([])
+            setdoctor_datas(doctors)
               setFiles([])
               setcheck_ecg(false)
               setshow_btn(false)
@@ -619,11 +675,40 @@ onChange={(value) => {
                       />
                     </Form.Item>
                   </Col>
-
-                 
-                                       
-               
-                <Col lg={12} md={24}></Col>  <Col lg={9} md={24}></Col>
+{doctors.length>0?<><Col className="main_col" lg={24} md={24}>
+                                                        <Form.Item
+                                                         name="positions"
+                                                         label={t('position')}
+                                                         
+                                                       >
+                                    <Select
+                                    onChange={(val)=>{changePositions(val)}}
+                                                           style={{ width: '100%' }}
+                                                           mode="multiple"
+                                                           prefix={<FaUserDoctor />}
+                                                           placeholder={t('enter_position_doctor')}
+                                                           options={position_datas.map(item => ({
+                                       value: item.id,
+                                       label: item[`name${t("data_lang")}`],
+                                     }))}
+                                                     
+                                                         />
+                                                        
+                                                       </Form.Item>
+                                                       </Col>
+                                    <Col  className="main_col" lg={24} md={24}>
+                                 <p className='ecg_label'>{t("select_doctor_of_patcient")}</p>
+                                 <br/>
+                                 <Row>
+                                     {doctor_datas.map((item, key)=>{
+                                         return(<Col lg={12} md={24}><div className='complaint_item'>
+                                              <Checkbox checked={select_doctor.findIndex(x=>(x.id==item.id))!=-1} onChange={()=>{onChangeDoctors(item)}}><span className='complaint_name'>{item.lastName} {item.firstName}</span></Checkbox>
+                                         </div></Col>)
+                                     })}
+                                     </Row>
+                                    <p className='ecg_has_not_label'>{t("has_not_doctor")}</p> 
+                                 </Col></>:<></>}
+<Col lg={9} md={24}></Col>
                 <Col lg={6} md={24}>
                 {show_btn?<Button onClick={handleSubmit} loading={loading3} htmlType='button'  className="btn_form">
            {t("check")}

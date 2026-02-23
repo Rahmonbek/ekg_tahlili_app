@@ -138,6 +138,33 @@ class ECGAnalyseDoctors(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+class LabAnalyseDoctors(Base):
+    __tablename__ = "lab_analyse_doctors" # Bazadagi mavjud jadval nomi
+
+    id = Column(Integer, primary_key=True, index=True)
+    lab_analyse_id = Column(Integer)
+    doctor_id = Column(Integer)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class SmadAnalyseDoctors(Base):
+    __tablename__ = "smad_analyse_doctors" # Bazadagi mavjud jadval nomi
+
+    id = Column(Integer, primary_key=True, index=True)
+    smad_analyse_id = Column(Integer)
+    doctor_id = Column(Integer)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class HolterAnalyseDoctors(Base):
+    __tablename__ = "holter_analyse_doctors" # Bazadagi mavjud jadval nomi
+
+    id = Column(Integer, primary_key=True, index=True)
+    holter_analyse_id = Column(Integer)
+    doctor_id = Column(Integer)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow)
+
 class ECGAnalyseComplaints(Base):
     __tablename__ = "ecg_analyse_complaints" # Bazadagi mavjud jadval nomi
 

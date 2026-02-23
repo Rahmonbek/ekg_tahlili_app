@@ -31,6 +31,9 @@ namespace EkgAnalyzerApi.Data
         public DbSet<LabAnalyses> LabAnalyse { get; set; }
         public DbSet<ECGAnalyses> ECGAnalyse { get; set; }
         public DbSet<ECGAnalyseDoctors> ECGAnalyseDoctor { get; set; }
+        public DbSet<LabAnalyseDoctors> LabAnalyseDoctor { get; set; }
+        public DbSet<SmadAnalyseDoctors> SmadAnalyseDoctor { get; set; }
+        public DbSet<HolterAnalyseDoctors> HolterAnalyseDoctor { get; set; }
         public DbSet<ECGAnalyseComplaints> ECGAnalyseComplaint { get; set; }
         public DbSet<LabAnalyseCategories> LabAnalyseCategories { get; set; }
         public DbSet<ClinicDetail> ClinicDetails { get; set; }

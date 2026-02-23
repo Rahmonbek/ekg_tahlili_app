@@ -24,6 +24,7 @@ public class SmadAnalyseDTO
    
     public DoctorForECGData? CreatedDoctor { get; set; }
     public DoctorForECGData? MainDoctor { get; set; }
+    public List<DoctorForECGData>? Doctors { get; set; }
     public PatcientForECG? Patcient { get; set; }
     public ClinicForECG? Clinic { get; set; }
     public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;

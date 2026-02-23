@@ -37,7 +37,10 @@ namespace EkgAnalyzerApi.Services
                 .Include(e => e.MainDoctor)
                     .ThenInclude(c => c.User)
                     .ThenInclude(c => c.Role)
-
+                .Include(e => e.Doctors)
+    .ThenInclude(c => c.Doctor)
+     .ThenInclude(c => c.User)
+    .ThenInclude(c => c.Role)
                 .OrderByDescending(e => e.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -98,6 +101,21 @@ namespace EkgAnalyzerApi.Services
                             NameRu = e.MainDoctor.User.Role.NameRu
                         }
                     },
+                    Doctors = e.Doctors.Select(c => new DoctorForECGData
+                    {
+                        Id = c.Doctor.Id,
+                        FirstName = c.Doctor.FirstName,
+                        LastName = c.Doctor.LastName,
+                        SureName = c.Doctor.SureName,
+                        Phone = c.Doctor.Phone,
+                        Role = new RolesDTO
+                        {
+                            Id = c.Doctor.User.Role.Id,
+                            NameUz = c.Doctor.User.Role.NameUz,
+                            NameEn = c.Doctor.User.Role.NameEn,
+                            NameRu = c.Doctor.User.Role.NameRu
+                        }
+                    }).ToList()
                 })
                 .ToListAsync();
 

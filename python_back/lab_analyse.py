@@ -17,6 +17,7 @@ def create_lab_analyse(
     created_doctor_id: int,
     clinic_id: int,
     status: int = 0,
+    
     analyse_file_link: Optional[str] = None,
     ai_answer_data: Optional[str] = None,
     hb: Optional[float] = None,

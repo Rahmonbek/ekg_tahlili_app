@@ -68,10 +68,10 @@ const [districtname, setDistrictname] = useState(null);
        if(positions.length==0){
            getParamsData()
        }else{
-        if(position_datas.length!=0){
+       
  let a=positions.filter((item)=>(item.roleId==4))
            setposition_datas([...a])
-        }
+        
        
        }
         getRegions()
@@ -303,6 +303,7 @@ const retryAnalyse=()=>{
               setFiles([])
               setcheck_ecg(false)
               setshow_btn(false)
+              setdoctor_datas(doctors)
               setResult(null);
     setError(null);
     setcheck_ai(false)
@@ -327,6 +328,7 @@ const resetData=()=>{
               setcheck_ecg(false)
               setshow_btn(false)
               setResult(null);
+              setdoctor_datas(doctors)
     setError(null);
     setimage(null)
     setpage(1)

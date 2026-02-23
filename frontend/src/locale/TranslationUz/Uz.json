@@ -191,7 +191,8 @@
   "smad_last_result":"So'ngi smad tahlili",
    "retry_holter_analyse":"Yangi holterni tahlil qilish",
    "retry_smad_analyse":"Yangi smadni tahlil qilish",
-   "retry_lab_analyse":"Yangi labaratoriyani tahlil qilish"
+   "retry_lab_analyse":"Yangi labaratoriyani tahlil qilish",
+   "analyse_lab_saved":"Labaratoriya analizi saqlandi. Keyingi bemor labaratoriya analiz faylini yuborishingiz mumkin"
 
 
 

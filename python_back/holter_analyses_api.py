@@ -6,8 +6,10 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from holter_analyse_doctors import create_holter_analyse_doctor
 from database import get_db
 from holter_analyse import create_holter_analyse, update_holter_analyse
+
 from openai import OpenAI
 BASE_DIR = Path(__file__).parent  # Loyihangiz papkasi
 OPENAI_API_KEY = "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"
@@ -103,6 +105,7 @@ def compose_prompt_for_openai(age, gender,  lang) -> str:
 @router.post("/analyze")
 async def analyze(
     db: Session = Depends(get_db),
+    doctor_id: list[int] | None = Form(None),
     file: list[UploadFile] = File(...),
     created_doctor_id: int = Form(...),
     main_doctor_id: int = Form(...),
@@ -131,7 +134,13 @@ async def analyze(
         status=0,
         analyse_file_link=analyse_file_path
     )
-
+    if doctor_id:
+        for d_id in doctor_id:
+            await create_holter_analyse_doctor(
+                session=db,
+                holter_analyse_id=holter_analyse.id,
+                doctor_id=d_id
+            )
 
     # OpenAI file upload
     try:

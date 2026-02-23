@@ -112,7 +112,15 @@ data!=null?<div className={`old_analyse main_card ${open?"opened_main_card":"clo
           <b>{data.createdDoctor.role!=null?data.createdDoctor.role[`name${t("data_lang")}`]+":":''} </b>
           <p>{data.createdDoctor.lastName} {data.createdDoctor.firstName} </p>
         </div></div>:<></>} 
-          
+          {data.doctors!=null && data.doctors.length>0?<div>
+          <p className='ecg_label'>{t("doctor_of_patcient")}</p>
+          {data.doctors.map((item, index)=>(
+            <div className="ekg-item-info-text">
+          <b>{item.role!=null?item.role[`name${t("data_lang")}`]+":":''} </b>
+          <p>{item.lastName} {item.firstName} </p>
+        </div>
+          ))}
+          </div>:<></>} 
           {data.categories!=null && data.categories.length>0?<div>
           <p className='ecg_label'>{t("lab_categories")}</p>
           {data.categories.map((item, index)=>(
@@ -141,7 +149,7 @@ data!=null?<div className={`old_analyse main_card ${open?"opened_main_card":"clo
     <ul>
 {lab_values.map((lab_value)=>{{
           if(data!=null && data[lab_value.columnName]!=null){
-            return (<li key={lab_value.id}><b>{lab_value[`name${t('data_lang')}`]}</b><span> - {data[lab_value.columnName].value} {data[lab_value.columnName].unit}</span></li>
+            return (<li key={lab_value.id}><b>{lab_value[`name${t('data_lang')}`]}</b><span> - {data[lab_value.columnName]} {lab_value.measure}</span></li>
             )
           }
 }})}

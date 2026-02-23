@@ -60,6 +60,7 @@ public class LabAnalyseDTO
     public decimal? daily_creatinine { get; set; } // mmol/24h
     public decimal? daily_calcium { get; set; } // mmol/24h
     public decimal? daily_sodium { get; set; } // mmol/24h
+    public List<DoctorForECGData>? Doctors { get; set; }
     public DoctorForECGData? CreatedDoctor { get; set; }
     public PatcientForECG? Patcient { get; set; }
     public ClinicForECG? Clinic { get; set; }

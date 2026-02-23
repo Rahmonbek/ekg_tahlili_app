@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
+from smad_analyse_doctors import create_smad_analyse_doctor
 from smad_analyse import create_smad_analyse, update_smad_analyse
 from openai import OpenAI
 BASE_DIR = Path(__file__).parent  # Loyihangiz papkasi
@@ -103,6 +104,7 @@ def compose_prompt_for_openai(age, gender,  lang) -> str:
 @router.post("/analyze")
 async def analyze(
     db: Session = Depends(get_db),
+    doctor_id: list[int] | None = Form(None),
     file: list[UploadFile] = File(...),
     created_doctor_id: int = Form(...),
     main_doctor_id: int = Form(...),
@@ -131,7 +133,13 @@ async def analyze(
         status=0,
         analyse_file_link=analyse_file_path
     )
-
+    if doctor_id:
+        for d_id in doctor_id:
+            await create_smad_analyse_doctor(
+                session=db,
+                smad_analyse_id=smad_analyse.id,
+                doctor_id=d_id
+            )
 
     # OpenAI file upload
     try:

@@ -310,7 +310,7 @@ cursor: pointer;
 width: 100% !important;
 height: 100% !important;
   }
-  .ecg_label{padding: 10px 10px; font-size: var(--medium_size); border-bottom: 2px solid var(--grey_color);
+  .ecg_label{padding: 10px 10px; font-size: var(--small_size); border-bottom: 2px solid var(--grey_color);
     font-weight: 500; margin-top: 10px; color: var(--text_second_color);}
 .ecg_has_not_label{
   font-size: var(--mini_size); color: var(--grey_color); padding: 10px;

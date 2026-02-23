@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from lab_analyse_categories import create_lab_analyse_category
 from lab_analyse import create_lab_analyse, update_lab_analyse
+from lab_analyse_doctors import create_lab_analyse_doctor
 from openai import OpenAI
 BASE_DIR = Path(__file__).parent  # Loyihangiz papkasi
 OPENAI_API_KEY = "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"
@@ -135,7 +136,7 @@ daily_sodium - 24 soatlik natriy (mmol/24h)
     
   },
 
-  "automatic_analysis": "Labaratoriya natijasi faylidagi mavjud parametrlardan qaysilari normada emas ekanligi yozilsin. Normasi qancha bo'lishini yozma",
+  "automatic_analysis": "Labaratoriya natijasi faylidagi mavjud parametrlardan qaysilari normada emas ekanligi yozilsin. Normasi qancha bo'lishini yozma. Parametrlardan qaysilarini aniqlab bo'lmasligi haqida ham yozma. Agar hech qanday parametr aniqlanmasa shunchaki labaratoriya faylini tahlil qil.",
 
   "automatic_analysis_bool": "Holat jiddiyligi darajasi: 1 = yengil, 2 = o‘rtacha, 3 = og‘ir",
    "final_summary": "Tibbiy asoslangan yakuniy xulosa"
@@ -155,6 +156,7 @@ daily_sodium - 24 soatlik natriy (mmol/24h)
 @router.post("/analyze")
 async def analyze(
     db: Session = Depends(get_db),
+    doctor_id: list[int] | None = Form(None),
     file: list[UploadFile] = File(...),
     lab_category_id: list[int] | None = Form(None),
     created_doctor_id: int = Form(...),
@@ -182,7 +184,13 @@ async def analyze(
         status=0,
         analyse_file_link=analyse_file_path
     )
-
+    if doctor_id:
+        for d_id in doctor_id:
+            await create_lab_analyse_doctor(
+                session=db,
+                lab_analyse_id=lab_analyse.id,
+                doctor_id=d_id
+            )
     # Lab categories bog'lash
     if lab_category_id:
         for c_id in lab_category_id:

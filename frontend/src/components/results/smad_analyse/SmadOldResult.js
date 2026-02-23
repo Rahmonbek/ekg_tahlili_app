@@ -112,7 +112,15 @@ data!=null?<div className={`old_analyse main_card ${open?"opened_main_card":"clo
           <b>{data.mainDoctor.role!=null?data.mainDoctor.role[`name${t("data_lang")}`]+":":''} </b>
           <p>{data.mainDoctor.lastName} {data.mainDoctor.firstName} </p>
         </div></div>:<></>} 
-
+        {data.doctors!=null && data.doctors.length>0?<div>
+          <p className='ecg_label'>{t("doctor_of_patcient")}</p>
+          {data.doctors.map((item, index)=>(
+            <div className="ekg-item-info-text">
+          <b>{item.role!=null?item.role[`name${t("data_lang")}`]+":":''} </b>
+          <p>{item.lastName} {item.firstName} </p>
+        </div>
+          ))}
+          </div>:<></>} 
         {data.createdDoctor!=null?<div>
           <p className='ecg_label'>{t("doctor_of_created")}</p>
           <div className="ekg-item-info-text">

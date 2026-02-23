@@ -15,29 +15,18 @@ namespace EkgAnalyzerApi.Services
         }
 
         public async Task<PagedResult<SmadAnalyseDTO>> GetSmadAnalysesByPatientIdAsync(
-            int patientId,
-            int page = 1,
-            int pageSize = 5)
+    int patientId,
+    int page = 1,
+    int pageSize = 5)
         {
             var baseQuery = _context.SmadAnalyses
-                .Where(e => e.PatcientId == patientId);
-
-            // jami yozuvlar soni
+               .Where(e => e.PatcientId == patientId);
+            var r = baseQuery.Include(e => e.Doctors).Take(pageSize).ToList();
+            // 1. Jami sonini hisoblash
             var totalCount = await baseQuery.CountAsync();
 
+            // 2. Ma'lumotlarni olish
             var items = await baseQuery
-                .Include(e => e.Clinic)
-                .ThenInclude(c => c.ClinicDetail)
-                .ThenInclude(c => c.District)
-                .ThenInclude(c => c.Region)
-                .Include(e => e.Patcient)
-                .Include(e => e.CreatedDoctor)
-                    .ThenInclude(c => c.User)
-                    .ThenInclude(c => c.Role)
-                .Include(e => e.MainDoctor)
-                    .ThenInclude(c => c.User)
-                    .ThenInclude(c => c.Role)
-
                 .OrderByDescending(e => e.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -49,33 +38,30 @@ namespace EkgAnalyzerApi.Services
                     CreatedAt = e.CreatedAt,
                     AnalyseFileLink = e.AnalyseFileLink,
                     Status = e.Status,
-                    
                     PatcientId = e.PatcientId,
                     CreatedDoctorId = e.CreatedDoctorId,
                     MainDoctorId = e.MainDoctorId,
-                    Clinic = new ClinicForECG
+                    Clinic = e.Clinic == null ? null : new ClinicForECG
                     {
                         Id = e.Clinic.Id,
                         ClinicLogo = e.Clinic.ClinicLogo,
                         ClinicName = e.Clinic.ClinicName,
                         District = e.Clinic.ClinicDetail.District
-
                     },
-                    Patcient = new PatcientForECG
+                    Patcient = e.Patcient == null ? null : new PatcientForECG
                     {
                         Id = e.Patcient.Id,
                         BirthDate = e.Patcient.BirthDate,
                         Gender = e.Patcient.Gender
-
                     },
-                    CreatedDoctor = new DoctorForECGData
+                    CreatedDoctor = e.CreatedDoctor == null ? null : new DoctorForECGData
                     {
                         Id = e.CreatedDoctor.Id,
                         FirstName = e.CreatedDoctor.FirstName,
                         LastName = e.CreatedDoctor.LastName,
                         SureName = e.CreatedDoctor.SureName,
                         Phone = e.CreatedDoctor.Phone,
-                        Role = new RolesDTO
+                        Role = e.CreatedDoctor.User.Role == null ? null : new RolesDTO
                         {
                             Id = e.CreatedDoctor.User.Role.Id,
                             NameUz = e.CreatedDoctor.User.Role.NameUz,
@@ -83,14 +69,14 @@ namespace EkgAnalyzerApi.Services
                             NameRu = e.CreatedDoctor.User.Role.NameRu
                         }
                     },
-                    MainDoctor = new DoctorForECGData
+                    MainDoctor = e.MainDoctor == null ? null : new DoctorForECGData
                     {
                         Id = e.MainDoctor.Id,
                         FirstName = e.MainDoctor.FirstName,
                         LastName = e.MainDoctor.LastName,
                         SureName = e.MainDoctor.SureName,
                         Phone = e.MainDoctor.Phone,
-                        Role = new RolesDTO
+                        Role = e.MainDoctor.User.Role == null ? null : new RolesDTO
                         {
                             Id = e.MainDoctor.User.Role.Id,
                             NameUz = e.MainDoctor.User.Role.NameUz,
@@ -98,6 +84,22 @@ namespace EkgAnalyzerApi.Services
                             NameRu = e.MainDoctor.User.Role.NameRu
                         }
                     },
+                    
+                    Doctors = e.Doctors.Select(c => new DoctorForECGData
+                    {
+                        Id = c.Doctor.Id,
+                        FirstName = c.Doctor.FirstName,
+                        LastName = c.Doctor.LastName,
+                        SureName = c.Doctor.SureName,
+                        Phone = c.Doctor.Phone,
+                        Role = new RolesDTO
+                        {
+                            Id = c.Doctor.User.Role.Id,
+                            NameUz = c.Doctor.User.Role.NameUz,
+                            NameEn = c.Doctor.User.Role.NameEn,
+                            NameRu = c.Doctor.User.Role.NameRu
+                        }
+                    }).ToList() 
                 })
                 .ToListAsync();
 

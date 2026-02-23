@@ -21,7 +21,7 @@ public class HolterAnalyseDTO
 
     public string? AIAnswerData { get; set; }
 
-   
+    public List<DoctorForECGData>? Doctors { get; set; }
     public DoctorForECGData? CreatedDoctor { get; set; }
     public DoctorForECGData? MainDoctor { get; set; }
     public PatcientForECG? Patcient { get; set; }
