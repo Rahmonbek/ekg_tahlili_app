@@ -346,7 +346,9 @@ font-size: var(--extra_large_size);
  .ekg-item-text:has(.see_diagnoses){display: flex; align-items: center; margin-bottom: var(--main_padding);}  
 .save-pat-data{width: 100%; display: flex; align-items: center; justify-content: center;}
 
-
+.new-password .ant-form-item-explain-error{
+  display: flex !important;
+}
 
 
   @media (max-width:1700px){

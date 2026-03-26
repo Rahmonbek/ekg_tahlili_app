@@ -1,7 +1,7 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-//export const api = "https://api.nmed.uz/api";
+// export const api = "https://api.nmed.uz/api";
 
 export const api = "http://localhost:5000/api";
 

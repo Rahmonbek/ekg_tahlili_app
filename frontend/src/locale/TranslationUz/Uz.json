@@ -192,7 +192,11 @@
    "retry_holter_analyse":"Yangi holterni tahlil qilish",
    "retry_smad_analyse":"Yangi smadni tahlil qilish",
    "retry_lab_analyse":"Yangi labaratoriyani tahlil qilish",
-   "analyse_lab_saved":"Labaratoriya analizi saqlandi. Keyingi bemor labaratoriya analiz faylini yuborishingiz mumkin"
+   "analyse_lab_saved":"Labaratoriya analizi saqlandi. Keyingi bemor labaratoriya analiz faylini yuborishingiz mumkin",
+  "password_complexity_error": "Parol kamida 8 ta belgi, bosh harf, raqam va maxsus belgi (!@#$%^&*) dan iborat bo‘lishi shart",
+  "password_too_short": "Parol juda qisqa (kamida 8 ta belgi bo‘lishi kerak)",
+  "please_enter_password": "Iltimos, parolni kiriting",
+  "verify":"Kodni tekshirish"
 
 
 

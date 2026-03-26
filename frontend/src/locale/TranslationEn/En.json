@@ -195,7 +195,33 @@
 "enter_region_clinic": "Select a city or district",
 "name_clinic": "Hospital",
 "name": "Name:",
-"place": "Address:"
+"place": "Address:",
+"analyse_holter": "Analyze Holter",
+  "lang_analyse": "Select AI analysis language",
+  "select_holter_file": "Select Holter monitoring report",
+  "holter_analyse": "Analyze Holter monitoring report",
+  "holter_doctor": "Report author (Physician)",
+  "doctor_of_created": "Staff member who entered data",
+  "holter_file": "Holter monitoring report",
+  "lab_last_result": "Latest laboratory test result",
+  "holter_last_result": "Latest Holter analysis",
+
+  "analyse_smad": "Analyze ABPM",
+  "select_smad_file": "Select ABPM monitoring report",
+  "smad_analyse": "Analyze ABPM monitoring report",
+  "smad_doctor": "Report author (Physician)",
+  "smad_file": "ABPM monitoring report",
+  "smad_last_result": "Latest ABPM analysis",
+
+  "retry_holter_analyse": "Analyze new Holter",
+  "retry_smad_analyse": "Analyze new ABPM",
+  "retry_lab_analyse": "Analyze new laboratory test",
+  "analyse_lab_saved": "Laboratory analysis saved. You can now upload the next patient's analysis file.",
+
+  "password_complexity_error": "Password must be at least 8 characters long and include an uppercase letter, a number, and a special character (!@#$%^&*)",
+  "password_too_short": "Password is too short (minimum 8 characters required)",
+  "please_enter_password": "Please enter your password",
+  "verify": "Verify code"
 
 
 

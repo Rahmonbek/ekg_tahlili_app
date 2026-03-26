@@ -1,7 +1,7 @@
-import { Button, Form, Input, Modal } from 'antd'
-import React, { useEffect, useState } from 'react'
+import { Button, Form, Input, Modal } from 'antd';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import login_img from '../../../images/doctor2.svg'
+import login_img from '../../../images/doctor2.svg';
 import { IoIosMail, IoMdLock } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
 import { checkusername, registration, verify_code } from '../../../host/requests/AuthRequest';
@@ -9,257 +9,148 @@ import { dangerAlert, successAlert } from '../../../tools/Alerts';
 import { useStore } from '../../../store/Store';
 import { IoPerson } from 'react-icons/io5';
 import Cookies from "js-cookie";
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 export default function Register() {
-  const [open, setopen]=useState(false)
-  const [loading, setloading]=useState(false)
-  const [email, setemail]=useState(null)
- const navigate =useNavigate()
+  const { executeRecaptcha } = useGoogleReCaptcha();
+  const [open, setopen] = useState(false);
+  const [loading, setloading] = useState(false);
+  const [email, setemail] = useState(null);
+  const navigate = useNavigate();
   const [form] = Form.useForm();
-  const {user_id, setuser_id} = useStore()
- const [codeForm] = Form.useForm();
-    const {t}=useTranslation()
-   
-const handleFinish = async (values) => {
-try{
-  setloading(true)
-            var res=await verify_code({
-                email:email,
-                code:values.code
-            })
-            if(res.status==200){
-              successAlert(t(res.data.message))
-              setopen(true)
-              setuser_id(res.data.userId)
-               Cookies.set("NMED_token", res.data.token, {
-                 expires: 1,
-                 path: "/",
-               });
-               navigate('/')
-            }
-        }catch(err){
-            dangerAlert(t(err.response.data.message));
-        }finally{
-          setloading(false)
-        }
-}
+  const { setuser_id } = useStore();
+  const [codeForm] = Form.useForm();
+  const { t } = useTranslation();
 
-
-const onFinish = async (val) => {
-  try {
-    setloading(true);
-
-    const checkRes = await checkusername({username:val.username});
-
-    if (checkRes.status === 200 && checkRes.data.exists === false) {
-      setemail(val.email);
-
-      const res = await registration({
-        email: val.email,
-        password: val.password,
-        username: val.username,
+  // 1. OTP Tasdiqlash (Brute-force himoyasi bilan)
+  const handleFinish = async (values) => {
+    try {
+      setloading(true);
+      const res = await verify_code({
+        email: email,
+        code: values.code
       });
-      console.log(res)
-
       if (res.status === 200) {
         successAlert(t(res.data.message));
-        setopen(true);
+        setuser_id(res.data.userId);
+        // Kiberxavfsizlik: XSS dan himoya uchun Secure va SameSite flaglari
+        Cookies.set("NMED_token", res.data.token, {
+          expires: 1,
+          path: "/",
+          secure: true, 
+          sameSite: 'strict'
+        });
+        navigate('/');
       }
+    } catch (err) {
+      dangerAlert(t(err?.response?.data?.message || "Error"));
+    } finally {
+      setloading(false);
+    }
+  };
 
-    } else if (checkRes.status === 200 && checkRes.data.exists === true) {
-      dangerAlert(t(checkRes.data.message));
- 
-      form.setFields([
-        {
-          name: "username",
-          value: "",
-          errors: [t(checkRes.data.message)],
-        },
-      ]);
+  // 2. Ro'yxatdan o'tish (reCAPTCHA v3 bilan)
+  const onFinish = async (val) => {
+    if (!executeRecaptcha) {
+      dangerAlert(t("recaptcha_not_ready"));
+      return;
     }
 
-  } catch (err) {
-    const message = err?.response?.data?.message;
-  
-    if (message === 'email_already_exists') {
-      dangerAlert(t(message));
-      form.setFields([
-        {
-          name: "email",
-          value: "",
-          errors: [t("email_already_exists")],
-        },
-      ]);
-    } else {
-     console.log(err)
+    try {
+      setloading(true);
+
+      // reCAPTCHA tokenni olish (Botlardan himoya)
+      const gToken = await executeRecaptcha('registration');
+
+      const checkRes = await checkusername({ username: val.username });
+
+      if (checkRes.status === 200 && !checkRes.data.exists) {
+        setemail(val.email);
+
+        const res = await registration({
+          email: val.email,
+          password: val.password,
+          username: val.username,
+          captchaToken: gToken // Backend buni tekshirishi shart
+        });
+
+        if (res.status === 200) {
+          successAlert(t(res.data.message));
+          setopen(true);
+        }
+      } else {
+        dangerAlert(t("username_exists"));
+      }
+    } catch (err) {
+      dangerAlert(t(err?.response?.data?.message || "registration_failed"));
+    } finally {
+      setloading(false);
     }
-  }
-  
-  
-  finally {
-    setloading(false);
-  }
-};
-
-
-    useEffect(()=>{
-      
-     }, [])
+  };
 
   return (
     <div className='login_box'>
-      
       <div className='login_form_box'>
-    <div className='login_form'>
-      
-    <h1>{t("ymed_register")}</h1>
-    <div className='login_form_form'>
-
-   
-        <Form
-    name="basic"
-    labelCol={{
-      span: 24,
-    }}
-    wrapperCol={{
-      span: 24,
-    }}
-   initialValues={{
-      remember: true,
-    }}
-    onFinish={onFinish}
-  form={form}
-    
-  >
-  <Form.Item
-    name="email"
-    label={t("email")}
-
-    rules={[
-      {
-        type: 'email',
-        message: t("please_enter_valid_email"),
-      },
-      {
-        required: true,
-        message: t("please_enter_email"),
-      }
-    ]}
-   
-  >
-    <Input
-      prefix={<IoIosMail />}
-      placeholder={t("enter_email")}
-
-    />
-  </Form.Item>
-
-
-
-<Form.Item
-    name="username"
-    label={t("username")}
-    rules={[
-      {
-        required: true,
-        message: t("please_enter_username"),
-      },
-    ]}
-    normalize={(value) => {
-      return value ? value.replace(/[.,!? ]/g, '') : '';
-    }}
-   
-  >
-    <Input
-      prefix={<IoPerson />}
-      placeholder={t("enter_username")}
-
-    />
-  </Form.Item>
-
-
-
-
-    <Form.Item
-      name="password"
-      label={t("new_password")}
-      rules={[
-        {
-          required: true,
-          message: "",
-        },
-      ]}
-     
-  
-    >
-      <Input.Password  prefix={<IoMdLock />} className='login_input'  placeholder={t("enter_new_password")} autoComplete="new-password"/>
-    </Form.Item>
-
-     <Form.Item
-      wrapperCol={{
-        span: 24,
-      }}
-      
-    >
-      <Button loading={loading} className='btn_form' htmlType="submit">
-        {t("register")}
-      </Button>
-       
-    </Form.Item>
-  </Form> </div>
-</div>
-<div className="login_bottom">
-  <p dangerouslySetInnerHTML={{__html:t("have_account")}}/>
-  <Link to={"/"}>{t("login_a")}</Link>
-</div>
-    </div>
-    <div className='login_img'>
-        <img src={login_img}/>
-      </div>
-      <Modal open={open} closable={false} footer={null} onCancel={()=>{}}
-        
-        width={{
-          xs: '90%',
-          sm: '80%',
-          md: '60%',
-          lg: '50%',
-          xl: '40%',
-          xxl: '30%',
-        }}
-        >
-  <div className='code_verify_box'>
-    <h2>{t("sended_code")}</h2>
-    
-   <Form
-              form={codeForm}
-              onFinish={handleFinish}
-              labelCol={{ span: 24 }}
-              wrapperCol={{ span: 24 }}
-              autoComplete="off"
-            >
-              <Form.Item name="code" rules={[{ required: true, message: '' }]}>
-                <Input.OTP
-                  className="teg_code_input"
-                  length={4}
-                  formatter={(str) => str.toUpperCase()}
-                />
-              </Form.Item>
+        <div className='login_form'>
+          <h1>{t("ymed_register")}</h1>
+          <div className='login_form_form'>
+            <Form name="basic" layout="vertical" onFinish={onFinish} form={form}>
+              
               <Form.Item
-      wrapperCol={{
-        span: 24,
-      }}
-    >
-      <Button className='btn_form'  loading={loading} htmlType="submit">
-        {t("register")}
-      </Button>
-        <Button className='btn_form btn_form_cencel' htmlType="button" onClick={()=>{setopen(false); codeForm.resetFields(['code'])}} style={{marginLeft:"10px"}}>
-        {t("retry_send")}
-      </Button>
-    </Form.Item>
-   
+                name="email"
+                label={t("email")}
+                rules={[{ type: 'email', message: t("invalid_email") }, { required: true }]}
+              >
+                <Input autoComplete='new-password' prefix={<IoIosMail />} placeholder={t("enter_email")} />
+              </Form.Item>
+
+              <Form.Item
+                name="username"
+                label={t("username")}
+                rules={[{ required: true }]}
+              >
+                <Input autoComplete='new-password' prefix={<IoPerson />} placeholder={t("enter_username")} />
+              </Form.Item>
+
+              {/* O‘zMSt 841:2026: Parol murakkabligi talabi */}
+              <Form.Item
+              className='new-password'
+                name="password"
+                label={t("new_password")}
+                rules={[
+                  { required: true, message: t("please_enter_password") },
+                  { 
+                    min: 8,
+                    pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/,
+                    message: t("password_complexity_error") 
+                  }
+                ]}
+              >
+                <Input.Password autoComplete='new-password' prefix={<IoMdLock />} placeholder={t("enter_new_password")} />
+              </Form.Item>
+
+              <Button loading={loading} className='btn_form' block htmlType="submit" type="primary">
+                {t("register")}
+              </Button>
             </Form>
-  </div>
+          </div>
+        </div>
+      </div>
+
+      {/* OTP Modal */}
+      <Modal open={open} closable={false} footer={null}>
+        <div className='code_verify_box' style={{ textAlign: 'center' }}>
+          <h2>{t("sended_code")}</h2>
+          <Form form={codeForm} onFinish={handleFinish}>
+            <Form.Item name="code" rules={[{ required: true }]}>
+              <Input.OTP length={4} />
+            </Form.Item>
+            <Button className='btn_form' loading={loading} htmlType="submit" block>
+              {t("verify")}
+            </Button>
+          </Form>
+        </div>
       </Modal>
     </div>
-  )
+  );
 }

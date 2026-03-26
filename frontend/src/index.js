@@ -5,14 +5,16 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import { CookiesProvider } from 'react-cookie';
-
+import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
+  <GoogleReCaptchaProvider reCaptchaKey="6LdQWZksAAAAAFzZmPqqS8QQBgI8CraS_9m2H66T">
   <CookiesProvider>
   <BrowserRouter>
     <App />
   </BrowserRouter>
   </CookiesProvider>
+  </GoogleReCaptchaProvider>
 );
 
 // If you want to start measuring performance in your app, pass a function

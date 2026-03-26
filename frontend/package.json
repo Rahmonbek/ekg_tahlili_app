@@ -20,6 +20,7 @@
     "react-cookie": "^8.0.1",
     "react-cookies": "^0.1.1",
     "react-dom": "18",
+    "react-google-recaptcha-v3": "^1.11.0",
     "react-i18next": "^16.3.5",
     "react-icons": "^5.5.0",
     "react-input-mask": "^2.0.4",

@@ -5,6 +5,7 @@ public class RegisterDto
     public string Username { get; set; } = default!;
     public string Email { get; set; } = default!;
     public string Password { get; set; } = default!;
+    public string RecaptchaToken { get; set; } = default!;
 }
 public class VerifyCodeResult
 {
@@ -19,6 +20,7 @@ public class LoginDto
 {
     public string Username { get; set; } = default!;
     public string Password { get; set; } = default!;
+    public string RecaptchaToken { get; set; } = default!;
 }
 public class VerifyCodeDto
 {

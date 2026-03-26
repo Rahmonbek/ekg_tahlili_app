@@ -1,9 +1,9 @@
 import axios from "axios"
 import axiosInstance from "./Api";
 import Cookies from "js-cookie";
-//export const api="https://api.nmed.uz/api"
-//export const apiEcg="https://analyse.nmed.uz"
-//export const imgApi="https://api.nmed.uz"
+// export const api="https://api.nmed.uz/api"
+// export const apiEcg="https://analyse.nmed.uz"
+// export const imgApi="https://api.nmed.uz"
 
 export const api="http://localhost:5000/api"
 export const apiEcg="http://127.0.0.1:8000"

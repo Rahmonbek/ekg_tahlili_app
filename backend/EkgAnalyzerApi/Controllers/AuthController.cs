@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using EkgAnalyzerApi.DTOs;
-
+using Newtonsoft.Json;
 [ApiController]
 [Route("api/auth")]
 public class AuthController : ControllerBase
@@ -16,6 +16,11 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
+        var isValid = await IsReCaptchaValid(dto.RecaptchaToken);
+        if (!isValid)
+        {
+            return BadRequest(new { message = "reCAPTCHA tekshiruvidan o'tmadi (Bot ehtimoli)" });
+        }
         try
         {
             await _authService.RegisterAsync(dto);
@@ -26,7 +31,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
-   
+
     [HttpGet("check-username")]
     public async Task<IActionResult> CheckUsername([FromQuery] string username, int? user_id, string? email)
     {
@@ -57,11 +62,37 @@ public class AuthController : ControllerBase
             message = result.Message
         });
     }
+    private async Task<bool> IsReCaptchaValid(string token)
+    {
+        if (string.IsNullOrEmpty(token)) return false;
 
+        using var client = new HttpClient();
+        var secretKey = "6LdQWZksAAAAAP7MZF77tuaNz1nV2toyJHkJB_lp"; // Siz bergan Secret Key
+
+        var response = await client.PostAsync(
+            $"https://www.google.com/recaptcha/api/siteverify?secret={secretKey}&response={token}",
+            null);
+
+        if (!response.IsSuccessStatusCode) return false;
+
+        var jsonString = await response.Content.ReadAsStringAsync();
+        dynamic result = Newtonsoft.Json.JsonConvert.DeserializeObject(jsonString);
+
+        // v3 da 'success' true bo'lishi va 'score' (ball) kamida 0.5 bo'lishi tavsiya etiladi
+        return result.success == "true" && (double)result.score >= 0.5;
+    }
     // ========================= LOGIN =========================
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
+        // 1. reCAPTCHA tekshiruvi
+        var isValid = await IsReCaptchaValid(dto.RecaptchaToken);
+        if (!isValid)
+        {
+            return BadRequest(new { message = "reCAPTCHA tekshiruvidan o'tmadi (Bot ehtimoli)" });
+        }
+
+        // 2. Oddiy login mantiqi
         var result = await _authService.LoginAsync(dto);
 
         if (!result.Success)

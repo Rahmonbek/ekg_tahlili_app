@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.AspNetCore.RateLimiting;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,6 +34,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
+
 .AddJwtBearer(options =>
 {
     options.RequireHttpsMetadata = false; // dev uchun
@@ -50,7 +52,12 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 });
-
+builder.Services.AddRateLimiter(options => {
+    options.AddFixedWindowLimiter("strict", opt => {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 5; // 1 minutda faqat 5 marta urinish
+    });
+});
 builder.Services.AddAuthorization();
 builder.Services.AddCors(options =>
 {
