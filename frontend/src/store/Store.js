@@ -29,5 +29,8 @@ export const useStore = create((set) => ({
      }),
      user: null,
     setuser: (id) => set({ user: id }),
-    
+
+    // ─── Phase 3: Region cache (har mount da qayta fetch qilmaslik uchun) ───
+    regions: [],
+    setregions: (data) => set({ regions: data }),
 }))

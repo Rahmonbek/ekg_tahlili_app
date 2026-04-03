@@ -11,10 +11,8 @@ from database import get_db
 from holter_analyse import create_holter_analyse, update_holter_analyse
 
 from openai import OpenAI
+from config import OPENAI_API_KEY, OPENAI_MODEL
 BASE_DIR = Path(__file__).parent  # Loyihangiz papkasi
-OPENAI_API_KEY = "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"
-if not OPENAI_API_KEY:
-    raise RuntimeError("OPENAI_API_KEY muhit o'zgaruvchisi topilmadi.")
 
 
 router = APIRouter(
@@ -182,7 +180,10 @@ async def analyze(
         if isinstance(parsed, dict):    
             automatic_analysis_text = parsed.get("automatic_analysis", "")
             final_summary = parsed.get("final_summary", "")
-            automatic_analysis_bool = parsed.get("automatic_analysis_bool", "")
+            try:
+                automatic_analysis_bool = int(parsed.get("automatic_analysis_bool", 0))
+            except (ValueError, TypeError):
+                automatic_analysis_bool = 0
         
         ai_data_to_save = {
             "automatic_analysis": automatic_analysis_text,

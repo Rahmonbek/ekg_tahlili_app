@@ -1,6 +1,7 @@
-﻿using EkgAnalyzerApi.Data;
+using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
+using EkgAnalyzerApi.Constants;
 using iTextSharp.text;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,18 +10,14 @@ namespace EkgAnalyzerApi.Services
     public class DoctorService
     {
         private readonly MedDataDB _context;
-        private int _adminRoleId;
-        private int _directorRoleId;
-        private int _doctorRoleId;
-        private int _superAdminRoleId;
+        private readonly int _adminRoleId = RoleConstants.Admin;
+        private readonly int _directorRoleId = RoleConstants.Director;
+        private readonly int _doctorRoleId = RoleConstants.Doctor;
+        private readonly int _superAdminRoleId = RoleConstants.SuperAdmin;
+
         public DoctorService(MedDataDB context)
         {
             _context = context;
-            _adminRoleId = 2;
-            _doctorRoleId = 4;
-            _directorRoleId = 3;
-            _superAdminRoleId = 1;
-
         }
         public async Task<string> GetDefaultUserName(int user_id)
         {
@@ -212,16 +209,16 @@ namespace EkgAnalyzerApi.Services
                 return null;
             }
 
-            var roles = _context.Roles.Where(r => r.Id != _superAdminRoleId && r.Id != _adminRoleId).Select(r => new RolesDTO
+            var roles = await _context.Roles.Where(r => r.Id != _superAdminRoleId && r.Id != _adminRoleId).Select(r => new RolesDTO
             {
                 Id = r.Id,
                 NameUz = r.NameUz,
                 NameRu = r.NameRu,
                 NameEn = r.NameEn,
 
-            }).OrderBy(d => d.Id).ToList();
+            }).OrderBy(d => d.Id).ToListAsync();
 
-            var positions = _context.Positions.Where(r => r.RoleId != _superAdminRoleId && r.RoleId != _adminRoleId).Select(r => new PositionDto
+            var positions = await _context.Positions.Where(r => r.RoleId != _superAdminRoleId && r.RoleId != _adminRoleId).Select(r => new PositionDto
             {
                 Id = r.Id,
                 RoleId = r.RoleId,
@@ -229,7 +226,7 @@ namespace EkgAnalyzerApi.Services
                 NameRu = r.NameRu,
                 NameEn = r.NameEn,
 
-            }).OrderBy(d=>d.RoleId).ToList();
+            }).OrderBy(d=>d.RoleId).ToListAsync();
 
             return new ParamsStaffDTO
             {

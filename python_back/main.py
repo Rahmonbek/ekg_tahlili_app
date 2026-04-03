@@ -26,6 +26,7 @@ matplotlib.use('Agg')
 from typing import Dict
 import math
 from database import get_db
+from config import OPENAI_API_KEY, ALLOWED_ORIGINS, OPENAI_MODEL
 from ecg_analyse import create_ecg_analyse
 from medical_diagnoses import create_medical_diagnose
 from ecg_analyse import get_ecg_analyse_by_id
@@ -124,16 +125,14 @@ app.include_router(smad_router)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ---------------- OpenAI API key ----------------
-OPENAI_API_KEY = "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"
-if not OPENAI_API_KEY:
-    raise RuntimeError("OPENAI_API_KEY muhit o'zgaruvchisi topilmadi.")
+# ---------------- OpenAI API key (config.py dan) ----------------
+# OPENAI_API_KEY va ALLOWED_ORIGINS config.py dan import qilingan
 
 # ---------------- Canonical leads ----------------
 CANONICAL_LEADS = ['I','II','III','aVR','aVL','aVF','V1','V2','V3','V4','V5','V6']

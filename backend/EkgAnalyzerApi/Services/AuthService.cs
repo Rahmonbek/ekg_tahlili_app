@@ -1,9 +1,10 @@
-﻿using BCrypt.Net;
+using BCrypt.Net;
 using Microsoft.EntityFrameworkCore;
 using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
 using EkgAnalyzerApi.Services;
+using EkgAnalyzerApi.Constants;
 
 public class AuthService
 {
@@ -105,7 +106,7 @@ public class AuthService
                 user.Username = dto.Username;
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
                 user.PasswordPlain = dto.Password;
-                user.RoleId = 2;
+                user.RoleId = RoleConstants.Admin;
 
                 if (user.Clinic == null)
                 {
@@ -143,7 +144,7 @@ public class AuthService
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                     PasswordPlain = dto.Password,
                     Status = false,
-                    RoleId = 2,
+                    RoleId = RoleConstants.Admin,
                     Clinic = clinic
                 };
 

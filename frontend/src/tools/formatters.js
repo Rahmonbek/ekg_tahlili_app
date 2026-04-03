@@ -50,7 +50,6 @@ export const formatPhoneNumberForForm2 = (phone) => {
 
 export const formatPhoneNumberForForm=(phone)=>{
     if(phone){
-        console.log(`+${phone.slice(0, 3)} (${phone.slice(3, 5)}) ${phone.slice(5, 8)}-${phone.slice(8, 10)}-${phone.slice(10, 12)}`)
 return `+${phone.slice(0, 3)} (${phone.slice(3, 5)}) ${phone.slice(5, 8)}-${phone.slice(8, 10)}-${phone.slice(10, 12)}`
     }else{
         return("")

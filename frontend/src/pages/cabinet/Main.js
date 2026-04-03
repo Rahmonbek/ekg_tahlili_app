@@ -32,19 +32,17 @@ export default function Main() {
     const getComplaints=async()=>{
         try{
              var res=await get_complaints_data()
-             console.log(res)
              setcomplaints(res.data)
         }catch(err){
-            console.log(err)
+
         }
     }
     const getLabValuesTypes=async()=>{
         try{
              var res=await get_lab_values_data()
-             console.log(res)
              setlab_values(res.data)
         }catch(err){
-            console.log(err)
+
         }
     }
   return (

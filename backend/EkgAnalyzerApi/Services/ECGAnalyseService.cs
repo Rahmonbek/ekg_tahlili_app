@@ -1,7 +1,8 @@
-﻿using EkgAnalyzerApi.Data;
+using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace EkgAnalyzerApi.Services
 {
@@ -120,5 +121,28 @@ namespace EkgAnalyzerApi.Services
             };
         }
 
+        /// <summary>
+        /// ai_answer_data TEXT ustunida saqlangan JSON stringni
+        /// AIAnswerDataDTO ga parse qiladi.
+        /// Parsing xatosi bo'lsa null qaytaradi.
+        /// </summary>
+        public static AIAnswerDataDTO? ParseAIAnswerData(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+                return null;
+
+            try
+            {
+                return JsonSerializer.Deserialize<AIAnswerDataDTO>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            }
+            catch
+            {
+                // JSON format to'g'ri emas bo'lsa, raw sifatida qaytaramiz
+                return new AIAnswerDataDTO { Raw = json };
+            }
+        }
     }
 }
