@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,6 +42,7 @@ namespace EkgAnalyzerApi.Data
         public DbSet<LabCategories> LabCategories { get; set; }
         public DbSet<LabValueTypes> LabValueTypes { get; set; }
         public DbSet<LabBigCategories> LabBigCategories { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
 
         public override int SaveChanges()
         {

@@ -31,6 +31,8 @@ from ecg_analyse import create_ecg_analyse
 from medical_diagnoses import create_medical_diagnose
 from ecg_analyse import get_ecg_analyse_by_id
 from ecg_analyse import update_ecg_analyse
+from auth_middleware import verify_token
+from file_validator import validate_file_type
 from fastapi.staticfiles import StaticFiles
 from ecg_analyse_doctors import create_ecg_analyse_doctor
 from ecg_analyse_complaints import create_ecg_analyse_complaint
@@ -42,7 +44,7 @@ from pathlib import Path
 from lab_analyses_api import router as lab_router
 from holter_analyses_api import router as holter_router
 from smad_analyses_api import router as smad_router
-Image.MAX_IMAGE_PIXELS = None
+Image.MAX_IMAGE_PIXELS = 50_000_000  # ZIP bomb himoyasi (50 megapiksel limit)
 # Optional for PDF -> image
 try:
     from pdf2image import convert_from_bytes
@@ -1053,6 +1055,7 @@ from fastapi import Form
 @app.post("/api/analyze")
 async def analyze(
     db: Session = Depends(get_db),
+    user: dict = Depends(verify_token),
     file: list[UploadFile] = File(...),
     complaint: list[str] | None = Form(None),
     complaint_id: list[int] | None = Form(None),
@@ -1070,6 +1073,11 @@ async def analyze(
     first_file: UploadFile = file[0]
     content = await first_file.read()
     fname = (first_file.filename or "upload").lower()
+
+    # Fayl turi tekshiruvi (MIME type)
+    if not validate_file_type(fname, content):
+        raise HTTPException(status_code=400, detail=f"Ruxsat etilmagan fayl turi: {fname}")
+
     analyse_file_path = save_analyse_file(content, fname)
     ecg_analyse = create_ecg_analyse(
         session=db,
@@ -1228,6 +1236,7 @@ async def analyze(
 @app.post("/api/analyze-save")
 async def analyze_save(
     db: Session = Depends(get_db),
+    user: dict = Depends(verify_token),
     file: list[UploadFile] = File(...),
     complaint: list[str] | None = Form(None),
     complaint_id: list[int] | None = Form(None),
@@ -1340,6 +1349,7 @@ async def analyze_save(
 @app.post("/api/analyze-retry")
 async def analyze_retry(
     db: Session = Depends(get_db),
+    user: dict = Depends(verify_token),
     complaint: list[str] | None = Form(None),
     id: str = Form(...),
     gender: str = Form(...),
@@ -1528,6 +1538,7 @@ async def analyze_retry(
 @app.post("/api/med-diagnoses-save")
 async def diagnose_save(
     db: Session = Depends(get_db),
+    user: dict = Depends(verify_token),
     file: list[UploadFile] = File(...),
     created_doctor_id: int = Form(...),
     clinic_id: int = Form(...),

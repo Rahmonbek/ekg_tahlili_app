@@ -1,10 +1,11 @@
-﻿using EkgAnalyzerApi.Data;
+using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.RateLimiting;
+using EkgAnalyzerApi.Middleware;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +27,16 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ClinicService>();;
+builder.Services.AddScoped<PythonApiProxyService>();
+builder.Services.AddScoped<AuditLogService>();
+builder.Services.AddSingleton<EncryptionService>(); // AES-256 shifrlash
+
+// Python API proxy uchun HttpClient
+builder.Services.AddHttpClient("PythonApi", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["PythonApi:BaseUrl"] ?? "http://127.0.0.1:8000");
+    client.Timeout = TimeSpan.FromMinutes(5); // AI tahlil uzoq davom etishi mumkin
+});
 // DbContext ulash
 builder.Services.AddDbContext<MedDataDB>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -53,9 +64,27 @@ builder.Services.AddAuthentication(options =>
     };
 });
 builder.Services.AddRateLimiter(options => {
-    options.AddFixedWindowLimiter("strict", opt => {
+    options.RejectionStatusCode = 429; // Too Many Requests
+
+    // Login/Register — 5 ta so'rov / 1 daqiqa (brute-force himoya)
+    options.AddSlidingWindowLimiter("strict", opt => {
         opt.Window = TimeSpan.FromMinutes(1);
-        opt.PermitLimit = 5; // 1 minutda faqat 5 marta urinish
+        opt.SegmentsPerWindow = 2;
+        opt.PermitLimit = 5;
+    });
+
+    // AI tahlil endpointlar — 10 ta so'rov / 1 daqiqa
+    options.AddSlidingWindowLimiter("ai-analysis", opt => {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.SegmentsPerWindow = 2;
+        opt.PermitLimit = 10;
+    });
+
+    // Umumiy API — 100 ta so'rov / 1 daqiqa
+    options.AddSlidingWindowLimiter("general", opt => {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.SegmentsPerWindow = 4;
+        opt.PermitLimit = 100;
     });
 });
 builder.Services.AddAuthorization();
@@ -101,8 +130,10 @@ if (app.Environment.IsDevelopment())
 }
 app.UseRouting();
 app.UseCors("AllowAll");
+app.UseRateLimiter(); // TT 4.1.6.3 — IP asosida so'rovlar cheklovi
 app.UseAuthentication();
 app.UseStaticFiles();
 app.UseAuthorization();
+app.UseAuditLogging(); // TT 4.1.6 — audit log middleware
 app.MapControllers();
 app.Run();

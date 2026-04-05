@@ -11,6 +11,8 @@ from smad_analyse_doctors import create_smad_analyse_doctor
 from smad_analyse import create_smad_analyse, update_smad_analyse
 from openai import OpenAI
 from config import OPENAI_API_KEY, OPENAI_MODEL
+from auth_middleware import verify_token
+from file_validator import validate_file_type
 BASE_DIR = Path(__file__).parent  # Loyihangiz papkasi
 
 
@@ -102,6 +104,7 @@ def compose_prompt_for_openai(age, gender,  lang) -> str:
 @router.post("/analyze")
 async def analyze(
     db: Session = Depends(get_db),
+    user: dict = Depends(verify_token),
     doctor_id: list[int] | None = Form(None),
     file: list[UploadFile] = File(...),
     created_doctor_id: int = Form(...),
@@ -118,6 +121,11 @@ async def analyze(
     first_file: UploadFile = file[0]
     content = await first_file.read()
     fname = (first_file.filename or "upload").lower()
+
+    # Fayl turi tekshiruvi
+    if not validate_file_type(fname, content):
+        raise HTTPException(status_code=400, detail=f"Ruxsat etilmagan fayl turi: {fname}")
+
     is_image = fname.endswith(('.png','.jpg','.jpeg'))
     analyse_file_path = save_analyse_file(content, fname)
 

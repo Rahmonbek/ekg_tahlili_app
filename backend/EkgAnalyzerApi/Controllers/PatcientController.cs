@@ -1,4 +1,4 @@
-﻿using EkgAnalyzerApi.Data;
+using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
 using EkgAnalyzerApi.Services;
@@ -13,11 +13,13 @@ public class PatcientController : ControllerBase
 {
     private readonly MedDataDB _context;
     private readonly PatcientService _patcientService;
+    private readonly EncryptionService _encryption;
 
-    public PatcientController(MedDataDB context, PatcientService patcientService)
+    public PatcientController(MedDataDB context, PatcientService patcientService, EncryptionService encryption)
     {
         _context = context;
         _patcientService = patcientService;
+        _encryption = encryption;
     }
 
     [HttpGet("get-patcients-of-clinic")]
@@ -33,6 +35,15 @@ public class PatcientController : ControllerBase
 
         var result = await _patcientService.GetPatcientsAsync(page, userId);
 
+        // Passportlarni deshifrlash
+        if (result?.data != null)
+        {
+            foreach (var p in result.data)
+            {
+                p.Passport = _encryption.Decrypt(p.Passport);
+            }
+        }
+
         return Ok(result);
     }
 
@@ -45,14 +56,21 @@ public class PatcientController : ControllerBase
 
         DateOnly birthDate = DateOnly.Parse(birthdate);
 
+        // Passportni shifrlangan holda qidirish
+        var encryptedPassport = _encryption.Encrypt(passport);
+
+        // Avval shifrlangan qiymat bilan qidirish, topilmasa — ochiq qiymat bilan (migration davri uchun)
         var patient = await _context.Patcients.Include(x => x.District).ThenInclude(d => d.Region)
             .FirstOrDefaultAsync(v =>
-                v.Passport == passport &&
+                (v.Passport == encryptedPassport || v.Passport == passport.ToUpper()) &&
                 v.BirthDate == birthDate
             );
 
         if (patient == null)
             return NotFound(new { message = "Patient not found" });
+
+        // Deshifrlash
+        patient.Passport = _encryption.Decrypt(patient.Passport);
 
         return Ok(patient);
     }
@@ -68,16 +86,20 @@ public class PatcientController : ControllerBase
         if (!DateOnly.TryParse(patientDto.birthdate, out DateOnly birthDate))
             return BadRequest(new { message = "Invalid birthdate format" });
 
-        // Tekshirish: patient mavjudmi (passport + birthdate)
+        // Passportni shifrlash
+        var encryptedPassport = _encryption.Encrypt(patientDto.passport.ToUpper());
+
+        // Tekshirish: patient mavjudmi (ochiq va shifrlangan passport bilan)
         var existingPatient = await _context.Patcients
             .FirstOrDefaultAsync(p =>
-                p.Passport == patientDto.passport.ToUpper() &&
+                (p.Passport == encryptedPassport || p.Passport == patientDto.passport.ToUpper()) &&
                 p.BirthDate == birthDate
             );
 
         if (existingPatient != null)
         {
             // ✅ Update mavjud patient
+            existingPatient.Passport = encryptedPassport; // Eski ochiq passport ni shifrlash
             existingPatient.FirstName = patientDto.firstname;
             existingPatient.Address = patientDto.address;
             existingPatient.DistrictId = patientDto.district_id;
@@ -90,14 +112,16 @@ public class PatcientController : ControllerBase
             _context.Patcients.Update(existingPatient);
             await _context.SaveChangesAsync();
 
+            // Response da deshifrlangan passport qaytarish
+            existingPatient.Passport = _encryption.Decrypt(existingPatient.Passport);
             return Ok(existingPatient);
         }
         else
         {
-            // ✅ Create yangi patient
+            // ✅ Create yangi patient (shifrlangan passport bilan)
             var newPatient = new Patcient
             {
-                Passport = patientDto.passport.ToUpper(),
+                Passport = encryptedPassport,
                 BirthDate = birthDate,
                 FirstName = patientDto.firstname,
                 Address = patientDto.address,
@@ -113,6 +137,8 @@ public class PatcientController : ControllerBase
             await _context.Patcients.AddAsync(newPatient);
             await _context.SaveChangesAsync();
 
+            // Response da deshifrlangan passport qaytarish
+            newPatient.Passport = _encryption.Decrypt(newPatient.Passport);
             return Ok(newPatient);
         }
     }
@@ -132,11 +158,13 @@ public class PatcientController : ControllerBase
         if (patients == null || !patients.Any())
             return NotFound(new { message = "Patients not found" });
 
+        // Passportlarni deshifrlash
+        foreach (var p in patients)
+        {
+            p.Passport = _encryption.Decrypt(p.Passport);
+        }
+
         return Ok(patients);
     }
-
-
-
-
-
 }
+

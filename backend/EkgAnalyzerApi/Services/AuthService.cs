@@ -105,7 +105,6 @@ public class AuthService
 
                 user.Username = dto.Username;
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-                user.PasswordPlain = dto.Password;
                 user.RoleId = RoleConstants.Admin;
 
                 if (user.Clinic == null)
@@ -142,7 +141,6 @@ public class AuthService
                     Username = dto.Username,
                     Email = dto.Email,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                    PasswordPlain = dto.Password,
                     Status = false,
                     RoleId = RoleConstants.Admin,
                     Clinic = clinic

@@ -67,7 +67,7 @@ namespace EkgAnalyzerApi.Services
                 {
                     Id = u.Doctor.Id,
                     Username = u.Username,
-                    Password = u.PasswordPlain,
+                    Password = u.PasswordPlain ?? "",
                     RoleId = u.RoleId,
                     FirstName = u.Doctor.FirstName,
                     LastName = u.Doctor.LastName,
@@ -170,7 +170,7 @@ namespace EkgAnalyzerApi.Services
                     Id = u.Doctor.Id,
                     UserId=u.Id,
                     Username = u.Username,
-                    Password = u.PasswordPlain,
+                    Password = u.PasswordPlain ?? "",
                     RoleId = u.RoleId,
                     FirstName = u.Doctor.FirstName,
                     LastName = u.Doctor.LastName,

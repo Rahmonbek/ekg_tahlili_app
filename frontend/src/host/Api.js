@@ -1,5 +1,6 @@
 import axios from "axios";
 import Cookies from "js-cookie";
+import { handleApiError } from "../tools/notify";
 
 // export const api = "https://api.nmed.uz/api";
 
@@ -33,7 +34,7 @@ axiosInstance.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// 🚨 RESPONSE INTERCEPTOR (401 error)
+// 🚨 RESPONSE INTERCEPTOR (401 error + global notification)
 axiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
@@ -47,6 +48,9 @@ axiosInstance.interceptors.response.use(
                 window.location.href = "/";
             }
         }
+
+        // Foydalanuvchiga xatolik xabari ko'rsatish
+        handleApiError(error);
 
         return Promise.reject(error);
     }

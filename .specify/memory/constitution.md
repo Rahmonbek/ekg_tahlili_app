@@ -150,13 +150,60 @@ frontend/src/
 
 ## Security Requirements
 
-> ⚠️ **OGOHLANTIRISH**: Quyidagi xavfsizlik muammolari mavjud va ularni bartaraf qilish lozim:
+## Security Requirements
 
-1. **API kalitlari hardcoded** (`main.py:134`, `lab_analyses_api.py:15`, `appsettings.json:3`) — `.env` / Environment Variables ga ko'chirish shart
-2. **Python API autentifikatsiyasiz** — Frontend to'g'ridan-to'g'ri `apiEcg` ga so'rov yuboradi, JWT tekshiruv yo'q
-3. **CORS** Python tomondagi `allow_origins=["*"]` — aniq domenlar bilan cheklash kerak
-4. **reCAPTCHA secret key** hardcoded (`AuthController.cs:70`)
-5. **Database credentials** hardcoded (`database.py:4`, `appsettings.json:12`)
+> ✅ **BAJARILGAN** (2026-04-05):
+> - API kalitlari `.env` / `appsettings.Development.json` ga ko'chirildi
+> - Python API JWT autentifikatsiya qo'shildi (`verify_token`)
+> - CORS cheklandi (aniq domenlar)
+> - reCAPTCHA secret key config dan o'qiladi
+> - Database credentials `.env` dan o'qiladi
+> - `PasswordPlain` koddan olib tashlandi
+
+> ⚠️ **BAJARILISHI KERAK**:
+> 1. **Proxy arxitektura**: Frontend to'g'ridan-to'g'ri Python API ga murojaat qilmasligi kerak — .NET API orqali proxy qilinishi shart
+> 2. **Audit log**: Barcha CRUD, login/logout amallari o'zgartirib bo'lmaydigan logga yozilishi kerak
+> 3. **Rate limiting**: IP asosida differensiallashtirilgan cheklovlar (login, register, tahlil)
+> 4. **AES-256 shifrlash**: Shaxsiy ma'lumotlar (passport, tug'ilgan sana) bazada shifrlangan saqlanishi kerak
+
+---
+
+## Cybersecurity Certification Requirements (O'z DSt 2814:2014 3-daraja)
+
+### C1. Proxy Arxitektura (POST endpointlar)
+Frontend **hech qachon** to'g'ridan-to'g'ri Python API ga murojaat qilmasligi kerak. Barcha so'rovlar `.NET API` orqali proxy qilinadi:
+```
+Frontend → .NET API (JWT tekshiruv) → Python API (tahlil) → bazaga yozish
+```
+Kerakli endpointlar:
+- `POST api/ecg-analyses/analyze` → proxy → Python `/api/analyze`
+- `POST api/ecg-analyses/analyze-save` → proxy → Python `/api/analyze-save`
+- `POST api/ecg-analyses/send-to-ai` → proxy → Python `/api/analyze-retry`
+- `POST api/lab-analyses/analyze` → proxy → Python `/lab/analyze`
+- `POST api/holter-analyses/analyze` → proxy → Python `/holter/analyze`
+- `POST api/smad-analyses/analyze` → proxy → Python `/smad/analyze`
+- `POST api/med-diagnose/save` → proxy → Python `/api/med-diagnoses-save`
+
+### C2. Audit Log (TT 4.1.6)
+Barcha foydalanuvchi amallari o'zgartirib bo'lmaydigan logga yozilishi **SHART**:
+- `audit_logs` jadvali: `user_id`, `action`, `entity_type`, `entity_id`, `old_values`, `new_values`, `ip_address`, `timestamp`
+- Middleware darajasida avtomatik loglash
+- Admin uchun loglarni ko'rish interfeysi
+
+### C3. Rate Limiting (TT 4.1.6.3)
+IP asosida differensiallashtirilgan cheklovlar:
+| Endpoint turi | Limit |
+|---------------|-------|
+| Login/Register | 5 / daqiqa |
+| API umumiy | 100 / daqiqa |
+| AI tahlil | 10 / daqiqa |
+
+### C4. AES-256 Shifrlash (TT 4.4.2)
+Quyidagi ma'lumotlar bazada **shifrlangan** saqlanishi SHART:
+- Bemor `passport` raqami
+- Bemor `birthdate` (tug'ilgan sana)
+- Tibbiy tashxis fayllarining yo'li
+- Shifrlash kaliti environment variable'da saqlanadi
 
 ---
 
@@ -165,11 +212,11 @@ frontend/src/
 ```mermaid
 graph LR
     FE[React Frontend :3000] -->|JWT Auth, CRUD| NET[.NET API :5000]
-    FE -->|Multipart/form-data| PY[Python API :8000]
+    FE -->|Proxy orqali| NET
+    NET -->|HttpClient| PY[Python API :8000]
     NET -->|EF Core| DB[(PostgreSQL med_helper_data)]
     PY -->|SQLAlchemy| DB
     PY -->|Files + Responses API| OAI[OpenAI GPT]
-    NET -->|Passthrough| OAI
 ```
 
 ### Critical Sync Points
@@ -177,6 +224,7 @@ graph LR
 2. **`lab_analyses` jadvali** — Python yozadi (lab qiymatlari + AI natija), .NET o'qiydi
 3. **Shared entitiy IDs** — `patcient_id`, `doctor_id`, `clinic_id` bir xil FK schema
 4. **File paths** — Python `uploads/` papkasiga yozadi (`/uploads/ecg_analyse_files/`, `/uploads/ecg_generated_files/`), .NET `StaticFiles` orqali serve qilishi kerak
+5. **Audit logs** — faqat .NET API tomonidan yoziladi (Python API o'z loglarini console ga chiqaradi)
 
 ---
 
@@ -185,7 +233,8 @@ graph LR
 - Ushbu konstitutisya loyihaning barcha qismlariga tegishli va barcha o'zgarishlardan oldin tekshirilishi shart
 - Baza sxemasiga o'zgarish kiritish faqat .NET Migrations orqali
 - Yangi endpoint qo'shishda ikkala backend va frontendni sinxronlashtirish kerak
-- API kalitlarni environment variable'larga ko'chirish — birinchi ustuvor vazifa
-- Python API'ga autentifikatsiya qo'shish — ikkinchi ustuvor vazifa
+- **Kiber xavfsizlik sertifikatsiyasi** talablari (C1-C4) birinchi ustuvor vazifa
+- Frontend → Python API to'g'ridan-to'g'ri aloqasi taqiqlanadi (proxy orqali)
+- Shaxsiy ma'lumotlar faqat shifrlangan ko'rinishda saqlanadi
 
-**Version**: 1.0.0 | **Ratified**: 2026-04-03 | **Last Amended**: 2026-04-03
+**Version**: 2.0.0 | **Ratified**: 2026-04-03 | **Last Amended**: 2026-04-05

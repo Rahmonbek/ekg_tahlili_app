@@ -12,6 +12,8 @@ from lab_analyse import create_lab_analyse, update_lab_analyse
 from lab_analyse_doctors import create_lab_analyse_doctor
 from openai import OpenAI
 from config import OPENAI_API_KEY, OPENAI_MODEL
+from auth_middleware import verify_token
+from file_validator import validate_file_type
 BASE_DIR = Path(__file__).parent  # Loyihangiz papkasi
 
 
@@ -154,6 +156,7 @@ daily_sodium - 24 soatlik natriy (mmol/24h)
 @router.post("/analyze")
 async def analyze(
     db: Session = Depends(get_db),
+    user: dict = Depends(verify_token),
     doctor_id: list[int] | None = Form(None),
     file: list[UploadFile] = File(...),
     lab_category_id: list[int] | None = Form(None),
@@ -170,6 +173,11 @@ async def analyze(
     first_file: UploadFile = file[0]
     content = await first_file.read()
     fname = (first_file.filename or "upload").lower()
+
+    # Fayl turi tekshiruvi
+    if not validate_file_type(fname, content):
+        raise HTTPException(status_code=400, detail=f"Ruxsat etilmagan fayl turi: {fname}")
+
     is_image = fname.endswith(('.png','.jpg','.jpeg'))
     analyse_file_path = save_analyse_file(content, fname)
 

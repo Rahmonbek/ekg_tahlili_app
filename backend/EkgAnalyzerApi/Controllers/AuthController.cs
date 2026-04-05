@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using EkgAnalyzerApi.DTOs;
 using Newtonsoft.Json;
 [ApiController]
@@ -6,10 +6,12 @@ using Newtonsoft.Json;
 public class AuthController : ControllerBase
 {
     private readonly AuthService _authService;
+    private readonly IConfiguration _configuration;
 
-    public AuthController(AuthService authService)
+    public AuthController(AuthService authService, IConfiguration configuration)
     {
         _authService = authService;
+        _configuration = configuration;
     }
 
     // ========================= REGISTER =========================
@@ -67,7 +69,9 @@ public class AuthController : ControllerBase
         if (string.IsNullOrEmpty(token)) return false;
 
         using var client = new HttpClient();
-        var secretKey = "6LdQWZksAAAAAP7MZF77tuaNz1nV2toyJHkJB_lp"; // Siz bergan Secret Key
+        var secretKey = _configuration["ReCaptcha:SecretKey"];
+        if (string.IsNullOrEmpty(secretKey))
+            return false;
 
         var response = await client.PostAsync(
             $"https://www.google.com/recaptcha/api/siteverify?secret={secretKey}&response={token}",
