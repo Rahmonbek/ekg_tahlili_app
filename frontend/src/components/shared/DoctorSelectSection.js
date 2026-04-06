@@ -26,7 +26,7 @@ export default function DoctorSelectSection({
 
     return (
         <>
-            <Col className="main_col" lg={24} md={24}>
+            <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
                 <Form.Item name="positions" label={t('position')}>
                     <Select
                         onChange={(val) => filterByPosition(val)}
@@ -41,12 +41,12 @@ export default function DoctorSelectSection({
                     />
                 </Form.Item>
             </Col>
-            <Col className="main_col" lg={24} md={24}>
+            <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
                 <p className="ecg_label">{t('select_doctor_of_patcient')}</p>
                 <br />
                 <Row>
                     {doctorDatas.map((item) => (
-                        <Col key={item.id} lg={12} md={24}>
+                        <Col key={item.id} lg={12} xs={24} sm={24} md={24}>
                             <div className="complaint_item">
                                 <Checkbox
                                     checked={selectedDoctors.findIndex((x) => x.id === item.id) !== -1}

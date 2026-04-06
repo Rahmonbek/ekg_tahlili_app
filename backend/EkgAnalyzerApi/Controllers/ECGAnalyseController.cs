@@ -51,9 +51,17 @@ public class ECGAnalyseController : ControllerBase
             return Unauthorized(new { message = "Klinika aniqlanmadi" });
 
         var results = await _ecgService.GetECGAnalysesByClinicIdAsync(
-            user.ClinicId.Value, page, pageSize, search, status, dateFrom, dateTo);
+            user.ClinicId.Value, page, pageSize, search, status, dateFrom, dateTo, null);
 
         return Ok(results);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var result = await _ecgService.GetECGAnalyseByIdAsync(id);
+        if (result == null) return NotFound();
+        return Ok(result);
     }
 
     [HttpGet("get-ecg-analyses-by-patcient-id")]

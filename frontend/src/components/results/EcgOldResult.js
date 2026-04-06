@@ -8,12 +8,13 @@ import { dangerAlert, warningAlert } from '../../tools/Alerts'
 import { analyzeEkgFileRetry } from '../../host/EkgService'
 import { useStore } from '../../store/Store'
 import { apiEcg } from '../../host/Host'
+import ClinicHeader from './ClinicHeader'
 
-export default function EcgOldResult({ data }) {
+export default function EcgOldResult({ data, initialOpen = false }) {
   const [result, setresult] = useState(null)
   const [image, setimage] = useState(null)
   const [image_short, setimage_short] = useState(null)
-  const [open, setopen] = useState(false)
+  const [open, setopen] = useState(initialOpen)
   const { t } = useTranslation()
   const { ecg_btn_loading, setecg_btn_loading } = useStore()
   useEffect(() => {
@@ -106,19 +107,10 @@ export default function EcgOldResult({ data }) {
         open ?
 
           <div className="main_card_content">
+            <ClinicHeader clinic={data.clinic} />
 
 
-            {data.clinic != null ? <div>
-              <p className='ecg_label'>{t("name_clinic")}</p>
-              <div className="ekg-item-info-text">
-                <b>{t("name")} </b>
-                <p>{data.clinic.clinicName} </p>
-              </div>
-              <div className="ekg-item-info-text">
-                <b>{t("place")} </b>
-                <p>{data.clinic.district != null ? data.clinic.district[`name${t("data_lang")}`] : <></>} </p>
-              </div>
-            </div> : <></>}
+            {/* Old clinic display removed as it's now in ClinicHeader */}
 
             {data.createdDoctor != null ? <div>
               <p className='ecg_label'>{t("doctor_of_created")}</p>

@@ -1,10 +1,12 @@
 import { Image } from 'antd'
 import React from 'react'
 import { apiEcg } from '../../host/Host'
+import ClinicHeader from './ClinicHeader'
 
-export default function EcgResult({error, image, image_short, result}) {
+export default function EcgResult({error, image, image_short, result, clinic}) {
   return (
     <div>
+      <ClinicHeader clinic={clinic} />
 
         {error && <div className="ekg-error">❌ Xatolik: {error}</div>}
       

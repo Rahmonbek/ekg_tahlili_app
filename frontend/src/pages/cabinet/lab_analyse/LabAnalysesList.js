@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { FaPlus, FaSearch, FaHospital } from 'react-icons/fa';
 import { FaEye } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
-import { get_ecg_analyses_by_clinic } from '../../../host/requests/ECGAnalyseRequest';
+import { get_lab_analyses_by_clinic } from '../../../host/requests/LabAnalyseRequest';
 import { formatDate, calculateAge } from '../../../tools/formatters';
 
 const { Option } = Select;
@@ -18,12 +18,12 @@ const STATUS_COLORS = {
 };
 
 const AI_STATUS_COLORS = {
-    1: '#52c41a', // Normal (Green)
-    2: '#faad14', // Average (Yellow/Orange)
-    3: '#ff4d4f', // Danger (Red)
+    1: '#52c41a', // Normal
+    2: '#faad14', // Average
+    3: '#ff4d4f', // Danger
 };
 
-export default function EcgAnalysesList() {
+export default function LabAnalysesList() {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
@@ -34,24 +34,24 @@ export default function EcgAnalysesList() {
 
     const [searchInput, setSearchInput] = useState('');
     const [statusFilter, setStatusFilter] = useState(null);
-    const [aiStatusFilter, setAiStatusFilter] = useState(null);
     const [dateRange, setDateRange] = useState([null, null]);
+    const [autoAnalysisFilter, setAutoAnalysisFilter] = useState(null);
 
     const [clinicModalVisible, setClinicModalVisible] = useState(false);
     const [selectedClinic, setSelectedClinic] = useState(null);
 
     const PAGE_SIZE = 10;
 
-    const fetchData = useCallback(async (p, s, st, dr, aiSt) => {
+    const fetchData = useCallback(async (p, s, st, dr, ab) => {
         setLoading(true);
         try {
             const params = { page: p, pageSize: PAGE_SIZE };
             if (s) params.search = s;
             if (st !== null && st !== undefined) params.status = st;
-            if (aiSt !== null && aiSt !== undefined) params.automaticAnalysisBool = aiSt;
             if (dr && dr[0]) params.dateFrom = dr[0].format('YYYY-MM-DD');
             if (dr && dr[1]) params.dateTo = dr[1].format('YYYY-MM-DD');
-            const res = await get_ecg_analyses_by_clinic(params);
+            if (ab !== null && ab !== undefined) params.automaticAnalysisBool = ab;
+            const res = await get_lab_analyses_by_clinic(params);
             setData(res.data.items);
             setTotal(res.data.totalCount);
         } catch (err) {
@@ -62,16 +62,12 @@ export default function EcgAnalysesList() {
     }, []);
 
     useEffect(() => {
-        fetchData(page, searchInput, statusFilter, dateRange, aiStatusFilter);
+        fetchData(page, searchInput, statusFilter, dateRange, autoAnalysisFilter);
     }, [page, fetchData]);
 
     const handleSearch = () => {
         setPage(1);
-        fetchData(1, searchInput, statusFilter, dateRange, aiStatusFilter);
-    };
-
-    const handleAIStatusChange = (val) => {
-        setAiStatusFilter(val ?? null);
+        fetchData(1, searchInput, statusFilter, dateRange, autoAnalysisFilter);
     };
 
     const handleStatusChange = (val) => {
@@ -173,9 +169,7 @@ export default function EcgAnalysesList() {
                     <Tag color={AI_STATUS_COLORS[st]} style={{ borderRadius: '4px', fontWeight: 500 }}>
                         {aiStatusLabel(st)}
                     </Tag>
-                ) : <Tag color={'blue'} style={{ borderRadius: '4px', fontWeight: 500 }}>
-                    {t('not_analysed') || 'Tahlil qilinmagan'}
-                </Tag>
+                ) : '—'
             ),
         },
         {
@@ -205,7 +199,7 @@ export default function EcgAnalysesList() {
                 <Tooltip title={t('view')}>
                     <span
                         className="table_view_btn"
-                        onClick={() => navigate(`/ecg-analyses/view/${row.id}`)}
+                        onClick={() => navigate(`/lab-analyses/view/${row.id}`)}
                     >
                         <FaEye />
                     </span>
@@ -271,7 +265,7 @@ export default function EcgAnalysesList() {
                                         className="login_input custom_select"
                                         placeholder={t('filter_by_ai') || 'AI bo\'yicha'}
                                         allowClear
-                                        onChange={handleAIStatusChange}
+                                        onChange={(val) => setAutoAnalysisFilter(val ?? null)}
                                         style={{ width: '100%' }}
                                     >
                                         <Option value={1}>{t('normal') || 'Normal'}</Option>
@@ -285,7 +279,7 @@ export default function EcgAnalysesList() {
                                     <button onClick={handleSearch} className="btn_form" style={{ flex: 1, margin: 0, height: '48px' }}>
                                         {t('search_patcient')}
                                     </button>
-                                    <button onClick={() => navigate('/analyse-ecg')} className="btn_form text-white" style={{ width: '50px', margin: 0, height: '48px', backgroundColor: '#00D1B2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <button onClick={() => navigate('/analyse-lab')} className="btn_form text-white" style={{ width: '50px', margin: 0, height: '48px', backgroundColor: '#00D1B2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <FaPlus />
                                     </button>
                                 </div>

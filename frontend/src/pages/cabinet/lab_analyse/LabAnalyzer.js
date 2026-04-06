@@ -221,7 +221,7 @@ export default function LabAnalyzer() {
                     <div className="main_card_content">
                         <Form form={form2} name="labUpload" labelCol={{ span: 24 }} wrapperCol={{ span: 24 }}>
                             <Row>
-                                <Col className="main_col" lg={12} md={24}>
+                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
                                     <Form.Item name="select_lab_file" label={t('select_lab_file')} rules={[{ required: true, message: '' }]}>
                                         <div>
                                             <input className="file_input" type="file" onChange={handleChange} accept=".pdf,.jpg,.png" />
@@ -229,7 +229,7 @@ export default function LabAnalyzer() {
                                         </div>
                                     </Form.Item>
                                 </Col>
-                                <Col className="main_col" lg={12} md={24}>
+                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
                                     <Form.Item name="lang" label={t('lang_analyse')} rules={[{ required: true, message: '' }]}>
                                         <Select
                                             style={{ width: '100%' }}
@@ -254,7 +254,7 @@ export default function LabAnalyzer() {
                                     filterByPosition={filterByPosition}
                                 />
 
-                                <Col className="main_col" lg={24} md={24}>
+                                <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
                                     <p className="ecg_label">{t('select_lab_category_type')}</p>
                                     <br />
                                     {lab_categories.map((item1) => (
@@ -262,7 +262,7 @@ export default function LabAnalyzer() {
                                             <h2 className="title_complaint_item">{item1[`name${t('data_lang')}`]}</h2>
                                             <Row>
                                                 {item1.categories.map((item) => (
-                                                    <Col key={item.id} lg={12} md={24}>
+                                                    <Col key={item.id} lg={12} xs={24} sm={24} md={24}>
                                                         <div className="complaint_item">
                                                             <Checkbox
                                                                 checked={selectedCategories.findIndex((x) => x.id === item.id) !== -1}
@@ -278,15 +278,15 @@ export default function LabAnalyzer() {
                                     ))}
                                 </Col>
 
-                                <Col lg={9} md={24}></Col>
-                                <Col lg={6} md={24}>
+                                <Col lg={9} xs={24} sm={24} md={24}></Col>
+                                <Col lg={6} xs={24} sm={24} md={24}>
                                     {state.showBtn && (
                                         <Button onClick={handleSubmit} loading={state.loading3} htmlType="button" className="btn_form">
                                             {t('check')}
                                         </Button>
                                     )}
                                 </Col>
-                                <Col lg={9} md={24}></Col>
+                                <Col lg={9} xs={24} sm={24} md={24}></Col>
                             </Row>
                         </Form>
                     </div>
@@ -302,16 +302,16 @@ export default function LabAnalyzer() {
                             <div className="mini_loader"><MoonLoader size={50} color="#4FD1C5" /></div>
                         ) : (
                             <>
-                                <LabResult error={state.error} result={state.result} image={state.image} />
+                                <LabResult error={state.error} result={state.result} image={state.image} clinic={user.clinic} />
                                 <br />
                                 <Row>
-                                    <Col lg={9} md={24}></Col>
-                                    <Col lg={6} md={24}>
+                                    <Col lg={9} xs={24} sm={24} md={24}></Col>
+                                    <Col lg={6} xs={24} sm={24} md={24}>
                                         <Button onClick={retryAnalyse} loading={state.loading3} htmlType="button" className="btn_form">
                                             {t('retry_lab_analyse')}
                                         </Button>
                                     </Col>
-                                    <Col lg={9} md={24}></Col>
+                                    <Col lg={9} xs={24} sm={24} md={24}></Col>
                                 </Row>
                             </>
                         )}

@@ -9,11 +9,12 @@ import { analyzeEkgFileRetry } from '../../../host/EkgService'
 import { useStore } from '../../../store/Store'
 import { apiEcg } from '../../../host/Host'
 import { FaDownload } from 'react-icons/fa6'
+import ClinicHeader from '../ClinicHeader'
 
-export default function SmadOldResult({data}) {
+export default function SmadOldResult({data, initialOpen = false}) {
   const [result, setresult]=useState(null)
   const [image, setimage]=useState(null)
-  const [open, setopen]=useState(false)
+  const [open, setopen]=useState(initialOpen)
   const {t}=useTranslation()
   const {ecg_btn_loading, setecg_btn_loading}=useStore()
   useEffect(()=>{
@@ -105,6 +106,7 @@ data!=null?<div className={`old_analyse main_card ${open?"opened_main_card":"clo
           open?
         
         <div className="main_card_content">
+          <ClinicHeader clinic={data.clinic} />
         
        {data.mainDoctor!=null?<div>
           <p className='ecg_label'>{t("smad_doctor")}</p>

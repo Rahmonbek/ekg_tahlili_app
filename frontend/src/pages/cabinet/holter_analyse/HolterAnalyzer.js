@@ -184,7 +184,7 @@ export default function HolterAnalyzer() {
                     <div className="main_card_content">
                         <Form form={form2} name="holterUpload" labelCol={{ span: 24 }} wrapperCol={{ span: 24 }}>
                             <Row>
-                                <Col className="main_col" lg={12} md={24}>
+                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
                                     <Form.Item name="select_lab_file" label={t('select_holter_file')} rules={[{ required: true, message: '' }]}>
                                         <div>
                                             <input className="file_input" type="file" onChange={handleChange} accept=".pdf" />
@@ -192,7 +192,7 @@ export default function HolterAnalyzer() {
                                         </div>
                                     </Form.Item>
                                 </Col>
-                                <Col className="main_col" lg={12} md={24}>
+                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
                                     <Form.Item name="lang" label={t('lang_analyse')} rules={[{ required: true, message: '' }]}>
                                         <Select
                                             style={{ width: '100%' }} value={state.lang} prefix={<MdLanguage />}
@@ -208,7 +208,7 @@ export default function HolterAnalyzer() {
                                 </Col>
 
                                 {/* Holter uchun asosiy shifokor */}
-                                <Col className="main_col" lg={12} md={24}>
+                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
                                     <Form.Item name="main_doctor" label={t('holter_doctor')} rules={[{ required: true, message: '' }]}>
                                         <Select
                                             style={{ width: '100%' }} value={selectedMainDoctor}
@@ -225,15 +225,15 @@ export default function HolterAnalyzer() {
                                     filterByPosition={filterByPosition}
                                 />
 
-                                <Col lg={9} md={24}></Col>
-                                <Col lg={6} md={24}>
+                                <Col lg={9} xs={24} sm={24} md={24}></Col>
+                                <Col lg={6} xs={24} sm={24} md={24}>
                                     {state.showBtn && (
                                         <Button onClick={handleSubmit} loading={state.loading3} htmlType="button" className="btn_form">
                                             {t('check')}
                                         </Button>
                                     )}
                                 </Col>
-                                <Col lg={9} md={24}></Col>
+                                <Col lg={9} xs={24} sm={24} md={24}></Col>
                             </Row>
                         </Form>
                     </div>
@@ -249,16 +249,16 @@ export default function HolterAnalyzer() {
                             <div className="mini_loader"><MoonLoader size={50} color="#4FD1C5" /></div>
                         ) : (
                             <>
-                                <HolterResult error={state.error} result={state.result} image={state.image} />
+                                <HolterResult error={state.error} result={state.result} image={state.image} clinic={user.clinic} />
                                 <br />
                                 <Row>
-                                    <Col lg={9} md={24}></Col>
-                                    <Col lg={6} md={24}>
+                                    <Col lg={9} xs={24} sm={24} md={24}></Col>
+                                    <Col lg={6} xs={24} sm={24} md={24}>
                                         <Button onClick={retryAnalyse} loading={state.loading3} htmlType="button" className="btn_form">
                                             {t('retry_holter_analyse')}
                                         </Button>
                                     </Col>
-                                    <Col lg={9} md={24}></Col>
+                                    <Col lg={9} xs={24} sm={24} md={24}></Col>
                                 </Row>
                             </>
                         )}

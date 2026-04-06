@@ -33,6 +33,8 @@ namespace EkgAnalyzerApi.Services
                 .ThenInclude(c=>c.ClinicDetail)
                 .ThenInclude(c=>c.District)
                 .ThenInclude(c=>c.Region)
+                .Include(e => e.Clinic)
+                .ThenInclude(c => c.ClinicPhoneNumber)
                 .Include(e => e.Patcient)
                 .Include(e => e.CreatedDoctor)
                     .ThenInclude(c => c.User)
@@ -64,8 +66,9 @@ namespace EkgAnalyzerApi.Services
                         Id = e.Clinic.Id,
                         ClinicLogo = e.Clinic.ClinicLogo,
                         ClinicName = e.Clinic.ClinicName,
-                        District = e.Clinic.ClinicDetail.District
-                        
+                        District = e.Clinic.ClinicDetail != null ? e.Clinic.ClinicDetail.District : null,
+                        Address = e.Clinic.ClinicDetail != null ? e.Clinic.ClinicDetail.Address : null,
+                        PhoneNumbers = e.Clinic.ClinicPhoneNumber.Select(p => p.PhoneNumber).ToList()
                     },
                     Patcient = new PatcientForECG
                     {
@@ -128,17 +131,23 @@ namespace EkgAnalyzerApi.Services
         /// Bemor ismi/familiyasi/passport bo'yicha qidiruv, status filtri,
         /// sana oralig'i filtri, ORDER BY id DESC.
         /// </summary>
-        public async Task<PagedResult<ECGAnalyseDTO>> GetECGAnalysesByClinicIdAsync(
+        public async Task<PagedResult<ECGAnalyseListDTO>> GetECGAnalysesByClinicIdAsync(
             int clinicId,
             int page = 1,
             int pageSize = 10,
             string? search = null,
             int? status = null,
             DateTime? dateFrom = null,
-            DateTime? dateTo = null)
+            DateTime? dateTo = null,
+            int? aiStatus = null)
         {
             var query = _context.ECGAnalyse
                 .Where(e => e.ClinicId == clinicId)
+                .Include(e => e.Clinic)
+                    .ThenInclude(c => c.ClinicDetail)
+                        .ThenInclude(d => d.District)
+                .Include(e => e.Clinic)
+                    .ThenInclude(c => c.ClinicPhoneNumber)
                 .Include(e => e.Patcient)
                 .Include(e => e.CreatedDoctor).ThenInclude(d => d.User).ThenInclude(u => u.Role)
                 .AsQueryable();
@@ -156,6 +165,16 @@ namespace EkgAnalyzerApi.Services
             {
                 var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
                 query = query.Where(e => e.CreatedAt <= utcTo);
+            }
+
+            if (aiStatus.HasValue)
+            {
+                var val = aiStatus.Value.ToString();
+                query = query.Where(e => e.AIAnswerData != null && (
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": {val}") ||
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":{val}") ||
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": \"{val}\"") ||
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":\"{val}\"")));
             }
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -207,17 +226,11 @@ namespace EkgAnalyzerApi.Services
                 .OrderByDescending(e => e.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(e => new ECGAnalyseDTO
+                .Select(e => new ECGAnalyseListDTO
                 {
                     Id              = e.Id,
                     Status          = e.Status,
-                    PatcientId      = e.PatcientId,
-                    CreatedDoctorId = e.CreatedDoctorId,
-                    AnalyseFileLink        = e.AnalyseFileLink,
-                    GeneratedFileLink      = e.GeneratedFileLink,
-                    GeneratedShortFileLink = e.GeneratedShortFileLink,
                     CreatedAt = e.CreatedAt,
-                    UpdatedAt = e.UpdatedAt,
                     Patcient = new PatcientForECG
                     {
                         Id        = e.Patcient.Id,
@@ -226,39 +239,122 @@ namespace EkgAnalyzerApi.Services
                         FirstName = e.Patcient.FirstName,
                         LastName  = e.Patcient.LastName,
                         SureName  = e.Patcient.SureName,
-                        Passport  = e.Patcient.Passport  // decrypted below
+                        Passport = e.Patcient.Passport
                     },
                     CreatedDoctor = new DoctorForECGData
                     {
                         Id        = e.CreatedDoctor.Id,
                         FirstName = e.CreatedDoctor.FirstName,
                         LastName  = e.CreatedDoctor.LastName,
-                        SureName  = e.CreatedDoctor.SureName,
-                        Phone     = e.CreatedDoctor.Phone,
-                        Role = new RolesDTO
-                        {
-                            Id     = e.CreatedDoctor.User.Role.Id,
-                            NameUz = e.CreatedDoctor.User.Role.NameUz,
-                            NameEn = e.CreatedDoctor.User.Role.NameEn,
-                            NameRu = e.CreatedDoctor.User.Role.NameRu
-                        }
-                    }
+                        SureName  = e.CreatedDoctor.SureName
+                    },
+                    AIStatus = e.AIAnswerData != null ? 
+                        (e.AIAnswerData.Contains("\"automatic_analysis_bool\": 1") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"1\"") ? 1 : 
+                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 2") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"2\"") ? 2 : 
+                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 3") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"3\"") ? 3 : null) : null
                 })
                 .ToListAsync();
 
-            // Passportlarni deshifrlash
-            foreach (var item in items)
-            {
-                if (item.Patcient?.Passport != null)
-                    item.Patcient.Passport = item.Patcient.Passport;
-            }
-
-            return new PagedResult<ECGAnalyseDTO>
+            return new PagedResult<ECGAnalyseListDTO>
             {
                 Items      = items,
                 TotalCount = totalCount,
                 Page       = page,
                 PageSize   = pageSize
+            };
+        }
+
+        public async Task<ECGAnalyseDTO?> GetECGAnalyseByIdAsync(int id)
+        {
+            var e = await _context.ECGAnalyse
+                .Include(e => e.Clinic)
+                .ThenInclude(c => c.ClinicDetail)
+                .ThenInclude(c => c.District)
+                .ThenInclude(c => c.Region)
+                .Include(e => e.Clinic)
+                .ThenInclude(c => c.ClinicPhoneNumber)
+                .Include(e => e.Patcient)
+                .Include(e => e.CreatedDoctor)
+                    .ThenInclude(c => c.User)
+                    .ThenInclude(c => c.Role)
+                .Include(e => e.Complaints)
+                    .ThenInclude(c => c.Complaint)
+                .Include(e => e.Doctors)
+                    .ThenInclude(c => c.Doctor)
+                     .ThenInclude(c => c.User)
+                    .ThenInclude(c => c.Role)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (e == null) return null;
+
+            return new ECGAnalyseDTO
+            {
+                Id = e.Id,
+                AIAnswerData = e.AIAnswerData,
+                UpdatedAt = e.UpdatedAt,
+                CreatedAt = e.CreatedAt,
+                GeneratedFileLink = e.GeneratedFileLink,
+                GeneratedShortFileLink = e.GeneratedShortFileLink,
+                AnalyseFileLink = e.AnalyseFileLink,
+                Status = e.Status,
+                PatcientId = e.PatcientId,
+                CreatedDoctorId = e.CreatedDoctorId,
+                Clinic = new ClinicForECG
+                {
+                    Id = e.Clinic.Id,
+                    ClinicLogo = e.Clinic.ClinicLogo,
+                    ClinicName = e.Clinic.ClinicName,
+                    District = e.Clinic.ClinicDetail != null ? e.Clinic.ClinicDetail.District : null,
+                    Address = e.Clinic.ClinicDetail != null ? e.Clinic.ClinicDetail.Address : null,
+                    PhoneNumbers = e.Clinic.ClinicPhoneNumber.Select(p => p.PhoneNumber).ToList()
+                },
+                Patcient = new PatcientForECG
+                {
+                    Id = e.Patcient.Id,
+                    BirthDate = e.Patcient.BirthDate,
+                    Gender = e.Patcient.Gender,
+                    FirstName = e.Patcient.FirstName,
+                    LastName = e.Patcient.LastName,
+                    SureName = e.Patcient.SureName,
+                    Passport = e.Patcient.Passport
+                },
+                CreatedDoctor = new DoctorForECGData
+                {
+                    Id = e.CreatedDoctor.Id,
+                    FirstName = e.CreatedDoctor.FirstName,
+                    LastName = e.CreatedDoctor.LastName,
+                    SureName = e.CreatedDoctor.SureName,
+                    Phone = e.CreatedDoctor.Phone,
+                    Role = new RolesDTO
+                    {
+                        Id = e.CreatedDoctor.User.Role.Id,
+                        NameUz = e.CreatedDoctor.User.Role.NameUz,
+                        NameEn = e.CreatedDoctor.User.Role.NameEn,
+                        NameRu = e.CreatedDoctor.User.Role.NameRu
+                    }
+                },
+                Complaints = e.Complaints.OrderBy(ce => ce.Complaint.NameUz).Select(c => new Complaints
+                {
+                    Id = c.Complaint.Id,
+                    NameUz = c.Complaint.NameUz,
+                    NameEn = c.Complaint.NameEn,
+                    NameRu = c.Complaint.NameRu
+                }).ToList(),
+                Doctors = e.Doctors.Select(c => new DoctorForECGData
+                {
+                    Id = c.Doctor.Id,
+                    FirstName = c.Doctor.FirstName,
+                    LastName = c.Doctor.LastName,
+                    SureName = c.Doctor.SureName,
+                    Phone = c.Doctor.Phone,
+                    Role = new RolesDTO
+                    {
+                        Id = c.Doctor.User.Role.Id,
+                        NameUz = c.Doctor.User.Role.NameUz,
+                        NameEn = c.Doctor.User.Role.NameEn,
+                        NameRu = c.Doctor.User.Role.NameRu
+                    }
+                }).ToList()
             };
         }
 

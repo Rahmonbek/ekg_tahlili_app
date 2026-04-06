@@ -1,8 +1,8 @@
 {
-    "lang":"EN",
-    "error_api":"en",
-    "data_lang":"En",
-    "email": "Email",
+  "lang": "EN",
+  "error_api": "en",
+  "data_lang": "En",
+  "email": "Email",
   "password": "Password",
   "enter_email": "Enter your email",
   "enter_password": "Enter your password",
@@ -32,7 +32,6 @@
   "user_not_find": "You are not registered. Please register first",
   "email_not_verified": "Your email is not verified. Please verify your email",
   "invalid_password": "Incorrect password. Please try again",
-
   "patcients": "Patients",
   "organization_info": "Organization information",
   "billings": "Billing",
@@ -43,6 +42,16 @@
   "date_from": "From date",
   "date_to": "To date",
   "filter_by_status": "Filter by status",
+  "filter_by_ai_level": "Filter by AI level",
+  "home": "Home",
+  "create_doctor": "Add staff",
+  "view": "View",
+  "view_analyse": "Analysis details",
+  "back": "Back",
+  "new_lab_analyse": "New Lab Analysis",
+  "new_holter_analyse": "New Holter Analysis",
+  "new_smad_analyse": "New SMAD Analysis",
+  "new_diagnose": "New Diagnosis",
   "all_statuses": "All statuses",
   "status_pending": "Pending",
   "status_processing": "Processing",
@@ -54,7 +63,6 @@
   "doctor": "Doctor",
   "dashboard": "Dashboard",
   "main_info": "Main information",
-
   "enter_clinic_name": "Enter the full name of the organization",
   "clinic_name": "Organization name",
   "save_data": "Save data",
@@ -76,62 +84,49 @@
   "phone_numbers": "Phone numbers",
   "phone_number": "Phone number",
   "phone_number_add": "Add another",
-
   "patcient_info": "Patient information",
   "passport_seria": "Passport series",
   "enter_passport_seria": "Enter passport series and number",
   "enter_birthdate": "Enter date of birth",
   "birthdate": "Date of birth",
   "search_patcient": "Search",
-
   "enter_firstname": "Enter patient's first name",
   "firstname": "First name",
   "enter_lastname": "Enter patient's last name",
   "lastname": "Last name",
   "enter_surename": "Enter patient's patronymic",
   "surename": "Patronymic",
-
   "female": "Female",
   "male": "Male",
   "gender": "Gender",
-
   "saveData": "Save data",
   "ecg_analyse": "Analyze ECG",
-
   "alert_patcient": "Enter the patient's information exactly as in the passport.",
   "alert_staff_change": "Enter the staff member's information exactly as in the passport.",
   "alert_ecg": "Make sure the uploaded ECG file belongs to this patient. If uploading an ECG image, ensure high image quality, no extraneous objects, and that ECG lines are clearly visible when zoomed in.",
-
   "select_ecg_file": "Select ECG file",
   "access_file_types": "Allowed file types",
   "patcient_complaint": "Select patient complaints",
-
   "checking": "Analyzing...",
   "check": "Analyze",
   "ecg_last_result": "Latest ECG analysis",
   "select_file_error": "Please select at least one file!",
   "please_wait": "ECG analysis may take some time. Please wait and do not refresh the browser.",
-
   "retry_ecg_analyse": "Analyze a new ECG",
-
   "english": "English",
   "russian": "Russian",
   "uzbek": "Uzbek",
   "lang_analyse": "Select diagnosis language",
-
   "enter_username": "Enter your username",
   "username": "Username",
   "username_already_exists": "This username already exists",
   "user_not_found": "Incorrect username. Please try again",
   "email_already_exists": "This email is already registered",
-
   "change_password": "Change password in the N MED system",
-
   "enter_lastname_staff": "Enter staff member's last name",
   "enter_firstname_staff": "Enter staff member's first name",
   "enter_surename_staff": "Enter staff member's patronymic",
   "saveDataStaff": "Save staff data",
-
   "staffs": "Staff",
   "clinic_staffs": "Hospital staff",
   "FIO": "Full name",
@@ -139,111 +134,92 @@
   "add_new_staff": "Add new staff member",
   "enter_gender_staff": "Select staff member gender",
   "enter_gender": "Select patient gender",
-
   "self_data_add": "Enter your personal information",
   "required_self_data": "Personal information is required to use the system",
   "self_data": "Personal information",
-
   "exit": "Log out",
   "data_saved": "Data saved successfully",
   "server_error": "Error! Data was not saved",
-
   "enter_role_staff": "Select staff role",
   "enter_position_staff": "Select staff specialization",
   "position": "Specialization",
-
   "enter_new_password_staff": "Create a password for the staff member",
   "enter_username_staff": "Create a username for the staff member",
   "edit": "Edit",
-
   "select_doctor_of_patcient": "Select attending physicians",
   "enter_position_doctor": "Select attending physician specialization",
   "has_not_doctor": "⚠️ Note: If the attending physician is not listed, please contact the hospital administrator",
-
   "normal": "Normal",
   "avarage": "Moderate",
   "danger": "Critical",
   "unknown": "Unknown",
-
   "check_by_ai": "Analyze ECG file using AI",
   "please_wait_save": "Please wait while the data is being saved.",
   "retry_ecg_save": "Save ECG of a new patient",
   "analyse_saved": "ECG data has been saved. You can upload the next patient's ECG file.",
   "not_analysed": "Not analyzed",
-
   "doctor_of_created": "Staff member who entered the ECG data",
   "doctor_of_patcient": "Attending physician",
   "complaints": "Patient complaints",
   "ecg-image": "ECG image",
-
   "api_error": "An error occurred while connecting to the server. Please try again.",
   "get_other_results": "Get more results",
-
   "patient_diagnostics": "Doctor's conclusion",
   "download_diagnosis": "Download doctor's conclusion",
   "select_diagnosis_file": "Select conclusion file",
   "owner_diagnosis": "Doctor who provided the conclusion",
   "doctor_of_created_diagnoses": "Doctor who provided the conclusion:",
   "save_diagnose": "Save conclusion",
-
   "diagnoses_file": "Conclusion file",
   "diagnoses_update": "Conclusion date",
   "see_diagnoses_file": "View conclusion file",
-
   "save_ecg": "Save data",
   "doctor_positions": "Doctor specialization",
-
   "analyse_lab": "Laboratory analysis",
   "lab_analyse": "Perform laboratory analysis",
   "select_lab_file": "Select laboratory result file",
   "select_lab_category_type": "Select performed test types",
   "lab_categories": "Laboratory test categories",
-
-  "addres": "Address",
-"enter_addres": "Enter address",
-
-"region": "Region",
-"enter_region": "Select the patient's region",
-"district": "City / District",
-"enter_district": "Select the patient's district",
-"enter_district_clinic": "Select a region",
-"enter_region_clinic": "Select a city or district",
-"name_clinic": "Hospital",
-"name": "Name:",
-"place": "Address:",
-"analyse_holter": "Analyze Holter",
+  "enter_address": "Enter address",
+  "region": "Region",
+  "enter_region": "Select the patient's region",
+  "district": "City / District",
+  "enter_district": "Select the patient's district",
+  "enter_district_clinic": "Select a region",
+  "enter_region_clinic": "Select a city or district",
+  "name_clinic": "Hospital",
+  "name": "Name:",
+  "place": "Address:",
+  "analyse_holter": "Analyze Holter",
   "lang_analyse": "Select AI analysis language",
   "select_holter_file": "Select Holter monitoring report",
   "holter_analyse": "Analyze Holter monitoring report",
   "holter_doctor": "Report author (Physician)",
-  "doctor_of_created": "Staff member who entered data",
   "holter_file": "Holter monitoring report",
   "lab_last_result": "Latest laboratory test result",
   "holter_last_result": "Latest Holter analysis",
-
   "analyse_smad": "Analyze ABPM",
   "select_smad_file": "Select ABPM monitoring report",
   "smad_analyse": "Analyze ABPM monitoring report",
   "smad_doctor": "Report author (Physician)",
   "smad_file": "ABPM monitoring report",
   "smad_last_result": "Latest ABPM analysis",
-
   "retry_holter_analyse": "Analyze new Holter",
   "retry_smad_analyse": "Analyze new ABPM",
   "retry_lab_analyse": "Analyze new laboratory test",
   "analyse_lab_saved": "Laboratory analysis saved. You can now upload the next patient's analysis file.",
-
   "password_complexity_error": "Password must be at least 8 characters long and include an uppercase letter, a number, and a special character (!@#$%^&*)",
   "password_too_short": "Password is too short (minimum 8 characters required)",
   "please_enter_password": "Please enter your password",
-  "verify": "Verify code"
-
-
-
-
-
-
-
-
-
+  "verify": "Verify code",
+  "date_filter": "Upload date",
+  "ai_result": "AI summary",
+  "filter_by_ai": "Filter by AI summary",
+  "age": "Age",
+  "status": "Analysis status",
+  "status_pending": "Uploading",
+  "status_processing": "Uploaded",
+  "status_done": "AI analyzed",
+  "status_error": "Error",
+  "new_lab_analyse": "New laboratory analysis"
 }

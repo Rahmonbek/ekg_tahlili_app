@@ -216,7 +216,7 @@ export default function EcgAnalyzer() {
                     <div className="main_card_content">
                         <Form form={form2} name="ecgUpload" labelCol={{ span: 24 }} wrapperCol={{ span: 24 }}>
                             <Row>
-                                <Col className="main_col" lg={12} md={24}>
+                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
                                     <Form.Item name="select_ecg_file" label={t('select_ecg_file')} rules={[{ required: true, message: '' }]}>
                                         <div>
                                             <input className="file_input" type="file" onChange={handleChange} accept=".xml,.jpg,.png" />
@@ -224,7 +224,7 @@ export default function EcgAnalyzer() {
                                         </div>
                                     </Form.Item>
                                 </Col>
-                                <Col className="main_col" lg={12} md={24}>
+                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
                                     <Form.Item name="lang" label={t('lang_analyse')} rules={[{ required: true, message: '' }]}>
                                         <Select
                                             style={{ width: '100%' }}
@@ -241,7 +241,7 @@ export default function EcgAnalyzer() {
                                     </Form.Item>
                                 </Col>
 
-                                <Col lg={24} md={24}>
+                                <Col lg={24} xs={24} sm={24} md={24}>
                                     <Form.Item name="check_ai">
                                         <div className="complaint_item">
                                             <Checkbox
@@ -262,12 +262,12 @@ export default function EcgAnalyzer() {
                                     filterByPosition={filterByPosition}
                                 />
 
-                                <Col className="main_col" lg={24} md={24}>
+                                <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
                                     <p className="ecg_label">{t('patcient_complaint')}</p>
                                     <br />
                                     <Row>
                                         {complaints.map((item) => (
-                                            <Col key={item.id} lg={12} md={24}>
+                                            <Col key={item.id} lg={12} xs={24} sm={24} md={24}>
                                                 <div className="complaint_item">
                                                     <Checkbox
                                                         checked={selectedComplaints.findIndex((x) => x.id === item.id) !== -1}
@@ -281,15 +281,15 @@ export default function EcgAnalyzer() {
                                     </Row>
                                 </Col>
 
-                                <Col lg={9} md={24}></Col>
-                                <Col lg={6} md={24}>
+                                <Col lg={9} xs={24} sm={24} md={24}></Col>
+                                <Col lg={6} xs={24} sm={24} md={24}>
                                     {state.showBtn && (
                                         <Button onClick={handleSubmit} loading={state.loading3} htmlType="button" className="btn_form">
                                             {state.checkAI ? t('check') : t('save_ecg')}
                                         </Button>
                                     )}
                                 </Col>
-                                <Col lg={9} md={24}></Col>
+                                <Col lg={9} xs={24} sm={24} md={24}></Col>
                             </Row>
                         </Form>
                     </div>
@@ -305,16 +305,16 @@ export default function EcgAnalyzer() {
                             <div className="mini_loader"><MoonLoader size={50} color="#4FD1C5" /></div>
                         ) : (
                             <>
-                                <EcgResult error={state.error} result={state.result} image={state.image} image_short={state.imageShort} />
+                                <EcgResult error={state.error} result={state.result} image={state.image} image_short={state.imageShort} clinic={user.clinic} />
                                 <br />
                                 <Row>
-                                    <Col lg={9} md={24}></Col>
-                                    <Col lg={6} md={24}>
+                                    <Col lg={9} xs={24} sm={24} md={24}></Col>
+                                    <Col lg={6} xs={24} sm={24} md={24}>
                                         <Button onClick={retryAnalyse} loading={state.loading3} htmlType="button" className="btn_form">
                                             {t('retry_ecg_analyse')}
                                         </Button>
                                     </Col>
-                                    <Col lg={9} md={24}></Col>
+                                    <Col lg={9} xs={24} sm={24} md={24}></Col>
                                 </Row>
                             </>
                         )}

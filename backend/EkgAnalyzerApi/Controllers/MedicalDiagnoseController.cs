@@ -9,7 +9,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.RateLimiting;
 
 [ApiController]
-[Route("api/med-diagnose")]
+[Route("api/medical-diagnose")]
 [Authorize]
 public class MedicalDiagnoseController : ControllerBase
 {
@@ -57,4 +57,40 @@ public class MedicalDiagnoseController : ControllerBase
             return StatusCode(502, new { message = "AI tahlil xizmati bilan bog'lanib bo'lmadi", error = ex.Message });
         }
     }
+    [HttpGet("get-by-clinic")]
+    public async Task<IActionResult> GetByClinic(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? search = null,
+
+        [FromQuery] DateTime? dateFrom = null,
+        [FromQuery] DateTime? dateTo = null)
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+            return Unauthorized(new { message = "Token invalid" });
+
+        var userId = int.Parse(userIdClaim.Value);
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null || user.ClinicId == null)
+            return Unauthorized(new { message = "Klinika aniqlanmadi" });
+
+        var userClinicId = user.ClinicId.Value;
+
+        var results = await _diagnoseService.GetMedicalDiagnoseAnalysesByClinicIdAsync(
+            userClinicId, page, pageSize, search, dateFrom, dateTo);
+
+        return Ok(results);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var result = await _diagnoseService.GetMedicalDiagnoseByIdAsync(id);
+        if (result == null) return NotFound();
+        return Ok(result);
+    }
+
 }

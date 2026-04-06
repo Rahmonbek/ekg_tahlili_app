@@ -240,12 +240,15 @@ label {
 
 .main_card_btn {
   width: 100%;
-  padding-left: 70%;
-  margin: 0px 0 20px 0px;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
 }
 
 .main_card_btn .btn_form {
   margin-top: 10px !important;
+  width: auto !important;
+  padding: 0 20px;
 }
 
 .btn_form:hover {
@@ -518,6 +521,77 @@ input:-webkit-autofill:active {
   padding: var(--main_padding);
   background-color: #F7FAFC;
   z-index: 344;
+  gap: 12px;
+}
+
+.header_breadcrumb {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  margin-left: 20px;
+  flex-wrap: wrap;
+  gap: 2px;
+  min-width: 0;
+}
+
+.breadcrumb_item {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.breadcrumb_sep {
+  color: #aaa;
+  font-size: var(--medium_size);
+  flex-shrink: 0;
+}
+
+.breadcrumb_link {
+  color: #00b09b;
+  font-size: var(--small_size);
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.breadcrumb_link:has(svg) {
+  font-size: var(--large_size);
+}
+
+.breadcrumb_link:hover {
+  color: #008a77;
+  text-decoration: underline;
+}
+
+.breadcrumb_current {
+  color: #555;
+  font-size: var(--small_size);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.table_view_btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #e8f9f7;
+  color: #00b09b;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.table_view_btn:hover {
+  background: #00b09b;
+  color: #fff;
 }
 
 .header_others {
@@ -1130,6 +1204,10 @@ input::placeholder,
   margin-bottom: 30px !important;
 }
 
+.filter_form_box .filter_label {
+  margin-bottom: 5px !important;
+}
+
 th,
 td {
   font-size: var(--small_size);
@@ -1278,19 +1356,16 @@ td {
   }
 
   .main_card_btn {
-    padding-left: 50% !important;
+    justify-content: flex-start;
   }
 
   .main_card_btn .btn_form {
     font-size: var(--small_size);
+    width: 100% !important;
   }
 
   .exit_icon {
     padding: 0px 15px 0px 30px !important;
-  }
-
-  :where(.css-dev-only-do-not-override-ac2jek).ant-col {
-    width: 100% !important;
   }
 
   .ant-input-affix-wrapper>input.ant-input {
@@ -1312,14 +1387,9 @@ td {
   }
 
   .doctors_table {
-    width: 100vw !important;
+    width: 100% !important;
     overflow: hidden !important;
     overflow-x: auto !important;
-  }
-
-  :where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper table {
-    width: 210vw !important;
-    padding-right: 4vw;
   }
 
   .ant-modal-content {
@@ -1338,17 +1408,10 @@ td {
     margin-top: 10px !important;
   }
 
-
   .diagnoses_table {
-    width: 100vw !important;
+    width: 100% !important;
     overflow: hidden !important;
     overflow-x: auto !important;
-    padding-left: 2vw !important;
     background-color: white !important;
-  }
-
-  .diagnoses_table .ant-table-wrapper table {
-    width: 160vw !important;
-    padding-right: 2vw !important;
   }
 }

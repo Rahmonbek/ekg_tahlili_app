@@ -49,7 +49,7 @@ export default function PatientInfoForm({
                 onFinish={onFinish}
             >
                 <Row>
-                    <Col className="main_col" lg={8} md={24}>
+                    <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                         <Form.Item
                             name="lastname"
                             label={t('lastname')}
@@ -64,7 +64,7 @@ export default function PatientInfoForm({
                         </Form.Item>
                     </Col>
 
-                    <Col className="main_col" lg={8} md={24}>
+                    <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                         <Form.Item
                             name="firstname"
                             label={t('firstname')}
@@ -79,7 +79,7 @@ export default function PatientInfoForm({
                         </Form.Item>
                     </Col>
 
-                    <Col className="main_col" lg={8} md={24}>
+                    <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                         <Form.Item
                             name="surename"
                             label={t('surename')}
@@ -94,7 +94,7 @@ export default function PatientInfoForm({
                         </Form.Item>
                     </Col>
 
-                    <Col className="main_col" lg={8} md={24}>
+                    <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                         <Form.Item
                             name="gender"
                             label={t('gender')}
@@ -114,7 +114,7 @@ export default function PatientInfoForm({
                         </Form.Item>
                     </Col>
 
-                    <Col className="main_col" lg={8} md={24}>
+                    <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                         <Form.Item
                             label={t('phone_number')}
                             name="phone"
@@ -137,7 +137,7 @@ export default function PatientInfoForm({
                         </Form.Item>
                     </Col>
 
-                    <Col className="main_col" lg={8} md={24}>
+                    <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                         <Form.Item
                             name="regioname"
                             label={t('region')}
@@ -161,7 +161,7 @@ export default function PatientInfoForm({
                         </Form.Item>
                     </Col>
 
-                    <Col className="main_col" lg={8} md={24}>
+                    <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                         <Form.Item
                             name="districtname"
                             label={t('district')}
@@ -181,7 +181,7 @@ export default function PatientInfoForm({
                         </Form.Item>
                     </Col>
 
-                    <Col className="main_col" lg={16} md={24}>
+                    <Col className="main_col" lg={16} xs={24} sm={24} md={24}>
                         <Form.Item
                             name="address"
                             label={t('addres')}
@@ -197,7 +197,7 @@ export default function PatientInfoForm({
                     </Col>
 
                     <div className="save-pat-data">
-                        <Col className="main_col" lg={8} md={24}>
+                        <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                             <div className="form_div">
                                 <Button className="btn_form" loading={loading} htmlType="submit">
                                     {t('saveData')}

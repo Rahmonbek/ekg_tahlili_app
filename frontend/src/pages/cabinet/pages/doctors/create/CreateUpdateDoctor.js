@@ -175,7 +175,7 @@ changeRole(form.getFieldValue('role'))
                 onFinish={saveData}
               >
                 <Row>
-                    <Col className="main_col" lg={8} md={24} >
+                    <Col className="main_col" lg={8} xs={24} sm={24} md={24} >
                     <Form.Item
     name="username"
     label={t("username")}
@@ -199,7 +199,7 @@ changeRole(form.getFieldValue('role'))
     />
   </Form.Item>
                     </Col>
-                    <Col className="main_col" lg={8} md={24}>
+                    <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                     <Form.Item
       name="password"
       label={t("new_password")}
@@ -216,8 +216,8 @@ changeRole(form.getFieldValue('role'))
       <Input prefix={<IoMdLock />} className='login_input'  placeholder={t("enter_new_password_staff")} autoComplete="new-password"/>
     </Form.Item>
                     </Col>
-                    <Col className="main_col" lg={8} md={24}></Col>
-                  <Col className="main_col" lg={8} md={24}>
+                    <Col className="main_col" lg={8} xs={24} sm={24} md={24}></Col>
+                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                     <Form.Item
                       name="lastname"
                       label={t('lastname')}
@@ -232,7 +232,7 @@ changeRole(form.getFieldValue('role'))
                     </Form.Item>
                   </Col>
 
-                  <Col className="main_col" lg={8} md={24}>
+                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                     <Form.Item
                       name="firstname"
                       label={t('firstname')}
@@ -247,7 +247,7 @@ changeRole(form.getFieldValue('role'))
                     </Form.Item>
                   </Col>
 
-                  <Col className="main_col" lg={8} md={24}>
+                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                     <Form.Item
                       name="surename"
                       label={t('surename')}
@@ -262,7 +262,7 @@ changeRole(form.getFieldValue('role'))
                     </Form.Item>
                   </Col>
 
-                  <Col className="main_col" lg={8} md={24}>
+                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                     <Form.Item
                       name="gender"
                       label={t('gender')}
@@ -282,7 +282,7 @@ changeRole(form.getFieldValue('role'))
                     </Form.Item>
                   </Col>
 
-                  <Col className="main_col" lg={8} md={24}>
+                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                     <Form.Item
                       label={t('phone_number')}
                       name="phone"
@@ -302,8 +302,8 @@ changeRole(form.getFieldValue('role'))
                       />
                     </Form.Item>
                   </Col>
-                  <Col className="main_col" lg={8} md={24}></Col>
-                     <Col className="main_col" lg={8} md={24}>
+                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}></Col>
+                     <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                      <Form.Item
                       name="role"
                       label={t('role')}
@@ -324,7 +324,7 @@ changeRole(form.getFieldValue('role'))
                       />
                     </Form.Item>
                      </Col>
-                     <Col className="main_col" lg={16} md={24}>
+                     <Col className="main_col" lg={16} xs={24} sm={24} md={24}>
                      <Form.Item
                       name="positions"
                       label={t('position')}
@@ -353,15 +353,15 @@ changeRole(form.getFieldValue('role'))
 
                     </Form.Item>
                     </Col>
-                  <Col className="main_col" lg={8} md={24}></Col>
-                  <Col className="main_col" lg={8} md={24}>
+                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}></Col>
+                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                     <div className="form_div">
                       <Button className="btn_form" loading={loading} htmlType="submit">
                         {t('saveDataStaff')}
                       </Button>
                     </div>
                   </Col>
-                  <Col className="main_col" lg={8} md={24}></Col>
+                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}></Col>
                 </Row>
               </Form>
         </div>

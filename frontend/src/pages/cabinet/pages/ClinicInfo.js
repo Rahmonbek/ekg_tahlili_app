@@ -298,7 +298,7 @@ const getDistricts = async (id) => {
     <>
     {clinic!=null?<div>
         <Row>
-                         <Col className='main_col' lg={8} md={12} sm={24}>
+                         <Col className='main_col' lg={8} xs={24} sm={24} md={12} sm={24}>
                          <div className='main_card'>
                     <h1>{t("main_info")}</h1>
                     
@@ -498,7 +498,7 @@ const getDistricts = async (id) => {
       
       
                          </Col>
-                         <Col className='main_col' lg={16} md={12} sm={24}>
+                         <Col className='main_col' lg={16} xs={24} sm={24} md={12} sm={24}>
                           <div className='main_card'>
                     <h1>{t("bank_info")}</h1>
                     
@@ -520,7 +520,7 @@ const getDistricts = async (id) => {
     
   >
 <Row>
-                         <Col className='main_col' lg={12} md={24} sm={24}>
+                         <Col className='main_col' lg={12} xs={24} sm={24} md={24} sm={24}>
                          <Form.Item
       name="inn"
       label={t("inn")}
@@ -559,7 +559,7 @@ const getDistricts = async (id) => {
                       
                       
                          </Col>
-    <Col className='main_col' lg={12} md={24} sm={24}>
+    <Col className='main_col' lg={12} xs={24} sm={24} md={24} sm={24}>
                          <Form.Item
       name="license"
       label={t("license")}
@@ -628,7 +628,7 @@ const getDistricts = async (id) => {
 
 
 
-      <Col className="main_col" lg={12} md={24}>
+      <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
                    <Form.Item
   name="regioname"
   label={t('region')}
@@ -657,7 +657,7 @@ onChange={(value) => {
 
                   </Col>
 
-                <Col className="main_col" lg={12} md={24}>
+                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
   <Form.Item  
     name="districtname"
     label={t('district')}
@@ -680,7 +680,7 @@ onChange={(value) => {
 
 
 
-                         <Col className='main_col' lg={24} md={24} sm={24}>
+                         <Col className='main_col' lg={24} xs={24} sm={24} md={24} sm={24}>
                          <Form.Item
       name="address"
       label={t("address")}
@@ -695,7 +695,7 @@ onChange={(value) => {
       <Input prefix={<FaLocationDot />} className='login_input' placeholder={t("enter_address")} />
     </Form.Item>
                          </Col>
-                         <Col className='main_col' lg={12} md={24} sm={24}>
+                         <Col className='main_col' lg={12} xs={24} sm={24} md={24} sm={24}>
                          <Form.Item
   name="bankAccount"
   label={t("bank_account")}
@@ -718,7 +718,7 @@ onChange={(value) => {
 </Form.Item>
 
                          </Col>
-                          <Col className='main_col' lg={12} md={24} sm={24}>
+                          <Col className='main_col' lg={12} xs={24} sm={24} md={24} sm={24}>
                          <Form.Item
       name="mfo"
       label={t("mfo")}
@@ -752,7 +752,7 @@ onChange={(value) => {
 </InputMask>
     </Form.Item>
                          </Col>
-                          <Col className='main_col' lg={24} md={24} sm={24}>
+                          <Col className='main_col' lg={24} xs={24} sm={24} md={24} sm={24}>
                          <Form.Item
       name="bankName"
       label={t("bankName")}

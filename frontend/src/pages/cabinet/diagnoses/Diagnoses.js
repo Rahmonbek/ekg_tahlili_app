@@ -328,7 +328,7 @@ const getDistricts = async (id) => {
           onFinish={searchPatcient}
         >
           <Row>
-            <Col className="main_col" lg={8} md={12}>
+            <Col className="main_col" lg={8} xs={24} sm={24} md={12}>
               <Form.Item
                 name="passport"
                 label={t('passport_seria')}
@@ -363,7 +363,7 @@ const getDistricts = async (id) => {
               </Form.Item>
             </Col>
 
-            <Col className="main_col" lg={8} md={12}>
+            <Col className="main_col" lg={8} xs={24} sm={24} md={12}>
               <Form.Item
                 name="birthdate"
                 label={t('birthdate')}
@@ -375,7 +375,7 @@ const getDistricts = async (id) => {
 
 
       
-            <Col className="main_col" lg={6} md={12}>
+            <Col className="main_col" lg={6} xs={24} sm={24} md={12}>
               <div className="form_div">
                 <Button className="btn_form" loading={loading} htmlType="submit">
                   {t('search_patcient')}
@@ -398,7 +398,7 @@ const getDistricts = async (id) => {
               onFinish={savePatcient}
             >
               <Row>
-                <Col className="main_col" lg={8} md={24}>
+                <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                   <Form.Item
                     name="lastname"
                     label={t('lastname')}
@@ -413,7 +413,7 @@ const getDistricts = async (id) => {
                   </Form.Item>
                 </Col>
 
-                <Col className="main_col" lg={8} md={24}>
+                <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                   <Form.Item
                     name="firstname"
                     label={t('firstname')}
@@ -428,7 +428,7 @@ const getDistricts = async (id) => {
                   </Form.Item>
                 </Col>
 
-                <Col className="main_col" lg={8} md={24}>
+                <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                   <Form.Item
                     name="surename"
                     label={t('surename')}
@@ -443,7 +443,7 @@ const getDistricts = async (id) => {
                   </Form.Item>
                 </Col>
 
-                <Col className="main_col" lg={8} md={24}>
+                <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                   <Form.Item
                     name="gender"
                     label={t('gender')}
@@ -463,7 +463,7 @@ const getDistricts = async (id) => {
                   </Form.Item>
                 </Col>
 
-                <Col className="main_col" lg={8} md={24}>
+                <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                   <Form.Item
                     label={t('phone_number')}
                     name="phone"
@@ -486,7 +486,7 @@ const getDistricts = async (id) => {
                   </Form.Item>
                 </Col>
 
-                         <Col className="main_col" lg={8} md={24}>
+                         <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                    <Form.Item
   name="regioname"
   label={t('region')}
@@ -516,7 +516,7 @@ onChange={(value) => {
 
                   </Col>
 
-                <Col className="main_col" lg={8} md={24}>
+                <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
   <Form.Item  
     name="districtname"
     label={t('district')}
@@ -535,7 +535,7 @@ onChange={(value) => {
 </Col>
 
 
-                  <Col className="main_col" lg={16} md={24}>
+                  <Col className="main_col" lg={16} xs={24} sm={24} md={24}>
                 <Form.Item
   name="address"
   label={t('addres')}
@@ -551,7 +551,7 @@ onChange={(value) => {
 
                   </Col>
      <div className='save-pat-data'>
-                <Col className="main_col" lg={8} md={24}>
+                <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                   <div className="form_div">
                     <Button className="btn_form" loading={loading1} htmlType="submit">
                       {t('saveData')}
@@ -580,7 +580,7 @@ onChange={(value) => {
               
             >
             <Row>
-              <Col  className="main_col" lg={12} md={24}>
+              <Col  className="main_col" lg={12} xs={24} sm={24} md={24}>
 
                    <Form.Item
 name="select_ecg_file"
@@ -605,7 +605,7 @@ rules={[{ required: true, message: '' }]}
 
 
 
-                <Col className="main_col" lg={12} md={24}>
+                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
                                      <Form.Item
                                       name="main_doctor"
                                       label={t('owner_diagnosis')}
@@ -639,14 +639,14 @@ rules={[{ required: true, message: '' }]}
 
 
 
-              <Col lg={9} md={24}></Col>
-              <Col lg={6} md={24}>
+              <Col lg={9} xs={24} sm={24} md={24}></Col>
+              <Col lg={6} xs={24} sm={24} md={24}>
               {show_btn?<Button  loading={loading3} htmlType='submit'  className="btn_form">
         {t("save_diagnose")}
       </Button>:<></>}
       
               </Col>
-              <Col lg={9} md={24}></Col>
+              <Col lg={9} xs={24} sm={24} md={24}></Col>
 
             </Row>
             </Form>

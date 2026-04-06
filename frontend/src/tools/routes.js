@@ -23,31 +23,31 @@ export const routers=[
         role_id:[]
     },
     {
-        path:'/analyse-holter',
+        path:'/holter-analyses',
         icon:<RiPulseLine />,
         title:"analyse_holter",
-        tools:"analyse-holter",
+        tools:"holter-analyses",
         role_id:[]
     },
     {
-        path:'/analyse-smad',
+        path:'/smad-analyses',
         icon:<FaChartLine />,
         title:"analyse_smad",
-        tools:"analyse-smad",
+        tools:"smad-analyses",
         role_id:[]
     },
      {
-        path:'/analyse-lab',
+        path:'/lab-analyses',
         icon:<GiTestTubes />,
         title:"analyse_lab",
-        tools:"analyse-lab",
+        tools:"lab-analyses",
         role_id:[]
     },
      {
-        path:'/diagnoses',
+        path:'/patient-diagnoses',
         icon:< MdOutlineMedicalInformation />,
         title:"patient_diagnostics",
-        tools:"diagnoses",
+        tools:"patient-diagnoses",
         role_id:[]
     },
     //  {

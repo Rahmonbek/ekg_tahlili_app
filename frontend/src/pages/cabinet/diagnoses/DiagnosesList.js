@@ -4,26 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { FaPlus, FaSearch, FaHospital } from 'react-icons/fa';
 import { FaEye } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
-import { get_ecg_analyses_by_clinic } from '../../../host/requests/ECGAnalyseRequest';
+import { get_diagnose_by_clinic } from '../../../host/requests/DiagnoseRequest';
 import { formatDate, calculateAge } from '../../../tools/formatters';
 
 const { Option } = Select;
 const { Title, Text } = Typography;
 
-const STATUS_COLORS = {
-    0: 'default',
-    1: 'processing',
-    2: 'success',
-    '-1': 'error',
-};
-
-const AI_STATUS_COLORS = {
-    1: '#52c41a', // Normal (Green)
-    2: '#faad14', // Average (Yellow/Orange)
-    3: '#ff4d4f', // Danger (Red)
-};
-
-export default function EcgAnalysesList() {
+export default function DiagnosesList() {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
@@ -34,7 +21,6 @@ export default function EcgAnalysesList() {
 
     const [searchInput, setSearchInput] = useState('');
     const [statusFilter, setStatusFilter] = useState(null);
-    const [aiStatusFilter, setAiStatusFilter] = useState(null);
     const [dateRange, setDateRange] = useState([null, null]);
 
     const [clinicModalVisible, setClinicModalVisible] = useState(false);
@@ -42,16 +28,15 @@ export default function EcgAnalysesList() {
 
     const PAGE_SIZE = 10;
 
-    const fetchData = useCallback(async (p, s, st, dr, aiSt) => {
+    const fetchData = useCallback(async (p, s, st, dr) => {
         setLoading(true);
         try {
             const params = { page: p, pageSize: PAGE_SIZE };
             if (s) params.search = s;
             if (st !== null && st !== undefined) params.status = st;
-            if (aiSt !== null && aiSt !== undefined) params.automaticAnalysisBool = aiSt;
             if (dr && dr[0]) params.dateFrom = dr[0].format('YYYY-MM-DD');
             if (dr && dr[1]) params.dateTo = dr[1].format('YYYY-MM-DD');
-            const res = await get_ecg_analyses_by_clinic(params);
+            const res = await get_diagnose_by_clinic(params);
             setData(res.data.items);
             setTotal(res.data.totalCount);
         } catch (err) {
@@ -62,20 +47,12 @@ export default function EcgAnalysesList() {
     }, []);
 
     useEffect(() => {
-        fetchData(page, searchInput, statusFilter, dateRange, aiStatusFilter);
+        fetchData(page, searchInput, statusFilter, dateRange);
     }, [page, fetchData]);
 
     const handleSearch = () => {
         setPage(1);
-        fetchData(1, searchInput, statusFilter, dateRange, aiStatusFilter);
-    };
-
-    const handleAIStatusChange = (val) => {
-        setAiStatusFilter(val ?? null);
-    };
-
-    const handleStatusChange = (val) => {
-        setStatusFilter(val ?? null);
+        fetchData(1, searchInput, statusFilter, dateRange);
     };
 
     const handleDateRangeChange = (dates) => {
@@ -85,25 +62,6 @@ export default function EcgAnalysesList() {
     const showClinicInfo = (clinic) => {
         setSelectedClinic(clinic);
         setClinicModalVisible(true);
-    };
-
-    const statusLabel = (status) => {
-        const map = {
-            0: t('status_pending'),
-            1: t('status_processing'),
-            2: t('status_done'),
-            '-1': t('status_error'),
-        };
-        return map[status] ?? status;
-    };
-
-    const aiStatusLabel = (st) => {
-        const map = {
-            1: t('normal') || 'Normal',
-            2: t('avarage') || 'O\'rta',
-            3: t('danger') || 'Xavfli',
-        };
-        return map[st] ?? st;
     };
 
     const columns = [
@@ -118,7 +76,7 @@ export default function EcgAnalysesList() {
         //     title: t('clinic') || 'Shifoxona',
         //     key: 'clinic',
         //     render: (_, row) => (
-        //         <span
+        //         <span 
         //             onClick={() => showClinicInfo(row.clinic)}
         //             style={{ cursor: 'pointer', color: '#1890ff', fontWeight: 500 }}
         //         >
@@ -164,32 +122,6 @@ export default function EcgAnalysesList() {
             },
         },
         {
-            title: t('ai_result') || 'AI Natija',
-            dataIndex: 'aiStatus',
-            key: 'aiStatus',
-            align: 'center',
-            render: (st) => (
-                st ? (
-                    <Tag color={AI_STATUS_COLORS[st]} style={{ borderRadius: '4px', fontWeight: 500 }}>
-                        {aiStatusLabel(st)}
-                    </Tag>
-                ) : <Tag color={'blue'} style={{ borderRadius: '4px', fontWeight: 500 }}>
-                    {t('not_analysed') || 'Tahlil qilinmagan'}
-                </Tag>
-            ),
-        },
-        {
-            title: t('status'),
-            dataIndex: 'status',
-            key: 'status',
-            align: 'center',
-            render: (status) => (
-                <Tag color={STATUS_COLORS[status] ?? 'default'}>
-                    {statusLabel(status)}
-                </Tag>
-            ),
-        },
-        {
             title: t('created_at'),
             dataIndex: 'createdAt',
             key: 'createdAt',
@@ -205,7 +137,7 @@ export default function EcgAnalysesList() {
                 <Tooltip title={t('view')}>
                     <span
                         className="table_view_btn"
-                        onClick={() => navigate(`/ecg-analyses/view/${row.id}`)}
+                        onClick={() => navigate(`/patient-diagnoses/view/${row.id}`)}
                     >
                         <FaEye />
                     </span>
@@ -222,7 +154,7 @@ export default function EcgAnalysesList() {
                     {/* Toolbar */}
                     <div style={{ padding: '0 0 20px 0' }} className='filter_form_box'>
                         <Row gutter={[12, 12]} align="bottom">
-                            <Col xs={24} sm={12} md={6}>
+                            <Col xs={24} sm={12} md={8}>
                                 <div>
                                     <label className="filter_label">{t('search_by_patient')}</label>
                                     <Input
@@ -235,7 +167,7 @@ export default function EcgAnalysesList() {
                                     />
                                 </div>
                             </Col>
-                            <Col xs={24} sm={12} md={6}>
+                            <Col xs={24} sm={12} md={8}>
                                 <div>
                                     <label className="filter_label">{t("date_filter")}</label>
                                     <DatePicker.RangePicker
@@ -247,45 +179,12 @@ export default function EcgAnalysesList() {
                                     />
                                 </div>
                             </Col>
-                            <Col xs={24} sm={12} md={4}>
-                                <div>
-                                    <label className="filter_label">{t('filter_by_status')}</label>
-                                    <Select
-                                        className="login_input custom_select"
-                                        placeholder={t('filter_by_status')}
-                                        allowClear
-                                        onChange={handleStatusChange}
-                                        style={{ width: '100%' }}
-                                    >
-                                        <Option value={0}>{t('status_pending')}</Option>
-                                        <Option value={1}>{t('status_processing')}</Option>
-                                        <Option value={2}>{t('status_done')}</Option>
-                                        <Option value={-1}>{t('status_error')}</Option>
-                                    </Select>
-                                </div>
-                            </Col>
-                            <Col xs={24} sm={12} md={4}>
-                                <div>
-                                    <label className="filter_label">{t('filter_by_ai') || 'AI bo\'yicha'}</label>
-                                    <Select
-                                        className="login_input custom_select"
-                                        placeholder={t('filter_by_ai') || 'AI bo\'yicha'}
-                                        allowClear
-                                        onChange={handleAIStatusChange}
-                                        style={{ width: '100%' }}
-                                    >
-                                        <Option value={1}>{t('normal') || 'Normal'}</Option>
-                                        <Option value={2}>{t('avarage') || 'O\'rta'}</Option>
-                                        <Option value={3}>{t('danger') || 'Xavfli'}</Option>
-                                    </Select>
-                                </div>
-                            </Col>
-                            <Col xs={24} sm={12} md={4}>
+                            <Col xs={24} sm={24} md={8}>
                                 <div style={{ display: 'flex', gap: 8, height: '48px' }}>
                                     <button onClick={handleSearch} className="btn_form" style={{ flex: 1, margin: 0, height: '48px' }}>
                                         {t('search_patcient')}
                                     </button>
-                                    <button onClick={() => navigate('/analyse-ecg')} className="btn_form text-white" style={{ width: '50px', margin: 0, height: '48px', backgroundColor: '#00D1B2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <button onClick={() => navigate('/diagnoses-create')} className="btn_form text-white" style={{ width: '50px', margin: 0, height: '48px', backgroundColor: '#00D1B2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <FaPlus />
                                     </button>
                                 </div>

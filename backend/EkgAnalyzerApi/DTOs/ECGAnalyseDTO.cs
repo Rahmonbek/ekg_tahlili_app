@@ -1,4 +1,4 @@
-﻿using EkgAnalyzerApi.Models;
+using EkgAnalyzerApi.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -46,6 +46,8 @@ public class ClinicForECG
     public string? ClinicName { get; set; }
     public string? ClinicLogo { get; set; }
     public Districts? District { get; set; }
+    public string? Address { get; set; }
+    public List<string>? PhoneNumbers { get; set; }
 }
 
     public class DoctorForECGData

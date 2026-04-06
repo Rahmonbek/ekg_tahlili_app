@@ -5,12 +5,14 @@ import { useStore } from '../../../store/Store'
 import { useTranslation } from 'react-i18next'
 import { LiaDownloadSolid } from 'react-icons/lia';
 import { FaDownload } from 'react-icons/fa6'
+import ClinicHeader from '../ClinicHeader'
 
-export default function LabResult({error,  result, image}) {
+export default function LabResult({error,  result, image, clinic}) {
   const {lab_values}=useStore()
   const {t}=useTranslation()
   return (
     <div>
+        <ClinicHeader clinic={clinic} />
 
         {error && <div className="ekg-error">❌ Xatolik: {error}</div>}
       

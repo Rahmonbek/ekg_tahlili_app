@@ -104,7 +104,7 @@ export default function AdminModal() {
 
 
 
-        <Col lg={24} md={24} >
+        <Col lg={24} xs={24} sm={24} md={24} >
           <Form.Item
           className=''
             name="lastname"
@@ -118,7 +118,7 @@ export default function AdminModal() {
           </Form.Item>
         </Col>
 
-        <Col lg={24} md={24} >
+        <Col lg={24} xs={24} sm={24} md={24} >
           <Form.Item
            className=''
             name="firstname"
@@ -131,7 +131,7 @@ export default function AdminModal() {
           </Form.Item>
         </Col>
 
-        <Col lg={24} md={24}>
+        <Col lg={24} xs={24} sm={24} md={24}>
           <Form.Item
            className=''
             name="surename"
@@ -144,7 +144,7 @@ export default function AdminModal() {
                 placeholder={t('enter_surename_staff')}/>
           </Form.Item>
         </Col>
-        <Col lg={24} md={24}>
+        <Col lg={24} xs={24} sm={24} md={24}>
                   <Form.Item
                    className=''
                     name="gender"
@@ -166,7 +166,7 @@ export default function AdminModal() {
                   </Form.Item>
                 </Col>
          
-         <Col lg={24} md={24}>
+         <Col lg={24} xs={24} sm={24} md={24}>
                     <Form.Item
                       label={t('phone_number')}
                       name="phone"
@@ -192,7 +192,7 @@ export default function AdminModal() {
 
 
        
-                <Col lg={24} md={24}>
+                <Col lg={24} xs={24} sm={24} md={24}>
                 <Form.Item
       wrapperCol={{
         span: 24,

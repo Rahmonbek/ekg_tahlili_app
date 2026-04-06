@@ -28,7 +28,7 @@ export default function PatientSearchSection({ form, onFinish, onReset, loading 
             onFinish={onFinish}
         >
             <Row>
-                <Col className="main_col" lg={8} md={12}>
+                <Col className="main_col" lg={8} xs={24} sm={24} md={12}>
                     <Form.Item
                         name="passport"
                         label={t('passport_seria')}
@@ -60,7 +60,7 @@ export default function PatientSearchSection({ form, onFinish, onReset, loading 
                     </Form.Item>
                 </Col>
 
-                <Col className="main_col" lg={8} md={12}>
+                <Col className="main_col" lg={8} xs={24} sm={24} md={12}>
                     <Form.Item
                         name="birthdate"
                         label={t('birthdate')}
@@ -70,7 +70,7 @@ export default function PatientSearchSection({ form, onFinish, onReset, loading 
                     </Form.Item>
                 </Col>
 
-                <Col className="main_col" lg={6} md={12}>
+                <Col className="main_col" lg={6} xs={24} sm={24} md={12}>
                     <div className="form_div">
                         <Button className="btn_form" loading={loading} htmlType="submit">
                             {t('search_patcient')}
