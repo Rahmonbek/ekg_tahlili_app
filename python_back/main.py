@@ -258,7 +258,6 @@ def parse_xml_bytes(b: bytes) -> Tuple[Dict[str, np.ndarray], float]:
         nonzero_idx = np.where(arr != 0)[0]
         if len(nonzero_idx) > 0:
             arr = arr[nonzero_idx[0]:nonzero_idx[-1]+1]
-        print(len(arr))
         # Maksimal 3000 sample (oxirgi qism)
         if len(arr) > 7500:
             arr = arr[-7500:-4500]
@@ -337,7 +336,6 @@ def compose_prompt_for_openai(digitals, age, gender, complaint, lang) -> str:
             digitals_str = str(digitals)
 
         prompt_header += f"\n\nEKG aparatdan olingan ekg parametrlari qiymatlari:\n{digitals_str}"
-        print(digitals_str)
 
     
         
@@ -812,7 +810,6 @@ def calculate_qrs_axis_robust(leads, fs):
         return round(float(axis_deg+10*(axis_deg/abs(axis_deg))), 1)
 
     except Exception as e:
-        print(f"Xatolik: {e}")
         return None
 def get_global_st_status(st_results):
     """
@@ -868,7 +865,6 @@ def get_st_segment_mv(leads_data, fs, gain=1000):
                 
         except Exception:
             st_results[lead_name] = 0.0
-    print(st_results)
     summary = get_global_st_status(st_results)       
     return summary
 
@@ -896,8 +892,7 @@ def check_t_wave_inversion(leads, fs=500):
                     t_values = sig[valid_indices]
                     avg_t_val = np.mean(t_values)
                     inversion_detected=avg_t_val
-            except Exception as e:
-                print(f"Lead {lead} tahlilida xatolik: {e}")
+            except Exception:
                 continue
                 
     return inversion_detected
@@ -924,10 +919,8 @@ def compute_full_ecg_v3(leads, fs=500):
         _, rpeaks1 = nk.ecg_peaks(lead_ii, sampling_rate=fs)
         _, waves = nk.ecg_delineate(lead_ii, rpeaks1, sampling_rate=fs, method="cwt")
         rr_intervals = np.diff(r_peaks) / float(fs)  # seconds
-        print(rr_intervals)
         if rr_intervals.size > 0:
             mean_rr = float(np.mean(rr_intervals))  # seconds
-            print(mean_rr)
             heart_rate_bpm = 60.0 / mean_rr
             rr_interval_ms = mean_rr * 1000.0
         else:
@@ -965,7 +958,6 @@ def compute_full_ecg_v3(leads, fs=500):
         else:
             t_amplitudes_mv.append(0.0)
         
-    print(qt_intervals_ms)
     pr_interval_ms=round(float(max(pr_intervals_ms)), 1)
     qt_interval_ms = round(float(np.percentile(qt_intervals_ms, 25)), 1) if qt_intervals_ms else 0.0
     if qrs_intervals_ms:
@@ -1146,11 +1138,9 @@ async def analyze(
         for ln in CANONICAL_LEADS:
             if ln not in leads:
                 leads[ln] = np.zeros(expected_samples, dtype=float)
-        print(leads)
         # --- Generate PNG from leads ---
         png_bytes = render_12_lead_png(leads, fs)
         digitals = compute_full_ecg_v3(leads, fs)
-        print(digitals)
         prompt = compose_prompt_for_openai(digitals, age, gender, complaint, lang)
     else:
         png_bytes = jpg_bytes_to_png_bytes(content)
@@ -1168,7 +1158,7 @@ async def analyze(
         generated_short_file_link=generated_short_file_link
     )
     
-    
+    print(OPENAI_API_KEY)
     try:
         file_id = openai_upload_file(
             OPENAI_API_KEY,
@@ -1182,10 +1172,6 @@ async def analyze(
             "png_base64": b64
         })
    
-    # --- Compose prompt ---
-    print(file_id)
-    
-    
     ai_error = False
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)
@@ -1322,7 +1308,6 @@ async def analyze_save(
         for ln in CANONICAL_LEADS:
             if ln not in leads:
                 leads[ln] = np.zeros(expected_samples, dtype=float)
-        print(leads)
         # --- Generate PNG from leads ---
         png_bytes = render_12_lead_png(leads, fs)
     else:
@@ -1420,9 +1405,7 @@ async def analyze_retry(
         for ln in CANONICAL_LEADS:
             if ln not in leads:
                 leads[ln] = np.zeros(expected_samples, dtype=float)
-        print(leads)
         digitals = compute_full_ecg_v3(leads, fs)
-        print(digitals)
         prompt = compose_prompt_for_openai(digitals, age, gender, complaint, lang)
         if analyse_data.generated_file_link==None:
             png_bytes = render_12_lead_png(leads, fs)
@@ -1471,7 +1454,7 @@ async def analyze_retry(
             raise HTTPException(status_code=404, detail="Generate file topilmadi")
     else:
         raise HTTPException(status_code=404, detail="Generate file link mavjud emas")
-    
+    print(OPENAI_API_KEY)
     try:
         file_id = openai_upload_file(
             OPENAI_API_KEY,
@@ -1485,10 +1468,6 @@ async def analyze_retry(
             "png_base64": b64
         })
    
-    # --- Compose prompt ---
-    print(file_id)
-    
-    
     ai_error = False
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)

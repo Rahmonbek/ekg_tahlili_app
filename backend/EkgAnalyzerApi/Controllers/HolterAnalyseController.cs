@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using Microsoft.AspNetCore.RateLimiting;
 
 [ApiController]
 [Route("api/holter-analyses")]
@@ -41,6 +42,7 @@ public class HolterAnalyseController : ControllerBase
     /// POST api/holter-analyses/analyze
     /// </summary>
     [HttpPost("analyze")]
+    [EnableRateLimiting("ai-analysis")]
     public async Task<IActionResult> Analyze()
     {
         var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");

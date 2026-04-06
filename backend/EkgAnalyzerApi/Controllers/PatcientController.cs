@@ -40,7 +40,7 @@ public class PatcientController : ControllerBase
         {
             foreach (var p in result.data)
             {
-                p.Passport = _encryption.Decrypt(p.Passport);
+                p.Passport = p.Passport;
             }
         }
 
@@ -57,7 +57,7 @@ public class PatcientController : ControllerBase
         DateOnly birthDate = DateOnly.Parse(birthdate);
 
         // Passportni shifrlangan holda qidirish
-        var encryptedPassport = _encryption.Encrypt(passport);
+        var encryptedPassport = passport;
 
         // Avval shifrlangan qiymat bilan qidirish, topilmasa — ochiq qiymat bilan (migration davri uchun)
         var patient = await _context.Patcients.Include(x => x.District).ThenInclude(d => d.Region)
@@ -70,7 +70,7 @@ public class PatcientController : ControllerBase
             return NotFound(new { message = "Patient not found" });
 
         // Deshifrlash
-        patient.Passport = _encryption.Decrypt(patient.Passport);
+        patient.Passport = patient.Passport;
 
         return Ok(patient);
     }
@@ -87,7 +87,7 @@ public class PatcientController : ControllerBase
             return BadRequest(new { message = "Invalid birthdate format" });
 
         // Passportni shifrlash
-        var encryptedPassport = _encryption.Encrypt(patientDto.passport.ToUpper());
+        var encryptedPassport = patientDto.passport.ToUpper();
 
         // Tekshirish: patient mavjudmi (ochiq va shifrlangan passport bilan)
         var existingPatient = await _context.Patcients
@@ -113,7 +113,7 @@ public class PatcientController : ControllerBase
             await _context.SaveChangesAsync();
 
             // Response da deshifrlangan passport qaytarish
-            existingPatient.Passport = _encryption.Decrypt(existingPatient.Passport);
+            existingPatient.Passport = existingPatient.Passport;
             return Ok(existingPatient);
         }
         else
@@ -138,7 +138,7 @@ public class PatcientController : ControllerBase
             await _context.SaveChangesAsync();
 
             // Response da deshifrlangan passport qaytarish
-            newPatient.Passport = _encryption.Decrypt(newPatient.Passport);
+            newPatient.Passport = newPatient.Passport;
             return Ok(newPatient);
         }
     }
@@ -161,7 +161,7 @@ public class PatcientController : ControllerBase
         // Passportlarni deshifrlash
         foreach (var p in patients)
         {
-            p.Passport = _encryption.Decrypt(p.Passport);
+            p.Passport = p.Passport;
         }
 
         return Ok(patients);

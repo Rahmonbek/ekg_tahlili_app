@@ -36,7 +36,13 @@ axiosInstance.interceptors.request.use(
 
 // 🚨 RESPONSE INTERCEPTOR (401 error + global notification)
 axiosInstance.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // AI yoxud Python xatoligida HTTP 200 OK kelsa ham "error" obyektini tutib olish (OpenAI kalit xatolarini)
+        if (response.data && response.data.error) {
+            handleApiError({ response: { data: { detail: response.data.error } } });
+        }
+        return response;
+    },
     (error) => {
         if (error.response && error.response.status === 401) {
             Cookies.remove("NMED_token");

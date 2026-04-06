@@ -48,7 +48,8 @@ builder.Services.AddAuthentication(options =>
 
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false; // dev uchun
+    // C6 talabi: production da HTTPS majburiy, faqat dev da o'chiriladi
+    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
     options.SaveToken = true;
     var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
     options.TokenValidationParameters = new TokenValidationParameters
@@ -120,7 +121,8 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        // Xatolikni log qilish mumkin
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Migration bajarishda xatolik yuz berdi. Server noto'g'ri holatda ishga tushgan bo'lishi mumkin.");
     }
 }
 if (app.Environment.IsDevelopment())

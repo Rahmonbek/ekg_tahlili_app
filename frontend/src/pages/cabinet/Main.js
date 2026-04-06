@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Route, Routes } from 'react-router-dom'
 import ClinicInfo from './pages/ClinicInfo'
 import EcgAnalyzer from './ecg_analyse/EcgAnalyzer'
+import EcgAnalysesList from './ecg_analyse/EcgAnalysesList'
 import { useStore } from '../../store/Store'
 import { get_complaints_data } from '../../host/requests/ComplaintsRequest'
 import AdminModal from '../../components/AdminModal'
@@ -61,7 +62,8 @@ export default function Main() {
                     <Route path="/settings" element={<ClinicInfo/>} />
                 </>:<></>}
                     
-                    {user.roleId!=2 && user.roleId!=3?<><Route path="" element={<EcgAnalyzer/>} /><Route path="/cabinet" element={<EcgAnalyzer/>} /></>:<></>}
+                    {user.roleId!=2 && user.roleId!=3?<><Route path="" element={<EcgAnalysesList/>} /><Route path="/cabinet" element={<EcgAnalysesList/>} /></>:<></>}
+                    <Route path="ecg-analyses" element={<EcgAnalysesList/>} />
                     <Route path="analyse-ecg" element={<EcgAnalyzer/>} />
                     <Route path="analyse-holter" element={<HolterAnalyzer/>} />
                     <Route path="analyse-smad" element={<SmadAnalyzer/>} />

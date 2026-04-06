@@ -23,7 +23,7 @@ export function usePatientSearch({ form, getDistricts, onPatientFound }) {
     const searchPatcient = useCallback(async (val) => {
         try {
             setLoading(true);
-            setPassport(val.passport);
+            setPassport(val.passport.replaceAll("+", ' '));
             setBirthdate(val.birthdate);
 
             const res = await get_patcient_by_passport(val);

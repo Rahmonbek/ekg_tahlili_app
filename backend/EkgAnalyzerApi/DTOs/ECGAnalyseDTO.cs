@@ -67,6 +67,8 @@ public class PatcientForECG
     public int? Id { get; set; }
     public DateOnly BirthDate { get; set; }
     public bool Gender { get; set; }
-
-
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? SureName { get; set; }
+    public string? Passport { get; set; }
 }

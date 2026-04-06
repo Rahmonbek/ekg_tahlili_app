@@ -116,7 +116,7 @@ export default function EcgOldResult({ data }) {
               </div>
               <div className="ekg-item-info-text">
                 <b>{t("place")} </b>
-                <p>{data.clinic.district[`name${t("data_lang")}`]} </p>
+                <p>{data.clinic.district != null ? data.clinic.district[`name${t("data_lang")}`] : <></>} </p>
               </div>
             </div> : <></>}
 

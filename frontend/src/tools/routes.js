@@ -16,10 +16,10 @@ export const routers=[
     
    
      {
-        path:'/analyse-ecg',
+        path:'/ecg-analyses',
         icon:<FaHeartbeat />,
         title:"analyse_ecg",
-        tools:"analyse-ecg",
+        tools:"ecg-analyses",
         role_id:[]
     },
     {

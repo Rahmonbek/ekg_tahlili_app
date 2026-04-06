@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 # .env faylini yuklash (python_back/ papkasidan)
 BASE_DIR = Path(__file__).parent
-load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR / ".env", override=True)
 
 
 # ─────────────── OpenAI ───────────────
@@ -33,6 +33,13 @@ DATABASE_URL: str = os.getenv(
 # ─────────────── JWT (Python API token tekshiruvi uchun) ───────────────
 JWT_SECRET: str = os.getenv("JWT_SECRET", "")
 JWT_ALGORITHM: str = "HS256"
+
+if not JWT_SECRET:
+    raise RuntimeError(
+        "JWT_SECRET topilmadi! "
+        "python_back/.env fayliga JWT_SECRET=<.NET Jwt:Key bilan bir xil qiymat> qo'shing. "
+        "C5 talabi: JWT_SECRET bo'lmasa Python API ishga tushmaydi."
+    )
 
 
 # ─────────────── CORS ───────────────

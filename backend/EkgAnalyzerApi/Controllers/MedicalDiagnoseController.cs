@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using Microsoft.AspNetCore.RateLimiting;
 
 [ApiController]
 [Route("api/med-diagnose")]
@@ -41,6 +42,7 @@ public class MedicalDiagnoseController : ControllerBase
     /// POST api/med-diagnose/save
     /// </summary>
     [HttpPost("save")]
+    [EnableRateLimiting("ai-analysis")]
     public async Task<IActionResult> Save()
     {
         var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");

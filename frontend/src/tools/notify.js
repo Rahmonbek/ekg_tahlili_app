@@ -70,7 +70,7 @@ export const handleApiError = (error, fallbackMsg = "Xatolik yuz berdi. Qaytadan
         msg = translateApiError(error.response.data.message);
     } else if (error?.response?.data?.detail) {
         // Python FastAPI format: { detail: "error_text" }
-        msg = error.response.data.detail;
+        msg = translateApiError(error.response.data.detail);
     } else if (error?.message) {
         msg = error.message;
     }
@@ -97,6 +97,8 @@ export const handleApiError = (error, fallbackMsg = "Xatolik yuz berdi. Qaytadan
  * Backend xatolik kodlarini o'zbek tiliga tarjima qiladi
  */
 const translateApiError = (errorCode) => {
+    if (!errorCode || typeof errorCode !== 'string') return errorCode;
+
     const translations = {
         'user_not_found': "Foydalanuvchi topilmadi",
         'email_already_exists': "Bu email allaqachon ro'yxatdan o'tgan",
@@ -111,7 +113,51 @@ const translateApiError = (errorCode) => {
         'doctor_not_found': "Shifokor topilmadi",
         'user_has_not_permission': "Sizda ruxsat yo'q",
         'doctor_saved_success': "Shifokor ma'lumotlari saqlandi",
+        
+        // Hozirgi / Yangi (.NET)
+        'Invalid birthdate format': "Tug'ilgan sana formati noto'g'ri",
+        'Hech qanday fayl yuborilmadi.': "Hech qanday fayl tanlanmadi",
+        'Fayl yuklashda xato': "Faylni yuklashda xatolik yuz berdi",
+        'OpenAI API xatosi': "AI serveri bilan bog'lanishda xatolik yuz berdi",
+        'error': "Xatolik yuz berdi",
+
+        // Hozirgi / Yangi (Python)
+        'OPENAI_API_KEY mavjud emas': "Tizim sozlamalarida OpenAI API kaliti kiritilmagan",
+        "Provide OpenAI API key in environment variable 'OPENAI_API_KEY'": "Tizimda OpenAI API kaliti topilmadi",
+        'pdf2image not installed or poppler missing': "Serverda PDF ni o'qish uchun dastur (poppler) o'rnatilmagan",
+        'ECG Analyse not found': "EKG tahlili topilmadi",
+        'Analyse file topilmadi': "Tahlil qilinuvchi fayl topilmadi",
+        'Analyse file link mavjud emas': "Tahlil fayliga havola biriktirilmagan",
+        'Generate file topilmadi': "Yaratilgan fayl topilmadi",
+        'Generate file link mavjud emas': "Yaratilgan fayl havolasi mavjud emas",
+        'Token muddati o\'tgan.': "Sessiya muddati tugadi. Iltimos, profilga qayta kiring",
     };
 
-    return translations[errorCode] || errorCode;
+    if (translations[errorCode]) {
+        return translations[errorCode];
+    }
+
+    // O'zgaruvchi bilan keladigan xatoliklarni qisman tekshirish (includes)
+    const lowerError = errorCode.toLowerCase();
+    
+    if (lowerError.includes('could not parse file')) {
+        return "Faylni o'qib bo'lmadi. Iltimos, to'g'ri formatdagi yoki buzilmagan fayl ekanligiga ishonch hosil qiling.";
+    }
+    if (lowerError.includes('ruxsat etilmagan fayl turi') || lowerError.includes('yaroqsiz fayl turi')) {
+        return "Bu fayl formatiga ruxsat berilmagan. (Faqat ruхsat etilgan: pdf, png, jpg, xml, csv)";
+    }
+    if (lowerError.includes('token noto\'g\'ri')) {
+        return "Token haqiqiy emas yoki yaroqsiz. Qaytadan avtorizatsiya qiling.";
+    }
+    if (lowerError.includes('recaptcha tekshiruvidan o\'tmadi')) {
+        return "reCAPTCHA tekshiruvidan o'tmadi (Bot ehtimoli). Iltimos sahifani yangilab qayta urinib ko'ring.";
+    }
+    if (lowerError.includes('incorrect api key provided') || lowerError.includes('invalid_api_key')) {
+        return "Tizimga kiritilgan OpenAI API kaliti yaroqsiz (xato yoki muddati tugagan). Iltimos, sozlamalardan haqiqiy kalit kiriting.";
+    }
+    if (lowerError.includes('openai upload failed')) {
+        return "OpenAI tarmog'iga EKG faylini yuklab bo'lmadi. API kalitingiz faolligini tekshiring.";
+    }
+
+    return errorCode;
 };

@@ -26,6 +26,36 @@ public class ECGAnalyseController : ControllerBase
     }
 
 
+    /// <summary>
+    /// Klinikaga tegishli barcha ECG tahlillari (id DESC, pagination, search, status filter)
+    /// GET api/ecg-analyses/get-by-clinic?page=1&pageSize=10&search=Ali&status=2
+    /// </summary>
+    [HttpGet("get-by-clinic")]
+    public async Task<IActionResult> GetByClinic(
+        int page = 1,
+        int pageSize = 10,
+        string? search = null,
+        int? status = null,
+        DateTime? dateFrom = null,
+        DateTime? dateTo = null)
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+            return Unauthorized(new { message = "Token invalid" });
+
+        var userId = int.Parse(userIdClaim.Value);
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null || user.ClinicId == null)
+            return Unauthorized(new { message = "Klinika aniqlanmadi" });
+
+        var results = await _ecgService.GetECGAnalysesByClinicIdAsync(
+            user.ClinicId.Value, page, pageSize, search, status, dateFrom, dateTo);
+
+        return Ok(results);
+    }
+
     [HttpGet("get-ecg-analyses-by-patcient-id")]
     public async Task<IActionResult> GetECGAnalysesByPatientId(int id, int page = 1)
     {

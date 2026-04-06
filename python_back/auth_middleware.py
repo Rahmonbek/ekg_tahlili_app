@@ -17,13 +17,14 @@ from config import JWT_SECRET, JWT_ALGORITHM
 async def verify_token(authorization: str = Header(None)):
     """
     Authorization header dan Bearer token ni tekshiradi.
-    Token bo'lmasa yoki JWT_SECRET sozlanmagan bo'lsa — ruxsat beriladi (graceful degradation).
-    JWT_SECRET sozlangan bo'lsa — token majburiy.
+    JWT_SECRET sozlanmagan bo'lsa — C5 talabiga ko'ra xatolik chiqariladi.
     """
-    # Agar JWT_SECRET sozlanmagan bo'lsa — autentifikatsiyani o'tkazib yuborish
-    # (development muhiti uchun)
+    # C5 talabi: JWT_SECRET bo'lmasa silent bypass taqiqlangan
     if not JWT_SECRET:
-        return {"user_id": None, "role": "anonymous"}
+        raise HTTPException(
+            status_code=500,
+            detail="Server konfiguratsiya xatosi: JWT_SECRET sozlanmagan."
+        )
 
     if not authorization:
         raise HTTPException(
