@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { FaPlus, FaSearch, FaHospital } from 'react-icons/fa';
 import { FaEye } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
-import { get_ecg_analyses_by_clinic, get_ecg_analyses_by_doctor, mark_ecg_viewed } from '../../../host/requests/ECGAnalyseRequest';
+import { get_ecg_analyses_by_clinic, get_ecg_analyses_by_doctor, get_ecg_analyses_by_nurse, mark_ecg_viewed } from '../../../host/requests/ECGAnalyseRequest';
 import { formatDate, calculateAge } from '../../../tools/formatters';
 import { useStore } from '../../../store/Store';
 
@@ -28,7 +28,8 @@ export default function EcgAnalysesList() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { user, setecg_unread } = useStore();
-    const isDoctor = user && (user.roleId === 4 || user.roleId === 5);
+    const isDoctor = user && user.roleId === 4;
+    const isNurse  = user && user.roleId === 5;
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -56,7 +57,9 @@ export default function EcgAnalysesList() {
             if (dr && dr[1]) params.dateTo = dr[1].format('YYYY-MM-DD');
             const res = isDoctor
                 ? await get_ecg_analyses_by_doctor(params)
-                : await get_ecg_analyses_by_clinic(params);
+                : isNurse
+                    ? await get_ecg_analyses_by_nurse(params)
+                    : await get_ecg_analyses_by_clinic(params);
             setData(res.data.items);
             setTotal(res.data.totalCount);
         } catch (err) {
@@ -64,7 +67,7 @@ export default function EcgAnalysesList() {
         } finally {
             setLoading(false);
         }
-    }, [isDoctor]);
+    }, [isDoctor, isNurse]);
 
     useEffect(() => {
         fetchData(page, searchInput, statusFilter, dateRange, aiStatusFilter);

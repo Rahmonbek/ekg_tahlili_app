@@ -12,6 +12,10 @@ export const get_diagnose_by_doctor=(params)=>{
     return httpGetRequest("/medical-diagnose/get-by-doctor", params)
 }
 
+export const get_diagnose_by_nurse=(params)=>{
+    return httpGetRequest("/medical-diagnose/get-by-nurse", params)
+}
+
 export const get_diagnose_unviewed_count=()=>{
     return httpGetRequest("/medical-diagnose/unviewed-count")
 }

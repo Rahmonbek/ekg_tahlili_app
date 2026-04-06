@@ -124,6 +124,26 @@ public class ECGAnalyseController : ControllerBase
         return Ok(new { success = true });
     }
 
+    // ── Hamshira bo'yicha endpointlar ─────────────────────────────────────────
+
+    [HttpGet("get-by-nurse")]
+    public async Task<IActionResult> GetByNurse(
+        int page = 1, int pageSize = 10,
+        string? search = null, int? status = null,
+        DateTime? dateFrom = null, DateTime? dateTo = null)
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null) return Unauthorized(new { message = "Token invalid" });
+
+        var userId = int.Parse(userIdClaim.Value);
+        var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
+        if (doctor == null) return NotFound(new { message = "Hamshira topilmadi" });
+
+        var results = await _ecgService.GetECGAnalysesByNurseAsync(
+            doctor.Id, page, pageSize, search, status, dateFrom, dateTo);
+        return Ok(results);
+    }
+
     /// <summary>
     /// EKG faylni tahlil qilish (Python API ga proxy)
     /// POST api/ecg-analyses/analyze

@@ -13,6 +13,10 @@ export const get_lab_analyses_by_doctor=(params)=>{
     return httpGetRequest("/lab-analyses/get-by-doctor", params)
 }
 
+export const get_lab_analyses_by_nurse=(params)=>{
+    return httpGetRequest("/lab-analyses/get-by-nurse", params)
+}
+
 export const get_lab_unviewed_count=()=>{
     return httpGetRequest("/lab-analyses/unviewed-count")
 }

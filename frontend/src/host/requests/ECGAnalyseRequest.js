@@ -13,6 +13,10 @@ export const get_ecg_analyses_by_doctor=(params)=>{
     return httpGetRequest("/ecg-analyses/get-by-doctor", params)
 }
 
+export const get_ecg_analyses_by_nurse=(params)=>{
+    return httpGetRequest("/ecg-analyses/get-by-nurse", params)
+}
+
 export const get_ecg_unviewed_count=()=>{
     return httpGetRequest("/ecg-analyses/unviewed-count")
 }

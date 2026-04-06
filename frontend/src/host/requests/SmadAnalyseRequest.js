@@ -13,6 +13,10 @@ export const get_smad_analyses_by_doctor=(params)=>{
     return httpGetRequest("/smad-analyses/get-by-doctor", params)
 }
 
+export const get_smad_analyses_by_nurse=(params)=>{
+    return httpGetRequest("/smad-analyses/get-by-nurse", params)
+}
+
 export const get_smad_unviewed_count=()=>{
     return httpGetRequest("/smad-analyses/unviewed-count")
 }

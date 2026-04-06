@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { FaPlus, FaSearch, FaHospital } from 'react-icons/fa';
 import { FaEye } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
-import { get_smad_analyses_by_clinic, get_smad_analyses_by_doctor, mark_smad_viewed } from '../../../host/requests/SmadAnalyseRequest';
+import { get_smad_analyses_by_clinic, get_smad_analyses_by_doctor, get_smad_analyses_by_nurse, mark_smad_viewed } from '../../../host/requests/SmadAnalyseRequest';
 import { formatDate, calculateAge } from '../../../tools/formatters';
 import { useStore } from '../../../store/Store';
 
@@ -28,7 +28,8 @@ export default function SmadAnalysesList() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { user, setsmad_unread } = useStore();
-    const isDoctor = user && (user.roleId === 4 || user.roleId === 5);
+    const isDoctor = user && user.roleId === 4;
+    const isNurse  = user && user.roleId === 5;
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -56,7 +57,9 @@ export default function SmadAnalysesList() {
             if (ab !== null && ab !== undefined) params.automaticAnalysisBool = ab;
             const res = isDoctor
                 ? await get_smad_analyses_by_doctor(params)
-                : await get_smad_analyses_by_clinic(params);
+                : isNurse
+                    ? await get_smad_analyses_by_nurse(params)
+                    : await get_smad_analyses_by_clinic(params);
             setData(res.data.items);
             setTotal(res.data.totalCount);
         } catch (err) {
@@ -64,7 +67,7 @@ export default function SmadAnalysesList() {
         } finally {
             setLoading(false);
         }
-    }, [isDoctor]);
+    }, [isDoctor, isNurse]);
 
     useEffect(() => {
         fetchData(page, searchInput, statusFilter, dateRange, autoAnalysisFilter);

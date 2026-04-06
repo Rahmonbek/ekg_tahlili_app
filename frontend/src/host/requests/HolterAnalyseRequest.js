@@ -13,6 +13,10 @@ export const get_holter_analyses_by_doctor=(params)=>{
     return httpGetRequest("/holter-analyses/get-by-doctor", params)
 }
 
+export const get_holter_analyses_by_nurse=(params)=>{
+    return httpGetRequest("/holter-analyses/get-by-nurse", params)
+}
+
 export const get_holter_unviewed_count=()=>{
     return httpGetRequest("/holter-analyses/unviewed-count")
 }

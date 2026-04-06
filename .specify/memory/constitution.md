@@ -493,14 +493,56 @@ useEffect(() => {
 
 ### 7.4 Qoidalar Xulosasi
 
-| Qoida | Shart darajasi |
-|-------|---------------|
-| Shifokor tahlil sahifalarida faqat o'ziga assigned tahlillarni ko'radi | SHART |
-| `is_viewed` ustuni barcha junction tablalarda mavjud bo'lishi | SHART |
-| Ko'rilmagan tahlillar menuda badge sifatida ko'rinishi | SHART |
-| Badge count 0 bo'lsa ko'rinmasligi | SHART |
-| Shifokor sahifaga kirishi bilan badge 0 ga tushishi | SHART |
-| Admin/Direktor uchun bu mantiq ishlamasligi (klinika ko'rinishi qolishi) | SHART |
+| Qoida | Rol | Shart darajasi |
+|-------|-----|---------------|
+| Tahlil sahifalarida faqat o'ziga assigned (junction) tahlillarni ko'radi | 4 (Doctor) | SHART |
+| Tahlil sahifalarida faqat o'zi yaratgan (created_doctor_id) tahlillarni ko'radi | 5 (Nurse) | SHART |
+| `is_viewed` ustuni barcha junction tablalarda mavjud bo'lishi | 4 | SHART |
+| `is_viewed` ustuni Hamshira uchun talab qilinmasligi | 5 | SHART |
+| Ko'rilmagan tahlillar menuda badge sifatida ko'rinishi | 4 | SHART |
+| Badge count 0 bo'lsa ko'rinmasligi | 4 | SHART |
+| Shifokor sahifaga kirishi bilan badge 0 ga tushishi | 4 | SHART |
+| Hamshira uchun unread badge ko'rsatilmasligi | 5 | SHART |
+| Admin/Direktor uchun bu mantiq ishlamasligi (klinika ko'rinishi qolishi) | 2, 3 | SHART |
+
+### 7.5 Hamshira (Nurse, rol 5) Ko'rinishi
+
+Hamshira (5) tizimga kirganda tahlil sahifalari **faqat o'sha hamshira tomonidan
+yuklangan (yaratilgan)** tahlillarni ko'rsatishi SHART.
+
+**Filtr mexanizmi**: `created_doctor_id == nurse's doctor_id`
+
+Hamshira ham `doctors` jadvalida yozuv sifatida mavjud (users.role_id = 5).
+Backend `_context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId)` orqali
+`doctor_id` ni oladi va `created_doctor_id` ustuni orqali filtrlaydi.
+
+**Backend — alohida endpointlar:**
+```
+GET api/ecg-analyses/get-by-nurse     (query: page, pageSize, search, status, dateFrom, dateTo)
+GET api/holter-analyses/get-by-nurse  (query: page, pageSize, search, status, dateFrom, dateTo)
+GET api/smad-analyses/get-by-nurse    (query: page, pageSize, search, status, dateFrom, dateTo)
+GET api/lab-analyses/get-by-nurse     (query: page, pageSize, search, status, dateFrom, dateTo)
+GET api/med-diagnose/get-by-nurse     (query: page, pageSize, search, dateFrom, dateTo)
+```
+
+**is_viewed** — talab qilinmaydi. Hamshira faqat o'zi yaratgan tahlillarni ko'radi,
+shuning uchun "ko'rilmagan/yangi" tushunchasi mavjud emas.
+
+**Unread badge** — ko'rsatilmaydi. Zustand unread count hamshira uchun hisoblanmaydi.
+
+**Frontend sahifalar** rol tekshiruvi:
+```js
+const isDoctor = user && user.roleId === 4;
+const isNurse  = user && user.roleId === 5;
+
+// fetch
+if (isDoctor) await get_xxx_by_doctor(params);
+else if (isNurse) await get_xxx_by_nurse(params);
+else await get_xxx_by_clinic(params);
+```
+
+Tahlil ro'yxati jadvalidagi `isViewed` ustun hamshira uchun ko'rsatilmaydi
+(faqat `isDoctor === true` bo'lganda render qilinadi).
 
 ---
 
@@ -515,4 +557,4 @@ useEffect(() => {
 - **Versioning**: MAJOR — printsiplarni olib tashlash/qayta aniqlash; MINOR — yangi bo'lim/printsip qo'shish; PATCH — aniqlashtirish, imlo.
 - **Amend procedure**: Konstitutisya faqat komanda yig'ilishida muhokama qilingandan so'ng o'zgartirilishi mumkin. Har qanday o'zgartirish `Last Amended` sanasini yangilaydi.
 
-**Version**: 2.5.0 | **Ratified**: 2026-04-03 | **Last Amended**: 2026-04-06
+**Version**: 2.6.0 | **Ratified**: 2026-04-03 | **Last Amended**: 2026-04-07

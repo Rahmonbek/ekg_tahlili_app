@@ -312,6 +312,92 @@ namespace EkgAnalyzerApi.Services
             await _context.SaveChangesAsync();
         }
 
+        // ── Hamshira bo'yicha filter (faqat o'zi yaratganlari) ───────────────────
+
+        public async Task<PagedResult<MedicalDiagnoseListDTO>> GetDiagnosesByNurseAsync(
+            int doctorId,
+            int page = 1,
+            int pageSize = 10,
+            string? search = null,
+            DateTime? dateFrom = null,
+            DateTime? dateTo = null)
+        {
+            var query = _context.MedicalDiagnose
+                .Where(e => e.CreatedDoctorId == doctorId)
+                .Include(e => e.Patcient)
+                .Include(e => e.CreatedDoctor)
+                .Include(e => e.MainDoctor)
+                .AsQueryable();
+
+            if (dateFrom.HasValue)
+            {
+                var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
+                query = query.Where(e => e.CreatedAt >= utcFrom);
+            }
+
+            if (dateTo.HasValue)
+            {
+                var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
+                query = query.Where(e => e.CreatedAt <= utcTo);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var sLower = search.Trim().ToLower();
+                query = query.Where(e =>
+                    (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(sLower)) ||
+                    (e.Patcient.LastName  != null && e.Patcient.LastName.ToLower().Contains(sLower))  ||
+                    (e.Patcient.SureName  != null && e.Patcient.SureName.ToLower().Contains(sLower)));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .OrderByDescending(e => e.Id)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(e => new MedicalDiagnoseListDTO
+                {
+                    Id               = e.Id,
+                    CreatedAt        = e.CreatedAt,
+                    IsViewed         = null,
+                    DiagnoseFileLink = e.DiagnoseFileLink,
+                    Patcient = e.Patcient == null ? null : new PatcientForECG
+                    {
+                        Id        = e.Patcient.Id,
+                        BirthDate = e.Patcient.BirthDate,
+                        Gender    = e.Patcient.Gender,
+                        FirstName = e.Patcient.FirstName,
+                        LastName  = e.Patcient.LastName,
+                        SureName  = e.Patcient.SureName,
+                        Passport  = e.Patcient.Passport
+                    },
+                    CreatedDoctor = e.CreatedDoctor == null ? null : new DoctorForECGData
+                    {
+                        Id        = e.CreatedDoctor.Id,
+                        FirstName = e.CreatedDoctor.FirstName,
+                        LastName  = e.CreatedDoctor.LastName,
+                        SureName  = e.CreatedDoctor.SureName
+                    },
+                    MainDoctor = e.MainDoctor == null ? null : new DoctorForECGData
+                    {
+                        Id        = e.MainDoctor.Id,
+                        FirstName = e.MainDoctor.FirstName,
+                        LastName  = e.MainDoctor.LastName,
+                        SureName  = e.MainDoctor.SureName
+                    }
+                })
+                .ToListAsync();
+
+            return new PagedResult<MedicalDiagnoseListDTO>
+            {
+                Items      = items,
+                TotalCount = totalCount,
+                Page       = page,
+                PageSize   = pageSize
+            };
+        }
+
         public async Task<MedicalDiagnoseDTO?> GetMedicalDiagnoseByIdAsync(int id)
         {
             var e = await _context.MedicalDiagnose
