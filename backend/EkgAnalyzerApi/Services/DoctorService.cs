@@ -50,7 +50,7 @@ namespace EkgAnalyzerApi.Services
             const int pageSize = 10;
 
             var doctorsQuery = _context.Users
-                .Where(u => u.RoleId != _adminRoleId && u.RoleId != _superAdminRoleId && u.ClinicId == user.ClinicId)
+                .Where(u => u.RoleId != _adminRoleId && u.RoleId != _superAdminRoleId && u.ClinicId == user.ClinicId && u.Id != user_id)
                 .Include(u => u.Role)
                 .Include(u => u.Doctor)
                     .ThenInclude(d => d.DoctorPositions)

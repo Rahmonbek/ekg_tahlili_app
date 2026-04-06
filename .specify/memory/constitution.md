@@ -1,18 +1,19 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change : 2.2.0 → 2.3.0 (MINOR)
-Bump rationale : New query parameters (dateFrom, dateTo) added to GET /api/ecg-analyses/get-by-clinic;
-                 passport search added (in-memory AES decryption); PatcientForECG DTO extended
-                 with Passport field; EcgAnalysesList frontend redesigned with new filters.
-                 Collectively these expand API contract and frontend patterns → MINOR bump.
+Version change : 2.3.0 → 2.4.0 (MINOR)
+Bump rationale : New section "VI. User Roles & Access Control" added documenting all system
+                 roles (IDs 1–5), cabinet-sharing rule (Director has same access as Admin),
+                 and self-exclusion rule on the Doctors/Staff page.
+                 Backend fix: DoctorService.GetDoctorsAsync now excludes the currently
+                 logged-in user from the staff list (u.Id != user_id filter).
 
 Modified sections:
-  • IV. API Contract Rules — get-by-clinic params updated (dateFrom, dateTo, passport search)
-                           — PatcientForECG DTO updated (Passport field added)
-  • III. Frontend Architecture — EcgAnalysesList filter/search patterns documented
+  • Governance — version line updated
 
-Added sections    : none
+Added sections:
+  • VI. User Roles & Access Control
+
 Removed sections  : none
 
 Template alignment:
@@ -309,6 +310,57 @@ graph LR
 
 ---
 
+## VI. User Roles & Access Control
+
+### Tizim Rollari (Role Table)
+
+| ID | Konstanta | Nomi (uz) | Tavsif |
+|----|-----------|-----------|--------|
+| 1 | `SuperAdmin` | SuperAdmin | Tizim darajasidagi administrator. Barcha klinikalar va loglarni ko'ra oladi. |
+| 2 | `Admin` | Admin | Shifoxona admini. Faqat o'z klinikasi xodimlarini boshqaradi. |
+| 3 | `Director` | Bosh shifokor | Shifoxona direktori. Admin bilan bir xil kabinet vakolatlariga ega. |
+| 4 | `Doctor` | Shifokor | Klinika shifokori. Tahlillar olib boradi. |
+| 5 | `Nurse` | Hamshira | Hamshira. Tahlillar olib boradi. |
+
+### Kabinet Kirish Qoidalari
+
+1. **Admin (2) va Direktor (3) kabinetlari bir xil**: Ikkala rol ham `/doctor`
+   (xodimlar), `/doctor/create`, `/doctor/create/:id` va `/settings` sahifalariga
+   kirish huquqiga ega. Default landing — `Doctors` sahifasi.
+
+2. **Shifokor (4) va Hamshira (5)**: `/ecg-analyses` — default landing.
+   Barcha tahlil sahifalariga (`/ecg-analyses`, `/holter-analyses`, `/smad-analyses`,
+   `/lab-analyses`, `/patient-diagnoses`) ruxsat bor. `/doctor` va `/settings` —
+   TAQIQLANGAN.
+
+3. **SuperAdmin (1)**: Tizim darajasi. Klinika kabineti oqimiga kirmaydi — alohida
+   boshqaruv interfeysi orqali ishlaydi.
+
+### Xodimlar Sahifasi (Doctors) — O'z-o'zini ko'rsatmaslik Qoidasi
+
+- `/doctor` sahifasi `GET api/doctor/get-doctors-of-clinic` endpointidan ma'lumot oladi.
+- Backend (`DoctorService.GetDoctorsAsync`) **joriy foydalanuvchini** (`u.Id != user_id`)
+  so'rov natijasidan **chiqarib tashlashi SHART**.
+- Sabab: Admin yoki Direktor o'z profilini "xodim" sifatida ko'rishi va tahrirlashi
+  chalkashlik tug'diradi.
+- Bundan tashqari, Admin roli (`RoleId == 2`) va SuperAdmin roli (`RoleId == 1`) ham
+  ro'yxatdan chiqarib tashlanadi (mavjud filtr).
+
+### Rol-marshrut Matritsa (Frontend)
+
+| Marshrut | Admin (2) | Direktor (3) | Shifokor (4) | Hamshira (5) |
+|----------|-----------|--------------|--------------|--------------|
+| `/` (default) | Doctors | Doctors | EcgAnalysesList | EcgAnalysesList |
+| `/doctor` | ✅ | ✅ | ❌ | ❌ |
+| `/settings` | ✅ | ✅ | ❌ | ❌ |
+| `/ecg-analyses` | ✅ | ✅ | ✅ | ✅ |
+| `/holter-analyses` | ✅ | ✅ | ✅ | ✅ |
+| `/smad-analyses` | ✅ | ✅ | ✅ | ✅ |
+| `/lab-analyses` | ✅ | ✅ | ✅ | ✅ |
+| `/patient-diagnoses` | ✅ | ✅ | ✅ | ✅ |
+
+---
+
 ## Governance
 
 - Ushbu konstitutisya loyihaning barcha qismlariga tegishli va barcha o'zgarishlardan oldin tekshirilishi SHART.
@@ -320,4 +372,4 @@ graph LR
 - **Versioning**: MAJOR — printsiplarni olib tashlash/qayta aniqlash; MINOR — yangi bo'lim/printsip qo'shish; PATCH — aniqlashtirish, imlo.
 - **Amend procedure**: Konstitutisya faqat komanda yig'ilishida muhokama qilingandan so'ng o'zgartirilishi mumkin. Har qanday o'zgartirish `Last Amended` sanasini yangilaydi.
 
-**Version**: 2.3.0 | **Ratified**: 2026-04-03 | **Last Amended**: 2026-04-06
+**Version**: 2.4.0 | **Ratified**: 2026-04-03 | **Last Amended**: 2026-04-06
