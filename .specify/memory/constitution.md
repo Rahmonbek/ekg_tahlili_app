@@ -1,18 +1,23 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change : 2.3.0 → 2.4.0 (MINOR)
-Bump rationale : New section "VI. User Roles & Access Control" added documenting all system
-                 roles (IDs 1–5), cabinet-sharing rule (Director has same access as Admin),
-                 and self-exclusion rule on the Doctors/Staff page.
-                 Backend fix: DoctorService.GetDoctorsAsync now excludes the currently
-                 logged-in user from the staff list (u.Id != user_id filter).
+Version change : 2.5.0 → 2.6.0 (MINOR)
+Bump rationale : Section VII extended with "7.5 Hamshira (Nurse) Ko'rinishi" subsection.
+                 Key distinction:
+                 - Doctor (4): sees analyses assigned as treating physician (junction tables)
+                 - Nurse (5): sees analyses they personally created (created_doctor_id filter)
+                 - is_viewed / badge notification logic does NOT apply to Nurse role
+                 Section 7.2 and 7.3 clarified — explicitly limited to Doctor (role 4).
+                 Section 7.4 rules table updated with Nurse row.
 
 Modified sections:
-  • Governance — version line updated
+  • VII.1 — Ma'lumotlar Filtri: Nurse subsection added
+  • VII.2 — is_viewed: explicitly scoped to Doctor (4) only
+  • VII.3 — Menu Notification Badge: explicitly scoped to Doctor (4) only
+  • VII.4 — Qoidalar Xulosasi: Nurse rows added
 
 Added sections:
-  • VI. User Roles & Access Control
+  • VII.5 — Hamshira Ko'rinishi (new subsection)
 
 Removed sections  : none
 
@@ -329,9 +334,13 @@ graph LR
    kirish huquqiga ega. Default landing — `Doctors` sahifasi.
 
 2. **Shifokor (4) va Hamshira (5)**: `/ecg-analyses` — default landing.
-   Barcha tahlil sahifalariga (`/ecg-analyses`, `/holter-analyses`, `/smad-analyses`,
-   `/lab-analyses`, `/patient-diagnoses`) ruxsat bor. `/doctor` va `/settings` —
-   TAQIQLANGAN.
+   - Barcha tahlil sahifalariga (`/ecg-analyses`, `/holter-analyses`, `/smad-analyses`,
+     `/lab-analyses`, `/patient-diagnoses`) ruxsat bor.
+   - `/doctor` (xodimlar) va `/settings` (tashkilot haqida) — TAQIQLANGAN.
+     Sidebar menusida ham ko'rinmasligi SHART.
+   - Tahlil ro'yxati sahifalarida **faqat shu shifokor davolovchi sifatida belgilangan**
+     (junction table orqali assigned) ma'lumotlar ko'rinishi SHART.
+     Butun klinika ma'lumotlari emas — qarang: VII bob.
 
 3. **SuperAdmin (1)**: Tizim darajasi. Klinika kabineti oqimiga kirmaydi — alohida
    boshqaruv interfeysi orqali ishlaydi.
@@ -361,6 +370,140 @@ graph LR
 
 ---
 
+## VII. Doctor View & Notification System
+
+### 7.1 Shifokor Ko'rinishi — Ma'lumotlar Filtri
+
+Shifokor (4) tizimga kirganda tahlil sahifalari butun klinika ma'lumotlarini emas,
+**faqat o'sha shifokor davolovchi (treating physician) sifatida belgilangan** tahlillarni
+ko'rsatishi SHART.
+
+Davolovchi sifatida belgilanish junction tablalari orqali aniqlanadi:
+
+| Tahlil turi | Junction jadval | Doctor FK ustuni |
+|-------------|-----------------|------------------|
+| ECG | `ecg_analyse_doctors` | `doctor_id` |
+| Holter | `holter_analyse_doctors` | `doctor_id` |
+| SMAD | `smad_analyse_doctors` | `doctor_id` |
+| Laboratoriya | `lab_analyse_doctors` | `doctor_id` |
+| Shifokor xulosasi | `medical_diagnoses.main_doctor_id` (to'g'ridan-to'g'ri) | `doctor_id` |
+
+Backend har bir tahlil turi uchun alohida endpoint SHART:
+```
+GET api/ecg-analyses/get-by-doctor       (query: page, pageSize, search, status, dateFrom, dateTo)
+GET api/holter-analyses/get-by-doctor    (query: page, pageSize, search, status, dateFrom, dateTo)
+GET api/smad-analyses/get-by-doctor      (query: page, pageSize, search, status, dateFrom, dateTo)
+GET api/lab-analyses/get-by-doctor       (query: page, pageSize, search, status, dateFrom, dateTo)
+GET api/med-diagnose/get-by-doctor       (query: page, pageSize, search, dateFrom, dateTo)
+```
+
+Frontend sahifalar `user.roleId === 4` shartiga qarab `get-by-doctor` endpointini
+chaqiradi. Hamshira (5) uchun alohida endpoint ishlatiladi — qarang: 7.5.
+
+### 7.2 Ko'rilgan/Ko'rilmagan Status (`is_viewed`) — faqat Shifokor (4)
+
+Bu mexanizm **faqat Shifokor (rol 4) uchun** amal qiladi. Hamshira (5) uchun `is_viewed`
+talab qilinmaydi — chunki hamshira faqat o'zi qo'shgan tahlillarni ko'radi (7.5-bo'lim).
+
+Har bir junction table qatorida **`is_viewed`** (boolean, default `false`) ustuni bo'lishi
+SHART. Bu ustun shifokor o'sha tahlilni birinchi marta ochganda `true` ga o'tkaziladi.
+
+**DB migratsiya (EF Core):**
+- `ecg_analyse_doctors.is_viewed` — bool, default `false`
+- `holter_analyse_doctors.is_viewed` — bool, default `false`
+- `smad_analyse_doctors.is_viewed` — bool, default `false`
+- `lab_analyse_doctors.is_viewed` — bool, default `false`
+
+Shifokor xulosasi (`medical_diagnoses`) uchun alohida junction yo'q — shu jadvalda
+`is_viewed` maydonini to'g'ridan-to'g'ri qo'shish SHART.
+
+**Modellarni yangilash:**
+- `ECGAnalyseDoctors.cs` — `IsViewed` property (Column: `is_viewed`)
+- `HolterAnalyseDoctors.cs` — `IsViewed` property
+- `SmadAnalyseDoctors.cs` — `IsViewed` property
+- `LabAnalyseDoctors.cs` — `IsViewed` property
+- `MedicalDiagnoses.cs` — `IsViewed` property
+
+**Mark-as-viewed endpointlari (batch — sahifaga kirish bilan):**
+```
+PUT api/ecg-analyses/mark-viewed-by-doctor     (body: { doctor_id })
+PUT api/holter-analyses/mark-viewed-by-doctor  (body: { doctor_id })
+PUT api/smad-analyses/mark-viewed-by-doctor    (body: { doctor_id })
+PUT api/lab-analyses/mark-viewed-by-doctor     (body: { doctor_id })
+PUT api/med-diagnose/mark-viewed-by-doctor     (body: { doctor_id })
+```
+
+Yoki alternativ: `put-by-id` — faqat bitta tahlil ochilganda belgilash.
+Har ikkala usul ham response ichida yangi `unviewed_count` qaytarishi SHART.
+
+**Frontend — ko'rilgan status ko'rsatish:**
+Tahlil ro'yxati jadvalida har bir qatorda `is_viewed` ga qarab vizual indikator:
+- Ko'rilmagan: `Badge` (rang: sariq yoki ko'k) — ustun: "Ko'rildi" → Yo'q
+- Ko'rilgan: yashil belgisi yoki "Ko'rildi" matni
+
+### 7.3 Menu Notification Badge (Ko'rilmagan Tahlillar Soni) — faqat Shifokor (4)
+
+Bu mexanizm **faqat Shifokor (rol 4) uchun** amal qiladi. Hamshira (5) uchun
+unviewed badge ko'rsatilmaydi.
+
+Sidebar menudagi har bir tahlil tipiga tegishli itemda shifokor hali ko'rmagan
+tahlillar soni **badge (notification count)** sifatida ko'rinishi SHART.
+
+**Backend — unviewed count endpointlari:**
+```
+GET api/ecg-analyses/unviewed-count      → { count: N }
+GET api/holter-analyses/unviewed-count   → { count: N }
+GET api/smad-analyses/unviewed-count     → { count: N }
+GET api/lab-analyses/unviewed-count      → { count: N }
+GET api/med-diagnose/unviewed-count      → { count: N }
+```
+
+Har bir endpoint JWT token ichidagi `doctor_id` ni olib, o'sha doktor uchun
+`is_viewed = false` qatorlar sonini qaytaradi. Rol 4/5 bo'lmagan foydalanuvchilar
+uchun `0` qaytariladi (yoki 403).
+
+**Frontend — Zustand Store:**
+```js
+ecg_unread: 0,       setecg_unread: (n) => set({ ecg_unread: n }),
+holter_unread: 0,    setholter_unread: (n) => set({ holter_unread: n }),
+smad_unread: 0,      setsmad_unread: (n) => set({ smad_unread: n }),
+lab_unread: 0,       setlab_unread: (n) => set({ lab_unread: n }),
+diagnoses_unread: 0, setdiagnoses_unread: (n) => set({ diagnoses_unread: n }),
+```
+
+Ilovaga kirish vaqtida (App.js — user ma'lumotlari yuklangandan so'ng) va har
+mark-viewed operatsiyasidan so'ng bu qiymatlar yangilanadi.
+
+**Frontend — SideBar badge render qoidasi:**
+- `count > 0` → `<Badge count={count}>` — `antd` `Badge` komponenti ishlatiladi
+- `count === 0` → badge **UMUMAN ko'rinmasligi SHART** (`showZero={false}` yoki
+  shartli render). 0 raqami hech qachon menuda ko'rsatilmasligi shart.
+
+**Frontend — Sahifaga kirish (`useEffect` on mount):**
+Shifokor (rol 4/5) tegishli sahifaga kirganda darhol `mark-viewed-by-doctor` API
+chaqiriladi va tegishli Zustand unread count nolga tushiriladi:
+```js
+useEffect(() => {
+  if (user.roleId === 4 || user.roleId === 5) {
+    markViewedByDoctor()          // API call
+    setecg_unread(0)              // clear badge immediately (optimistic)
+  }
+}, [])
+```
+
+### 7.4 Qoidalar Xulosasi
+
+| Qoida | Shart darajasi |
+|-------|---------------|
+| Shifokor tahlil sahifalarida faqat o'ziga assigned tahlillarni ko'radi | SHART |
+| `is_viewed` ustuni barcha junction tablalarda mavjud bo'lishi | SHART |
+| Ko'rilmagan tahlillar menuda badge sifatida ko'rinishi | SHART |
+| Badge count 0 bo'lsa ko'rinmasligi | SHART |
+| Shifokor sahifaga kirishi bilan badge 0 ga tushishi | SHART |
+| Admin/Direktor uchun bu mantiq ishlamasligi (klinika ko'rinishi qolishi) | SHART |
+
+---
+
 ## Governance
 
 - Ushbu konstitutisya loyihaning barcha qismlariga tegishli va barcha o'zgarishlardan oldin tekshirilishi SHART.
@@ -372,4 +515,4 @@ graph LR
 - **Versioning**: MAJOR — printsiplarni olib tashlash/qayta aniqlash; MINOR — yangi bo'lim/printsip qo'shish; PATCH — aniqlashtirish, imlo.
 - **Amend procedure**: Konstitutisya faqat komanda yig'ilishida muhokama qilingandan so'ng o'zgartirilishi mumkin. Har qanday o'zgartirish `Last Amended` sanasini yangilaydi.
 
-**Version**: 2.4.0 | **Ratified**: 2026-04-03 | **Last Amended**: 2026-04-06
+**Version**: 2.5.0 | **Ratified**: 2026-04-03 | **Last Amended**: 2026-04-06

@@ -358,6 +358,110 @@ namespace EkgAnalyzerApi.Services
             };
         }
 
+        // ── Shifokor bo'yicha filter ──────────────────────────────────────────────
+
+        public async Task<PagedResult<ECGAnalyseListDTO>> GetECGAnalysesByDoctorAsync(
+            int doctorId,
+            int page = 1,
+            int pageSize = 10,
+            string? search = null,
+            int? status = null,
+            DateTime? dateFrom = null,
+            DateTime? dateTo = null)
+        {
+            var query = _context.ECGAnalyse
+                .Where(e => e.Doctors!.Any(d => d.DoctorId == doctorId))
+                .Include(e => e.Patcient)
+                .Include(e => e.CreatedDoctor)
+                .Include(e => e.Doctors)
+                .AsQueryable();
+
+            if (status.HasValue)
+                query = query.Where(e => e.Status == status.Value);
+
+            if (dateFrom.HasValue)
+            {
+                var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
+                query = query.Where(e => e.CreatedAt >= utcFrom);
+            }
+
+            if (dateTo.HasValue)
+            {
+                var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
+                query = query.Where(e => e.CreatedAt <= utcTo);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var sLower = search.Trim().ToLower();
+                query = query.Where(e =>
+                    (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(sLower)) ||
+                    (e.Patcient.LastName  != null && e.Patcient.LastName.ToLower().Contains(sLower))  ||
+                    (e.Patcient.SureName  != null && e.Patcient.SureName.ToLower().Contains(sLower)));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .OrderByDescending(e => e.Id)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(e => new ECGAnalyseListDTO
+                {
+                    Id        = e.Id,
+                    Status    = e.Status,
+                    CreatedAt = e.CreatedAt,
+                    IsViewed  = e.Doctors!.Where(d => d.DoctorId == doctorId).Select(d => d.IsViewed).FirstOrDefault(),
+                    Patcient  = new PatcientForECG
+                    {
+                        Id        = e.Patcient.Id,
+                        BirthDate = e.Patcient.BirthDate,
+                        Gender    = e.Patcient.Gender,
+                        FirstName = e.Patcient.FirstName,
+                        LastName  = e.Patcient.LastName,
+                        SureName  = e.Patcient.SureName,
+                        Passport  = e.Patcient.Passport
+                    },
+                    CreatedDoctor = new DoctorForECGData
+                    {
+                        Id        = e.CreatedDoctor.Id,
+                        FirstName = e.CreatedDoctor.FirstName,
+                        LastName  = e.CreatedDoctor.LastName,
+                        SureName  = e.CreatedDoctor.SureName
+                    },
+                    AIStatus = e.AIAnswerData != null ?
+                        (e.AIAnswerData.Contains("\"automatic_analysis_bool\": 1") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"1\"") ? 1 :
+                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 2") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"2\"") ? 2 :
+                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 3") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"3\"") ? 3 : null) : null
+                })
+                .ToListAsync();
+
+            return new PagedResult<ECGAnalyseListDTO>
+            {
+                Items      = items,
+                TotalCount = totalCount,
+                Page       = page,
+                PageSize   = pageSize
+            };
+        }
+
+        public async Task<int> GetUnviewedECGCountByDoctorAsync(int doctorId)
+        {
+            return await _context.ECGAnalyseDoctor
+                .Where(d => d.DoctorId == doctorId && !d.IsViewed)
+                .CountAsync();
+        }
+
+        public async Task MarkECGViewedByDoctorAsync(int doctorId)
+        {
+            var rows = await _context.ECGAnalyseDoctor
+                .Where(d => d.DoctorId == doctorId && !d.IsViewed)
+                .ToListAsync();
+
+            foreach (var r in rows) r.IsViewed = true;
+            await _context.SaveChangesAsync();
+        }
+
         /// <summary>
         /// ai_answer_data TEXT ustunida saqlangan JSON stringni
         /// AIAnswerDataDTO ga parse qiladi.

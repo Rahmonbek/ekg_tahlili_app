@@ -33,4 +33,16 @@ export const useStore = create((set) => ({
     // ─── Phase 3: Region cache (har mount da qayta fetch qilmaslik uchun) ───
     regions: [],
     setregions: (data) => set({ regions: data }),
+
+    // ─── Shifokor ko'rilmagan tahlillar soni ───────────────────────────────
+    ecg_unread: 0,
+    setecg_unread: (n) => set({ ecg_unread: n }),
+    holter_unread: 0,
+    setholter_unread: (n) => set({ holter_unread: n }),
+    smad_unread: 0,
+    setsmad_unread: (n) => set({ smad_unread: n }),
+    lab_unread: 0,
+    setlab_unread: (n) => set({ lab_unread: n }),
+    diagnoses_unread: 0,
+    setdiagnoses_unread: (n) => set({ diagnoses_unread: n }),
 }))

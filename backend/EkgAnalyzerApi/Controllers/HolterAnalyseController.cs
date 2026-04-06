@@ -94,4 +94,52 @@ public class HolterAnalyseController : ControllerBase
         return Ok(result);
     }
 
+    // ── Shifokor bo'yicha endpointlar ─────────────────────────────────────────
+
+    [HttpGet("get-by-doctor")]
+    public async Task<IActionResult> GetByDoctor(
+        int page = 1, int pageSize = 10,
+        string? search = null, int? status = null,
+        DateTime? dateFrom = null, DateTime? dateTo = null)
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null) return Unauthorized(new { message = "Token invalid" });
+
+        var userId = int.Parse(userIdClaim.Value);
+        var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
+        if (doctor == null) return NotFound(new { message = "Shifokor topilmadi" });
+
+        var results = await _holterService.GetHolterAnalysesByDoctorAsync(
+            doctor.Id, page, pageSize, search, status, dateFrom, dateTo);
+        return Ok(results);
+    }
+
+    [HttpGet("unviewed-count")]
+    public async Task<IActionResult> GetUnviewedCount()
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null) return Unauthorized(new { message = "Token invalid" });
+
+        var userId = int.Parse(userIdClaim.Value);
+        var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
+        if (doctor == null) return Ok(new { count = 0 });
+
+        var count = await _holterService.GetUnviewedHolterCountByDoctorAsync(doctor.Id);
+        return Ok(new { count });
+    }
+
+    [HttpPut("mark-viewed")]
+    public async Task<IActionResult> MarkViewed()
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null) return Unauthorized(new { message = "Token invalid" });
+
+        var userId = int.Parse(userIdClaim.Value);
+        var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
+        if (doctor == null) return NotFound(new { message = "Shifokor topilmadi" });
+
+        await _holterService.MarkHolterViewedByDoctorAsync(doctor.Id);
+        return Ok(new { success = true });
+    }
+
 }

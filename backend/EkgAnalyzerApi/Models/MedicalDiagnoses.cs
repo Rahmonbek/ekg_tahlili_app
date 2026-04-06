@@ -33,6 +33,9 @@ namespace EkgAnalyzerApi.Models
         [Column("diagnose_file_link")]
         public string? DiagnoseFileLink { get; set; }
 
+        [Column("is_viewed")]
+        public bool IsViewed { get; set; } = false;
+
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 

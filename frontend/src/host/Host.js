@@ -27,6 +27,10 @@ export const httpPatchRequest = async (url, data) => {
     return await axiosInstance.patch(url, data);
 };
 
+export const httpPutRequest = async (url, data) => {
+    return await axiosInstance.put(url, data);
+};
+
 export const httpGetRequest = async (url, params) => {
     return await axiosInstance.get(url, { params });
 };

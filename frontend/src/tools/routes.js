@@ -10,45 +10,51 @@ export const routers=[
         icon:<FaUserDoctor />,
         title:"staffs",
         tools:"doctor",
-        role_id:[2, 3]
+        role_id:[2, 3],
+        unread_key: null
     },
 
-    
-   
+
+
      {
         path:'/ecg-analyses',
         icon:<FaHeartbeat />,
         title:"analyse_ecg",
         tools:"ecg-analyses",
-        role_id:[]
+        role_id:[],
+        unread_key: 'ecg_unread'
     },
     {
         path:'/holter-analyses',
         icon:<RiPulseLine />,
         title:"analyse_holter",
         tools:"holter-analyses",
-        role_id:[]
+        role_id:[],
+        unread_key: 'holter_unread'
     },
     {
         path:'/smad-analyses',
         icon:<FaChartLine />,
         title:"analyse_smad",
         tools:"smad-analyses",
-        role_id:[]
+        role_id:[],
+        unread_key: 'smad_unread'
     },
      {
         path:'/lab-analyses',
         icon:<GiTestTubes />,
         title:"analyse_lab",
         tools:"lab-analyses",
-        role_id:[]
+        role_id:[],
+        unread_key: 'lab_unread'
     },
      {
         path:'/patient-diagnoses',
         icon:< MdOutlineMedicalInformation />,
         title:"patient_diagnostics",
         tools:"patient-diagnoses",
-        role_id:[]
+        role_id:[],
+        unread_key: 'diagnoses_unread'
     },
     //  {
     //     path:'/patcients',
@@ -69,7 +75,8 @@ export const routers=[
         icon:<IoMdSettings />,
         title:"organization_info",
         tools:"settings",
-        role_id:[2, 3]
+        role_id:[2, 3],
+        unread_key: null
     },
-    
+
 ]

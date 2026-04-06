@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { FaPlus, FaSearch, FaHospital } from 'react-icons/fa';
 import { FaEye } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
-import { get_ecg_analyses_by_clinic } from '../../../host/requests/ECGAnalyseRequest';
+import { get_ecg_analyses_by_clinic, get_ecg_analyses_by_doctor, mark_ecg_viewed } from '../../../host/requests/ECGAnalyseRequest';
 import { formatDate, calculateAge } from '../../../tools/formatters';
+import { useStore } from '../../../store/Store';
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -26,6 +27,8 @@ const AI_STATUS_COLORS = {
 export default function EcgAnalysesList() {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const { user, setecg_unread } = useStore();
+    const isDoctor = user && (user.roleId === 4 || user.roleId === 5);
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -51,7 +54,9 @@ export default function EcgAnalysesList() {
             if (aiSt !== null && aiSt !== undefined) params.automaticAnalysisBool = aiSt;
             if (dr && dr[0]) params.dateFrom = dr[0].format('YYYY-MM-DD');
             if (dr && dr[1]) params.dateTo = dr[1].format('YYYY-MM-DD');
-            const res = await get_ecg_analyses_by_clinic(params);
+            const res = isDoctor
+                ? await get_ecg_analyses_by_doctor(params)
+                : await get_ecg_analyses_by_clinic(params);
             setData(res.data.items);
             setTotal(res.data.totalCount);
         } catch (err) {
@@ -59,10 +64,13 @@ export default function EcgAnalysesList() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [isDoctor]);
 
     useEffect(() => {
         fetchData(page, searchInput, statusFilter, dateRange, aiStatusFilter);
+        if (isDoctor) {
+            mark_ecg_viewed().then(() => setecg_unread(0)).catch(() => {});
+        }
     }, [page, fetchData]);
 
     const handleSearch = () => {
@@ -114,6 +122,16 @@ export default function EcgAnalysesList() {
             align: 'center',
             width: 60,
         },
+        ...(isDoctor ? [{
+            title: '',
+            dataIndex: 'isViewed',
+            key: 'isViewed',
+            align: 'center',
+            width: 36,
+            render: (val) => val
+                ? <Tag color="green" style={{ margin: 0 }}>✓</Tag>
+                : <Tag color="gold" style={{ margin: 0 }}>Yangi</Tag>,
+        }] : []),
         // {
         //     title: t('clinic') || 'Shifoxona',
         //     key: 'clinic',
