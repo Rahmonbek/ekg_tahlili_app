@@ -29,6 +29,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ClinicService>();;
 builder.Services.AddScoped<PythonApiProxyService>();
 builder.Services.AddScoped<AuditLogService>();
+builder.Services.AddScoped<ParasitologyAnalyseService>();
 builder.Services.AddSingleton<EncryptionService>(); // AES-256 shifrlash
 
 // Python API proxy uchun HttpClient

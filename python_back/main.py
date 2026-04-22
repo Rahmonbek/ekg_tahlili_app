@@ -44,6 +44,7 @@ from pathlib import Path
 from lab_analyses_api import router as lab_router
 from holter_analyses_api import router as holter_router
 from smad_analyses_api import router as smad_router
+from parasitology_api import router as parasitology_router
 Image.MAX_IMAGE_PIXELS = 50_000_000  # ZIP bomb himoyasi (50 megapiksel limit)
 # Optional for PDF -> image
 try:
@@ -124,6 +125,7 @@ app = FastAPI(title="AI EKG Analyzer")
 app.include_router(lab_router)
 app.include_router(holter_router)
 app.include_router(smad_router)
+app.include_router(parasitology_router)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 app.add_middleware(
     CORSMiddleware,

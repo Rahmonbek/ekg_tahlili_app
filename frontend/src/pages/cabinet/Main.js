@@ -17,6 +17,7 @@ import { get_lab_values_data } from '../../host/requests/LabValueTypesRequest'
 import Patcients from './pages/patcients/Patcients'
 import HolterAnalyzer from './holter_analyse/HolterAnalyzer'
 import SmadAnalyzer from './smad_analyse/SmadAnalyzer'
+import ParasitologyAnalyzer from './parasitology/ParasitologyAnalyzer'
 import SmadAnalysesList from './smad_analyse/SmadAnalysesList'
 import HolterAnalysesList from './holter_analyse/HolterAnalysesList'
 import LabAnalysesList from './lab_analyse/LabAnalysesList'
@@ -138,6 +139,10 @@ export default function Main() {
                         } />
                         <Route path="/patient-diagnoses/view/:id" element={
                             <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><DiagnoseView /></ProtectedRoute>
+                        } />
+
+                        <Route path="/parasitology-analyzer" element={
+                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><ParasitologyAnalyzer /></ProtectedRoute>
                         } />
 
                         {/* Bemorlar va Boshqalar */}

@@ -3,7 +3,8 @@ import { FaPeopleGroup, FaUserDoctor } from "react-icons/fa6";
 import { IoIosCard, IoIosPeople, IoMdSettings } from "react-icons/io";
 import { MdOutlineMedicalInformation } from "react-icons/md";
 import { GiTestTubes } from "react-icons/gi";
-import {RiPulseLine } from 'react-icons/ri'
+import { RiPulseLine } from 'react-icons/ri';
+import { GiMicroscope } from 'react-icons/gi';
 export const routers=[
     {
         path:'/doctor',
@@ -55,6 +56,14 @@ export const routers=[
         tools:"patient-diagnoses",
         role_id:[],
         unread_key: 'diagnoses_unread'
+    },
+    {
+        path:'/parasitology-analyzer',
+        icon:<GiMicroscope />,
+        title:"parasitology_analyse",
+        tools:"parasitology-analyzer",
+        role_id:[],
+        unread_key: null
     },
     //  {
     //     path:'/patcients',

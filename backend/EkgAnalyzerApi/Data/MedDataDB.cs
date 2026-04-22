@@ -43,6 +43,9 @@ namespace EkgAnalyzerApi.Data
         public DbSet<LabValueTypes> LabValueTypes { get; set; }
         public DbSet<LabBigCategories> LabBigCategories { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<ParasitologyAnalyses> ParasitologyAnalyses { get; set; }
+        public DbSet<ParasitologyAnalysisDoctors> ParasitologyAnalysisDoctors { get; set; }
+        public DbSet<ParasitologyResults> ParasitologyResults { get; set; }
 
         public override int SaveChanges()
         {

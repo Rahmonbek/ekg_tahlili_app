@@ -1,23 +1,22 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change : 2.5.0 → 2.6.0 (MINOR)
-Bump rationale : Section VII extended with "7.5 Hamshira (Nurse) Ko'rinishi" subsection.
-                 Key distinction:
-                 - Doctor (4): sees analyses assigned as treating physician (junction tables)
-                 - Nurse (5): sees analyses they personally created (created_doctor_id filter)
-                 - is_viewed / badge notification logic does NOT apply to Nurse role
-                 Section 7.2 and 7.3 clarified — explicitly limited to Doctor (role 4).
-                 Section 7.4 rules table updated with Nurse row.
+Version change : 2.6.0 → 2.7.0 (MINOR)
+Bump rationale : New parasitology analysis module added.
+                 - Section I extended with parasitology table names.
+                 - Section IV extended with /analyze-parasitology proxy endpoint.
+                 - Section VI role matrix updated with /parasitology-analyzer route.
+                 - New Section VIII added: Parasitology Analysis Module.
+                 - Project Overview updated to include parasitology.
 
 Modified sections:
-  • VII.1 — Ma'lumotlar Filtri: Nurse subsection added
-  • VII.2 — is_viewed: explicitly scoped to Doctor (4) only
-  • VII.3 — Menu Notification Badge: explicitly scoped to Doctor (4) only
-  • VII.4 — Qoidalar Xulosasi: Nurse rows added
+  • Project Overview — parasitology added to analysis types list
+  • I — Shared Database Architecture: parasitology table names added
+  • IV — API Contract Rules: POST /analyze-parasitology proxy endpoint added
+  • VI — Rol-marshrut Matritsa: /parasitology-analyzer row added
 
 Added sections:
-  • VII.5 — Hamshira Ko'rinishi (new subsection)
+  • VIII — Parasitology Analysis Module (new)
 
 Removed sections  : none
 
@@ -35,7 +34,7 @@ Still open:
 
 ## Project Overview
 
-**NMED** — tibbiy tahlil platformasi (EKG, Laboratoriya, Holter, SMAD). Loyiha uch qatlamdan iborat:
+**NMED** — tibbiy tahlil platformasi (EKG, Laboratoriya, Holter, SMAD, Parazitologiya). Loyiha uch qatlamdan iborat:
 - **Backend (.NET 8 / C#)** — CRUD, autentifikatsiya, avtorizatsiya, ma'lumotlar bazasi
 - **Frontend (React 18)** — foydalanuvchi interfeysi, shifokor kabineti
 - **AI/Scripting (Python FastAPI)** — EKG signal tahlili, AI diagnostika (OpenAI GPT)
@@ -47,7 +46,9 @@ Still open:
 ### I. Shared Database Architecture (MUHIM)
 Backend (.NET) va Python (FastAPI) **bitta PostgreSQL bazaga** (`med_helper_data`) ulanadi.
 - **Baza sxemasi** `.NET Entity Framework Migrations` tomonidan boshqariladi. Python tomoni `SQLAlchemy` orqali faqat yozish/o'qish qiladi.
-- **Jadval nomlari** snake_case: `ecg_analyses`, `lab_analyses`, `holter_analyses`, `smad_analyses`, `medical_diagnoses`, `ecg_analyse_doctors`, `ecg_analyse_complaints` va h.k.
+- **Jadval nomlari** snake_case: `ecg_analyses`, `lab_analyses`, `holter_analyses`, `smad_analyses`,
+  `parasitology_analyses`, `parasitology_analysis_doctors`, `parasitology_results`,
+  `medical_diagnoses`, `ecg_analyse_doctors`, `ecg_analyse_complaints` va h.k.
 - **Yangi jadval qo'shish** faqat .NET Migrations orqali amalga oshiriladi. Python `models.py` faqat mavjud jadvallarni reflect qiladi.
 - **Ustun nomlari** snake_case va ikkala tomonda identik bo'lishi shart: `patcient_id`, `created_doctor_id`, `clinic_id`, `status`, `ai_answer_data`, `analyse_file_link`, `generated_file_link`, va hokazo.
 
@@ -57,7 +58,7 @@ Ikki alohida backend mavjud, har biri o'z vazifasini bajaradi:
 | Qatlam | Texnologiya | Port | Vazifa |
 |--------|-------------|------|--------|
 | **.NET API** | ASP.NET Core 8 | `5000` (HTTP), `5001` (HTTPS) | CRUD, Auth (JWT), foydalanuvchi/klinika/shifokor/bemor boshqaruvi |
-| **Python API** | FastAPI + Uvicorn | `8000` | EKG signal parsing, AI tahlil (OpenAI), Lab/Holter/SMAD tahlil |
+| **Python API** | FastAPI + Uvicorn | `8000` | EKG signal parsing, AI tahlil (OpenAI), Lab/Holter/SMAD/Parazitologiya tahlil |
 
 - Frontend `.NET API` ga autentifikatsiya va CRUD so'rovlarini yuboradi.
 - Frontend Python API ga **bevosita murojaat qilmaydi** — barcha tahlil so'rovlari `.NET API` orqali proxy qilinadi (C1 talabi).
@@ -78,6 +79,7 @@ Ikki alohida backend mavjud, har biri o'z vazifasini bajaradi:
     (pagination, bemor ismi/familiyasi/sharifi yoki passport seriyasi bo'yicha qidiruv,
     status filtri, sana oralig'i filtri — dan/gacha)
   - `/analyse-ecg` → `EcgAnalyzer` — yangi EKG qo'shish/tahlil qilish sahifasi
+  - `/parasitology-analyzer` → `ParasitologyAnalyzer` — parazitologik tahlil sahifasi
   - Non-admin foydalanuvchilar uchun default landing: `EcgAnalysesList`
   - Admin/SuperAdmin uchun default landing: `Doctors`
 - **UI dizayn konventsiyalari**:
@@ -96,6 +98,7 @@ Python endpointlari (faqat .NET proxy orqali chaqiriladi):
 - `POST /lab/analyze-save` — Lab faylini saqlash
 - `POST /holter/analyze` — Holter tahlili
 - `POST /smad/analyze` — SMAD tahlili
+- `POST /analyze-parasitology` — Parazitologik mikroskop tasvir tahlili (GPT-4o vision)
 
 .NET endpointlari:
 - `api/auth/*` — register, login, verify, change-password
@@ -114,14 +117,15 @@ Python endpointlari (faqat .NET proxy orqali chaqiriladi):
 - `api/ecg-analyses/*` — ECG CRUD + proxy (`/analyze`, `/analyze-save`, `/send-to-ai`)
 - `api/lab-analyses/*` — Lab CRUD + proxy (`/analyze`)
 - `api/holter-analyses/*`, `api/smad-analyses/*` — CRUD + proxy
+- `api/parasitology-analyses/*` — Parazitologiya CRUD + proxy (`/save-and-analyze`, `/send-to-ai/{id}`, `/statistics`)
 - `api/doctors/*`, `api/patcients/*`, `api/clinics/*`, `api/regions/*`
 
 ### V. AI Integration Protocol
 - **Provider**: OpenAI — model `gpt-4o` by default
   (`OPENAI_MODEL` environment variable orqali sozlanadi; `.env` da o'zgartirish mumkin)
 - **Flow**: Frontend → .NET API (JWT) → Python API → OpenAI Files API → OpenAI Responses API → JSON javob → bazaga saqlash
-- **Prompt tili**: O'zbek tilida professional kardiologiya terminlari
-- **Javob formati**: Qat'iy JSON schema (`digital_measurements`, `automatic_analysis`, `automatic_analysis_bool`, `AI_recommendations`, `final_summary`)
+- **Prompt tili**: O'zbek tilida professional kardiologiya/parazitologiya terminlari
+- **Javob formati**: Qat'iy JSON schema (`digital_measurements`, `automatic_analysis`, `automatic_analysis_bool`, `AI_recommendations`, `final_summary` — EKG uchun; `gijja_topildimi`, `aniqlangan_turlar`, `jami_jiddiylik`, `davolash_tavsiyasi`, `shifokorga_tavsiya`, `rasm_sifati`, `yakuniy_xulosa` — Parazitologiya uchun)
 - **API kalitlari** environment variable yoki konfiguratsiya fayllaridan o'qiladi (hardcoded taqiqlangan)
 
 ---
@@ -252,6 +256,8 @@ Kerakli endpointlar:
 - `POST api/holter-analyses/analyze` → proxy → Python `/holter/analyze`
 - `POST api/smad-analyses/analyze` → proxy → Python `/smad/analyze`
 - `POST api/med-diagnose/save` → proxy → Python `/api/med-diagnoses-save`
+- `POST api/parasitology-analyses/save-and-analyze` → proxy → Python `/analyze-parasitology`
+- `POST api/parasitology-analyses/send-to-ai/{id}` → proxy → Python `/analyze-parasitology` (retry)
 
 ### C2. Audit Log (TT 4.1.6)
 Barcha foydalanuvchi amallari o'zgartirib bo'lmaydigan logga yozilishi SHART:
@@ -309,9 +315,10 @@ graph LR
 ### Critical Sync Points
 1. **`ecg_analyses` jadvali** — Python yozadi (status, ai_answer_data, file_links), .NET o'qiydi (paginatsiya, DTO mapping)
 2. **`lab_analyses` jadvali** — Python yozadi (lab qiymatlari + AI natija), .NET o'qiydi
-3. **Shared entitiy IDs** — `patcient_id`, `doctor_id`, `clinic_id` bir xil FK schema
-4. **File paths** — Python `uploads/` papkasiga yozadi (`/uploads/ecg_analyse_files/`, `/uploads/ecg_generated_files/`), .NET `StaticFiles` orqali serve qilishi kerak
-5. **Audit logs** — faqat .NET API tomonidan yoziladi (Python API o'z loglarini `logging` moduli orqali chiqaradi)
+3. **`parasitology_analyses` jadvali** — .NET yozadi (fayl saqlash, AI proxy, status boshqaruvi), `parasitology_results` .NET tomonidan AI javobdan parse qilinib to'ldiriladi
+4. **Shared entitiy IDs** — `patcient_id`, `doctor_id`, `clinic_id` bir xil FK schema
+5. **File paths** — Python `uploads/` papkasiga yozadi; .NET StaticFiles orqali serve qilishi kerak. Parazitologiya uchun: `wwwroot/uploads/parasitology/{yyyyMM}/`
+6. **Audit logs** — faqat .NET API tomonidan yoziladi
 
 ---
 
@@ -335,7 +342,7 @@ graph LR
 
 2. **Shifokor (4) va Hamshira (5)**: `/ecg-analyses` — default landing.
    - Barcha tahlil sahifalariga (`/ecg-analyses`, `/holter-analyses`, `/smad-analyses`,
-     `/lab-analyses`, `/patient-diagnoses`) ruxsat bor.
+     `/lab-analyses`, `/patient-diagnoses`, `/parasitology-analyzer`) ruxsat bor.
    - `/doctor` (xodimlar) va `/settings` (tashkilot haqida) — TAQIQLANGAN.
      Sidebar menusida ham ko'rinmasligi SHART.
    - Tahlil ro'yxati sahifalarida **faqat shu shifokor davolovchi sifatida belgilangan**
@@ -343,7 +350,8 @@ graph LR
      Butun klinika ma'lumotlari emas — qarang: VII bob.
 
 3. **SuperAdmin (1)**: Tizim darajasi. Klinika kabineti oqimiga kirmaydi — alohida
-   boshqaruv interfeysi orqali ishlaydi.
+   boshqaruv interfeysi orqali ishlaydi. Parazitologiya statistika endpointi
+   (`GET /api/parasitology-analyses/statistics`) **faqat SuperAdmin** uchun.
 
 ### Xodimlar Sahifasi (Doctors) — O'z-o'zini ko'rsatmaslik Qoidasi
 
@@ -367,6 +375,7 @@ graph LR
 | `/smad-analyses` | ✅ | ✅ | ✅ | ✅ |
 | `/lab-analyses` | ✅ | ✅ | ✅ | ✅ |
 | `/patient-diagnoses` | ✅ | ✅ | ✅ | ✅ |
+| `/parasitology-analyzer` | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -386,6 +395,7 @@ Davolovchi sifatida belgilanish junction tablalari orqali aniqlanadi:
 | Holter | `holter_analyse_doctors` | `doctor_id` |
 | SMAD | `smad_analyse_doctors` | `doctor_id` |
 | Laboratoriya | `lab_analyse_doctors` | `doctor_id` |
+| Parazitologiya | `parasitology_analysis_doctors` | `doctor_id` |
 | Shifokor xulosasi | `medical_diagnoses.main_doctor_id` (to'g'ridan-to'g'ri) | `doctor_id` |
 
 Backend har bir tahlil turi uchun alohida endpoint SHART:
@@ -546,6 +556,211 @@ Tahlil ro'yxati jadvalidagi `isViewed` ustun hamshira uchun ko'rsatilmaydi
 
 ---
 
+## VIII. Parasitology Analysis Module
+
+### 8.1 Modul Haqida
+
+Parazitologik tahlil moduli mikroskop ostida olingan axlat namunesining rasmi (PNG/JPG/JPEG)
+asosida gijja tuxumlarini AI yordamida aniqlash imkonini beradi. Bu modul EKG, Lab,
+Holter, SMAD modullari bilan bir xil arxitektura qoidalariga amal qiladi.
+
+**Fayl formati**: Faqat `.jpg`, `.png`, `.jpeg` (PDF emas — rasm tahlil qilinadi).
+**AI provider**: OpenAI GPT-4o vision.
+**Saqlash yo'li**: `wwwroot/uploads/parasitology/{yyyyMM}/` — LabAnalyse/ECGAnalyse kabi.
+
+### 8.2 Database Sxemasi
+
+**`parasitology_analyses`** jadvali (EF Core Migration orqali yaratiladi):
+
+| Ustun | Tip | Izoh |
+|-------|-----|------|
+| `id` | int, PK, autoincrement | |
+| `patcient_id` | int, FK → `patcients` | |
+| `clinic_id` | int, FK → `clinics` | |
+| `created_doctor_id` | int, FK → `doctors` | |
+| `file_path` | string | Yuklangan rasm manzili |
+| `microscopy_method` | string | `direct_smear` \| `kato_katz` \| `flotation` \| `fecpakg` |
+| `magnification` | string | `100x` \| `200x` \| `400x` \| `1000x` |
+| `egg_count_per_field` | int, nullable | Laborant hisoblagan tuxum soni |
+| `ai_response` | text, nullable | JSON format (AI natijasi) |
+| `analysis_status` | string | `pending` \| `analyzed` \| `not_analyzed` \| `failed` |
+| `jiddiylik_darajasi` | int, nullable | 1 / 2 / 3 |
+| `lang` | string | `uz` / `ru` / `en` |
+| `created_at` | datetime | |
+| `updated_at` | datetime, nullable | |
+
+**`parasitology_analysis_doctors`** jadvali (ko'p-ko'p, ECGAnalyseDoctors.cs pattern):
+
+| Ustun | Tip |
+|-------|-----|
+| `id` | int, PK |
+| `parasitology_analysis_id` | int, FK → `parasitology_analyses` |
+| `doctor_id` | int, FK → `doctors` |
+
+**`parasitology_results`** jadvali (har bir aniqlangan gijja turi uchun alohida qator):
+
+| Ustun | Tip | Izoh |
+|-------|-----|------|
+| `id` | int, PK |
+| `parasitology_analysis_id` | int, FK → `parasitology_analyses` |
+| `helminth_type` | string | `"Ascaris lumbricoides"` va h.k. (lotin nomi) |
+| `helminth_name_uz` | string | |
+| `helminth_name_ru` | string | |
+| `helminth_name_en` | string | |
+| `confidence` | decimal | 0.0 – 1.0 |
+| `infection_level` | string | `light` \| `moderate` \| `heavy` |
+| `viloyat` | string, nullable | Statistika uchun |
+| `tuman` | string, nullable | |
+| `patient_age_group` | string | `0-5` \| `6-14` \| `15-60` \| `60+` |
+| `patient_gender` | bool | |
+| `analysis_date` | date | Statistika filtrlash uchun |
+
+### 8.3 Python FastAPI Endpoint
+
+**Fayl**: `python_back/parasitology_api.py` (mavjud `ecg_api.py` / `smad_api.py` strukturasiga amal qiladi)
+
+**Endpoint**: `POST /analyze-parasitology` (multipart/form-data)
+
+**So'rov maydonlari**:
+
+| Maydon | Tip | Majburiy |
+|--------|-----|---------|
+| `file` | UploadFile (PNG/JPG/JPEG) | ✅ |
+| `microscopy_method` | str | ✅ |
+| `magnification` | str | ✅ |
+| `gender` | str (`erkak`/`ayol`) | ✅ |
+| `age` | int | ✅ |
+| `egg_count_per_field` | int | ixtiyoriy (0 = aniqlanmagan) |
+| `complaints` | List[str] | ixtiyoriy |
+| `lang` | str (`uz`/`ru`/`en`) | ✅ |
+
+**AI Javob JSON strukturasi**:
+```json
+{
+  "gijja_topildimi": true,
+  "aniqlangan_turlar": [
+    {
+      "lotin_nomi": "Ascaris lumbricoides",
+      "uz_nomi": "Oddiy gijja",
+      "ru_nomi": "Аскарида",
+      "en_nomi": "Common roundworm",
+      "ishonch_darajasi": 0.92,
+      "infektsiya_darajasi": "light",
+      "infektsiya_uz": "Yengil"
+    }
+  ],
+  "jami_jiddiylik": 1,
+  "davolash_tavsiyasi": "Albendazol 400 mg...",
+  "shifokorga_tavsiya": "Nazorat tekshiruvi 3 haftadan so'ng...",
+  "rasm_sifati": "yaxshi",
+  "qoshimcha_izoh": "...",
+  "yakuniy_xulosa": "..."
+}
+```
+
+**Xatolik holatlari**:
+- Rasm sifati past → `{"xato": "rasm_sifati_past", "xabar": "Rasmni qayta yuklang"}`
+- Parazitologik rasm emas → `{"xato": "noto'g'ri_rasm", "xabar": "..."}`
+- Gijja topilmadi → `gijja_topildimi: false, aniqlangan_turlar: []`
+
+### 8.4 .NET Backend Endpointlari
+
+**Controller**: `ParasitologyAnalyseController.cs`
+**Service**: `ParasitologyAnalyseService.cs`
+**DTOs**: `ParasitologyAnalyseDTOs.cs`
+
+**Endpointlar**:
+
+| Method | Endpoint | Tavsif |
+|--------|----------|--------|
+| POST | `/api/parasitology-analyses/save-and-analyze` | Rasm saqlash + AI tahlil + natijani bazaga yozish |
+| GET | `/api/parasitology-analyses/get-by-patient-id?id={}&page={}` | Bemorning parazitologik tarixi (pageSize=5) |
+| POST | `/api/parasitology-analyses/send-to-ai/{id}` | Saqlangan faylni qayta AI ga yuborish (`not_analyzed` holat uchun) |
+| GET | `/api/parasitology-analyses/statistics` | SuperAdmin statistikasi — `[Authorize(Roles = "SuperAdmin")]` |
+
+**`save-and-analyze` oqimi**:
+1. Faylni `wwwroot/uploads/parasitology/{yyyyMM}/` ga saqlaydi
+2. `ParasitologyAnalyses` yozuvi yaratadi (`analysis_status = "pending"`)
+3. `ParasitologyAnalysisDoctors` ko'p-ko'p qatorlari yaratadi
+4. Python `/analyze-parasitology` ga multipart proxy so'rov yuboradi
+5. AI javobini parse qiladi → `ParasitologyResults` jadvaliga har bir tur uchun alohida qator
+6. `analysis_status = "analyzed"` yoki `"failed"` qilib yangilaydi
+7. To'liq DTO qaytaradi
+
+**Statistika endpoint response**:
+```json
+{
+  "jami_tahlillar": 1250,
+  "gijja_topilgan": 847,
+  "topilmagan": 403,
+  "eng_kop_turlar": [
+    {"tur": "Ascaris lumbricoides", "uz_nomi": "Oddiy gijja", "soni": 423, "foizi": 49.9}
+  ],
+  "viloyatlar_boyicha": [
+    {"viloyat": "Farg'ona", "soni": 234, "ogir_soni": 45}
+  ],
+  "yosh_guruhlari": [
+    {"guruh": "6-14", "soni": 378, "foizi": 44.6}
+  ],
+  "oylik_dinamika": [
+    {"oy": "2026-01", "soni": 89, "topilgan": 61}
+  ]
+}
+```
+
+**Statistika query params**: `viloyat?`, `tuman?`, `yiloyAy?`, `helminthType?`, `dateFrom?`, `dateTo?`
+
+### 8.5 Frontend Komponentlar
+
+**Yangi fayllar**:
+
+| Fayl | Maqsad |
+|------|--------|
+| `frontend/src/pages/cabinet/parasitology/ParasitologyAnalyzer.js` | Asosiy forma (LabAnalyzer.js pattern) |
+| `frontend/src/pages/cabinet/parasitology/ParasitologyResult.js` | Natija ko'rsatish komponenti |
+| `frontend/src/host/parasitologyService.js` | API so'rov funksiyasi |
+
+**Formadagi qo'shimcha maydonlar** (LabAnalyzer.js dagi `lab_category` o'rniga):
+1. Buyatkovka usuli (`Select`, majburiy): `direct_smear` / `kato_katz` / `flotation` / `fecpakg`
+2. Kattalashtirish (`Select`, majburiy): `100x` / `200x` / `400x` / `1000x`
+3. Ko'rish maydonidagi tuxum soni (`InputNumber`, ixtiyoriy)
+
+**Natija ko'rsatish qoidalari**:
+- Gijja topilmasa: yashil banner — `t("helminth_not_detected")`
+- Topilsa: har bir tur uchun card (tur nomi, ishonch % progress bar, infektsiya badge:
+  yengil=yashil, o'rtacha=sariq, og'ir=qizil)
+- Umumiy jiddiylik darajasi, davolash tavsiyasi, shifokorga tavsiya bo'limlari
+
+**Mavjud fayllarga minimum o'zgarish**:
+- `routes.js` — `/parasitology-analyzer` yo'li qo'shiladi
+- `Main.js` — `<Route>` qo'shiladi
+- Sidebar/navigation — "Parazitologik tahlil" menyu elementi
+
+### 8.6 i18n Kalitlari
+
+Uch til faylida (`Uz.json`, `Ru.json`, `En.json`) quyidagi kalitlar qo'shiladi:
+
+```
+parasitology_analyse, microscopy_method, magnification, egg_count_per_field,
+direct_smear, kato_katz, flotation, helminth_detected, helminth_not_detected,
+confidence, infection_level, light, moderate, heavy,
+treatment_recommendation, doctor_recommendation,
+image_quality_poor, parasitology_saved
+```
+
+### 8.7 Parazitologiya Uchun Maxsus Qoidalar
+
+- Fayl qabul: `.jpg`, `.png`, `.jpeg` faqat. PDF **qabul qilinmaydi** (rasm tahlil qilinadi).
+- `analysis_status` string tizimi (`"pending"` / `"analyzed"` / `"not_analyzed"` / `"failed"`)
+  mavjud int-based status kodidan farq qiladi — bu modul uchun string enum ishlatiladi.
+- `send-to-ai/{id}` endpoint faqat `analysis_status == "not_analyzed"` bo'lgan tahlillar uchun ishlaydi.
+- Statistika endpoint `ParasitologyResults` jadvalidan aggregatsiya qiladi (bemor `viloyat`/`tuman`
+  ma'lumotlari `PatcientId` orqali join qilinishi SHART).
+- Python tomoni faqat AI tahlil qiladi; `ParasitologyResults` ni **faqat .NET** to'ldiradi
+  (AI JSON response parse qilinib C# tomonida yoziladi).
+
+---
+
 ## Governance
 
 - Ushbu konstitutisya loyihaning barcha qismlariga tegishli va barcha o'zgarishlardan oldin tekshirilishi SHART.
@@ -557,4 +772,4 @@ Tahlil ro'yxati jadvalidagi `isViewed` ustun hamshira uchun ko'rsatilmaydi
 - **Versioning**: MAJOR — printsiplarni olib tashlash/qayta aniqlash; MINOR — yangi bo'lim/printsip qo'shish; PATCH — aniqlashtirish, imlo.
 - **Amend procedure**: Konstitutisya faqat komanda yig'ilishida muhokama qilingandan so'ng o'zgartirilishi mumkin. Har qanday o'zgartirish `Last Amended` sanasini yangilaydi.
 
-**Version**: 2.6.0 | **Ratified**: 2026-04-03 | **Last Amended**: 2026-04-07
+**Version**: 2.7.0 | **Ratified**: 2026-04-03 | **Last Amended**: 2026-04-22

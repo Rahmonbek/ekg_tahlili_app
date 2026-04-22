@@ -3,7 +3,12 @@
     "allow": [
       "Bash(grep -E \"\\\\.cs$\")",
       "Bash(dotnet ef:*)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(dotnet run *)",
+      "Bash(echo \"Backend starting with PID $!\")",
+      "Bash(npm start *)",
+      "Bash(echo \"Frontend starting with PID $!\")",
+      "Bash(netstat -ano)"
     ]
   }
 }
