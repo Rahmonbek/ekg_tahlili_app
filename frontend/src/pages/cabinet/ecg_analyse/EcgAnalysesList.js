@@ -254,13 +254,15 @@ export default function EcgAnalysesList() {
                 <h1>
                     <span>
                         {t('analyse_ecg') || 'EKG Tahlillar'}
-                        <span style={{ fontSize: 13, fontWeight: 400, color: '#94a3b8', marginLeft: 4 }}>
-                            {total > 0 ? `— ${total} ta` : ''}
-                        </span>
+                       
                     </span>
-                    <span className="h1_add_btn" onClick={() => navigate('/analyse-ecg')} title={t('new_ecg_analyse')}>
-                        <FaPlus />
-                    </span>
+                    <button
+                    onClick={() => navigate('/analyse-ecg')}
+                    className="btn_form"
+                    style={{ width: 'auto', padding: '0 24px', marginTop: 0 }}
+                >
+                    {t('create_new_ecg_analyse') || 'Yangi EKG tahlil'}
+                </button>
                 </h1>
                 <div className="main_card_content big_card_content">
 
@@ -271,7 +273,7 @@ export default function EcgAnalysesList() {
                                 <div>
                                     <label className="filter_label">{t('search_by_patient')}</label>
                                     <Input
-                                        prefix={<FaSearch style={{ color: '#aaa' }} />}
+                                        
                                         placeholder={t('search_by_patient')}
                                         value={searchInput}
                                         onChange={(e) => setSearchInput(e.target.value)}

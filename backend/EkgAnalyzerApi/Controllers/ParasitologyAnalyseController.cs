@@ -106,10 +106,10 @@ public class ParasitologyAnalyseController : ControllerBase
         if (userIdClaim == null) return Unauthorized();
 
         var userId = int.Parse(userIdClaim.Value);
-        var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
-        if (doctor?.ClinicId == null) return BadRequest(new { message = "Klinika aniqlanmadi" });
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null || user.ClinicId == null) return BadRequest(new { message = "Klinika aniqlanmadi" });
 
-        var result = await _service.GetByClinicAsync(doctor.ClinicId.Value, page, pageSize, search, status, dateFrom, dateTo, jiddiylik);
+        var result = await _service.GetByClinicAsync(user.ClinicId.Value, page, pageSize, search, status, dateFrom, dateTo, jiddiylik);
         return Ok(result);
     }
 

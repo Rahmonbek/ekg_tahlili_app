@@ -20,30 +20,33 @@ router = APIRouter(
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
 
-def _build_prompt(microscopy_method: str, magnification: str, gender: str,
-                  age: int, egg_count: int, complaints: List[str], lang: str) -> str:
+def _build_prompt(magnification: str, gender: str, age: int,
+                  complaints: List[str], lang: str) -> str:
     language = (
         "O'ZBEK" if lang == "uz"
-        else "RUS" if lang == "ru"
-        else "INGLIZ"
+        else "РУССКИЙ" if lang == "ru"
+        else "ENGLISH"
     )
-    egg_text = str(egg_count) if egg_count and egg_count > 0 else "aniqlanmagan"
     complaints_text = ", ".join(complaints) if complaints else "ko'rsatilmagan"
 
-    return f"""Mikroskopik tasvir tahlili:
-- Buyatkovka usuli: {microscopy_method}
+    return f"""Sen NMED tibbiy laboratoriya platformasining tajribali parazitolog mutaxassisisan.
+Quyidagi mikroskopik tasvir najas (kal) preparatidan olingan.
+
+TAHLIL MA'LUMOTLARI:
 - Kattalashtirish: {magnification}
 - Bemor: {age} yosh, {gender}
-- Ko'rish maydonidagi tuxum soni: {egg_text}
 - Shikoyatlar: {complaints_text}
 
-❗️ JAVOB QOIDALARI:
-- Javob FAQAT quyidagi JSON formatida bo'lsin
-- JSON dan tashqarida hech qanday matn yozilmasin
-- Javob {language} tilida bo'lsin
-- Faqat mikroskopik tekshiruvga asoslangan, klinik tashxis qo'yma
+VAZIFANG — RASMNI DIQQAT BILAN KO'RIB CHIQ:
+1. Rasmda ko'rinayotgan BARCHA gijja (parazit) turlari va ularning TUXUMLARINI aniqlash
+2. Har bir topilgan tur uchun RASMDAN TO'G'RIDAN-TO'G'RI:
+   - Ko'rinayotgan TUXUMLAR SONINI sanash (50 tadan ko'p bo'lsa: -1)
+   - Voyaga yetgan parazit (gijja tanasi, segment, lichinka) bor-yo'qligini aniqlash
+   - Tuxum morfologiyasini tasvirlash: shakl, qobiq qalinligi, o'lchami, ichki tuzilishi
+3. Artefaktlarni (soch, tolalar, havo pufakchalari, qoldiqlar) parazit deb hisoblatma
+4. Noaniq bo'lsa — ishonch_darajasini past qo'y va izoh qoldir
 
-### JSON SHABLONI (QAT'IY SAQLANSIN):
+JAVOB QAT'IY FAQAT JSON FORMATIDA, {language} TILIDA:
 
 {{
   "gijja_topildimi": true,
@@ -54,38 +57,44 @@ def _build_prompt(microscopy_method: str, magnification: str, gender: str,
       "ru_nomi": "Аскарида",
       "en_nomi": "Common roundworm",
       "ishonch_darajasi": 0.92,
-      "infektsiya_darajasi": "light",
-      "infektsiya_uz": "Yengil"
+      "voyaga_yetgan_bor": false,
+      "tuxum_soni": 14,
+      "tuxum_morfologiyasi": "Oval shaklda, qalin burchakli qobiqli, 45-70 mkm, ichida blastomer ko'rinmoqda",
+      "infektsiya_darajasi": "moderate",
+      "infektsiya_uz": "O'rtacha"
     }}
   ],
-  "jami_jiddiylik": 1,
-  "davolash_tavsiyasi": "Davolash rejasi...",
-  "shifokorga_tavsiya": "Shifokorga tavsiya...",
+  "jami_tuxum_soni": 14,
+  "jami_jiddiylik": 2,
+  "davolash_tavsiyasi": "...",
+  "shifokorga_tavsiya": "...",
   "rasm_sifati": "yaxshi",
   "qoshimcha_izoh": "...",
   "yakuniy_xulosa": "..."
 }}
 
-### QO'SHIMCHA TALABLAR:
-- "gijja_topildimi" faqat true yoki false
-- "ishonch_darajasi" 0.0 dan 1.0 gacha
-- "infektsiya_darajasi" faqat: "light", "moderate", "heavy"
-- "jami_jiddiylik" faqat 1, 2 yoki 3
-- "rasm_sifati" faqat: "yaxshi", "qoniqarli", "past"
-- Gijja topilmasa: "gijja_topildimi": false, "aniqlangan_turlar": []
-
-❗️ Javob FAQAT JSON bo'lsin va {language} tilida bo'lsin"""
+QOIDALAR (QAT'IY BAJAR):
+- "gijja_topildimi": true yoki false
+- "ishonch_darajasi": 0.0 — 1.0 (faqat ko'rinadigan belgilarga asosla)
+- "voyaga_yetgan_bor": rasmda voyaga yetgan parazit ko'rinsa true, aks holda false
+- "tuxum_soni": ko'rinayotgan tuxumlar soni (butun son); juda ko'p bo'lsa -1; yo'q bo'lsa 0
+- "tuxum_morfologiyasi": tuxumning vizual tavsifi, yo'q bo'lsa ""
+- "infektsiya_darajasi": "light" | "moderate" | "heavy"
+- "infektsiya_uz": "Yengil" | "O'rtacha" | "Og'ir"
+- "jami_tuxum_soni": barcha turlar bo'yicha umumiy tuxum soni
+- "jami_jiddiylik": 1 (engil) | 2 (o'rta) | 3 (og'ir)
+- "rasm_sifati": "yaxshi" | "qoniqarli" | "past"
+- Gijja topilmasa: "gijja_topildimi": false, "aniqlangan_turlar": [], "jami_tuxum_soni": 0
+- JSON dan tashqarida HECH QANDAY matn yozilmasin"""
 
 
 @router.post("/analyze-parasitology")
 async def analyze_parasitology(
     user: dict = Depends(verify_token),
     file: UploadFile = File(...),
-    microscopy_method: str = Form(...),
     magnification: str = Form(...),
     gender: str = Form(...),
     age: int = Form(...),
-    egg_count_per_field: int = Form(0),
     complaints: Optional[List[str]] = Form(None),
     lang: str = Form("uz"),
 ):
@@ -106,10 +115,7 @@ async def analyze_parasitology(
     mime = "image/png" if ext == ".png" else "image/jpeg"
     data_url = f"data:{mime};base64,{img_b64}"
 
-    prompt = _build_prompt(
-        microscopy_method, magnification, gender,
-        age, egg_count_per_field, complaints or [], lang
-    )
+    prompt = _build_prompt(magnification, gender, age, complaints or [], lang)
 
     parsed = {}
     try:

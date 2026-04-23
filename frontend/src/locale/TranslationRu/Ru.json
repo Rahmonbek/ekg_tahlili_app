@@ -239,5 +239,17 @@
   "ai_analyse": "Анализ с ИИ",
   "select_analyse_mode": "Выберите режим анализа",
   "click_or_drag_file": "Выберите файл или перетащите сюда",
-  "clear_filters": "Сбросить фильтры"
+  "clear_filters": "Сбросить фильтры",
+  "today_stats": "Анализы за сегодня",
+  "quick_actions": "Быстрые действия",
+  "new": "новых",
+  "total": "Всего",
+  "new_parasitology_analyse": "Новый паразитологический анализ",
+  "view_image": "Просмотр изображения",
+  "egg_count": "Количество яиц",
+  "total_egg_count": "Всего яиц",
+  "adult_worm": "Взрослый паразит",
+  "detected_short": "Обнаружен",
+  "not_detected_short": "Не обнаружен",
+  "egg_morphology": "Морфология яиц"
 }

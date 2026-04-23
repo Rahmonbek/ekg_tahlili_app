@@ -1,11 +1,9 @@
 {
-  "agent": "nmed-system-architect",
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1"
   },
   "permissions": {
-    "mode": "acceptEdits",
     "allow": [
       "Bash(grep *)",
       "Bash(dotnet ef *)",
@@ -19,14 +17,23 @@
       "Bash(echo *)",
       "Read(*)",
       "Glob(*)",
-      "Grep(*)"
+      "Grep(*)",
+      "Bash(pip install *)",
+      "Bash(python -c \"from auth_middleware import verify_token; print\\('auth_middleware OK'\\)\")",
+      "Bash(python -c \"import main; print\\('main.py OK'\\)\")",
+      "Bash(python -m uvicorn main:app --host 127.0.0.1 --port 8000 --timeout-graceful-shutdown 1)",
+      "Bash(curl -s http://127.0.0.1:8000/docs)",
+      "Bash(kill %1)",
+      "Bash(taskkill /F /PID 24340)"
     ],
     "deny": [
       "Bash(rm -rf /)",
       "Bash(drop database *)",
       "Bash(mkfs *)"
-    ]
+    ],
+    "mode": "acceptEdits"
   },
+  "agent": "nmed-system-architect",
   "teammateMode": "in-process",
   "effort": "high"
 }

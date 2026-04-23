@@ -14,15 +14,7 @@ export default function EmptyState({ icon, message, actionLabel, actionPath }) {
         }}>
             <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.5 }}>{icon}</div>
             <p style={{ fontSize: 15, fontWeight: 500, marginBottom: 16, color: '#64748b' }}>{message}</p>
-            {actionLabel && actionPath && (
-                <button
-                    onClick={() => navigate(actionPath)}
-                    className="btn_form"
-                    style={{ width: 'auto', padding: '0 24px', marginTop: 0 }}
-                >
-                    + {actionLabel}
-                </button>
-            )}
+           
         </div>
     );
 }

@@ -1,6 +1,8 @@
+import { Image } from 'antd';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IoIosArrowBack, IoIosArrowDown } from 'react-icons/io';
+import { imgApi } from '../../../host/Host';
 import { formatDateTime } from '../../../tools/formatters';
 import ParasitologyResult from './ParasitologyResult';
 
@@ -45,9 +47,7 @@ export default function ParasitologyOldResult({ data, initialOpen = false }) {
             <h1 onClick={() => setOpen(!open)}>
                 <p>{formatDateTime(data.createdAt)}</p>
                 <p>
-                    {methodLabel}
-                    {data.magnification ? ` · ${data.magnification}` : ''}
-                    {' · '}
+                    
                     {statusLabel}
                     <span>{open ? <IoIosArrowDown /> : <IoIosArrowBack />}</span>
                 </p>
@@ -72,8 +72,18 @@ export default function ParasitologyOldResult({ data, initialOpen = false }) {
                             ))}
                         </div>
                     )}
+                    {data.filePath && !parsed && (
+                        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                            <Image
+                                src={imgApi + data.filePath}
+                                alt="parasitology"
+                                style={{ maxHeight: 400, borderRadius: 8, objectFit: 'contain' }}
+                                preview={{ mask: t('view_image') }}
+                            />
+                        </div>
+                    )}
                     {parsed
-                        ? <ParasitologyResult result={parsed} />
+                        ? <ParasitologyResult result={parsed} image={data.filePath} />
                         : <p className="ecg_label">{t('not_analysed')}</p>
                     }
                 </div>

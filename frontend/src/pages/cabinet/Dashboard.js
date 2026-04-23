@@ -1,57 +1,47 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { FaHeartbeat, FaPlus, FaFlask } from 'react-icons/fa';
+import { FaHeartbeat, FaPlus, FaFlask, FaMicroscope } from 'react-icons/fa';
 import { RiPulseLine } from 'react-icons/ri';
 import { FaChartLine } from 'react-icons/fa';
 import { MdOutlineMedicalInformation } from 'react-icons/md';
 import { useStore } from '../../store/Store';
 import StatCard from '../../components/shared/StatCard';
-import { get_ecg_analyses_by_clinic, get_ecg_analyses_by_doctor } from '../../host/requests/ECGAnalyseRequest';
-import { get_holter_analyses_by_clinic, get_holter_analyses_by_doctor } from '../../host/requests/HolterAnalyseRequest';
-import { get_smad_analyses_by_clinic, get_smad_analyses_by_doctor } from '../../host/requests/SmadAnalyseRequest';
-import { get_lab_analyses_by_clinic, get_lab_analyses_by_doctor } from '../../host/requests/LabAnalyseRequest';
-import { get_diagnose_by_clinic, get_diagnose_by_doctor } from '../../host/requests/DiagnoseRequest';
+import { get_dashboard_statistics } from '../../host/requests/DashboardRequest';
 import dayjs from 'dayjs';
+
+const EMPTY_COUNTS = { ecg: null, holter: null, smad: null, lab: null, diagnoses: null, parasitology: null };
 
 export default function Dashboard() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { user, ecg_unread, holter_unread, smad_unread, lab_unread, diagnoses_unread } = useStore();
-    const isDoctor = user && user.roleId === 4;
 
-    const [stats, setStats] = useState({ ecg: null, holter: null, smad: null, lab: null, diagnoses: null });
+    const [today, setToday] = useState(EMPTY_COUNTS);
+    const [allTime, setAllTime] = useState(EMPTY_COUNTS);
     const [loading, setLoading] = useState(true);
 
-    const today = dayjs().format('YYYY-MM-DD');
-
     useEffect(() => {
-        const fetchAll = async () => {
+        const fetchStats = async () => {
             setLoading(true);
-            const params = { page: 1, pageSize: 1, dateFrom: today, dateTo: today };
-            const clinicFetch = isDoctor
-                ? [
-                    get_ecg_analyses_by_doctor(params),
-                    get_holter_analyses_by_doctor(params),
-                    get_smad_analyses_by_doctor(params),
-                    get_lab_analyses_by_doctor(params),
-                    get_diagnose_by_doctor(params),
-                ]
-                : [
-                    get_ecg_analyses_by_clinic(params),
-                    get_holter_analyses_by_clinic(params),
-                    get_smad_analyses_by_clinic(params),
-                    get_lab_analyses_by_clinic(params),
-                    get_diagnose_by_clinic(params),
-                ];
             try {
-                const [ecgRes, holterRes, smadRes, labRes, diagRes] = await Promise.allSettled(clinicFetch);
-                setStats({
-                    ecg: ecgRes.status === 'fulfilled' ? ecgRes.value.data.totalCount : null,
-                    holter: holterRes.status === 'fulfilled' ? holterRes.value.data.totalCount : null,
-                    smad: smadRes.status === 'fulfilled' ? smadRes.value.data.totalCount : null,
-                    lab: labRes.status === 'fulfilled' ? labRes.value.data.totalCount : null,
-                    diagnoses: diagRes.status === 'fulfilled' ? diagRes.value.data.totalCount : null,
+                const res = await get_dashboard_statistics();
+                const data = res.data;
+                setToday({
+                    ecg: data.today.ecg,
+                    holter: data.today.holter,
+                    smad: data.today.smad,
+                    lab: data.today.lab,
+                    diagnoses: data.today.diagnoses,
+                    parasitology: data.today.parasitology,
+                });
+                setAllTime({
+                    ecg: data.allTime.ecg,
+                    holter: data.allTime.holter,
+                    smad: data.allTime.smad,
+                    lab: data.allTime.lab,
+                    diagnoses: data.allTime.diagnoses,
+                    parasitology: data.allTime.parasitology,
                 });
             } catch {
                 // leave nulls
@@ -59,8 +49,67 @@ export default function Dashboard() {
                 setLoading(false);
             }
         };
-        fetchAll();
-    }, [isDoctor, today]);
+        fetchStats();
+    }, []);
+
+    const val = (v) => (loading ? '...' : v);
+
+    const cards = [
+        {
+            icon: <FaHeartbeat />,
+            title: t('analyse_ecg') || 'EKG Tahlillar',
+            value: val(today.ecg),
+            allTimeValue: loading ? null : allTime.ecg,
+            subValue: ecg_unread,
+            color: '#00D1B2',
+            path: '/ecg-analyses',
+        },
+        {
+            icon: <RiPulseLine />,
+            title: t('analyse_holter') || 'Holter',
+            value: val(today.holter),
+            allTimeValue: loading ? null : allTime.holter,
+            subValue: holter_unread,
+            color: '#6366f1',
+            path: '/holter-analyses',
+        },
+        {
+            icon: <FaChartLine />,
+            title: t('analyse_smad') || 'SMAD',
+            value: val(today.smad),
+            allTimeValue: loading ? null : allTime.smad,
+            subValue: smad_unread,
+            color: '#f59e0b',
+            path: '/smad-analyses',
+        },
+        {
+            icon: <FaFlask />,
+            title: t('analyse_lab') || 'Lab',
+            value: val(today.lab),
+            allTimeValue: loading ? null : allTime.lab,
+            subValue: lab_unread,
+            color: '#10b981',
+            path: '/lab-analyses',
+        },
+        {
+            icon: <MdOutlineMedicalInformation />,
+            title: t('patient_diagnostics') || 'Tashxislar',
+            value: val(today.diagnoses),
+            allTimeValue: loading ? null : allTime.diagnoses,
+            subValue: diagnoses_unread,
+            color: '#ef4444',
+            path: '/patient-diagnoses',
+        },
+        {
+            icon: <FaMicroscope />,
+            title: t('parasitology_analyse') || 'Parazitologiya',
+            value: val(today.parasitology),
+            allTimeValue: loading ? null : allTime.parasitology,
+            subValue: 0,
+            color: '#8b5cf6',
+            path: '/parasitology-analyses',
+        },
+    ];
 
     const quickActions = [
         { label: t('new_ecg_analyse') || 'Yangi EKG', path: '/analyse-ecg', icon: <FaHeartbeat /> },
@@ -68,6 +117,7 @@ export default function Dashboard() {
         { label: t('new_smad_analyse') || 'Yangi SMAD', path: '/analyse-smad', icon: <FaChartLine /> },
         { label: t('new_lab_analyse') || 'Yangi Lab', path: '/analyse-lab', icon: <FaFlask /> },
         { label: t('new_diagnose') || 'Yangi Tashxis', path: '/diagnoses-create', icon: <MdOutlineMedicalInformation /> },
+        { label: t('new_parasitology_analyse') || 'Yangi Parazitologiya', path: '/parasitology-analyzer', icon: <FaMicroscope /> },
     ];
 
     return (
@@ -82,51 +132,20 @@ export default function Dashboard() {
                 <div className="main_card_content">
                     <p className="dashboard_section_label">{t('today_stats') || 'Bugungi tahlillar'}</p>
                     <div className="stat_cards_grid">
-                        <StatCard
-                            icon={<FaHeartbeat />}
-                            title={t('analyse_ecg') || 'EKG Tahlillar'}
-                            value={loading ? '...' : stats.ecg}
-                            subValue={ecg_unread}
-                            subLabel={t('new') || 'yangi'}
-                            color="#00D1B2"
-                            path="/ecg-analyses"
-                        />
-                        <StatCard
-                            icon={<RiPulseLine />}
-                            title={t('analyse_holter') || 'Holter'}
-                            value={loading ? '...' : stats.holter}
-                            subValue={holter_unread}
-                            subLabel={t('new') || 'yangi'}
-                            color="#6366f1"
-                            path="/holter-analyses"
-                        />
-                        <StatCard
-                            icon={<FaChartLine />}
-                            title={t('analyse_smad') || 'SMAD'}
-                            value={loading ? '...' : stats.smad}
-                            subValue={smad_unread}
-                            subLabel={t('new') || 'yangi'}
-                            color="#f59e0b"
-                            path="/smad-analyses"
-                        />
-                        <StatCard
-                            icon={<FaFlask />}
-                            title={t('analyse_lab') || 'Lab'}
-                            value={loading ? '...' : stats.lab}
-                            subValue={lab_unread}
-                            subLabel={t('new') || 'yangi'}
-                            color="#10b981"
-                            path="/lab-analyses"
-                        />
-                        <StatCard
-                            icon={<MdOutlineMedicalInformation />}
-                            title={t('patient_diagnostics') || 'Tashxislar'}
-                            value={loading ? '...' : stats.diagnoses}
-                            subValue={diagnoses_unread}
-                            subLabel={t('new') || 'yangi'}
-                            color="#ef4444"
-                            path="/patient-diagnoses"
-                        />
+                        {cards.map((card) => (
+                            <StatCard
+                                key={card.path}
+                                icon={card.icon}
+                                title={card.title}
+                                value={card.value}
+                                subValue={card.subValue}
+                                subLabel={t('new') || 'yangi'}
+                                allTimeValue={card.allTimeValue}
+                                allTimeLabel={t('total') || 'Jami'}
+                                color={card.color}
+                                path={card.path}
+                            />
+                        ))}
                     </div>
 
                     <p className="dashboard_section_label" style={{ marginTop: 32 }}>

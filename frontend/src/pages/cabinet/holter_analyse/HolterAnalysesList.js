@@ -246,9 +246,13 @@ export default function HolterAnalysesList() {
             <div className="main_card">
                 <h1>
                     {t('analyse_holter') || 'Holter Tahlillar'}
-                    <span style={{ fontSize: 13, fontWeight: 400, color: '#94a3b8' }}>
-                        {total > 0 ? ` — ${total} ta` : ''}
-                    </span>
+                    <button
+                    onClick={() => navigate('/analyse-holter')}
+                    className="btn_form"
+                    style={{ width: 'auto', padding: '0 24px', marginTop: 0 }}
+                >
+                    {t('create_new_holter_analyse') || 'Yangi Holter tahlil'}
+                </button>
                 </h1>
                 <div className="main_card_content big_card_content">
 
@@ -259,7 +263,7 @@ export default function HolterAnalysesList() {
                                 <div>
                                     <label className="filter_label">{t('search_by_patient')}</label>
                                     <Input
-                                        prefix={<FaSearch style={{ color: '#aaa' }} />}
+                                        
                                         placeholder={t('search_by_patient')}
                                         value={searchInput}
                                         onChange={(e) => setSearchInput(e.target.value)}

@@ -209,16 +209,14 @@ export default function ParasitologyAnalysesList() {
             <div className="main_card">
                 <h1>
                     {t('parasitology_analyse') || 'Parazitologik tahlillar'}
-                    <span style={{ fontSize: 13, fontWeight: 400, color: '#94a3b8' }}>
-                        {total > 0 ? ` — ${total} ta` : ''}
-                    </span>
-                    <span
-                        className="h1_add_btn"
-                        onClick={() => navigate('/parasitology-analyzer')}
-                        title={t('new_lab_analyse') || 'Yangi tahlil'}
-                    >
-                        <FaPlus />
-                    </span>
+                   
+                     <button
+                    onClick={() => navigate('/parasitology-analyzer')}
+                    className="btn_form"
+                    style={{ width: 'auto', padding: '0 24px', marginTop: 0 }}
+                >
+                    {t('create_new_parasitology_analyse') || 'Yangi tahlil'}
+                </button>
                 </h1>
                 <div className="main_card_content big_card_content">
 
@@ -229,7 +227,7 @@ export default function ParasitologyAnalysesList() {
                                 <div>
                                     <label className="filter_label">{t('search_by_patient')}</label>
                                     <Input
-                                        prefix={<FaSearch style={{ color: '#aaa' }} />}
+                                        
                                         placeholder={t('search_by_patient')}
                                         value={searchInput}
                                         onChange={(e) => setSearchInput(e.target.value)}

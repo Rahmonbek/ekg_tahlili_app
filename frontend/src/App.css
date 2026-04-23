@@ -461,7 +461,7 @@ input:-webkit-autofill:active {
 }
 
 .sidebar_head h1 {
-  font-size: var(--very_large_size);
+  font-size: var(--extra_large_size);
   transition: 0.3s;
   white-space: nowrap;
   color: var(--text_color);
@@ -488,7 +488,7 @@ input:-webkit-autofill:active {
   overflow: hidden;
   align-items: center;
   margin: 10px 0px;
-  padding: 10px;
+  padding:5px;
   border-radius: 12px;
 }
 
@@ -500,7 +500,7 @@ input:-webkit-autofill:active {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--extra_large_size);
+  font-size: var(--large_size);
   color: var(--back_color);
   margin-right: 10px;
   box-shadow: rgba(0, 0, 0, 0.02) 0px 3.5px 5.5px;
@@ -517,7 +517,6 @@ input:-webkit-autofill:active {
 
 .active_sidebar_item {
   background-color: #E6FAF8;
-  border-left: 0px solid var(--back_color);
 }
 
 .active_sidebar_item .sidebar_title {
@@ -669,7 +668,7 @@ input:-webkit-autofill:active {
   padding: 14px 20px;
   background: #ffffff;
   border-bottom: 1px solid var(--border_color);
-  font-size: var(--small_size);
+  font-size: var(--medium_size);
   font-weight: 700;
   color: var(--text_color);
   display: flex;
@@ -1275,6 +1274,7 @@ td {
   font-size: var(--small_size);
 }
 
+.main_card h1 .btn_form{margin-top: 0px !important;}
 @media (max-width:1700px) {
   .login_img img {
     width: 100%;

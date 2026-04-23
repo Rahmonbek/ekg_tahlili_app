@@ -27,5 +27,8 @@ requests
 fuzzywuzzy
 python-Levenshtein
 
+# Autentifikatsiya
+PyJWT
+
 # Boshqalar
 python-dotenv

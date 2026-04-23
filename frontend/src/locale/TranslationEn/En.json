@@ -238,5 +238,17 @@
   "ai_analyse": "Analyze with AI",
   "select_analyse_mode": "Select analysis mode",
   "click_or_drag_file": "Select a file or drag it here",
-  "clear_filters": "Clear filters"
+  "clear_filters": "Clear filters",
+  "today_stats": "Today's analyses",
+  "quick_actions": "Quick actions",
+  "new": "new",
+  "total": "Total",
+  "new_parasitology_analyse": "New parasitology analysis",
+  "view_image": "View image",
+  "egg_count": "Egg count",
+  "total_egg_count": "Total egg count",
+  "adult_worm": "Adult parasite",
+  "detected_short": "Detected",
+  "not_detected_short": "Not detected",
+  "egg_morphology": "Egg morphology"
 }

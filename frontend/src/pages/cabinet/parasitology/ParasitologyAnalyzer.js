@@ -92,7 +92,7 @@ export default function ParasitologyAnalyzer() {
             formData.append('PatcientId', patcient.id);
             formData.append('CreatedDoctorId', user.doctor.id);
             formData.append('ClinicId', user.clinic.id);
-            formData.append('MicroscopyMethod', values.microscopy_method);
+            formData.append('Magnification', values.magnification);
             formData.append('Lang', state.lang);
 
             const res = await analyzeParasitologyFile(formData);
@@ -215,17 +215,19 @@ export default function ParasitologyAnalyzer() {
 
                                 <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
                                     <Form.Item
-                                        name="microscopy_method"
-                                        label={t('microscopy_method')}
+                                        name="magnification"
+                                        label={t('magnification')}
                                         rules={[{ required: true, message: '' }]}
                                     >
                                         <Select
                                             style={{ width: '100%' }}
                                             options={[
-                                                { value: 'direct_smear', label: t('direct_smear') },
-                                                { value: 'kato_katz', label: t('kato_katz') },
-                                                { value: 'flotation', label: t('flotation') },
-                                                { value: 'fecpakg', label: 'FECPAKG' },
+                                                { value: '4x', label: '4x' },
+                                                { value: '10x', label: '10x' },
+                                                { value: '40x', label: '40x' },
+                                                { value: '100x', label: '100x' },
+                                                { value: '400x', label: '400x' },
+                                                { value: '1000x', label: '1000x' },
                                             ]}
                                         />
                                     </Form.Item>
@@ -276,7 +278,7 @@ export default function ParasitologyAnalyzer() {
                             />
                         ) : (
                             <>
-                                <ParasitologyResult result={state.result} />
+                                <ParasitologyResult result={state.result} image={state.image} />
                                 <br />
                                 <Row>
                                     <Col lg={9} xs={24} sm={24} md={24} />

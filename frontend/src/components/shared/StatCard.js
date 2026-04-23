@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function StatCard({ icon, title, value, subValue, subLabel, color = '#00D1B2', path }) {
+export default function StatCard({ icon, title, value, subValue, subLabel, allTimeValue, allTimeLabel, color = '#00D1B2', path }) {
     const navigate = useNavigate();
     return (
         <div
@@ -14,12 +14,13 @@ export default function StatCard({ icon, title, value, subValue, subLabel, color
             </div>
             <div className="stat_card_body">
                 <p className="stat_card_title">{title}</p>
-                <h2 className="stat_card_value">{value ?? '—'}</h2>
+                <h2 className="stat_card_value">{allTimeValue ?? '—'}</h2>
                 {subValue > 0 && (
                     <span className="stat_card_sub" style={{ color }}>
                         {subValue} {subLabel}
                     </span>
                 )}
+               
             </div>
         </div>
     );
