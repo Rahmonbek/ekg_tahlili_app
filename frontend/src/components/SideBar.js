@@ -48,10 +48,10 @@ useEffect(() => {
 
   return (
     <div className={`sidebar ${!open_menu?"closed_menu":''}`}>
-        <div className='sidebar_head'>
+        <Link to={'/'} className='sidebar_head'>
             <img src={logo} alt="logo"/>
             <h1>N MED AI</h1>
-        </div>
+        </Link>
         <div className='sidebar_line'></div>
         <div className='sidebar_menu'>
             {routers.map((item, index)=>{

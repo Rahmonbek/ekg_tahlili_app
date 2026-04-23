@@ -326,7 +326,7 @@ label {
 
 .selected_lang {
   display: flex;
-  width: 100px;
+  width: 85px;
   align-items: center;
   justify-content: space-between;
   padding: 5px 10px;
