@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { get_diagnose_by_clinic, get_diagnose_by_doctor, get_diagnose_by_nurse, mark_diagnose_viewed } from '../../../host/requests/DiagnoseRequest';
 import { formatDate, calculateAge } from '../../../tools/formatters';
 import { useStore } from '../../../store/Store';
+import EmptyState from '../../../components/shared/EmptyState';
+import { MdOutlineMedicalInformation } from 'react-icons/md';
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -167,9 +169,24 @@ export default function DiagnosesList() {
         },
     ];
 
+    const hasActiveFilters = searchInput || (dateRange[0] || dateRange[1]);
+
+    const handleClearFilters = () => {
+        setSearchInput('');
+        setDateRange([null, null]);
+        setPage(1);
+        fetchData(1, '', null, [null, null]);
+    };
+
     return (
         <div>
             <div className="main_card">
+                <h1>
+                    {t('patient_diagnostics') || 'Tibbiy Tashxislar'}
+                    <span style={{ fontSize: 13, fontWeight: 400, color: '#94a3b8' }}>
+                        {total > 0 ? ` — ${total} ta` : ''}
+                    </span>
+                </h1>
                 <div className="main_card_content big_card_content">
 
                     {/* Toolbar */}
@@ -205,10 +222,15 @@ export default function DiagnosesList() {
                                     <button onClick={handleSearch} className="btn_form" style={{ flex: 1, margin: 0, height: '48px' }}>
                                         {t('search_patcient')}
                                     </button>
-                                    <button onClick={() => navigate('/diagnoses-create')} className="btn_form text-white" style={{ width: '50px', margin: 0, height: '48px', backgroundColor: '#00D1B2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <button onClick={() => navigate('/diagnoses-create')} className="btn_form" style={{ width: '48px', flexShrink: 0, margin: 0, height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <FaPlus />
                                     </button>
                                 </div>
+                                {hasActiveFilters && (
+                                    <button onClick={handleClearFilters} style={{ marginTop: 6, background: 'none', color: '#94a3b8', fontSize: 13, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
+                                        {t('clear_filters') || 'Filtrlarni tozalash'}
+                                    </button>
+                                )}
                             </Col>
                         </Row>
                     </div>
@@ -220,11 +242,23 @@ export default function DiagnosesList() {
                             loading={loading}
                             dataSource={data}
                             columns={columns}
+                            rowClassName={(row) => (!row.isViewed && isDoctor) ? 'table_row_unviewed' : ''}
+                            locale={{
+                                emptyText: (
+                                    <EmptyState
+                                        icon={<MdOutlineMedicalInformation />}
+                                        message={t('no_diagnoses') || 'Hech qanday tashxis topilmadi'}
+                                        actionLabel={t('new_diagnose') || 'Yangi tashxis'}
+                                        actionPath="/diagnoses-create"
+                                    />
+                                )
+                            }}
                             pagination={{
                                 current: page,
                                 pageSize: PAGE_SIZE,
                                 total: total,
                                 showSizeChanger: false,
+                                showTotal: (tot) => `${tot} ta natija`,
                                 onChange: (p) => setPage(p),
                             }}
                         />

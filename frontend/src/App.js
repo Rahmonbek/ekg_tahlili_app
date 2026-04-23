@@ -53,7 +53,6 @@ getUserData()
          setuser(res.data)
          setuser_id(res.data.id)
          setfirst_load(true)
-         console.log(res)
          if(res.data.doctor==null || res.data.doctor.firstName==null){
           setopen_admin_modal(true)
          }
@@ -61,7 +60,9 @@ getUserData()
            fetchUnreadCounts()
          }
       }catch(err){
-        console.log(err)
+        // token yo'q yoki muddati o'tgan — login ga yo'naltir
+        navigate("/")
+        setfirst_load(true)
       }finally{
 
       }

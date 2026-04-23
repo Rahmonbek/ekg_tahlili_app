@@ -1,27 +1,38 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 
 :root {
-  --big_main_padding_for_media: 4vw;
-  --big_main_padding: 2vw;
-  --main_padding: 1vw;
-  --main_mini_padding: 0.5vw;
-  --mini_size: 14px;
-  --small_size: 16px;
-  --center_size: 17px;
-  --medium_size: 18px;
+  /* Spacing — fixed px (8px grid) */
+  --big_main_padding_for_media: 48px;
+  --big_main_padding: 32px;
+  --main_padding: 16px;
+  --main_mini_padding: 8px;
+
+  /* Typography */
+  --mini_size: 12px;
+  --small_size: 14px;
+  --center_size: 16px;
+  --medium_size: 17px;
   --large_size: 20px;
   --extra_large_size: 24px;
   --very_large_size: 30px;
+
+  /* Colors */
   --grey_color: #A0AEC0;
+  --sidebar_text_color: #64748B;
   --text_color: #2a5267;
   --text_second_color: #416d83;
   --back_color: #4FD1C5;
   --back_hover_color: #38B2AC;
   --cancel_color: #5bb0df;
   --cancel_hover_color: #427c9b;
-  --border_color: #d9d9d9;
+  --border_color: #E8ECF0;
   --back_gradient_color: #2AA79B;
   --back_second_color: #56f79e;
+
+  /* Sidebar */
+  --sidebar_width: 260px;
+  --sidebar_closed_width: 100px;
+  --card_radius: 12px;
 }
 
 * {
@@ -31,9 +42,14 @@
   text-decoration: none;
   list-style: none;
   border: none;
-  outline: none;
   font-family: 'Open Sans', sans-serif;
+}
 
+/* WCAG 2.4.7 — Focus Visible: keyboard navigation uchun focus ring */
+*:focus-visible {
+  outline: 2px solid #4FD1C5;
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 body {
@@ -126,12 +142,14 @@ body {
 }
 
 .login_form h1 {
-  font-size: var(--large_size);
-  color: white;
+  font-size: var(--small_size);
+  color: var(--text_color);
   text-align: center;
-  padding: 15px;
-  background: linear-gradient(var(--back_color), var(--back_hover_color));
-  margin-bottom: 25px;
+  padding: 20px 15px 8px;
+  background: transparent;
+  margin-bottom: 8px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
@@ -167,7 +185,7 @@ input,
 .ant-select-selection-item {
   padding: 10px !important;
   font-size: var(--small_size) !important;
-  height: 46px !important;
+  height: 42px !important;
   display: flex !important;
   align-items: center;
   border-radius: 12px !important;
@@ -191,14 +209,14 @@ input,
 }
 
 .ant-select-selector {
-  height: 46px !important;
+  height: 42px !important;
   border-radius: 12px !important;
   padding-left: 0px !important;
 }
 
-.ant-form-item-required::before,
-.ant-form-item-required::after {
-  display: none !important;
+/* Required field indicator — WCAG: foydalanuvchi qaysi maydon majburiyligini bilishi kerak */
+.ant-form-item-required::before {
+  color: #ff4d4f !important;
 }
 
 label {
@@ -226,7 +244,7 @@ label {
   width: 100%;
   background: linear-gradient(var(--back_color), var(--back_hover_color));
   color: white !important;
-  height: 46px !important;
+  height: 42px !important;
   font-size: var(--small_size);
   border: none !important;
   border-radius: 12px !important;
@@ -419,11 +437,14 @@ input:-webkit-autofill:active {
 }
 
 .sidebar {
-  width: 350px;
+  width: var(--sidebar_width);
   transition: 0.3s;
   overflow: hidden;
   height: 100%;
   padding: var(--main_padding);
+  background-color: #ffffff;
+  border-right: 1px solid var(--border_color);
+  flex-shrink: 0;
 }
 
 .sidebar_head {
@@ -489,13 +510,14 @@ input:-webkit-autofill:active {
   font-weight: 600;
   font-size: var(--small_size);
   transition: 0.3s;
-  color: var(--grey_color);
+  color: var(--sidebar_text_color);
   white-space: nowrap;
+  flex: 1;
 }
 
 .active_sidebar_item {
-  background-color: white;
-  box-shadow: rgba(0, 0, 0, 0.02) 0px 3.5px 5.5px;
+  background-color: #E6FAF8;
+  border-left: 0px solid var(--back_color);
 }
 
 .active_sidebar_item .sidebar_title {
@@ -509,19 +531,26 @@ input:-webkit-autofill:active {
   box-shadow: none;
 }
 
+.sidebar_menu_item:not(.active_sidebar_item):hover {
+  background-color: #F0FFFE;
+}
+
 .content_box {
   width: 100%;
 }
 
 .main_header {
-  height: calc(6vh + var(--main_padding) + var(--main_padding));
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--main_padding);
-  background-color: #F7FAFC;
+  padding: 0 var(--main_padding);
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--border_color);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   z-index: 344;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .header_breadcrumb {
@@ -619,9 +648,8 @@ input:-webkit-autofill:active {
 
 .content {
   width: 100%;
-  padding: 0;
-  padding-right: var(--main_padding);
-  height: calc(100vh - 6vh - var(--main_padding) - var(--main_padding));
+  padding: 0 var(--main_padding);
+  height: calc(100vh - 64px);
   overflow: auto;
 }
 
@@ -638,17 +666,40 @@ input:-webkit-autofill:active {
 }
 
 .main_card h1 {
-  padding: 15px 20px;
-  background: linear-gradient(var(--back_color), var(--back_gradient_color));
-  font-size: var(--medium_size);
-  color: white;
+  padding: 14px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border_color);
+  font-size: var(--small_size);
+  font-weight: 700;
+  color: var(--text_color);
   display: flex;
   justify-content: space-between;
+  align-items: center;
   width: 100%;
 }
 
 .main_card_content {
   padding: var(--main_padding);
+}
+
+.h1_add_btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--main_color);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 14px;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.h1_add_btn:hover {
+  background: var(--main_color_dark, #38b2ac);
+  transform: scale(1.08);
 }
 
 .main_col {
@@ -709,7 +760,7 @@ input:-webkit-autofill:active {
 }
 
 .closed_menu {
-  width: calc(68px + var(--main_padding) + var(--main_padding));
+  width: var(--sidebar_closed_width);
 }
 
 .closed_menu .sidebar_head h1 {
@@ -781,7 +832,8 @@ input:-webkit-autofill:active {
 }
 
 .ekg-image {
-  padding: 0px 30%;
+  max-width: 820px;
+  margin: 20px auto;
   min-height: 190px;
 }
 
@@ -831,9 +883,7 @@ input:-webkit-autofill:active {
   font-size: var(--mini_size);
 }
 
-:where(.css-dev-only-do-not-override-ac2jek).ant-form-item .ant-form-item-explain-error {
-  display: none !important;
-}
+/* Form validation xatolari ko'rsatiladi — faqat password almashtirish sahifasida yashiriladi */
 
 
 .modal-text {
@@ -876,9 +926,14 @@ input:-webkit-autofill:active {
 
 :where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-thead>tr>th,
 :where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-thead>tr>td {
-  background: linear-gradient(var(--back_color), var(--back_gradient_color)) !important;
-  padding: 15px 10px !important;
-  color: white !important;
+  background: #F7FAFC !important;
+  padding: 12px 10px !important;
+  color: #64748B !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.4px !important;
+  border-bottom: 1px solid var(--border_color) !important;
 }
 
 .open_list {
@@ -933,7 +988,7 @@ input:-webkit-autofill:active {
 
 
 .ant-select-multiple .ant-select-selection-wrap {
-  min-height: 46px !important;
+  min-height: 42px !important;
 }
 
 .ant-select-multiple .ant-select-selection-placeholder {
@@ -959,7 +1014,7 @@ input::placeholder,
 
 .ant-select-multiple .ant-select-selector {
   height: auto !important;
-  min-height: 46px !important;
+  min-height: 42px !important;
 }
 
 .ant-select input,
@@ -969,7 +1024,7 @@ input::placeholder,
 }
 
 :where(.css-dev-only-do-not-override-ac2jek).ant-select-single {
-  height: 46px !important;
+  height: 42px !important;
 }
 
 .ant-select-multiple .ant-select-prefix {
@@ -1067,16 +1122,23 @@ input::placeholder,
   line-height: var(--extra_large_size);
 }
 
+/* Severity rangli karta sarlavhalari — AI natijasi darajasiga qarab */
 .avarage_analyse h1 {
-  background: linear-gradient(#f3bd09, #c49300)
+  background: #FFFBEB;
+  color: #92400e;
+  border-bottom-color: #FCD34D;
 }
 
 .danger_analyse h1 {
-  background: linear-gradient(#d14f4f, #a72a2a)
+  background: #FEF2F2;
+  color: #7f1d1d;
+  border-bottom-color: #FCA5A5;
 }
 
 .unknown_analyse h1 {
-  background: linear-gradient(#009aff, #0062b4)
+  background: #EFF6FF;
+  color: #1e3a8a;
+  border-bottom-color: #93C5FD;
 }
 
 .old_analyse h1 {
@@ -1178,13 +1240,13 @@ input::placeholder,
 }
 
 .ant-picker {
-  height: 46px !important;
+  height: 42px !important;
   border-radius: 12px !important;
   width: 100%;
 }
 
 .ant-input-affix-wrapper input {
-  height: 44px !important;
+  height: 40px !important;
 }
 
 .ant-select-selection-search input {
@@ -1240,6 +1302,7 @@ td {
     position: absolute !important;
     z-index: 0 !important;
     opacity: 0 !important;
+    border-right: none !important;
   }
 
   .sidebar {
@@ -1294,6 +1357,71 @@ td {
   }
 }
 
+/* ─── Radio.Group — brand rang (teal) ─── */
+.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+  background: linear-gradient(var(--back_color), var(--back_hover_color)) !important;
+  border-color: var(--back_hover_color) !important;
+  color: white !important;
+}
+.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before {
+  background-color: var(--back_hover_color) !important;
+}
+.ant-radio-button-wrapper:hover {
+  color: var(--back_color) !important;
+}
+
+/* ─── Upload.Dragger — brand rang ─── */
+.ant-upload-drag:hover {
+  border-color: var(--back_color) !important;
+}
+.ant-upload-drag-icon .anticon {
+  color: var(--back_color) !important;
+}
+
+/* ─── Jadval — ko'rilmagan qator ajratish ─── */
+.table_row_unviewed td {
+  background-color: #FFFBEB !important;
+}
+.table_row_unviewed:hover td {
+  background-color: #FEF3C7 !important;
+}
+
+/* ─── Dashboard ─── */
+.dashboard_section_label {
+  font-size: var(--small_size);
+  font-weight: 700;
+  color: var(--text_second_color);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat_cards_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.quick_actions_grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.quick_action_btn {
+  width: auto !important;
+  padding: 0 20px !important;
+  margin-top: 0 !important;
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.quick_action_icon {
+  font-size: var(--large_size);
+}
+
 .ant-select-selection-search-input {
   border-radius: 0px !important;
 }
@@ -1324,7 +1452,7 @@ td {
   }
 
   .main_header {
-    height: 8vh !important;
+    height: 56px !important;
   }
 
   .login_form h1 {
@@ -1413,5 +1541,138 @@ td {
     overflow: hidden !important;
     overflow-x: auto !important;
     background-color: white !important;
+  }
+}
+
+/* Ko'rilmagan jadval qatori highlight */
+.table_row_unviewed td {
+  background: #FFFBEB !important;
+  border-left: 3px solid #FAAD14;
+}
+
+.table_row_unviewed:hover td {
+  background: #FEF3C7 !important;
+}
+
+/* Ant Design jadval qatori hover */
+.ant-table-tbody>tr:not(.table_row_unviewed):hover>td {
+  background: #F0FFFE !important;
+}
+
+/* ─── Dashboard ─────────────────────────────────────────────── */
+.dashboard_section_label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+
+.stat_cards_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.stat_card {
+  background: #ffffff;
+  border: 1px solid var(--border_color);
+  border-radius: var(--card_radius);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.stat_card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.stat_card_icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.stat_card_body {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat_card_title {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stat_card_value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text_color);
+  line-height: 1.1;
+}
+
+.stat_card_sub {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.quick_actions_grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.quick_action_btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: auto !important;
+  padding: 0 20px !important;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.quick_action_icon {
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+}
+
+/* Chop etish uchun stil */
+@media print {
+
+  .sidebar,
+  .main_header,
+  .filter_form_box,
+  .ant-pagination,
+  .btn_form,
+  .menu_close {
+    display: none !important;
+  }
+
+  .content_box {
+    width: 100% !important;
+  }
+
+  .main_card {
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  .ekg-image {
+    max-width: 100% !important;
   }
 }

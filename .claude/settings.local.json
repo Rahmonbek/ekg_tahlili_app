@@ -1,14 +1,32 @@
 {
+  "agent": "nmed-system-architect",
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1"
+  },
   "permissions": {
+    "mode": "acceptEdits",
     "allow": [
-      "Bash(grep -E \"\\\\.cs$\")",
-      "Bash(dotnet ef:*)",
-      "Bash(dotnet build:*)",
+      "Bash(grep *)",
+      "Bash(dotnet ef *)",
+      "Bash(dotnet build *)",
       "Bash(dotnet run *)",
-      "Bash(echo \"Backend starting with PID $!\")",
       "Bash(npm start *)",
-      "Bash(echo \"Frontend starting with PID $!\")",
-      "Bash(netstat -ano)"
+      "Bash(netstat *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(git diff *)",
+      "Bash(echo *)",
+      "Read(*)",
+      "Glob(*)",
+      "Grep(*)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(drop database *)",
+      "Bash(mkfs *)"
     ]
-  }
+  },
+  "teammateMode": "in-process",
+  "effort": "high"
 }

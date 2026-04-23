@@ -92,6 +92,69 @@ public class ParasitologyAnalyseController : ControllerBase
         }
     }
 
+    [HttpGet("get-by-clinic")]
+    public async Task<IActionResult> GetByClinic(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? search = null,
+        [FromQuery] string? status = null,
+        [FromQuery] DateTime? dateFrom = null,
+        [FromQuery] DateTime? dateTo = null,
+        [FromQuery] int? jiddiylik = null)
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null) return Unauthorized();
+
+        var userId = int.Parse(userIdClaim.Value);
+        var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
+        if (doctor?.ClinicId == null) return BadRequest(new { message = "Klinika aniqlanmadi" });
+
+        var result = await _service.GetByClinicAsync(doctor.ClinicId.Value, page, pageSize, search, status, dateFrom, dateTo, jiddiylik);
+        return Ok(result);
+    }
+
+    [HttpGet("get-by-doctor")]
+    public async Task<IActionResult> GetByDoctor(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? search = null,
+        [FromQuery] string? status = null,
+        [FromQuery] DateTime? dateFrom = null,
+        [FromQuery] DateTime? dateTo = null,
+        [FromQuery] int? jiddiylik = null)
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null) return Unauthorized();
+
+        var userId = int.Parse(userIdClaim.Value);
+        var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
+        if (doctor == null) return BadRequest(new { message = "Shifokor topilmadi" });
+
+        var result = await _service.GetByDoctorAsync(doctor.Id, page, pageSize, search, status, dateFrom, dateTo, jiddiylik);
+        return Ok(result);
+    }
+
+    [HttpGet("get-by-nurse")]
+    public async Task<IActionResult> GetByNurse(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? search = null,
+        [FromQuery] string? status = null,
+        [FromQuery] DateTime? dateFrom = null,
+        [FromQuery] DateTime? dateTo = null,
+        [FromQuery] int? jiddiylik = null)
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null) return Unauthorized();
+
+        var userId = int.Parse(userIdClaim.Value);
+        var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
+        if (doctor == null) return BadRequest(new { message = "Xodim topilmadi" });
+
+        var result = await _service.GetByNurseAsync(doctor.Id, page, pageSize, search, status, dateFrom, dateTo, jiddiylik);
+        return Ok(result);
+    }
+
     [HttpGet("statistics")]
     [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> GetStatistics(

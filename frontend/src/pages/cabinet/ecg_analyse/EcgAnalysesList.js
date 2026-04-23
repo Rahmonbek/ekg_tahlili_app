@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { get_ecg_analyses_by_clinic, get_ecg_analyses_by_doctor, get_ecg_analyses_by_nurse, mark_ecg_viewed } from '../../../host/requests/ECGAnalyseRequest';
 import { formatDate, calculateAge } from '../../../tools/formatters';
 import { useStore } from '../../../store/Store';
+import EmptyState from '../../../components/shared/EmptyState';
+import { FaHeartbeat } from 'react-icons/fa';
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -29,7 +31,7 @@ export default function EcgAnalysesList() {
     const navigate = useNavigate();
     const { user, setecg_unread } = useStore();
     const isDoctor = user && user.roleId === 4;
-    const isNurse  = user && user.roleId === 5;
+    const isNurse = user && user.roleId === 5;
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -72,7 +74,7 @@ export default function EcgAnalysesList() {
     useEffect(() => {
         fetchData(page, searchInput, statusFilter, dateRange, aiStatusFilter);
         if (isDoctor) {
-            mark_ecg_viewed().then(() => setecg_unread(0)).catch(() => {});
+            mark_ecg_viewed().then(() => setecg_unread(0)).catch(() => { });
         }
     }, [page, fetchData]);
 
@@ -235,9 +237,31 @@ export default function EcgAnalysesList() {
         },
     ];
 
+    const hasActiveFilters = searchInput || statusFilter !== null || aiStatusFilter !== null || (dateRange[0] || dateRange[1]);
+
+    const handleClearFilters = () => {
+        setSearchInput('');
+        setStatusFilter(null);
+        setAiStatusFilter(null);
+        setDateRange([null, null]);
+        setPage(1);
+        fetchData(1, '', null, [null, null], null);
+    };
+
     return (
         <div>
             <div className="main_card">
+                <h1>
+                    <span>
+                        {t('analyse_ecg') || 'EKG Tahlillar'}
+                        <span style={{ fontSize: 13, fontWeight: 400, color: '#94a3b8', marginLeft: 4 }}>
+                            {total > 0 ? `— ${total} ta` : ''}
+                        </span>
+                    </span>
+                    <span className="h1_add_btn" onClick={() => navigate('/analyse-ecg')} title={t('new_ecg_analyse')}>
+                        <FaPlus />
+                    </span>
+                </h1>
                 <div className="main_card_content big_card_content">
 
                     {/* Toolbar */}
@@ -251,8 +275,10 @@ export default function EcgAnalysesList() {
                                         placeholder={t('search_by_patient')}
                                         value={searchInput}
                                         onChange={(e) => setSearchInput(e.target.value)}
+                                        onPressEnter={handleSearch}
                                         className="login_input"
                                         allowClear
+                                        onClear={() => { setSearchInput(''); fetchData(1, '', statusFilter, dateRange, aiStatusFilter); }}
                                     />
                                 </div>
                             </Col>
@@ -261,6 +287,7 @@ export default function EcgAnalysesList() {
                                     <label className="filter_label">{t("date_filter")}</label>
                                     <DatePicker.RangePicker
                                         className="login_input"
+                                        value={dateRange[0] || dateRange[1] ? dateRange : null}
                                         onChange={handleDateRangeChange}
                                         placeholder={[t('date_from'), t('date_to')]}
                                         format="DD.MM.YYYY"
@@ -274,6 +301,7 @@ export default function EcgAnalysesList() {
                                     <Select
                                         className="login_input custom_select"
                                         placeholder={t('filter_by_status')}
+                                        value={statusFilter}
                                         allowClear
                                         onChange={handleStatusChange}
                                         style={{ width: '100%' }}
@@ -291,6 +319,7 @@ export default function EcgAnalysesList() {
                                     <Select
                                         className="login_input custom_select"
                                         placeholder={t('filter_by_ai') || 'AI bo\'yicha'}
+                                        value={aiStatusFilter}
                                         allowClear
                                         onChange={handleAIStatusChange}
                                         style={{ width: '100%' }}
@@ -302,14 +331,17 @@ export default function EcgAnalysesList() {
                                 </div>
                             </Col>
                             <Col xs={24} sm={12} md={4}>
-                                <div style={{ display: 'flex', gap: 8, height: '48px' }}>
-                                    <button onClick={handleSearch} className="btn_form" style={{ flex: 1, margin: 0, height: '48px' }}>
-                                        {t('search_patcient')}
+                                <button onClick={handleSearch} className="btn_form" style={{ width: '100%', margin: 0, height: '48px' }}>
+                                    {t('search_patcient')}
+                                </button>
+                                {hasActiveFilters && (
+                                    <button
+                                        onClick={handleClearFilters}
+                                        style={{ marginTop: 6, background: 'none', color: '#94a3b8', fontSize: 13, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                                    >
+                                        {t('clear_filters') || 'Filtrlarni tozalash'}
                                     </button>
-                                    <button onClick={() => navigate('/analyse-ecg')} className="btn_form text-white" style={{ width: '50px', margin: 0, height: '48px', backgroundColor: '#00D1B2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <FaPlus />
-                                    </button>
-                                </div>
+                                )}
                             </Col>
                         </Row>
                     </div>
@@ -321,11 +353,23 @@ export default function EcgAnalysesList() {
                             loading={loading}
                             dataSource={data}
                             columns={columns}
+                            rowClassName={(row) => (!row.isViewed && isDoctor) ? 'table_row_unviewed' : ''}
+                            locale={{
+                                emptyText: (
+                                    <EmptyState
+                                        icon={<FaHeartbeat />}
+                                        message={t('no_ecg_analyses') || 'Hech qanday EKG tahlil topilmadi'}
+                                        actionLabel={t('new_ecg_analyse') || 'Yangi EKG tahlil'}
+                                        actionPath="/analyse-ecg"
+                                    />
+                                )
+                            }}
                             pagination={{
                                 current: page,
                                 pageSize: PAGE_SIZE,
                                 total: total,
                                 showSizeChanger: false,
+                                showTotal: (tot) => `${tot} ta natija`,
                                 onChange: (p) => setPage(p),
                             }}
                         />

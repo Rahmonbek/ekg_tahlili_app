@@ -18,6 +18,7 @@ import Patcients from './pages/patcients/Patcients'
 import HolterAnalyzer from './holter_analyse/HolterAnalyzer'
 import SmadAnalyzer from './smad_analyse/SmadAnalyzer'
 import ParasitologyAnalyzer from './parasitology/ParasitologyAnalyzer'
+import ParasitologyAnalysesList from './parasitology/ParasitologyAnalysesList'
 import SmadAnalysesList from './smad_analyse/SmadAnalysesList'
 import HolterAnalysesList from './holter_analyse/HolterAnalysesList'
 import LabAnalysesList from './lab_analyse/LabAnalysesList'
@@ -27,6 +28,7 @@ import HolterAnalyseView from './holter_analyse/HolterAnalyseView'
 import SmadAnalyseView from './smad_analyse/SmadAnalyseView'
 import LabAnalyseView from './lab_analyse/LabAnalyseView'
 import DiagnoseView from './diagnoses/DiagnoseView'
+import Dashboard from './Dashboard'
 const ProtectedRoute = ({ allowedRoles, userRole, children }) => {
     // Agar berilgan ruxsatlar bo'sh bo'lsa (barchaga) YOKI foydalanuvchi roli ruxsat etilganlar ruyxatida bo'lsa
     if (allowedRoles.length === 0 || allowedRoles.includes(userRole)) {
@@ -72,8 +74,9 @@ export default function Main() {
                 {user != null ? <div className='content'>
                     <Routes>
                         {/* Birlamchi yo'naltirishlar (Default Routes) */}
-                        <Route path="/" element={user.roleId === 2 || user.roleId === 3 ? <Doctors /> : <EcgAnalysesList />} />
+                        <Route path="/" element={user.roleId === 2 || user.roleId === 3 ? <Dashboard /> : <EcgAnalysesList />} />
                         <Route path="/cabinet" element={<Navigate to="/" replace />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
 
                         {/* Admin/Menejer kabi maxsus rollar uchun marshrutlar (Role: 2, 3) */}
                         <Route path="/doctor" element={
@@ -141,6 +144,9 @@ export default function Main() {
                             <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><DiagnoseView /></ProtectedRoute>
                         } />
 
+                        <Route path="/parasitology-analyses" element={
+                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><ParasitologyAnalysesList /></ProtectedRoute>
+                        } />
                         <Route path="/parasitology-analyzer" element={
                             <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><ParasitologyAnalyzer /></ProtectedRoute>
                         } />

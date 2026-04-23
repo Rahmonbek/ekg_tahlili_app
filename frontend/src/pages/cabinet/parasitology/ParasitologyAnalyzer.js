@@ -1,4 +1,4 @@
-import { Alert, Button, Col, Form, InputNumber, Row, Select, Tooltip } from 'antd';
+import { Alert, Button, Col, Form, Row, Select, Tooltip } from 'antd';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IoAlertCircleSharp } from 'react-icons/io5';
@@ -93,10 +93,6 @@ export default function ParasitologyAnalyzer() {
             formData.append('CreatedDoctorId', user.doctor.id);
             formData.append('ClinicId', user.clinic.id);
             formData.append('MicroscopyMethod', values.microscopy_method);
-            formData.append('Magnification', values.magnification);
-            if (values.egg_count_per_field) {
-                formData.append('EggCountPerField', values.egg_count_per_field);
-            }
             formData.append('Lang', state.lang);
 
             const res = await analyzeParasitologyFile(formData);
@@ -231,35 +227,6 @@ export default function ParasitologyAnalyzer() {
                                                 { value: 'flotation', label: t('flotation') },
                                                 { value: 'fecpakg', label: 'FECPAKG' },
                                             ]}
-                                        />
-                                    </Form.Item>
-                                </Col>
-
-                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
-                                    <Form.Item
-                                        name="magnification"
-                                        label={t('magnification')}
-                                        rules={[{ required: true, message: '' }]}
-                                    >
-                                        <Select
-                                            style={{ width: '100%' }}
-                                            options={[
-                                                { value: '100x', label: '100x' },
-                                                { value: '200x', label: '200x' },
-                                                { value: '400x', label: '400x' },
-                                                { value: '1000x', label: '1000x' },
-                                            ]}
-                                        />
-                                    </Form.Item>
-                                </Col>
-
-                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
-                                    <Form.Item name="egg_count_per_field" label={t('egg_count_per_field')}>
-                                        <InputNumber
-                                            style={{ width: '100%' }}
-                                            min={0}
-                                            placeholder={t('egg_count_per_field')}
-                                            className="login_input"
                                         />
                                     </Form.Item>
                                 </Col>

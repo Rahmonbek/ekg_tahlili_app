@@ -58,10 +58,10 @@ export const routers=[
         unread_key: 'diagnoses_unread'
     },
     {
-        path:'/parasitology-analyzer',
+        path:'/parasitology-analyses',
         icon:<GiMicroscope />,
         title:"parasitology_analyse",
-        tools:"parasitology-analyzer",
+        tools:"parasitology-analyses",
         role_id:[],
         unread_key: null
     },

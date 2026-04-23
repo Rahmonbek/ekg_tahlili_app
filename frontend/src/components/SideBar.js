@@ -64,13 +64,18 @@ useEffect(() => {
                     key={index}
                 >
                     <div className='sidebar_icon'>
-                        <Badge count={unreadCount} showZero={false} size="small" offset={[4, -4]}>
-                            {item.icon}
-                        </Badge>
+                        {item.icon}
                     </div>
                     <div className='sidebar_title'>
                         {t(item.title)}
                     </div>
+                    {unreadCount > 0 && (
+                        <Badge
+                            count={unreadCount}
+                            size="small"
+                            style={{ backgroundColor: '#FF4D4F', marginLeft: 'auto', flexShrink: 0 }}
+                        />
+                    )}
                 </Link>
                 ) : null
             })}

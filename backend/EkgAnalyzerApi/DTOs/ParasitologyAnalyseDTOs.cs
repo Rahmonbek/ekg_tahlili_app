@@ -85,3 +85,13 @@ public class OylikDinamikaDto
     public int Soni { get; set; }
     public int Topilgan { get; set; }
 }
+
+public class ParasitologyAnalyseListDTO
+{
+    public int Id { get; set; }
+    public string AnalysisStatus { get; set; } = "pending";
+    public int? JiddiylikDarajasi { get; set; }
+    public DateTime? CreatedAt { get; set; }
+    public PatcientForECG? Patcient { get; set; }
+    public DoctorForECGData? CreatedDoctor { get; set; }
+}

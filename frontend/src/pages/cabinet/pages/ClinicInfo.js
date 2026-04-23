@@ -77,7 +77,6 @@ const [licenseUrl, setLicenseUrl] = useState(null);
         phoneNumber:''
       }]
      }
-     console.log(a)
      setphones([...a])
 
      formPhones.setFieldsValue({
@@ -114,7 +113,7 @@ const [licenseUrl, setLicenseUrl] = useState(null);
       setloadingDetail(false)
       setloadingPhone(false)
   }catch(err){
-console.log(err)
+    // getClinicData xatoligi
   }finally{
   setloader(false);
   }}
@@ -156,12 +155,10 @@ formData.append("Id", clinic.id);
       formData.append("ClinicLogo", clinicLogoFile);
  }  
 
- const res = await send_clinic_info(formData);
+ await send_clinic_info(formData);
  successAlert(t("data_saved"))
 getClinicData()
-console.log( res);
 } catch (error) {
-    console.error( error);
     dangerAlert(t("server_error"))
  }
 
@@ -211,7 +208,6 @@ const onFinishFinish = async (values) => {
     formData.append("Address", values.address);
     formData.append("License", values.license);
   
-console.log("district", values.districtname?.value )
     if (licenseFile) {
       formData.append("LicenseFile", licenseFile);
     }
@@ -238,7 +234,6 @@ if(digits.length<=3){
   }
   
   let result = "+998";
-  console.log(digits, digits.length)
   // AGAR 1 ta ham raqam bo'lmasa — faqat +998
   if (digits.length === 0) {
     return result;
@@ -271,24 +266,20 @@ if(digits.length<=3){
 const getRegions = async () => {
   try {
     const res = await get_region_data()
-    console.log(res.data)
     setRegion(res.data)
   } catch (err) {
-    console.log(err)
+    // viloyatlar yuklanmadi
   }
 }
 
-
 const getDistricts = async (id) => {
   try {
-    const res = await get_districts_data({ region_id: id }); 
-    
-    console.log("Tumanlar kelyapti:", res.data); 
+    const res = await get_districts_data({ region_id: id });
     if (res.data) {
-      setDistricts(res.data); 
+      setDistricts(res.data);
     }
   } catch (err) {
-    console.log("Tumanlarni yuklashda xatolik:", err);
+    // tumanlar yuklanmadi
   }
 };
 

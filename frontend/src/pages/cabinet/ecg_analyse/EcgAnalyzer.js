@@ -1,4 +1,5 @@
-import { Button, Checkbox, Col, Form, Row, Select, Tooltip } from 'antd';
+import { Button, Checkbox, Col, Form, Radio, Row, Select, Tooltip, Upload } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IoAlertCircleSharp } from 'react-icons/io5';
@@ -21,7 +22,7 @@ import { analyzeEkgFile, analyzeEkgFileSave } from '../../../host/EkgService';
 import { get_ecg_analyses_by_patcient_id } from '../../../host/requests/ECGAnalyseRequest';
 import { useStore } from '../../../store/Store';
 import { calculateAge } from '../../../tools/formatters';
-import { successAlert, warningAlert } from '../../../tools/Alerts';
+import { dangerAlert, successAlert, warningAlert } from '../../../tools/Alerts';
 
 // ─── Result Components ───
 import EcgResult from '../../../components/results/EcgResult';
@@ -34,6 +35,7 @@ export default function EcgAnalyzer() {
     const [form2] = Form.useForm();
     const [gender, setGender] = useState(true);
     const [selectedComplaints, setSelectedComplaints] = useState([]);
+    const [checkAI, setCheckAI] = useState(false);
 
     const { complaints, user, setloader } = useStore();
 
@@ -81,20 +83,16 @@ export default function EcgAnalyzer() {
         });
     }, []);
 
-    // ─── File Select ───
-    const handleChange = useCallback((e) => {
-        dispatch({
-            type: 'SET_FILES',
-            files: Array.from(e.target.files),
-            fileInput: e.target.value,
-        });
+    // Upload.Dragger uchun handler — auto-upload oldini oladi
+    const handleUploadFile = useCallback((file) => {
+        dispatch({ type: 'SET_FILES', files: [file], fileInput: '' });
         if (patcient?.id) getOldECGAnalyses(patcient.id, 'first');
+        return false;
     }, [patcient, getOldECGAnalyses, dispatch]);
 
-    // ─── Submit (analyze or save) ───
     const handleSubmit = useCallback(async () => {
-        if (state.files.length === 0) return alert(t('select_file_error'));
-        warningAlert(state.checkAI ? t('please_wait') : t('please_wait_save'));
+        if (state.files.length === 0) return dangerAlert(t('select_file_error'));
+        warningAlert(checkAI ? t('please_wait') : t('please_wait_save'));
 
         setloader(true);
         dispatch({ type: 'SUBMIT_START' });
@@ -113,7 +111,7 @@ export default function EcgAnalyzer() {
             formData.append('age', calculateAge(patcient.birthDate));
 
             let res;
-            if (state.checkAI) {
+            if (checkAI) {
                 res = await analyzeEkgFile(formData);
                 let parsedResult;
                 try {
@@ -148,13 +146,14 @@ export default function EcgAnalyzer() {
         } finally {
             setloader(false);
         }
-    }, [state, patcient, user, selectedComplaints, selectedDoctors, setloader, dispatch, t]);
+    }, [state, patcient, user, selectedComplaints, selectedDoctors, setloader, dispatch, t, checkAI]);
 
     // ─── Retry / Reset ───
     const retryAnalyse = useCallback(() => {
         resetPatient();
         resetDoctorSelection();
         setSelectedComplaints([]);
+        setCheckAI(false);
         resetAll();
         form.resetFields();
         form1.resetFields();
@@ -165,6 +164,7 @@ export default function EcgAnalyzer() {
         resetPatient();
         resetDoctorSelection();
         setSelectedComplaints([]);
+        setCheckAI(false);
         resetAll();
         form.resetFields();
         form2.resetFields();
@@ -218,10 +218,21 @@ export default function EcgAnalyzer() {
                             <Row>
                                 <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
                                     <Form.Item name="select_ecg_file" label={t('select_ecg_file')} rules={[{ required: true, message: '' }]}>
-                                        <div>
-                                            <input className="file_input" type="file" onChange={handleChange} accept=".xml,.jpg,.png" />
-                                            <p className="file_input_bottom_text">{t('access_file_types')}: xml, jpg, png</p>
-                                        </div>
+                                        <Upload.Dragger
+                                            accept=".xml,.jpg,.png"
+                                            beforeUpload={handleUploadFile}
+                                            onRemove={() => dispatch({ type: 'SET_FILES', files: [], fileInput: '' })}
+                                            maxCount={1}
+                                            fileList={state.files.map((f, i) => ({
+                                                uid: String(i), name: f.name, status: 'done', originFileObj: f,
+                                            }))}
+                                        >
+                                            <p className="ant-upload-drag-icon"><InboxOutlined /></p>
+                                            <p className="ant-upload-text" style={{ fontSize: 14 }}>
+                                                {t('click_or_drag_file') || 'Fayl tanlang yoki bu yerga tashlang'}
+                                            </p>
+                                            <p className="ant-upload-hint">{t('access_file_types')}: xml, jpg, png</p>
+                                        </Upload.Dragger>
                                     </Form.Item>
                                 </Col>
                                 <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
@@ -233,24 +244,11 @@ export default function EcgAnalyzer() {
                                             defaultValue={state.lang}
                                             onChange={(value) => dispatch({ type: 'SET_FIELD', field: 'lang', value })}
                                             options={[
-                                                { value: 'uz', label: <> {t('uzbek')}</> },
+                                                { value: 'uz', label: <>{t('uzbek')}</> },
                                                 { value: 'ru', label: <>{t('russian')}</> },
                                                 { value: 'en', label: <>{t('english')}</> },
                                             ]}
                                         />
-                                    </Form.Item>
-                                </Col>
-
-                                <Col lg={24} xs={24} sm={24} md={24}>
-                                    <Form.Item name="check_ai">
-                                        <div className="complaint_item">
-                                            <Checkbox
-                                                value={state.checkAI}
-                                                onChange={(val) => dispatch({ type: 'SET_FIELD', field: 'checkAI', value: val.target.checked })}
-                                            >
-                                                <span className="complaint_name">{t('check_by_ai')}</span>
-                                            </Checkbox>
-                                        </div>
                                     </Form.Item>
                                 </Col>
 
@@ -281,15 +279,44 @@ export default function EcgAnalyzer() {
                                     </Row>
                                 </Col>
 
-                                <Col lg={9} xs={24} sm={24} md={24}></Col>
-                                <Col lg={6} xs={24} sm={24} md={24}>
-                                    {state.showBtn && (
-                                        <Button onClick={handleSubmit} loading={state.loading3} htmlType="button" className="btn_form">
-                                            {state.checkAI ? t('check') : t('save_ecg')}
-                                        </Button>
-                                    )}
+                                <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
+                                    <p className="ecg_label" style={{ marginBottom: 12 }}>
+                                        {t('select_analyse_mode') || 'Tahlil usulini tanlang'}
+                                    </p>
+                                    <Radio.Group
+                                        value={checkAI ? 'ai' : 'save'}
+                                        onChange={(e) => setCheckAI(e.target.value === 'ai')}
+                                        buttonStyle="solid"
+                                        size="large"
+                                    >
+                                        <Radio.Button value="save">
+                                            💾 {t('save_only') || 'Faqat saqlash'}
+                                        </Radio.Button>
+                                        <Radio.Button value="ai">
+                                            🤖 {t('ai_analyse') || 'AI bilan tahlil'}
+                                        </Radio.Button>
+                                    </Radio.Group>
                                 </Col>
-                                <Col lg={9} xs={24} sm={24} md={24}></Col>
+
+                                {state.showBtn && (
+                                    <>
+                                        <Col lg={9} xs={24} sm={24} md={24} />
+                                        <Col lg={6} xs={24} sm={24} md={24}>
+                                            <Button
+                                                onClick={handleSubmit}
+                                                loading={state.loading3}
+                                                htmlType="button"
+                                                className="btn_form"
+                                            >
+                                                {checkAI
+                                                    ? (t('ai_analyse') || 'AI bilan tahlil')
+                                                    : (t('save_only') || 'Faqat saqlash')
+                                                }
+                                            </Button>
+                                        </Col>
+                                        <Col lg={9} xs={24} sm={24} md={24} />
+                                    </>
+                                )}
                             </Row>
                         </Form>
                     </div>
@@ -297,7 +324,7 @@ export default function EcgAnalyzer() {
             )}
 
             {/* ═══════ Natijalar ═══════ */}
-            {(state.result != null || state.loading3) && state.checkAI && (
+            {(state.result != null || state.loading3) && checkAI && (
                 <div className="main_card">
                     <h1>{t('ecg_last_result')}</h1>
                     <div className="main_card_content">

@@ -135,6 +135,246 @@ namespace EkgAnalyzerApi.Services
             };
         }
 
+        public async Task<PagedResult<ParasitologyAnalyseListDTO>> GetByClinicAsync(
+            int clinicId,
+            int page = 1,
+            int pageSize = 10,
+            string? search = null,
+            string? status = null,
+            DateTime? dateFrom = null,
+            DateTime? dateTo = null,
+            int? jiddiylik = null)
+        {
+            var query = _context.ParasitologyAnalyses
+                .Where(a => a.ClinicId == clinicId)
+                .Include(a => a.Patcient)
+                .Include(a => a.CreatedDoctor)
+                .AsQueryable();
+
+            query = ApplyParasitologyFilters(query, search, status, dateFrom, dateTo, jiddiylik, clinicId);
+
+            var total = await query.CountAsync();
+
+            var items = await query
+                .OrderByDescending(a => a.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(a => new ParasitologyAnalyseListDTO
+                {
+                    Id = a.Id,
+                    AnalysisStatus = a.AnalysisStatus,
+                    JiddiylikDarajasi = a.JiddiylikDarajasi,
+                    CreatedAt = a.CreatedAt,
+                    Patcient = a.Patcient == null ? null : new PatcientForECG
+                    {
+                        Id = a.Patcient.Id,
+                        BirthDate = a.Patcient.BirthDate,
+                        Gender = a.Patcient.Gender,
+                        FirstName = a.Patcient.FirstName,
+                        LastName = a.Patcient.LastName,
+                        SureName = a.Patcient.SureName,
+                        Passport = a.Patcient.Passport
+                    },
+                    CreatedDoctor = a.CreatedDoctor == null ? null : new DoctorForECGData
+                    {
+                        Id = a.CreatedDoctor.Id,
+                        FirstName = a.CreatedDoctor.FirstName,
+                        LastName = a.CreatedDoctor.LastName,
+                        SureName = a.CreatedDoctor.SureName
+                    }
+                })
+                .ToListAsync();
+
+            return new PagedResult<ParasitologyAnalyseListDTO>
+            {
+                Items = items,
+                TotalCount = total,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<PagedResult<ParasitologyAnalyseListDTO>> GetByDoctorAsync(
+            int doctorId,
+            int page = 1,
+            int pageSize = 10,
+            string? search = null,
+            string? status = null,
+            DateTime? dateFrom = null,
+            DateTime? dateTo = null,
+            int? jiddiylik = null)
+        {
+            var query = _context.ParasitologyAnalyses
+                .Where(a => a.Doctors!.Any(d => d.DoctorId == doctorId))
+                .Include(a => a.Patcient)
+                .Include(a => a.CreatedDoctor)
+                .Include(a => a.Doctors)
+                .AsQueryable();
+
+            query = ApplyParasitologyFilters(query, search, status, dateFrom, dateTo, jiddiylik, null);
+
+            var total = await query.CountAsync();
+
+            var items = await query
+                .OrderByDescending(a => a.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(a => new ParasitologyAnalyseListDTO
+                {
+                    Id = a.Id,
+                    AnalysisStatus = a.AnalysisStatus,
+                    JiddiylikDarajasi = a.JiddiylikDarajasi,
+                    CreatedAt = a.CreatedAt,
+                    Patcient = a.Patcient == null ? null : new PatcientForECG
+                    {
+                        Id = a.Patcient.Id,
+                        BirthDate = a.Patcient.BirthDate,
+                        Gender = a.Patcient.Gender,
+                        FirstName = a.Patcient.FirstName,
+                        LastName = a.Patcient.LastName,
+                        SureName = a.Patcient.SureName,
+                        Passport = a.Patcient.Passport
+                    },
+                    CreatedDoctor = a.CreatedDoctor == null ? null : new DoctorForECGData
+                    {
+                        Id = a.CreatedDoctor.Id,
+                        FirstName = a.CreatedDoctor.FirstName,
+                        LastName = a.CreatedDoctor.LastName,
+                        SureName = a.CreatedDoctor.SureName
+                    }
+                })
+                .ToListAsync();
+
+            return new PagedResult<ParasitologyAnalyseListDTO>
+            {
+                Items = items,
+                TotalCount = total,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<PagedResult<ParasitologyAnalyseListDTO>> GetByNurseAsync(
+            int doctorId,
+            int page = 1,
+            int pageSize = 10,
+            string? search = null,
+            string? status = null,
+            DateTime? dateFrom = null,
+            DateTime? dateTo = null,
+            int? jiddiylik = null)
+        {
+            var query = _context.ParasitologyAnalyses
+                .Where(a => a.CreatedDoctorId == doctorId)
+                .Include(a => a.Patcient)
+                .Include(a => a.CreatedDoctor)
+                .AsQueryable();
+
+            query = ApplyParasitologyFilters(query, search, status, dateFrom, dateTo, jiddiylik, null);
+
+            var total = await query.CountAsync();
+
+            var items = await query
+                .OrderByDescending(a => a.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(a => new ParasitologyAnalyseListDTO
+                {
+                    Id = a.Id,
+                    AnalysisStatus = a.AnalysisStatus,
+                    JiddiylikDarajasi = a.JiddiylikDarajasi,
+                    CreatedAt = a.CreatedAt,
+                    Patcient = a.Patcient == null ? null : new PatcientForECG
+                    {
+                        Id = a.Patcient.Id,
+                        BirthDate = a.Patcient.BirthDate,
+                        Gender = a.Patcient.Gender,
+                        FirstName = a.Patcient.FirstName,
+                        LastName = a.Patcient.LastName,
+                        SureName = a.Patcient.SureName,
+                        Passport = a.Patcient.Passport
+                    },
+                    CreatedDoctor = a.CreatedDoctor == null ? null : new DoctorForECGData
+                    {
+                        Id = a.CreatedDoctor.Id,
+                        FirstName = a.CreatedDoctor.FirstName,
+                        LastName = a.CreatedDoctor.LastName,
+                        SureName = a.CreatedDoctor.SureName
+                    }
+                })
+                .ToListAsync();
+
+            return new PagedResult<ParasitologyAnalyseListDTO>
+            {
+                Items = items,
+                TotalCount = total,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
+
+        private IQueryable<ParasitologyAnalyses> ApplyParasitologyFilters(
+            IQueryable<ParasitologyAnalyses> query,
+            string? search,
+            string? status,
+            DateTime? dateFrom,
+            DateTime? dateTo,
+            int? jiddiylik,
+            int? clinicId)
+        {
+            if (!string.IsNullOrWhiteSpace(status))
+                query = query.Where(a => a.AnalysisStatus == status);
+
+            if (dateFrom.HasValue)
+            {
+                var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
+                query = query.Where(a => a.CreatedAt >= utcFrom);
+            }
+
+            if (dateTo.HasValue)
+            {
+                var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
+                query = query.Where(a => a.CreatedAt <= utcTo);
+            }
+
+            if (jiddiylik.HasValue)
+                query = query.Where(a => a.JiddiylikDarajasi == jiddiylik.Value);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var sLower = search.Trim().ToLower();
+                var isPassport = System.Text.RegularExpressions.Regex.IsMatch(search.Replace(" ", ""), @"^[A-Za-z]{2}\d+$");
+                if (isPassport && clinicId.HasValue)
+                {
+                    // Passport search — executed in memory
+                    var normalizedSearch = search.Replace(" ", "").ToUpper();
+                    var clinicPatientIds = _context.ParasitologyAnalyses
+                        .Where(a => a.ClinicId == clinicId)
+                        .Select(a => a.PatcientId)
+                        .Distinct()
+                        .ToList();
+                    var patients = _context.Patcients
+                        .Where(p => clinicPatientIds.Contains(p.Id))
+                        .Select(p => new { p.Id, p.Passport })
+                        .ToList();
+                    var matchingIds = patients
+                        .Where(p => p.Passport != null && p.Passport.Replace(" ", "").ToUpper().Contains(normalizedSearch))
+                        .Select(p => p.Id)
+                        .ToList();
+                    query = query.Where(a => matchingIds.Contains(a.PatcientId));
+                }
+                else
+                {
+                    query = query.Where(a =>
+                        (a.Patcient.FirstName != null && a.Patcient.FirstName.ToLower().Contains(sLower)) ||
+                        (a.Patcient.LastName != null && a.Patcient.LastName.ToLower().Contains(sLower)) ||
+                        (a.Patcient.SureName != null && a.Patcient.SureName.ToLower().Contains(sLower)));
+                }
+            }
+
+            return query;
+        }
+
         public async Task<ParasitologyStatisticsDto> GetStatisticsAsync(
             string? viloyat, string? tuman, string? yiloyAy,
             string? helminthType, DateTime? dateFrom, DateTime? dateTo)

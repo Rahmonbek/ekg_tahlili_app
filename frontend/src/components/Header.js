@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import ChangeLangs from './ChangeLangs'
 import { FaBars, FaCircleInfo, FaHandSparkles } from 'react-icons/fa6'
 import { useStore } from '../store/Store'
@@ -15,6 +15,20 @@ import { buildCrumbs } from '../tools/breadcrumbs'
 export default function Header() {
   const { open_menu, setopen_menu, setuser_id, setuser, user, setopen_admin_modal } = useStore();
   const [isRightListOpen, setIsRightListOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Tashqaridan bosganda dropdown yopiladi
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsRightListOpen(false);
+      }
+    };
+    if (isRightListOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isRightListOpen]);
 
   const handleExitIconClick = () => setIsRightListOpen(!isRightListOpen);
 
@@ -56,7 +70,7 @@ export default function Header() {
         <div className='header_others'>
           <ChangeLangs />
         </div>
-        {user != null && user.doctor != null ? <div className='open_list'>
+        {user != null && user.doctor != null ? <div className='open_list' ref={dropdownRef}>
           <div className='exit_icon' onClick={handleExitIconClick}>
             <img src={(!user?.doctor?.gender ? femaleStaff : maleStaff)} alt="Staff" />
             <div>
