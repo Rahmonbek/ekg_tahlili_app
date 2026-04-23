@@ -52,25 +52,25 @@ JAVOB QAT'IY FAQAT JSON FORMATIDA, {language} TILIDA:
   "gijja_topildimi": true,
   "aniqlangan_turlar": [
     {{
-      "lotin_nomi": "Ascaris lumbricoides",
-      "uz_nomi": "Oddiy gijja",
-      "ru_nomi": "Аскарида",
-      "en_nomi": "Common roundworm",
-      "ishonch_darajasi": 0.92,
-      "voyaga_yetgan_bor": false,
-      "tuxum_soni": 14,
-      "tuxum_morfologiyasi": "Oval shaklda, qalin burchakli qobiqli, 45-70 mkm, ichida blastomer ko'rinmoqda",
-      "infektsiya_darajasi": "moderate",
-      "infektsiya_uz": "O'rtacha"
+      "lotin_nomi": "Gijja lotincha nomi",
+      "uz_nomi": "Gijja nomi va turi (tibbiyot tilida) O'zbek tilida",
+      "ru_nomi": "Гельминт на русском языке",
+      "en_nomi": "Helminth name in English",
+      "ishonch_darajasi": Ishonch darajasi 0.0 dan 1.0 gacha,
+      "voyaga_yetgan_bor": true yoki false,
+      "tuxum_soni": ko'rinayotgan tuxumlar soni (butun son); juda ko'p bo'lsa -1; yo'q bo'lsa 0,
+      "tuxum_morfologiyasi": "Tuxumning vizual tavsifi va morfologiyasi, yo'q bo'lsa ''",
+      "infektsiya_darajasi": "light" | "moderate" | "heavy",
+      "infektsiya_uz": "O'zbek tilida infektsiya darajasi: Yengil, O'rtacha yoki Og'ir"
     }}
   ],
-  "jami_tuxum_soni": 14,
-  "jami_jiddiylik": 2,
-  "davolash_tavsiyasi": "...",
-  "shifokorga_tavsiya": "...",
-  "rasm_sifati": "yaxshi",
-  "qoshimcha_izoh": "...",
-  "yakuniy_xulosa": "..."
+  "jami_tuxum_soni": Jami tuxum soni barcha turlar bo'yicha,
+  "jami_jiddiylik": Umumiy jiddiylik darajasi 1 (engil) | 2 (o'rta) | 3 (og'ir),
+  "davolash_tavsiyasi": "Davolash bo'yicha tavsiyalar, agar mavjud bo'lsa",
+  "shifokorga_tavsiya": "Shifokorga tavsiyalar, agar mavjud bo'lsa",
+  "rasm_sifati": "yaxshi" | "qoniqarli" | "past",
+  "qoshimcha_izoh": "Qo'shimcha izohlar yoki tavsiyalar, agar mavjud bo'lsa",
+  "yakuniy_xulosa": "Rasm va tahlil asosida yakuniy xulosa va tavsiyalar"
 }}
 
 QOIDALAR (QAT'IY BAJAR):
