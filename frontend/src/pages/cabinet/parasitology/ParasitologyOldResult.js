@@ -16,9 +16,14 @@ function parseAiResponse(raw) {
     }
 }
 
-function statusClass(status) {
-    if (status === 'analyzed') return 'normal_analyse';
+function statusClass(status, jiddiylik) {
     if (status === 'failed') return 'danger_analyse';
+    if (status === 'pending' || status === 'not_analyzed') return 'unknown_analyse';
+    if (status === 'analyzed') {
+        if (jiddiylik === 3) return 'danger_analyse';
+        if (jiddiylik === 2) return 'avarage_analyse';
+        return 'normal_analyse';
+    }
     return 'unknown_analyse';
 }
 
@@ -37,18 +42,13 @@ export default function ParasitologyOldResult({ data, initialOpen = false }) {
         ? t('status_pending')
         : t('not_analysed');
 
-    const methodLabel = data.microscopyMethod === 'direct_smear' ? t('direct_smear')
-        : data.microscopyMethod === 'kato_katz' ? t('kato_katz')
-        : data.microscopyMethod === 'flotation' ? t('flotation')
-        : data.microscopyMethod || '—';
 
     return (
-        <div className={`old_analyse main_card ${open ? 'opened_main_card' : 'closed_main_card'} ${statusClass(data.analysisStatus)}`}>
+        <div className={`old_analyse main_card ${open ? 'opened_main_card' : 'closed_main_card'} ${statusClass(data.analysisStatus, data.jiddiylikDarajasi)}`}>
             <h1 onClick={() => setOpen(!open)}>
                 <p>{formatDateTime(data.createdAt)}</p>
                 <p>
-                    
-                    {statusLabel}
+                    {data.magnification ? `${data.magnification} · ` : ''}{statusLabel}
                     <span>{open ? <IoIosArrowDown /> : <IoIosArrowBack />}</span>
                 </p>
             </h1>

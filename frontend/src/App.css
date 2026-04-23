@@ -1122,6 +1122,12 @@ input::placeholder,
 }
 
 /* Severity rangli karta sarlavhalari — AI natijasi darajasiga qarab */
+.normal_analyse h1 {
+  background: #F0FDF4;
+  color: #14532d;
+  border-bottom-color: #86EFAC;
+}
+
 .avarage_analyse h1 {
   background: #FFFBEB;
   color: #92400e;
