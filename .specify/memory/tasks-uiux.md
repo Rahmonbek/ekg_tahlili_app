@@ -199,6 +199,29 @@
 
 ---
 
+## Phase 12: EKG UI/PDF Pariteti va View Polish — Priority: P1
+
+**Maqsad**: EKG list/analyzer/view/PDF dagi UX standardini qolgan tahlil modullariga ko'chirish va PDF exportlarni chiroyli/foydalanuvchiga qulay qilish.
+
+### Frontend (List Filter UI parity)
+
+- [ ] T052 [P1] Holter/SMAD/Lab/Parasitology list filter toolbar joylashuvini EKG list (`EcgAnalysesList`) layoutiga keltirish (responsive Col breakpoints, bir xil label/placeholder, `allowClear/onClear`); Search tugmasi yonidagi `+` create tugmani olib tashlash (create tugma faqat headerda qolsin)
+
+### Frontend (Analyzer layout + default values)
+
+- [ ] T053 [P1] Barcha analyzer sahifalarda: AI tili default `uz`, `analysis_date` default bugungi sana, upload qismi to'liq qator, yonidagi lang/date/selectlar 1 qatorda 3 tadan; "Davolovchi shifokorlarni tanlang" kabi yirik bloklar full row bo'lsin (EKG parity)
+
+### PDF Export (EKG + Parasitology)
+
+- [ ] T054 [P1] Parasitology PDF export: `ishonch_darajasi` (confidence) ko'rsatilmasin; `SUN'IY INTELLEKT TAHLILI XULOSASI` JSON natijani EKGga o'xshash o'qilishi oson formatga chiqarish (sectionlar, ro'yxatlar, label/value)
+- [ ] T055 [P1] EKG PDF export: AI ga yuborilgan original fayl (image/pdf) ham PDFga qo'shilsin (kamida link/preview + kerak bo'lsa screenshot)
+
+### View sahifalar polish
+
+- [ ] T056 [P2] `/view` sahifalarda header qismidagi ma'lumotlarni chiroyli va tushunarli ko'rinishga keltirish (bemor, shifokor, statuslar, sanalar); Parasitology view dagi box+border layout buzilmasin, faqat boyitilsin
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

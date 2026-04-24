@@ -6,6 +6,14 @@ import { useReducer, useCallback } from 'react';
  * retryAnalyse/resetData chaqirilganda FAQAT 1 TA re-render bo'ladi.
  */
 
+export function getTodayDateInputValue() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
 const initialState = {
     result: null,
     error: null,

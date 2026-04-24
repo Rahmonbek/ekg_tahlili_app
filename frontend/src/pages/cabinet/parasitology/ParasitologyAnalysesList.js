@@ -1,7 +1,7 @@
-import { Button, DatePicker, Input, Select, Table, Tag, Row, Col, Tooltip } from 'antd';
+import { DatePicker, Input, Select, Table, Tag, Row, Col, Tooltip } from 'antd';
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaPlus, FaSearch, FaCheck } from 'react-icons/fa';
+import { FaCheck } from 'react-icons/fa';
 import { FaEye } from 'react-icons/fa6';
 import { GiMicroscope } from 'react-icons/gi';
 import { useNavigate } from 'react-router-dom';
@@ -229,15 +229,22 @@ export default function ParasitologyAnalysesList() {
             <div className="main_card">
                 <h1>
                     {t('parasitology_analyse') || 'Parazitologik tahlillar'}
+                    <button
+                        onClick={() => navigate('/parasitology/analyze')}
+                        className="btn_form"
+                        style={{ width: 'auto', padding: '0 24px', marginTop: 0 }}
+                    >
+                        {t('create_new_parasitology_analyse') || 'Yangi Parazitologiya tahlil'}
+                    </button>
                 </h1>
                 <div className="main_card_content big_card_content">
 
                     {/* Toolbar */}
                     <div style={{ padding: '0 0 20px 0' }} className="filter_form_box">
                         <Row gutter={[12, 12]} align="bottom">
-                            <Col xs={24} sm={12} md={6}>
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
                                 <div className="filter_item">
-                                    <label className="filter_label">{t('search_by_patient')}</label>
+                                    <label className="filter_label">{t('search_by_label')}</label>
                                     <Input
                                         placeholder={t('search_by_patient')}
                                         value={searchInput}
@@ -255,7 +262,7 @@ export default function ParasitologyAnalysesList() {
                                     />
                                 </div>
                             </Col>
-                            <Col xs={24} sm={12} md={6}>
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
                                 <div className="filter_item">
                                     <label className="filter_label">{t("date_filter")}</label>
                                     <DatePicker.RangePicker
@@ -265,10 +272,18 @@ export default function ParasitologyAnalysesList() {
                                         placeholder={[t('date_from'), t('date_to')]}
                                         format="DD.MM.YYYY"
                                         style={{ width: '100%' }}
+                                        allowEmpty={[true, true]}
+                                        allowClear
+                                        onClear={() => {
+                                            setDateRange([null, null]);
+                                            filterRef.current.dateRange = [null, null];
+                                            setPage(1);
+                                            fetchData(1);
+                                        }}
                                     />
                                 </div>
                             </Col>
-                            <Col xs={24} sm={12} md={4}>
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
                                 <div className="filter_item">
                                     <label className="filter_label">{t('filter_by_status')}</label>
                                     <Select
@@ -292,7 +307,7 @@ export default function ParasitologyAnalysesList() {
                                     </Select>
                                 </div>
                             </Col>
-                            <Col xs={24} sm={12} md={4}>
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
                                 <div className="filter_item">
                                     <label className="filter_label">{t('para_filter_jiddiylik') || 'AI natija'}</label>
                                     <Select
@@ -315,7 +330,7 @@ export default function ParasitologyAnalysesList() {
                                     </Select>
                                 </div>
                             </Col>
-                            <Col xs={24} sm={12} md={4}>
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
                                 <div className="filter_item">
                                     <label className="filter_label">{t('diagnosis_status') || 'Tashxis holati'}</label>
                                     <Select
@@ -337,15 +352,10 @@ export default function ParasitologyAnalysesList() {
                                     </Select>
                                 </div>
                             </Col>
-                            <Col xs={24} sm={12} md={4}>
-                                <div style={{ display: 'flex', gap: 8, height: '48px' }}>
-                                    <button onClick={handleSearch} className="btn_form" style={{ flex: 1, margin: 0, height: '48px' }}>
-                                        {t('search')}
-                                    </button>
-                                    <button onClick={() => navigate('/parasitology/analyze')} className="btn_form" style={{ width: '48px', flexShrink: 0, margin: 0, height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <FaPlus />
-                                    </button>
-                                </div>
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
+                                <button onClick={handleSearch} className="btn_form" style={{ width: '100%', margin: 0, height: '48px' }}>
+                                    {t('search')}
+                                </button>
                             </Col>
                         </Row>
                     </div>

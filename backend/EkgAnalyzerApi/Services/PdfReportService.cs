@@ -85,6 +85,7 @@ public class PdfReportService
             "ecg", id,
             doc =>
             {
+                AddEcgSourceFile(doc, tr, row.AnalyseFileLink);
                 AddEcgImage(doc, tr, row.GeneratedFileLink);
                 AddEcgTable(doc, tr, aiData);
                 AddAiBlock(doc, tr, aiData);
@@ -200,12 +201,12 @@ public class PdfReportService
             DoctorNames(row.Doctors?.Select(d => d.Doctor).ToList()),
             null,
             "para", id,
-            doc =>
-            {
-                AddParaResults(doc, tr, row, lang);
-                AddParaAiBlock(doc, tr, row);
-            });
-    }
+             doc =>
+             {
+                 AddParaResults(doc, tr, row, lang);
+                 AddParaAiBlock(doc, tr, row, lang);
+             });
+     }
 
     public async Task<byte[]> GenerateCombinedReport(int patientId, string lang)
     {
@@ -287,14 +288,15 @@ public class PdfReportService
         {
             var ai = ParseAi(ecg.AIAnswerData);
             Divider($"{tr["ecg_title"]}  —  {(ecg.AnalysisDate ?? ecg.CreatedAt):dd.MM.yyyy HH:mm}");
-            ComposeAnalysisBlock(doc, tr, fonts, (ecg.AnalysisDate ?? ecg.CreatedAt),
-                GetAnalysisTypeName(tr, "ecg"), ecg.CreatedDoctor,
-                DoctorNames(ecg.Doctors?.Select(d => d.Doctor).ToList()),
-                ComplaintNames(ecg.Complaints));
-            AddEcgImage(doc, tr, ecg.GeneratedFileLink);
-            AddEcgTable(doc, tr, ai);
-            AddAiBlock(doc, tr, ai);
-        }
+             ComposeAnalysisBlock(doc, tr, fonts, (ecg.AnalysisDate ?? ecg.CreatedAt),
+                 GetAnalysisTypeName(tr, "ecg"), ecg.CreatedDoctor,
+                 DoctorNames(ecg.Doctors?.Select(d => d.Doctor).ToList()),
+                 ComplaintNames(ecg.Complaints));
+             AddEcgSourceFile(doc, tr, ecg.AnalyseFileLink);
+             AddEcgImage(doc, tr, ecg.GeneratedFileLink);
+             AddEcgTable(doc, tr, ai);
+             AddAiBlock(doc, tr, ai);
+         }
 
         foreach (var smad in smadList)
         {
@@ -336,7 +338,7 @@ public class PdfReportService
                 GetAnalysisTypeName(tr, "para"), para.CreatedDoctor,
                 DoctorNames(para.Doctors?.Select(d => d.Doctor).ToList()), null);
             AddParaResults(doc, tr, para, lang);
-            AddParaAiBlock(doc, tr, para);
+            AddParaAiBlock(doc, tr, para, lang);
         }
 
         ComposeNmedVerification(doc, tr, fonts, docNum, DateTime.UtcNow);
@@ -1034,11 +1036,10 @@ public class PdfReportService
             return;
         }
 
-        var tbl = new PdfPTable(4) { WidthPercentage = 100, SpacingBefore = 4 };
-        tbl.SetWidths(new[] { 30f, 30f, 20f, 20f });
+        var tbl = new PdfPTable(3) { WidthPercentage = 100, SpacingBefore = 4 };
+        tbl.SetWidths(new[] { 40f, 40f, 20f });
         TableHead(tbl, fonts,
-            tr["para_helminth_type"], tr["para_latin_name"],
-            tr["para_confidence"],    tr["para_level"]);
+            tr["para_helminth_type"], tr["para_latin_name"], tr["para_level"]);
 
         int rowIdx = 0;
         foreach (var r in row.Results)
@@ -1049,8 +1050,6 @@ public class PdfReportService
             var bg = rowIdx++ % 2 == 0 ? CL_White : CL_RowAlt;
             TblCell(tbl, name ?? r.HelminthType ?? "—", fonts["td9bold"], bg, Element.ALIGN_LEFT);
             TblCell(tbl, r.HelminthType ?? "—",         fonts["td9gray"], bg, Element.ALIGN_LEFT);
-            TblCell(tbl, r.Confidence.HasValue ? $"{r.Confidence.Value:F0}%" : "—",
-                         fonts["td9bold"], bg, Element.ALIGN_CENTER);
             TblCell(tbl, r.InfectionLevel ?? "—",       fonts["td9"],     bg, Element.ALIGN_CENTER);
         }
 
@@ -1058,21 +1057,196 @@ public class PdfReportService
     }
 
     private void AddParaAiBlock(Document doc, Dictionary<string, string> tr,
-        ParasitologyAnalyses row)
+        ParasitologyAnalyses row, string lang)
     {
         if (string.IsNullOrWhiteSpace(row.AiResponse)) return;
 
         var fonts = BuildFonts();
         ComposeSectionHeader(doc, fonts, tr["ai_section_title"], CL_Green);
-        AddAiTextBlock(doc, fonts, row.AiResponse.Trim());
 
-        if (row.JiddiylikDarajasi.HasValue)
-            ComposeSeverityBar(doc, tr, fonts, row.JiddiylikDarajasi.Value);
+        var raw = row.AiResponse.Trim();
+        var jsonText = ExtractJsonObject(raw);
+
+        if (jsonText == null)
+        {
+            AddAiTextBlock(doc, fonts, raw);
+            if (row.JiddiylikDarajasi.HasValue)
+                ComposeSeverityBar(doc, tr, fonts, row.JiddiylikDarajasi.Value);
+            ComposeDisclaimer(doc, tr, fonts);
+            return;
+        }
+
+        try
+        {
+            using var json = JsonDocument.Parse(jsonText);
+            var root = json.RootElement;
+
+            // Qisqa umumiy ma'lumotlar (key/value)
+            var infoTbl = InfoTable();
+            int ri = 0;
+
+            if (TryGetBool(root, "gijja_topildimi", out var found))
+                InfoRow(infoTbl, tr["para_worm_found"] + ":", found ? tr["yes"] : tr["no"], fonts, ri++);
+
+            if (TryGetInt(root, "jami_tuxum_soni", out var totalEggs))
+                InfoRow(infoTbl, tr["para_total_eggs"] + ":", totalEggs.ToString(), fonts, ri++);
+
+            if (TryGetInt(root, "jami_jiddiylik", out var totalSeverity))
+                InfoRow(infoTbl, tr["para_total_severity"] + ":", totalSeverity.ToString(), fonts, ri++);
+
+            if (TryGetString(root, "rasm_sifati", out var imageQuality))
+                InfoRow(infoTbl, tr["para_image_quality"] + ":", imageQuality, fonts, ri++);
+
+            if (ri > 0) doc.Add(infoTbl);
+
+            // Aniqlangan turlar
+            if (root.TryGetProperty("aniqlangan_turlar", out var types) &&
+                types.ValueKind == JsonValueKind.Array &&
+                types.GetArrayLength() > 0)
+            {
+                doc.Add(new Paragraph(tr["para_detected_types"], fonts["p10bold"])
+                {
+                    SpacingBefore = 6,
+                    SpacingAfter = 4,
+                });
+
+                var tbl = new PdfPTable(4) { WidthPercentage = 100, SpacingBefore = 0, SpacingAfter = 4 };
+                tbl.SetWidths(new[] { 42f, 18f, 20f, 20f });
+                TableHead(tbl, fonts,
+                    tr["para_type_name"], tr["para_egg_count_short"], tr["para_adult_present"], tr["para_level"]);
+
+                int idx = 0;
+                foreach (var t in types.EnumerateArray())
+                {
+                    var bg = idx++ % 2 == 0 ? CL_White : CL_RowAlt;
+                    var latin = GetString(t, "lotin_nomi") ?? "—";
+                    var localName = lang == "ru" ? GetString(t, "ru_nomi")
+                                  : lang == "en" ? GetString(t, "en_nomi")
+                                  : GetString(t, "uz_nomi");
+
+                    var nameCell = string.IsNullOrWhiteSpace(localName) ? latin : $"{localName} ({latin})";
+                    TblCell(tbl, nameCell, fonts["td9bold"], bg, Element.ALIGN_LEFT);
+
+                    var eggs = GetInt(t, "tuxum_soni");
+                    TblCell(tbl, eggs?.ToString() ?? "—", fonts["td9"], bg, Element.ALIGN_CENTER);
+
+                    var adult = GetBool(t, "voyaga_yetgan_bor");
+                    TblCell(tbl, adult.HasValue ? (adult.Value ? tr["yes"] : tr["no"]) : "—",
+                        fonts["td9"], bg, Element.ALIGN_CENTER);
+
+                    var level = lang == "uz" ? GetString(t, "infektsiya_uz") : null;
+                    level ??= GetString(t, "infektsiya_darajasi");
+                    TblCell(tbl, level ?? "—", fonts["td9"], bg, Element.ALIGN_CENTER);
+                }
+                doc.Add(tbl);
+
+                // Qo'shimcha tafsilotlar (morfologiya) — ishonch darajasisiz
+                foreach (var t in types.EnumerateArray())
+                {
+                    var latin = GetString(t, "lotin_nomi");
+                    var localName = lang == "ru" ? GetString(t, "ru_nomi")
+                                  : lang == "en" ? GetString(t, "en_nomi")
+                                  : GetString(t, "uz_nomi");
+
+                    var title = string.IsNullOrWhiteSpace(localName) ? latin : $"{localName} ({latin})";
+                    var morphology = GetString(t, "tuxum_morfologiyasi");
+                    if (!string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(morphology))
+                    {
+                        doc.Add(new Paragraph($"{tr["para_morphology"]}: {title}", fonts["p9bold"])
+                        {
+                            SpacingBefore = 2,
+                            SpacingAfter = 2,
+                        });
+                        doc.Add(new Paragraph(morphology.Trim(), fonts["p9gray"]) { SpacingAfter = 2 });
+                    }
+                }
+            }
+
+            // Tavsiyalar va yakuniy xulosa
+            AddParaAiTextIfExists(doc, fonts, tr["para_treatment"] + ":", GetString(root, "davolash_tavsiyasi"));
+            AddParaAiTextIfExists(doc, fonts, tr["recommendations"] + ":", GetString(root, "shifokorga_tavsiya"));
+            AddParaAiTextIfExists(doc, fonts, tr["para_additional_note"] + ":", GetString(root, "qoshimcha_izoh"));
+            AddParaAiTextIfExists(doc, fonts, tr["final_summary"] + ":", GetString(root, "yakuniy_xulosa"));
+
+            if (row.JiddiylikDarajasi.HasValue)
+                ComposeSeverityBar(doc, tr, fonts, row.JiddiylikDarajasi.Value);
+        }
+        catch
+        {
+            AddAiTextBlock(doc, fonts, raw);
+            if (row.JiddiylikDarajasi.HasValue)
+                ComposeSeverityBar(doc, tr, fonts, row.JiddiylikDarajasi.Value);
+        }
 
         ComposeDisclaimer(doc, tr, fonts);
     }
 
     // ════════════════════════════════════════════════════════════════════
+    private static string? ExtractJsonObject(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return null;
+        var start = raw.IndexOf('{');
+        if (start < 0) return null;
+        var end = raw.LastIndexOf('}');
+        if (end <= start) return null;
+        return raw.Substring(start, end - start + 1);
+    }
+
+    private static bool TryGetString(JsonElement el, string prop, out string value)
+    {
+        value = string.Empty;
+        if (!el.TryGetProperty(prop, out var p)) return false;
+        if (p.ValueKind != JsonValueKind.String) return false;
+        value = p.GetString() ?? string.Empty;
+        return !string.IsNullOrWhiteSpace(value);
+    }
+
+    private static bool TryGetBool(JsonElement el, string prop, out bool value)
+    {
+        value = default;
+        if (!el.TryGetProperty(prop, out var p)) return false;
+        if (p.ValueKind == JsonValueKind.True) { value = true; return true; }
+        if (p.ValueKind == JsonValueKind.False) { value = false; return true; }
+        if (p.ValueKind == JsonValueKind.String && bool.TryParse(p.GetString(), out var b)) { value = b; return true; }
+        return false;
+    }
+
+    private static bool TryGetInt(JsonElement el, string prop, out int value)
+    {
+        value = default;
+        if (!el.TryGetProperty(prop, out var p)) return false;
+        if (p.ValueKind == JsonValueKind.Number && p.TryGetInt32(out var n)) { value = n; return true; }
+        if (p.ValueKind == JsonValueKind.String && int.TryParse(p.GetString(), out var s)) { value = s; return true; }
+        return false;
+    }
+
+    private static string? GetString(JsonElement el, string prop)
+        => el.TryGetProperty(prop, out var p) && p.ValueKind == JsonValueKind.String ? p.GetString() : null;
+
+    private static int? GetInt(JsonElement el, string prop)
+    {
+        if (!el.TryGetProperty(prop, out var p)) return null;
+        if (p.ValueKind == JsonValueKind.Number && p.TryGetInt32(out var n)) return n;
+        if (p.ValueKind == JsonValueKind.String && int.TryParse(p.GetString(), out var s)) return s;
+        return null;
+    }
+
+    private static bool? GetBool(JsonElement el, string prop)
+    {
+        if (!el.TryGetProperty(prop, out var p)) return null;
+        if (p.ValueKind == JsonValueKind.True) return true;
+        if (p.ValueKind == JsonValueKind.False) return false;
+        if (p.ValueKind == JsonValueKind.String && bool.TryParse(p.GetString(), out var b)) return b;
+        return null;
+    }
+
+    private void AddParaAiTextIfExists(Document doc, Dictionary<string, Font> fonts, string label, string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return;
+        doc.Add(new Paragraph(label, fonts["p10bold"]) { SpacingBefore = 4, SpacingAfter = 2 });
+        AddAiTextBlock(doc, fonts, text.Trim());
+    }
+
     //  BLOK 5 — AI XULOSASI
     // ════════════════════════════════════════════════════════════════════
 

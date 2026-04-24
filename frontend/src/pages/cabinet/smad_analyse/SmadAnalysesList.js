@@ -1,7 +1,7 @@
 import { Button, DatePicker, Input, Select, Table, Tag, Row, Col, Tooltip, Modal, Space, Image, Typography } from 'antd';
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaPlus, FaSearch, FaHeartbeat, FaCheck, FaClock, FaSpinner, FaExclamationCircle } from 'react-icons/fa';
+import { FaSearch, FaHeartbeat, FaCheck, FaClock, FaSpinner, FaExclamationCircle } from 'react-icons/fa';
 import { FaEye } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
 import { get_smad_analyses_by_clinic, get_smad_analyses_by_doctor, get_smad_analyses_by_nurse, mark_smad_viewed } from '../../../host/requests/SmadAnalyseRequest';
@@ -315,9 +315,9 @@ export default function SmadAnalysesList() {
                     {/* Toolbar */}
                     <div style={{ padding: '0 0 20px 0' }} className='filter_form_box'>
                         <Row gutter={[12, 12]} align="bottom">
-                            <Col xs={24} sm={12} md={6}>
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
                                 <div className="filter_item">
-                                    <label className="filter_label">{t('search_by_patient')}</label>
+                                    <label className="filter_label">{t('search_by_label')}</label>
                                     <Input
                                         placeholder={t('search_by_patient')}
                                         value={searchInput}
@@ -335,7 +335,7 @@ export default function SmadAnalysesList() {
                                     />
                                 </div>
                             </Col>
-                            <Col xs={24} sm={12} md={6}>
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
                                 <div className="filter_item">
                                     <label className="filter_label">{t("date_filter")}</label>
                                     <DatePicker.RangePicker
@@ -345,15 +345,23 @@ export default function SmadAnalysesList() {
                                         placeholder={[t('date_from'), t('date_to')]}
                                         format="DD.MM.YYYY"
                                         style={{ width: '100%' }}
+                                        allowEmpty={[true, true]}
+                                        allowClear
+                                        onClear={() => {
+                                            setDateRange([null, null]);
+                                            filterRef.current.dateRange = [null, null];
+                                            setPage(1);
+                                            fetchData(1);
+                                        }}
                                     />
                                 </div>
                             </Col>
-                            <Col xs={24} sm={12} md={4}>
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
                                 <div className="filter_item">
-                                    <label className="filter_label">{t('filter_by_status')}</label>
+                                    <label className="filter_label">{t('processing_status')}</label>
                                     <Select
                                         className="login_input custom_select"
-                                        placeholder={t('filter_by_status')}
+                                        placeholder={t('processing_status')}
                                         value={statusFilter}
                                         allowClear
                                         onClear={() => {
@@ -372,7 +380,7 @@ export default function SmadAnalysesList() {
                                     </Select>
                                 </div>
                             </Col>
-                            <Col xs={24} sm={12} md={4}>
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
                                 <div className="filter_item">
                                     <label className="filter_label">{t('filter_by_ai') || 'AI bo\'yicha'}</label>
                                     <Select
@@ -395,7 +403,7 @@ export default function SmadAnalysesList() {
                                     </Select>
                                 </div>
                             </Col>
-                            <Col xs={24} sm={12} md={4}>
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
                                 <div className="filter_item">
                                     <label className="filter_label">{t('diagnosis_status') || 'Tashxis holati'}</label>
                                     <Select
@@ -417,15 +425,10 @@ export default function SmadAnalysesList() {
                                     </Select>
                                 </div>
                             </Col>
-                            <Col xs={24} sm={12} md={4}>
-                                <div style={{ display: 'flex', gap: 8, height: '48px' }}>
-                                    <button onClick={handleSearch} className="btn_form" style={{ flex: 1, margin: 0, height: '48px' }}>
-                                        {t('search')}
-                                    </button>
-                                    <button onClick={() => navigate('/analyse-smad')} className="btn_form" style={{ width: '48px', flexShrink: 0, margin: 0, height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <FaPlus />
-                                    </button>
-                                </div>
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
+                                <button onClick={handleSearch} className="btn_form" style={{ width: '100%', margin: 0, height: '48px' }}>
+                                    {t('search')}
+                                </button>
                             </Col>
                         </Row>
                     </div>

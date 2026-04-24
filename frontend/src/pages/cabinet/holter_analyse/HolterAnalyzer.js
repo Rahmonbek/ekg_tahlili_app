@@ -1,6 +1,6 @@
 import { Button, Col, Form, Row, Select, Tooltip, Upload } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IoAlertCircleSharp } from 'react-icons/io5';
 import { MdLanguage } from 'react-icons/md';
@@ -11,7 +11,7 @@ import { MoonLoader } from 'react-spinners';
 import { usePatientSearch } from '../../../hooks/usePatientSearch';
 import { useRegionDistrict } from '../../../hooks/useRegionDistrict';
 import { useDoctorPositions } from '../../../hooks/useDoctorPositions';
-import { useAnalyzerState } from '../../../hooks/useAnalyzerState';
+import { getTodayDateInputValue, useAnalyzerState } from '../../../hooks/useAnalyzerState';
 
 // ─── Shared Components ───
 import PatientSearchSection from '../../../components/shared/PatientSearchSection';
@@ -36,7 +36,7 @@ export default function HolterAnalyzer() {
     const [form2] = Form.useForm();
     const [gender, setGender] = useState(true);
     const [selectedMainDoctor, setSelectedMainDoctor] = useState(null);
-    const [analysisDateValue, setAnalysisDateValue] = useState('');
+    const [analysisDateValue, setAnalysisDateValue] = useState(getTodayDateInputValue());
 
     const { user, setloader, doctors } = useStore();
 
@@ -47,6 +47,17 @@ export default function HolterAnalyzer() {
         onChangeDoctors, filterByPosition, resetDoctorSelection,
     } = useDoctorPositions();
     const { state, dispatch, resetAll } = useAnalyzerState();
+
+    useEffect(() => {
+        form2?.setFieldsValue?.({ lang: state.lang, analysis_date: analysisDateValue });
+        if (!state.analysis_date && analysisDateValue) {
+            dispatch({
+                type: 'SET_FIELD',
+                field: 'analysis_date',
+                value: new Date(`${analysisDateValue}T00:00:00`).toISOString(),
+            });
+        }
+    }, [analysisDateValue, dispatch, form2, state.analysis_date, state.lang]);
 
     // ─── Old Analyses ───
     const getOldAnalyses = useCallback(async (id, type) => {
@@ -137,7 +148,7 @@ export default function HolterAnalyzer() {
         resetPatient();
         resetDoctorSelection();
         setSelectedMainDoctor(null);
-        setAnalysisDateValue('');
+        setAnalysisDateValue(getTodayDateInputValue());
         resetAll();
         form.resetFields();
         form1.resetFields();
@@ -148,7 +159,7 @@ export default function HolterAnalyzer() {
         resetPatient();
         resetDoctorSelection();
         setSelectedMainDoctor(null);
-        setAnalysisDateValue('');
+        setAnalysisDateValue(getTodayDateInputValue());
         resetAll();
         form.resetFields();
         form2.resetFields();
@@ -194,7 +205,7 @@ export default function HolterAnalyzer() {
                     <div className="main_card_content">
                         <Form form={form2} name="holterUpload" labelCol={{ span: 24 }} wrapperCol={{ span: 24 }}>
                             <Row>
-                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
+                                <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
                                     <Form.Item name="select_lab_file" label={t('select_holter_file')} rules={[{ required: true, message: '' }]}>
                                         <Upload.Dragger
                                             accept=".pdf"
@@ -209,7 +220,7 @@ export default function HolterAnalyzer() {
                                         </Upload.Dragger>
                                     </Form.Item>
                                 </Col>
-                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
+                                <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                                     <Form.Item name="lang" label={t('lang_analyse')} rules={[{ required: true, message: '' }]}>
                                         <Select
                                             style={{ width: '100%' }}
@@ -224,7 +235,7 @@ export default function HolterAnalyzer() {
                                         />
                                     </Form.Item>
                                 </Col>
-                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
+                                <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                                     <Form.Item
                                         name="analysis_date"
                                         label={t('analysis_date')}
@@ -236,14 +247,14 @@ export default function HolterAnalyzer() {
                                             value={analysisDateValue}
                                             onChange={(e) => {
                                                 setAnalysisDateValue(e.target.value);
-                                                dispatch({ type: 'SET_FIELD', field: 'analysis_date', value: e.target.value ? new Date(e.target.value).toISOString() : null });
+                                                dispatch({ type: 'SET_FIELD', field: 'analysis_date', value: e.target.value ? new Date(`${e.target.value}T00:00:00`).toISOString() : null });
                                             }}
                                         />
                                     </Form.Item>
                                 </Col>
 
                                 {/* Holter uchun asosiy shifokor */}
-                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
+                                <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                                     <Form.Item name="main_doctor" label={t('holter_doctor')} rules={[{ required: true, message: '' }]}>
                                         <Select
                                             style={{ width: '100%' }} value={selectedMainDoctor}

@@ -8,7 +8,7 @@ import { MoonLoader } from 'react-spinners';
 import { usePatientSearch } from '../../../hooks/usePatientSearch';
 import { useRegionDistrict } from '../../../hooks/useRegionDistrict';
 import { useDoctorPositions } from '../../../hooks/useDoctorPositions';
-import { useAnalyzerState } from '../../../hooks/useAnalyzerState';
+import { getTodayDateInputValue, useAnalyzerState } from '../../../hooks/useAnalyzerState';
 
 import PatientSearchSection from '../../../components/shared/PatientSearchSection';
 import PatientInfoForm from '../../../components/shared/PatientInfoForm';
@@ -27,6 +27,7 @@ export default function ParasitologyAnalyzer() {
     const [form1] = Form.useForm();
     const [form2] = Form.useForm();
     const [gender, setGender] = React.useState(true);
+    const [analysisDateValue, setAnalysisDateValue] = React.useState(getTodayDateInputValue());
 
     const { user, setloader } = useStore();
 
@@ -36,6 +37,17 @@ export default function ParasitologyAnalyzer() {
         onChangeDoctors, filterByPosition, resetDoctorSelection,
     } = useDoctorPositions();
     const { state, dispatch, resetAll } = useAnalyzerState();
+
+    React.useEffect(() => {
+        form2?.setFieldsValue?.({ lang: state.lang, analysis_date: analysisDateValue });
+        if (!state.analysis_date && analysisDateValue) {
+            dispatch({
+                type: 'SET_FIELD',
+                field: 'analysis_date',
+                value: new Date(`${analysisDateValue}T00:00:00`).toISOString(),
+            });
+        }
+    }, [analysisDateValue, dispatch, form2, state.analysis_date, state.lang]);
 
     const getOldAnalyses = useCallback(async (id, type) => {
         dispatch({ type: 'OLD_LOADING' });
@@ -126,6 +138,7 @@ export default function ParasitologyAnalyzer() {
     const retryAnalyse = useCallback(() => {
         resetPatient();
         resetDoctorSelection();
+        setAnalysisDateValue(getTodayDateInputValue());
         resetAll();
         form.resetFields();
         form1.resetFields();
@@ -135,6 +148,7 @@ export default function ParasitologyAnalyzer() {
     const resetData = useCallback(() => {
         resetPatient();
         resetDoctorSelection();
+        setAnalysisDateValue(getTodayDateInputValue());
         resetAll();
         form.resetFields();
         form2.resetFields();
@@ -185,7 +199,7 @@ export default function ParasitologyAnalyzer() {
                     <div className="main_card_content">
                         <Form form={form2} name="parasitologyUpload" labelCol={{ span: 24 }} wrapperCol={{ span: 24 }}>
                             <Row>
-                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
+                                <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
                                     <Form.Item name="select_file" label={t('select_lab_file')} rules={[{ required: true, message: '' }]}>
                                         <div>
                                             <input
@@ -199,7 +213,7 @@ export default function ParasitologyAnalyzer() {
                                     </Form.Item>
                                 </Col>
 
-                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
+                                <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                                     <Form.Item name="lang" label={t('lang_analyse')} rules={[{ required: true, message: '' }]}>
                                         <Select
                                             style={{ width: '100%' }}
@@ -216,7 +230,7 @@ export default function ParasitologyAnalyzer() {
                                     </Form.Item>
                                 </Col>
 
-                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
+                                <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                                     <Form.Item
                                         name="magnification"
                                         label={t('magnification')}
@@ -235,7 +249,7 @@ export default function ParasitologyAnalyzer() {
                                         />
                                     </Form.Item>
                                 </Col>
-                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
+                                <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                                     <Form.Item
                                         name="analysis_date"
                                         label={t('analysis_date')}
@@ -243,8 +257,12 @@ export default function ParasitologyAnalyzer() {
                                     >
                                         <input
                                             className="input_date"
-                                            type="datetime-local"
-                                            onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'analysis_date', value: e.target.value ? new Date(e.target.value).toISOString() : null })}
+                                            type="date"
+                                            value={analysisDateValue}
+                                            onChange={(e) => {
+                                                setAnalysisDateValue(e.target.value);
+                                                dispatch({ type: 'SET_FIELD', field: 'analysis_date', value: e.target.value ? new Date(`${e.target.value}T00:00:00`).toISOString() : null });
+                                            }}
                                         />
                                     </Form.Item>
                                 </Col>

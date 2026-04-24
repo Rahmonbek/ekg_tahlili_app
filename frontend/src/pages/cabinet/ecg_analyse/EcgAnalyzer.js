@@ -1,6 +1,6 @@
 import { Button, Checkbox, Col, Form, Radio, Row, Select, Tooltip, Upload, DatePicker } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IoAlertCircleSharp } from 'react-icons/io5';
 import { MdLanguage } from 'react-icons/md';
@@ -10,7 +10,7 @@ import { MoonLoader } from 'react-spinners';
 import { usePatientSearch } from '../../../hooks/usePatientSearch';
 import { useRegionDistrict } from '../../../hooks/useRegionDistrict';
 import { useDoctorPositions } from '../../../hooks/useDoctorPositions';
-import { useAnalyzerState } from '../../../hooks/useAnalyzerState';
+import { getTodayDateInputValue, useAnalyzerState } from '../../../hooks/useAnalyzerState';
 
 // ─── Shared Components ───
 import PatientSearchSection from '../../../components/shared/PatientSearchSection';
@@ -36,7 +36,7 @@ export default function EcgAnalyzer() {
     const [gender, setGender] = useState(true);
     const [selectedComplaints, setSelectedComplaints] = useState([]);
     const [checkAI, setCheckAI] = useState(false);
-    const [analysisDateValue, setAnalysisDateValue] = useState('');
+    const [analysisDateValue, setAnalysisDateValue] = useState(getTodayDateInputValue());
 
     const { complaints, user, setloader } = useStore();
 
@@ -47,6 +47,16 @@ export default function EcgAnalyzer() {
         onChangeDoctors, filterByPosition, resetDoctorSelection,
     } = useDoctorPositions();
     const { state, dispatch, resetAll } = useAnalyzerState();
+
+    useEffect(() => {
+        if (!state.analysis_date && analysisDateValue) {
+            dispatch({
+                type: 'SET_FIELD',
+                field: 'analysis_date',
+                value: new Date(`${analysisDateValue}T00:00:00`).toISOString(),
+            });
+        }
+    }, [analysisDateValue, dispatch, state.analysis_date]);
 
     const getOldECGAnalyses = useCallback(async (id, type) => {
         dispatch({ type: 'OLD_LOADING' });
@@ -158,7 +168,7 @@ export default function EcgAnalyzer() {
         resetDoctorSelection();
         setSelectedComplaints([]);
         setCheckAI(false);
-        setAnalysisDateValue('');
+        setAnalysisDateValue(getTodayDateInputValue());
         resetAll();
         form.resetFields();
         form1.resetFields();
@@ -170,7 +180,7 @@ export default function EcgAnalyzer() {
         resetDoctorSelection();
         setSelectedComplaints([]);
         setCheckAI(false);
-        setAnalysisDateValue('');
+        setAnalysisDateValue(getTodayDateInputValue());
         resetAll();
         form.resetFields();
         form2.resetFields();
@@ -269,7 +279,7 @@ export default function EcgAnalyzer() {
                                             value={analysisDateValue}
                                             onChange={(e) => {
                                                 setAnalysisDateValue(e.target.value);
-                                                dispatch({ type: 'SET_FIELD', field: 'analysis_date', value: e.target.value ? new Date(e.target.value).toISOString() : null });
+                                                dispatch({ type: 'SET_FIELD', field: 'analysis_date', value: e.target.value ? new Date(`${e.target.value}T00:00:00`).toISOString() : null });
                                             }}
                                         />
                                     </div>
