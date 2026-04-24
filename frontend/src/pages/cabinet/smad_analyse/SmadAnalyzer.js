@@ -1,4 +1,5 @@
-import { Button, Col, Form, Row, Select, Tooltip, DatePicker } from 'antd';
+import { Button, Col, Form, Row, Select, Tooltip, Upload } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IoAlertCircleSharp } from 'react-icons/io5';
@@ -35,6 +36,7 @@ export default function SmadAnalyzer() {
     const [form2] = Form.useForm();
     const [gender, setGender] = useState(true);
     const [selectedMainDoctor, setSelectedMainDoctor] = useState(null);
+    const [analysisDateValue, setAnalysisDateValue] = useState('');
 
     const { user, setloader, doctors } = useStore();
 
@@ -75,13 +77,10 @@ export default function SmadAnalyzer() {
     });
 
     // ─── File Select ───
-    const handleChange = useCallback((e) => {
-        dispatch({
-            type: 'SET_FILES',
-            files: Array.from(e.target.files),
-            fileInput: e.target.value,
-        });
+    const handleUploadFile = useCallback((file) => {
+        dispatch({ type: 'SET_FILES', files: [file], fileInput: '' });
         if (patcient?.id) getOldAnalyses(patcient.id, 'first');
+        return false;
     }, [patcient, getOldAnalyses, dispatch]);
 
     // ─── Submit ───
@@ -138,6 +137,7 @@ export default function SmadAnalyzer() {
         resetPatient();
         resetDoctorSelection();
         setSelectedMainDoctor(null);
+        setAnalysisDateValue('');
         resetAll();
         form.resetFields();
         form1.resetFields();
@@ -148,10 +148,17 @@ export default function SmadAnalyzer() {
         resetPatient();
         resetDoctorSelection();
         setSelectedMainDoctor(null);
+        setAnalysisDateValue('');
         resetAll();
         form.resetFields();
         form2.resetFields();
     }, [resetPatient, resetDoctorSelection, resetAll, form, form2]);
+
+    const canSubmit =
+        state.files.length > 0 &&
+        !!analysisDateValue &&
+        selectedDoctors.length > 0 &&
+        !!selectedMainDoctor;
 
     // ─── RENDER ───
     return (
@@ -189,17 +196,25 @@ export default function SmadAnalyzer() {
                             <Row>
                                 <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
                                     <Form.Item name="select_lab_file" label={t('select_smad_file')} rules={[{ required: true, message: '' }]}>
-                                        <div>
-                                            <input className="file_input" type="file" onChange={handleChange} accept=".pdf" />
-                                            <p className="file_input_bottom_text">{t('access_file_types')}: pdf</p>
-                                        </div>
+                                        <Upload.Dragger
+                                            accept=".pdf"
+                                            beforeUpload={handleUploadFile}
+                                            maxCount={1}
+                                            fileList={state.files}
+                                            onRemove={() => dispatch({ type: 'SET_FILES', files: [], fileInput: '' })}
+                                        >
+                                            <p className="ant-upload-drag-icon"><InboxOutlined /></p>
+                                            <p className="ant-upload-text">{t('select_smad_file')}</p>
+                                            <p className="ant-upload-hint">{t('access_file_types')}: pdf</p>
+                                        </Upload.Dragger>
                                     </Form.Item>
                                 </Col>
                                 <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
                                     <Form.Item name="lang" label={t('lang_analyse')} rules={[{ required: true, message: '' }]}>
                                         <Select
-                                            style={{ width: '100%' }} value={state.lang} prefix={<MdLanguage />}
-                                            defaultValue={state.lang}
+                                            style={{ width: '100%' }}
+                                            className="login_input"
+                                            value={state.lang}
                                             onChange={(value) => dispatch({ type: 'SET_FIELD', field: 'lang', value })}
                                             options={[
                                                 { value: 'uz', label: <> {t('uzbek')}</> },
@@ -217,8 +232,12 @@ export default function SmadAnalyzer() {
                                     >
                                         <input
                                             className="input_date"
-                                            type="datetime-local"
-                                            onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'analysis_date', value: e.target.value ? new Date(e.target.value).toISOString() : null })}
+                                            type="date"
+                                            value={analysisDateValue}
+                                            onChange={(e) => {
+                                                setAnalysisDateValue(e.target.value);
+                                                dispatch({ type: 'SET_FIELD', field: 'analysis_date', value: e.target.value ? new Date(e.target.value).toISOString() : null });
+                                            }}
                                         />
                                     </Form.Item>
                                 </Col>
@@ -243,7 +262,7 @@ export default function SmadAnalyzer() {
 
                                 <Col lg={9} xs={24} sm={24} md={24}></Col>
                                 <Col lg={6} xs={24} sm={24} md={24}>
-                                    {state.showBtn && (
+                                    {canSubmit && state.showBtn && (
                                         <Button onClick={handleSubmit} loading={state.loading3} htmlType="button" className="btn_form">
                                             {t('check')}
                                         </Button>

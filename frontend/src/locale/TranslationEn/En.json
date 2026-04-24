@@ -281,5 +281,7 @@
   "diagnosis_written": "Diagnosis written",
   "diagnosis_not_written": "Diagnosis not written",
   "analysis_date": "Analysis date",
-  "diagnosis_status": "Diagnosis status"
+  "diagnosis_status": "Diagnosis status",
+  "processing_status": "Analysis status",
+  "passport": "Passport"
 }

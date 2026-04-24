@@ -168,6 +168,37 @@
 
 ---
 
+## Phase 11: Analizlar Pariteti (EKG Reference) — Priority: P1/P2
+
+**Maqsad**: EKG tahlil sahifalaridagi filter/search/status/diagnosis/PDF ishlash prinsipi va UI joylashuvini Holter/SMAD/Lab/Parasitology sahifalariga ham bir xil qilish.
+
+### Backend (API contract)
+
+- [x] T042 [P1] Holter/SMAD/Lab doctor & nurse list endpointlariga `automaticAnalysisBool` va `hasDiagnosis` filterlarini to'liq qo'shish (controller+service)
+- [x] T043 [P1] Holter/SMAD/Lab list DTO lariga `HasDiagnosis` qo'shish va list projectionlarda to'ldirish (batch `has-diagnosis` chaqiruvisiz)
+- [x] T044 [P2] Holter/SMAD/Lab servicelarda ko'p so'zli qidiruvni (split by space) EKG kabi qilish (clinic/doctor/nurse)
+
+### Frontend (List sahifalar)
+
+- [x] T045 [P1] Holter/SMAD/Lab list sahifalarini EKG list standartiga keltirish: `filterRef` (Search bosilganda apply), `onClear` hammasiga, ustunlar: processing status + AI status + diagnosis status + createdAt + analysisDate
+- [x] T046 [P2] Parasitology list sahifasini ham shu standartga yaqinlashtirish (filterRef/onClear/HasDiagnosis) — status string bo'lsa ham UX bir xil
+
+### Frontend (Analyzer sahifalar)
+
+- [x] T047 [P1] Variant A: barcha analyzer sahifalarda `analysis_date` inputni `type="date"` qilib standart qilish (EKG kabi) va reset/gatingni bir xil qilish
+- [x] T048 [P2] Holter/SMAD/Lab analyzerdagi file upload UI ni Ant Design `Upload.Dragger`ga o'tkazish (EKG parity)
+- [x] T049 [P1] Analyzer submit gating: file + analysis_date + doctor(lar) + (Holter/SMAD main_doctor) majburiy bo'lsa tugma ko'rinishi sharti bilan bir xil qilish
+
+### Frontend (View sahifalar + Request layer)
+
+- [x] T050 [P2] Parasitology view sahifasida `axiosInstance.get`ni request layerga ko'chirish (bir xil pattern)
+
+### Locale / Consistency
+
+- [x] T051 [P2] List sahifalardagi `passport`/`passport_seria`, `date_filter`/`created_at`, `processing_status` keylarini bir xil qilish va uz/ru/en jsonlarda yo'q bo'lsa qo'shish
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

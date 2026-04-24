@@ -168,6 +168,7 @@ namespace EkgAnalyzerApi.Services
                     JiddiylikDarajasi = a.JiddiylikDarajasi,
                     CreatedAt = a.CreatedAt,
                     AnalysisDate = a.AnalysisDate,
+                    HasDiagnosis = _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "para" && d.AnalysisId == a.Id),
                     Patcient = a.Patcient == null ? null : new PatcientForECG
                     {
                         Id = a.Patcient.Id,
@@ -230,6 +231,7 @@ namespace EkgAnalyzerApi.Services
                     JiddiylikDarajasi = a.JiddiylikDarajasi,
                     CreatedAt = a.CreatedAt,
                     AnalysisDate = a.AnalysisDate,
+                    HasDiagnosis = _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "para" && d.AnalysisId == a.Id),
                     Patcient = a.Patcient == null ? null : new PatcientForECG
                     {
                         Id = a.Patcient.Id,
@@ -291,6 +293,7 @@ namespace EkgAnalyzerApi.Services
                     JiddiylikDarajasi = a.JiddiylikDarajasi,
                     CreatedAt = a.CreatedAt,
                     AnalysisDate = a.AnalysisDate,
+                    HasDiagnosis = _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "para" && d.AnalysisId == a.Id),
                     Patcient = a.Patcient == null ? null : new PatcientForECG
                     {
                         Id = a.Patcient.Id,

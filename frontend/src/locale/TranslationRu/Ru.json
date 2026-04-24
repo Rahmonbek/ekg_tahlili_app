@@ -283,5 +283,7 @@
   "diagnosis_written": "Диагноз поставлен",
   "diagnosis_not_written": "Диагноз не поставлен",
   "analysis_date": "Дата анализа",
-  "diagnosis_status": "Статус диагноза"
+  "diagnosis_status": "Статус диагноза",
+  "processing_status": "Статус анализа",
+  "passport": "Паспорт"
 }

@@ -1,5 +1,5 @@
 import { Button, DatePicker, Input, Select, Table, Tag, Row, Col, Tooltip } from 'antd';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaPlus, FaSearch, FaCheck } from 'react-icons/fa';
 import { FaEye } from 'react-icons/fa6';
@@ -12,7 +12,6 @@ import {
 } from '../../../host/requests/ParasitologyRequest';
 import { formatDateTime, calculateAge, formatDate } from '../../../tools/formatters';
 import { useStore } from '../../../store/Store';
-import { check_has_diagnosis } from '../../../host/requests/AnalysisDiagnosisRequest';
 import EmptyState from '../../../components/shared/EmptyState';
 
 const { Option } = Select;
@@ -50,18 +49,26 @@ export default function ParasitologyAnalysesList() {
     const [dateRange, setDateRange] = useState([null, null]);
     const [jiddiylikFilter, setJiddiylikFilter] = useState(null);
     const [hasDiagnosisFilter, setHasDiagnosisFilter] = useState(null);
-    const [diagnosisMap, setDiagnosisMap] = useState([]);
 
-    const fetchData = useCallback(async (p, s, st, dr, jd) => {
+    const filterRef = useRef({
+        search: '',
+        status: null,
+        dateRange: [null, null],
+        jiddiylik: null,
+        hasDiagnosis: null,
+    });
+
+    const fetchData = useCallback(async (p) => {
         setLoading(true);
         try {
+            const { search, status, dateRange: dr, jiddiylik, hasDiagnosis } = filterRef.current;
             const params = { page: p, pageSize: PAGE_SIZE };
-            if (s) params.search = s;
-            if (st) params.status = st;
+            if (search) params.search = search;
+            if (status) params.status = status;
             if (dr && dr[0]) params.dateFrom = dr[0].format('YYYY-MM-DD');
             if (dr && dr[1]) params.dateTo = dr[1].format('YYYY-MM-DD');
-            if (jd !== null && jd !== undefined) params.jiddiylik = jd;
-            if (hasDiagnosisFilter !== null) params.hasDiagnosis = hasDiagnosisFilter;
+            if (jiddiylik !== null && jiddiylik !== undefined) params.jiddiylik = jiddiylik;
+            if (hasDiagnosis !== null) params.hasDiagnosis = hasDiagnosis;
 
             const res = isDoctor
                 ? await get_parasitology_analyses_by_doctor(params)
@@ -69,17 +76,8 @@ export default function ParasitologyAnalysesList() {
                     ? await get_parasitology_analyses_by_nurse(params)
                     : await get_parasitology_analyses_by_clinic(params);
 
-            const items = res.data.items;
-            setData(items);
+            setData(res.data.items);
             setTotal(res.data.totalCount);
-
-            if (items.length > 0) {
-                check_has_diagnosis('para', items.map(i => i.id))
-                    .then(diagRes => setDiagnosisMap(diagRes.data))
-                    .catch(() => { });
-            } else {
-                setDiagnosisMap([]);
-            }
         } catch {
             // silent
         } finally {
@@ -88,24 +86,19 @@ export default function ParasitologyAnalysesList() {
     }, [isDoctor, isNurse]);
 
     useEffect(() => {
-        fetchData(page, searchInput, statusFilter, dateRange, jiddiylikFilter, hasDiagnosisFilter);
+        fetchData(page);
     }, [page, fetchData]);
 
     const handleSearch = () => {
+        filterRef.current = {
+            search: searchInput,
+            status: statusFilter,
+            dateRange,
+            jiddiylik: jiddiylikFilter,
+            hasDiagnosis: hasDiagnosisFilter,
+        };
         setPage(1);
-        fetchData(1, searchInput, statusFilter, dateRange, jiddiylikFilter, hasDiagnosisFilter);
-    };
-
-    const hasActiveFilters = searchInput || statusFilter || jiddiylikFilter !== null || hasDiagnosisFilter !== null || (dateRange[0] || dateRange[1]);
-
-    const handleClearFilters = () => {
-        setSearchInput('');
-        setStatusFilter(null);
-        setJiddiylikFilter(null);
-        setHasDiagnosisFilter(null);
-        setDateRange([null, null]);
-        setPage(1);
-        fetchData(1, '', null, [null, null], null, null);
+        fetchData(1);
     };
 
     const statusLabel = (s) => {
@@ -183,12 +176,11 @@ export default function ParasitologyAnalysesList() {
                 ) : '—',
         },
         {
-            title: t('status'),
-            key: 'status',
+            title: t('diagnosis_written') || 'Holati',
+            key: 'diagnosis_written',
             align: 'center',
             render: (_, row) => {
-                const hasDiag = diagnosisMap.includes(row.id);
-                if (hasDiag) {
+                if (row.hasDiagnosis) {
                     return (
                         <Tag color="success" style={{ borderRadius: '4px', fontWeight: 500 }}>
                             <FaCheck style={{ marginRight: 4 }} /> {t('diagnosis_written') || 'Tashxis yozilgan'}
@@ -203,7 +195,7 @@ export default function ParasitologyAnalysesList() {
             },
         },
         {
-            title: t('created_at') || 'Tizimga kiritilgan sana',
+            title: t('date_filter') || 'Tizimga kiritilgan sana',
             key: 'createdAt',
             align: 'center',
             render: (_, row) => formatDate(row.createdAt),
@@ -254,7 +246,12 @@ export default function ParasitologyAnalysesList() {
                                         className="login_input"
 
                                         allowClear
-                                        onClear={() => { setSearchInput(''); fetchData(1, '', statusFilter, dateRange, jiddiylikFilter, hasDiagnosisFilter); }}
+                                        onClear={() => {
+                                            setSearchInput('');
+                                            filterRef.current.search = '';
+                                            setPage(1);
+                                            fetchData(1);
+                                        }}
                                     />
                                 </div>
                             </Col>
@@ -279,7 +276,13 @@ export default function ParasitologyAnalysesList() {
                                         placeholder={t('filter_by_status')}
                                         value={statusFilter}
                                         allowClear
-                                        onChange={(val) => setStatusFilter(val)}
+                                        onClear={() => {
+                                            setStatusFilter(null);
+                                            filterRef.current.status = null;
+                                            setPage(1);
+                                            fetchData(1);
+                                        }}
+                                        onChange={(val) => setStatusFilter(val ?? null)}
                                         style={{ width: '100%' }}
                                     >
                                         <Option value="pending">{t('para_status_pending')}</Option>
@@ -297,7 +300,13 @@ export default function ParasitologyAnalysesList() {
                                         placeholder={t('para_filter_jiddiylik')}
                                         value={jiddiylikFilter}
                                         allowClear
-                                        onChange={(val) => setJiddiylikFilter(val)}
+                                        onClear={() => {
+                                            setJiddiylikFilter(null);
+                                            filterRef.current.jiddiylik = null;
+                                            setPage(1);
+                                            fetchData(1);
+                                        }}
+                                        onChange={(val) => setJiddiylikFilter(val ?? null)}
                                         style={{ width: '100%' }}
                                     >
                                         <Option value={1}>{t('normal')}</Option>
@@ -314,6 +323,12 @@ export default function ParasitologyAnalysesList() {
                                         placeholder={t('diagnosis_status') || 'Tashxis holati'}
                                         value={hasDiagnosisFilter}
                                         allowClear
+                                        onClear={() => {
+                                            setHasDiagnosisFilter(null);
+                                            filterRef.current.hasDiagnosis = null;
+                                            setPage(1);
+                                            fetchData(1);
+                                        }}
                                         onChange={(val) => setHasDiagnosisFilter(val ?? null)}
                                         style={{ width: '100%' }}
                                     >
@@ -331,14 +346,6 @@ export default function ParasitologyAnalysesList() {
                                         <FaPlus />
                                     </button>
                                 </div>
-                                {hasActiveFilters && (
-                                    <button
-                                        onClick={handleClearFilters}
-                                        style={{ marginTop: 6, background: 'none', color: '#94a3b8', fontSize: 13, cursor: 'pointer', padding: 0, textDecoration: 'underline', width: '100%', textAlign: 'center' }}
-                                    >
-                                        {t('clear_filters') || 'Filtrlarni tozalash'}
-                                    </button>
-                                )}
                             </Col>
                         </Row>
                     </div>

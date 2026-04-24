@@ -8,6 +8,7 @@ public class HolterAnalyseListDTO
     public DateTime? CreatedAt { get; set; }
     public DateTime? AnalysisDate { get; set; }
     public bool? IsViewed { get; set; }
+    public bool HasDiagnosis { get; set; }
     public PatcientForECG? Patcient { get; set; }
     public DoctorForECGData? CreatedDoctor { get; set; }
 }
@@ -20,6 +21,7 @@ public class SmadAnalyseListDTO
     public DateTime? CreatedAt { get; set; }
     public DateTime? AnalysisDate { get; set; }
     public bool? IsViewed { get; set; }
+    public bool HasDiagnosis { get; set; }
     public PatcientForECG? Patcient { get; set; }
     public DoctorForECGData? CreatedDoctor { get; set; }
 }
@@ -32,6 +34,7 @@ public class LabAnalyseListDTO
     public DateTime? CreatedAt { get; set; }
     public DateTime? AnalysisDate { get; set; }
     public bool? IsViewed { get; set; }
+    public bool HasDiagnosis { get; set; }
     public PatcientForECG? Patcient { get; set; }
     public DoctorForECGData? CreatedDoctor { get; set; }
 }

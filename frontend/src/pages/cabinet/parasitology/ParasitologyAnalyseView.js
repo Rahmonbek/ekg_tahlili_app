@@ -8,7 +8,7 @@ import ParasitologyOldResult from './ParasitologyOldResult';
 import { useStore } from '../../../store/Store';
 import DownloadReportButton from '../../../components/DownloadReportButton';
 import DoctorDiagnosisBlock from '../../../components/results/DoctorDiagnosisBlock';
-import axiosInstance from '../../../host/Api';
+import { get_parasitology_analyse_by_id } from '../../../host/requests/ParasitologyRequest';
 
 const { Title, Text } = Typography;
 
@@ -32,7 +32,7 @@ export default function ParasitologyAnalyseView() {
         setLoading(true);
         setloader(true);
         try {
-            const res = await axiosInstance.get(`/parasitology-analyses/${id}`);
+            const res = await get_parasitology_analyse_by_id(id);
             setData(res.data);
         } catch (err) {
             navigate('/parasitology-analyses');

@@ -95,6 +95,7 @@ public class ParasitologyAnalyseListDTO
     public int? JiddiylikDarajasi { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? AnalysisDate { get; set; }
+    public bool HasDiagnosis { get; set; }
     public PatcientForECG? Patcient { get; set; }
     public DoctorForECGData? CreatedDoctor { get; set; }
 }

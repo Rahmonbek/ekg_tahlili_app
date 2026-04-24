@@ -1,13 +1,12 @@
 import { Button, DatePicker, Input, Select, Table, Tag, Row, Col, Tooltip, Modal, Space, Image, Typography } from 'antd';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaPlus, FaSearch, FaFlask, FaHeartbeat, FaCheck } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaFlask, FaHeartbeat, FaCheck, FaClock, FaSpinner, FaExclamationCircle } from 'react-icons/fa';
 import { FaEye } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
 import { get_lab_analyses_by_clinic, get_lab_analyses_by_doctor, get_lab_analyses_by_nurse, mark_lab_viewed } from '../../../host/requests/LabAnalyseRequest';
 import { formatDate, calculateAge, formatDateTime } from '../../../tools/formatters';
 import { useStore } from '../../../store/Store';
-import { check_has_diagnosis } from '../../../host/requests/AnalysisDiagnosisRequest';
 import EmptyState from '../../../components/shared/EmptyState';
 
 const { Option } = Select;
@@ -40,42 +39,41 @@ export default function LabAnalysesList() {
 
     const [searchInput, setSearchInput] = useState('');
     const [statusFilter, setStatusFilter] = useState(null);
+    const [aiStatusFilter, setAiStatusFilter] = useState(null);
     const [dateRange, setDateRange] = useState([null, null]);
-    const [autoAnalysisFilter, setAutoAnalysisFilter] = useState(null);
     const [hasDiagnosisFilter, setHasDiagnosisFilter] = useState(null);
-    const [diagnosisMap, setDiagnosisMap] = useState([]);
 
     const [clinicModalVisible, setClinicModalVisible] = useState(false);
     const [selectedClinic, setSelectedClinic] = useState(null);
 
     const PAGE_SIZE = 10;
 
-    const fetchData = useCallback(async (p, s, st, dr, ab) => {
+    const filterRef = useRef({
+        search: '',
+        status: null,
+        aiStatus: null,
+        dateRange: [null, null],
+        hasDiagnosis: null,
+    });
+
+    const fetchData = useCallback(async (p) => {
         setLoading(true);
         try {
+            const { search, status, aiStatus, dateRange: dr, hasDiagnosis } = filterRef.current;
             const params = { page: p, pageSize: PAGE_SIZE };
-            if (s) params.search = s;
-            if (st !== null && st !== undefined) params.status = st;
+            if (search) params.search = search;
+            if (status !== null && status !== undefined) params.status = status;
             if (dr && dr[0]) params.dateFrom = dr[0].format('YYYY-MM-DD');
             if (dr && dr[1]) params.dateTo = dr[1].format('YYYY-MM-DD');
-            if (ab !== null && ab !== undefined) params.automaticAnalysisBool = ab;
-            if (hasDiagnosisFilter !== null) params.hasDiagnosis = hasDiagnosisFilter;
+            if (aiStatus !== null && aiStatus !== undefined) params.automaticAnalysisBool = aiStatus;
+            if (hasDiagnosis !== null) params.hasDiagnosis = hasDiagnosis;
             const res = isDoctor
                 ? await get_lab_analyses_by_doctor(params)
                 : isNurse
                     ? await get_lab_analyses_by_nurse(params)
                     : await get_lab_analyses_by_clinic(params);
-            const items = res.data.items;
-            setData(items);
+            setData(res.data.items);
             setTotal(res.data.totalCount);
-
-            if (items.length > 0) {
-                check_has_diagnosis('lab', items.map(i => i.id))
-                    .then(diagRes => setDiagnosisMap(diagRes.data))
-                    .catch(() => { });
-            } else {
-                setDiagnosisMap([]);
-            }
         } catch (err) {
             // handleApiError
         } finally {
@@ -84,35 +82,34 @@ export default function LabAnalysesList() {
     }, [isDoctor, isNurse]);
 
     useEffect(() => {
-        fetchData(page, searchInput, statusFilter, dateRange, autoAnalysisFilter, hasDiagnosisFilter);
+        fetchData(page);
         if (isDoctor) {
             mark_lab_viewed().then(() => setlab_unread(0)).catch(() => { });
         }
-    }, [page, fetchData]);
+    }, [page, isDoctor, fetchData]);
 
     const handleSearch = () => {
+        filterRef.current = {
+            search: searchInput,
+            status: statusFilter,
+            aiStatus: aiStatusFilter,
+            dateRange,
+            hasDiagnosis: hasDiagnosisFilter,
+        };
         setPage(1);
-        fetchData(1, searchInput, statusFilter, dateRange, autoAnalysisFilter, hasDiagnosisFilter);
+        fetchData(1);
     };
 
     const handleStatusChange = (val) => {
         setStatusFilter(val ?? null);
     };
 
-    const handleDateRangeChange = (dates) => {
-        setDateRange(dates || [null, null]);
+    const handleAIStatusChange = (val) => {
+        setAiStatusFilter(val ?? null);
     };
 
-    const hasActiveFilters = searchInput || statusFilter !== null || autoAnalysisFilter !== null || hasDiagnosisFilter !== null || (dateRange[0] || dateRange[1]);
-
-    const handleClearFilters = () => {
-        setSearchInput('');
-        setStatusFilter(null);
-        setAutoAnalysisFilter(null);
-        setHasDiagnosisFilter(null);
-        setDateRange([null, null]);
-        setPage(1);
-        fetchData(1, '', null, [null, null], null, null);
+    const handleDateRangeChange = (dates) => {
+        setDateRange(dates || [null, null]);
     };
 
     const showClinicInfo = (clinic) => {
@@ -192,10 +189,16 @@ export default function LabAnalysesList() {
             },
         },
         {
-            title: t('passport_seria'),
+            title: t('passport'),
             key: 'passport',
             align: 'center',
             render: (_, row) => row.patcient?.passport || '—',
+        },
+        {
+            title: t('birthdate'),
+            key: 'birthdate',
+            align: 'center',
+            render: (_, row) => row.patcient ? formatDate(row.patcient.birthDate) : '—',
         },
         {
             title: t('doctor'),
@@ -207,6 +210,26 @@ export default function LabAnalysesList() {
             },
         },
         {
+            title: t('processing_status') || 'Tahlil holati',
+            dataIndex: 'status',
+            key: 'status',
+            align: 'center',
+            render: (st) => {
+                const colors = { 0: 'default', 1: 'processing', 2: 'success', '-1': 'error' };
+                const icons = {
+                    0: <FaClock style={{ marginRight: 4 }} />,
+                    1: <FaSpinner className="ant-spin-dot-spin" style={{ marginRight: 4 }} />,
+                    2: <FaCheck style={{ marginRight: 4 }} />,
+                    '-1': <FaExclamationCircle style={{ marginRight: 4 }} />
+                };
+                return (
+                    <Tag color={colors[st]} style={{ borderRadius: '4px', fontWeight: 500 }}>
+                        {icons[st]} {statusLabel(st)}
+                    </Tag>
+                );
+            }
+        },
+        {
             title: t('ai_result') || 'AI Natija',
             dataIndex: 'aiStatus',
             key: 'aiStatus',
@@ -216,16 +239,17 @@ export default function LabAnalysesList() {
                     <Tag color={AI_STATUS_COLORS[st]} style={{ borderRadius: '4px', fontWeight: 500 }}>
                         {aiStatusLabel(st)}
                     </Tag>
-                ) : '—'
+                ) : <Tag color={'blue'} style={{ borderRadius: '4px', fontWeight: 500 }}>
+                    {t('not_analysed') || 'Tahlil qilinmagan'}
+                </Tag>
             ),
         },
         {
-            title: t('status'),
-            key: 'status',
+            title: t('diagnosis_written') || 'Holati',
+            key: 'diagnosis_written',
             align: 'center',
             render: (_, row) => {
-                const hasDiag = diagnosisMap.includes(row.id);
-                if (hasDiag) {
+                if (row.hasDiagnosis) {
                     return (
                         <Tag color="success" style={{ borderRadius: '4px', fontWeight: 500 }}>
                             <FaCheck style={{ marginRight: 4 }} /> {t('diagnosis_written') || 'Tashxis yozilgan'}
@@ -241,7 +265,7 @@ export default function LabAnalysesList() {
         },
         // Removed redundant diagnosis column
         {
-            title: t('created_at') || 'Tizimga kiritilgan sana',
+            title: t('date_filter') || 'Tizimga kiritilgan sana',
             key: 'createdAt',
             align: 'center',
             render: (_, row) => formatDate(row.createdAt),
@@ -299,7 +323,12 @@ export default function LabAnalysesList() {
                                         className="login_input"
 
                                         allowClear
-                                        onClear={() => { setSearchInput(''); fetchData(1, '', statusFilter, dateRange, autoAnalysisFilter, hasDiagnosisFilter); }}
+                                        onClear={() => {
+                                            setSearchInput('');
+                                            filterRef.current.search = '';
+                                            setPage(1);
+                                            fetchData(1);
+                                        }}
                                     />
                                 </div>
                             </Col>
@@ -324,6 +353,12 @@ export default function LabAnalysesList() {
                                         placeholder={t('filter_by_status')}
                                         value={statusFilter}
                                         allowClear
+                                        onClear={() => {
+                                            setStatusFilter(null);
+                                            filterRef.current.status = null;
+                                            setPage(1);
+                                            fetchData(1);
+                                        }}
                                         onChange={handleStatusChange}
                                         style={{ width: '100%' }}
                                     >
@@ -340,9 +375,15 @@ export default function LabAnalysesList() {
                                     <Select
                                         className="login_input custom_select"
                                         placeholder={t('filter_by_ai') || 'AI bo\'yicha'}
-                                        value={autoAnalysisFilter}
+                                        value={aiStatusFilter}
                                         allowClear
-                                        onChange={(val) => setAutoAnalysisFilter(val ?? null)}
+                                        onClear={() => {
+                                            setAiStatusFilter(null);
+                                            filterRef.current.aiStatus = null;
+                                            setPage(1);
+                                            fetchData(1);
+                                        }}
+                                        onChange={handleAIStatusChange}
                                         style={{ width: '100%' }}
                                     >
                                         <Option value={1}>{t('normal') || 'Normal'}</Option>
@@ -359,6 +400,12 @@ export default function LabAnalysesList() {
                                         placeholder={t('diagnosis_status') || 'Tashxis holati'}
                                         value={hasDiagnosisFilter}
                                         allowClear
+                                        onClear={() => {
+                                            setHasDiagnosisFilter(null);
+                                            filterRef.current.hasDiagnosis = null;
+                                            setPage(1);
+                                            fetchData(1);
+                                        }}
                                         onChange={(val) => setHasDiagnosisFilter(val ?? null)}
                                         style={{ width: '100%' }}
                                     >
@@ -376,14 +423,6 @@ export default function LabAnalysesList() {
                                         <FaPlus />
                                     </button>
                                 </div>
-                                {hasActiveFilters && (
-                                    <button
-                                        onClick={handleClearFilters}
-                                        style={{ marginTop: 6, background: 'none', color: '#94a3b8', fontSize: 13, cursor: 'pointer', padding: 0, textDecoration: 'underline', width: '100%', textAlign: 'center' }}
-                                    >
-                                        {t('clear_filters') || 'Filtrlarni tozalash'}
-                                    </button>
-                                )}
                             </Col>
                         </Row>
                     </div>

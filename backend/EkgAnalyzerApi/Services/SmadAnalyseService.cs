@@ -156,7 +156,7 @@ namespace EkgAnalyzerApi.Services
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                var sLower = search.Trim().ToLower();
+                var s = search.Trim();
                 var isPassport = System.Text.RegularExpressions.Regex.IsMatch(search.Replace(" ", ""), @"^[A-Za-z]{2}\d+$");
                 if (isPassport)
                 {
@@ -168,11 +168,15 @@ namespace EkgAnalyzerApi.Services
                 }
                 else
                 {
-                    query = query.Where(e =>
-                        (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(sLower)) ||
-                        (e.Patcient.LastName != null && e.Patcient.LastName.ToLower().Contains(sLower)) ||
-                        (e.Patcient.SureName != null && e.Patcient.SureName.ToLower().Contains(sLower))
-                    );
+                    var words = s.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var word in words)
+                    {
+                        query = query.Where(e =>
+                            (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(word)) ||
+                            (e.Patcient.LastName != null && e.Patcient.LastName.ToLower().Contains(word)) ||
+                            (e.Patcient.SureName != null && e.Patcient.SureName.ToLower().Contains(word)) ||
+                            (e.Patcient.Passport != null && e.Patcient.Passport.Replace(" ", "").Contains(s.Replace(" ", "").ToUpper())));
+                    }
                 }
             }
 
@@ -230,7 +234,8 @@ namespace EkgAnalyzerApi.Services
                     AIStatus = e.AIAnswerData != null ? 
                         (e.AIAnswerData.Contains("\"automatic_analysis_bool\": 1") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"1\"") ? 1 : 
                          e.AIAnswerData.Contains("\"automatic_analysis_bool\": 2") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"2\"") ? 2 : 
-                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 3") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"3\"") ? 3 : null) : null
+                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 3") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"3\"") ? 3 : null) : null,
+                    HasDiagnosis = _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "smad" && d.AnalysisId == e.Id)
                 })
                 .ToListAsync();
 
@@ -251,6 +256,7 @@ namespace EkgAnalyzerApi.Services
             int? status = null,
             DateTime? dateFrom = null,
             DateTime? dateTo = null,
+            int? aiStatus = null,
             bool? hasDiagnosis = null)
         {
             var query = _context.SmadAnalyses
@@ -275,6 +281,16 @@ namespace EkgAnalyzerApi.Services
                 query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) <= utcTo);
             }
 
+            if (aiStatus.HasValue)
+            {
+                var val = aiStatus.Value.ToString();
+                query = query.Where(e => e.AIAnswerData != null && (
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": {val}") ||
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":{val}") ||
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": \"{val}\"") ||
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":\"{val}\"")));
+            }
+
             if (hasDiagnosis.HasValue)
             {
                 if (hasDiagnosis.Value)
@@ -289,11 +305,17 @@ namespace EkgAnalyzerApi.Services
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                var sLower = search.Trim().ToLower();
-                query = query.Where(e =>
-                    (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(sLower)) ||
-                    (e.Patcient.LastName  != null && e.Patcient.LastName.ToLower().Contains(sLower))  ||
-                    (e.Patcient.SureName  != null && e.Patcient.SureName.ToLower().Contains(sLower)));
+                var s = search.Trim();
+                var words = s.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (var word in words)
+                {
+                    query = query.Where(e =>
+                        (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(word)) ||
+                        (e.Patcient.LastName  != null && e.Patcient.LastName.ToLower().Contains(word))  ||
+                        (e.Patcient.SureName  != null && e.Patcient.SureName.ToLower().Contains(word)) ||
+                        (e.Patcient.Passport  != null && e.Patcient.Passport.Replace(" ", "").Contains(s.Replace(" ", "").ToUpper())));
+                }
             }
 
             var totalCount = await query.CountAsync();
@@ -329,7 +351,8 @@ namespace EkgAnalyzerApi.Services
                     AIStatus = e.AIAnswerData != null ?
                         (e.AIAnswerData.Contains("\"automatic_analysis_bool\": 1") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"1\"") ? 1 :
                          e.AIAnswerData.Contains("\"automatic_analysis_bool\": 2") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"2\"") ? 2 :
-                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 3") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"3\"") ? 3 : null) : null
+                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 3") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"3\"") ? 3 : null) : null,
+                    HasDiagnosis = _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "smad" && d.AnalysisId == e.Id)
                 })
                 .ToListAsync();
 
@@ -367,6 +390,7 @@ namespace EkgAnalyzerApi.Services
             int? status = null,
             DateTime? dateFrom = null,
             DateTime? dateTo = null,
+            int? aiStatus = null,
             bool? hasDiagnosis = null)
         {
             var query = _context.SmadAnalyses
@@ -390,6 +414,16 @@ namespace EkgAnalyzerApi.Services
                 query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) <= utcTo);
             }
 
+            if (aiStatus.HasValue)
+            {
+                var val = aiStatus.Value.ToString();
+                query = query.Where(e => e.AIAnswerData != null && (
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": {val}") ||
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":{val}") ||
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": \"{val}\"") ||
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":\"{val}\"")));
+            }
+
             if (hasDiagnosis.HasValue)
             {
                 if (hasDiagnosis.Value)
@@ -404,11 +438,17 @@ namespace EkgAnalyzerApi.Services
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                var sLower = search.Trim().ToLower();
-                query = query.Where(e =>
-                    (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(sLower)) ||
-                    (e.Patcient.LastName  != null && e.Patcient.LastName.ToLower().Contains(sLower))  ||
-                    (e.Patcient.SureName  != null && e.Patcient.SureName.ToLower().Contains(sLower)));
+                var s = search.Trim();
+                var words = s.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (var word in words)
+                {
+                    query = query.Where(e =>
+                        (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(word)) ||
+                        (e.Patcient.LastName  != null && e.Patcient.LastName.ToLower().Contains(word))  ||
+                        (e.Patcient.SureName  != null && e.Patcient.SureName.ToLower().Contains(word)) ||
+                        (e.Patcient.Passport  != null && e.Patcient.Passport.Replace(" ", "").Contains(s.Replace(" ", "").ToUpper())));
+                }
             }
 
             var totalCount = await query.CountAsync();
@@ -444,7 +484,8 @@ namespace EkgAnalyzerApi.Services
                     AIStatus = e.AIAnswerData != null ?
                         (e.AIAnswerData.Contains("\"automatic_analysis_bool\": 1") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"1\"") ? 1 :
                          e.AIAnswerData.Contains("\"automatic_analysis_bool\": 2") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"2\"") ? 2 :
-                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 3") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"3\"") ? 3 : null) : null
+                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 3") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"3\"") ? 3 : null) : null,
+                    HasDiagnosis = _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "smad" && d.AnalysisId == e.Id)
                 })
                 .ToListAsync();
 

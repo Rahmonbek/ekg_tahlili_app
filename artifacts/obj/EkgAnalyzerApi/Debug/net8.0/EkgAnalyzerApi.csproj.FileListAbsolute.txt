@@ -1,0 +1,9 @@
+D:\git\ekg_tahlili_app\artifacts\obj\EkgAnalyzerApi\Debug\net8.0\EkgAnalyzerApi.csproj.AssemblyReference.cache
+D:\git\ekg_tahlili_app\artifacts\obj\EkgAnalyzerApi\Debug\net8.0\rpswa.dswa.cache.json
+D:\git\ekg_tahlili_app\artifacts\obj\EkgAnalyzerApi\Debug\net8.0\EkgAnalyzerApi.GeneratedMSBuildEditorConfig.editorconfig
+D:\git\ekg_tahlili_app\artifacts\obj\EkgAnalyzerApi\Debug\net8.0\EkgAnalyzerApi.AssemblyInfoInputs.cache
+D:\git\ekg_tahlili_app\artifacts\obj\EkgAnalyzerApi\Debug\net8.0\EkgAnalyzerApi.AssemblyInfo.cs
+D:\git\ekg_tahlili_app\artifacts\obj\EkgAnalyzerApi\Debug\net8.0\EkgAnalyzerApi.csproj.CoreCompileInputs.cache
+D:\git\ekg_tahlili_app\artifacts\obj\EkgAnalyzerApi\Debug\net8.0\EkgAnalyzerApi.MvcApplicationPartsAssemblyInfo.cs
+D:\git\ekg_tahlili_app\artifacts\obj\EkgAnalyzerApi\Debug\net8.0\EkgAnalyzerApi.MvcApplicationPartsAssemblyInfo.cache
+D:\git\ekg_tahlili_app\artifacts\obj\EkgAnalyzerApi\Debug\net8.0\EkgAnalyzerApi.sourcelink.json

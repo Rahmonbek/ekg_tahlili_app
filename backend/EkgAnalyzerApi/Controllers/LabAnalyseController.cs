@@ -100,6 +100,7 @@ public class LabAnalyseController : ControllerBase
         int page = 1, int pageSize = 10,
         string? search = null, int? status = null,
         DateTime? dateFrom = null, DateTime? dateTo = null,
+        int? automaticAnalysisBool = null,
         bool? hasDiagnosis = null)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
@@ -110,7 +111,7 @@ public class LabAnalyseController : ControllerBase
         if (doctor == null) return NotFound(new { message = "Shifokor topilmadi" });
 
         var results = await _labService.GetLabAnalysesByDoctorAsync(
-            doctor.Id, page, pageSize, search, status, dateFrom, dateTo, hasDiagnosis);
+            doctor.Id, page, pageSize, search, status, dateFrom, dateTo, automaticAnalysisBool, hasDiagnosis);
         return Ok(results);
     }
 
@@ -149,6 +150,7 @@ public class LabAnalyseController : ControllerBase
         int page = 1, int pageSize = 10,
         string? search = null, int? status = null,
         DateTime? dateFrom = null, DateTime? dateTo = null,
+        int? automaticAnalysisBool = null,
         bool? hasDiagnosis = null)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
@@ -159,7 +161,7 @@ public class LabAnalyseController : ControllerBase
         if (doctor == null) return NotFound(new { message = "Hamshira topilmadi" });
 
         var results = await _labService.GetLabAnalysesByNurseAsync(
-            doctor.Id, page, pageSize, search, status, dateFrom, dateTo, hasDiagnosis);
+            doctor.Id, page, pageSize, search, status, dateFrom, dateTo, automaticAnalysisBool, hasDiagnosis);
         return Ok(results);
     }
 

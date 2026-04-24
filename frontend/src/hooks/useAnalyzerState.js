@@ -18,6 +18,7 @@ const initialState = {
     checkAI: false,
     loading3: false,
     lang: 'uz',
+    analysis_date: null,
     oldAnalyses: [],
     page: 1,
     totalPage: 0,
