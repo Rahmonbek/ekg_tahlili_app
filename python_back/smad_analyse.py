@@ -20,7 +20,7 @@ def create_smad_analyse(
     status: int = 0,
     analyse_file_link: Optional[str] = None,
     ai_answer_data: Optional[str] = None,
-    
+    analysis_date: Optional[datetime.datetime] = None
 ) -> SmadAnalyses:
     """
     Yangi laboratoriya tahlilini yaratadi.
@@ -33,6 +33,7 @@ def create_smad_analyse(
         status=status,
         analyse_file_link=analyse_file_link,
         ai_answer_data=ai_answer_data,
+        analysis_date=analysis_date,
         created_at=datetime.datetime.utcnow(),
         updated_at=datetime.datetime.utcnow()
     )

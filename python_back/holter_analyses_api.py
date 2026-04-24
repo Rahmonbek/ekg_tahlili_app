@@ -114,7 +114,8 @@ async def analyze(
     patcient_id: int = Form(...),
     gender: str = Form(...),
     lang: str = Form(...),
-    age: int = Form(...)
+    age: int = Form(...),
+    analysis_date: str | None = Form(None)
 ):
     if not OPENAI_API_KEY:
         raise HTTPException(status_code=400, detail="OPENAI_API_KEY mavjud emas")
@@ -138,7 +139,8 @@ async def analyze(
         main_doctor_id=main_doctor_id,
         clinic_id=clinic_id,
         status=0,
-        analyse_file_link=analyse_file_path
+        analyse_file_link=analyse_file_path,
+        analysis_date=__import__("datetime").datetime.fromisoformat(analysis_date.replace("Z", "+00:00")) if analysis_date else None
     )
     if doctor_id:
         for d_id in doctor_id:

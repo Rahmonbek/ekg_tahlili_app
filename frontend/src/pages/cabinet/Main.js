@@ -19,6 +19,7 @@ import HolterAnalyzer from './holter_analyse/HolterAnalyzer'
 import SmadAnalyzer from './smad_analyse/SmadAnalyzer'
 import ParasitologyAnalyzer from './parasitology/ParasitologyAnalyzer'
 import ParasitologyAnalysesList from './parasitology/ParasitologyAnalysesList'
+import ParasitologyAnalyseView from './parasitology/ParasitologyAnalyseView'
 import SmadAnalysesList from './smad_analyse/SmadAnalysesList'
 import HolterAnalysesList from './holter_analyse/HolterAnalysesList'
 import LabAnalysesList from './lab_analyse/LabAnalysesList'
@@ -149,6 +150,9 @@ export default function Main() {
                         } />
                         <Route path="/parasitology-analyzer" element={
                             <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><ParasitologyAnalyzer /></ProtectedRoute>
+                        } />
+                        <Route path="/parasitology-analyses/view/:id" element={
+                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><ParasitologyAnalyseView /></ProtectedRoute>
                         } />
 
                         {/* Bemorlar va Boshqalar */}

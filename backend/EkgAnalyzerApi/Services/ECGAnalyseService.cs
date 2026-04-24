@@ -139,7 +139,8 @@ namespace EkgAnalyzerApi.Services
             int? status = null,
             DateTime? dateFrom = null,
             DateTime? dateTo = null,
-            int? aiStatus = null)
+            int? aiStatus = null,
+            bool? hasDiagnosis = null)
         {
             var query = _context.ECGAnalyse
                 .Where(e => e.ClinicId == clinicId)
@@ -158,13 +159,13 @@ namespace EkgAnalyzerApi.Services
             if (dateFrom.HasValue)
             {
                 var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
-                query = query.Where(e => e.CreatedAt >= utcFrom);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) >= utcFrom);
             }
 
             if (dateTo.HasValue)
             {
                 var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
-                query = query.Where(e => e.CreatedAt <= utcTo);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) <= utcTo);
             }
 
             if (aiStatus.HasValue)
@@ -175,6 +176,18 @@ namespace EkgAnalyzerApi.Services
                     e.AIAnswerData.Contains($"\"automatic_analysis_bool\":{val}") ||
                     e.AIAnswerData.Contains($"\"automatic_analysis_bool\": \"{val}\"") ||
                     e.AIAnswerData.Contains($"\"automatic_analysis_bool\":\"{val}\"")));
+            }
+
+            if (hasDiagnosis.HasValue)
+            {
+                if (hasDiagnosis.Value)
+                {
+                    query = query.Where(e => _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "ecg" && d.AnalysisId == e.Id));
+                }
+                else
+                {
+                    query = query.Where(e => !_context.AnalysisDiagnoses.Any(d => d.AnalysisType == "ecg" && d.AnalysisId == e.Id));
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -213,10 +226,15 @@ namespace EkgAnalyzerApi.Services
                 }
                 else
                 {
-                    query = query.Where(e =>
-                        (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(sLower)) ||
-                        (e.Patcient.LastName  != null && e.Patcient.LastName.ToLower().Contains(sLower))  ||
-                        (e.Patcient.SureName  != null && e.Patcient.SureName.ToLower().Contains(sLower)));
+                    var words = s.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var word in words)
+                    {
+                        query = query.Where(e =>
+                            (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(word)) ||
+                            (e.Patcient.LastName  != null && e.Patcient.LastName.ToLower().Contains(word))  ||
+                            (e.Patcient.SureName  != null && e.Patcient.SureName.ToLower().Contains(word)) ||
+                            (e.Patcient.Passport != null && e.Patcient.Passport.Replace(" ", "").Contains(s.Replace(" ", "").ToUpper())));
+                    }
                 }
             }
 
@@ -231,6 +249,7 @@ namespace EkgAnalyzerApi.Services
                     Id              = e.Id,
                     Status          = e.Status,
                     CreatedAt = e.CreatedAt,
+                    AnalysisDate = e.AnalysisDate,
                     Patcient = new PatcientForECG
                     {
                         Id        = e.Patcient.Id,
@@ -251,7 +270,8 @@ namespace EkgAnalyzerApi.Services
                     AIStatus = e.AIAnswerData != null ? 
                         (e.AIAnswerData.Contains("\"automatic_analysis_bool\": 1") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"1\"") ? 1 : 
                          e.AIAnswerData.Contains("\"automatic_analysis_bool\": 2") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"2\"") ? 2 : 
-                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 3") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"3\"") ? 3 : null) : null
+                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 3") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"3\"") ? 3 : null) : null,
+                    HasDiagnosis = _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "ecg" && d.AnalysisId == e.Id)
                 })
                 .ToListAsync();
 
@@ -367,7 +387,9 @@ namespace EkgAnalyzerApi.Services
             string? search = null,
             int? status = null,
             DateTime? dateFrom = null,
-            DateTime? dateTo = null)
+            DateTime? dateTo = null,
+            int? aiStatus = null,
+            bool? hasDiagnosis = null)
         {
             var query = _context.ECGAnalyse
                 .Where(e => e.Doctors!.Any(d => d.DoctorId == doctorId))
@@ -382,22 +404,50 @@ namespace EkgAnalyzerApi.Services
             if (dateFrom.HasValue)
             {
                 var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
-                query = query.Where(e => e.CreatedAt >= utcFrom);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) >= utcFrom);
             }
 
             if (dateTo.HasValue)
             {
                 var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
-                query = query.Where(e => e.CreatedAt <= utcTo);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) <= utcTo);
+            }
+
+            if (aiStatus.HasValue)
+            {
+                var val = aiStatus.Value.ToString();
+                query = query.Where(e => e.AIAnswerData != null && (
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": {val}") ||
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":{val}") ||
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": \"{val}\"") ||
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":\"{val}\"")));
+            }
+
+            if (hasDiagnosis.HasValue)
+            {
+                if (hasDiagnosis.Value)
+                {
+                    query = query.Where(e => _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "ecg" && d.AnalysisId == e.Id));
+                }
+                else
+                {
+                    query = query.Where(e => !_context.AnalysisDiagnoses.Any(d => d.AnalysisType == "ecg" && d.AnalysisId == e.Id));
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                var sLower = search.Trim().ToLower();
-                query = query.Where(e =>
-                    (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(sLower)) ||
-                    (e.Patcient.LastName  != null && e.Patcient.LastName.ToLower().Contains(sLower))  ||
-                    (e.Patcient.SureName  != null && e.Patcient.SureName.ToLower().Contains(sLower)));
+                var s = search.Trim();
+                var words = s.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (var word in words)
+                {
+                    query = query.Where(e =>
+                        (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(word)) ||
+                        (e.Patcient.LastName  != null && e.Patcient.LastName.ToLower().Contains(word))  ||
+                        (e.Patcient.SureName  != null && e.Patcient.SureName.ToLower().Contains(word)) ||
+                        (e.Patcient.Passport  != null && e.Patcient.Passport.Replace(" ", "").Contains(s.Replace(" ", "").ToUpper())));
+                }
             }
 
             var totalCount = await query.CountAsync();
@@ -411,6 +461,7 @@ namespace EkgAnalyzerApi.Services
                     Id        = e.Id,
                     Status    = e.Status,
                     CreatedAt = e.CreatedAt,
+                    AnalysisDate = e.AnalysisDate,
                     IsViewed  = e.Doctors!.Where(d => d.DoctorId == doctorId).Select(d => d.IsViewed).FirstOrDefault(),
                     Patcient  = new PatcientForECG
                     {
@@ -432,7 +483,8 @@ namespace EkgAnalyzerApi.Services
                     AIStatus = e.AIAnswerData != null ?
                         (e.AIAnswerData.Contains("\"automatic_analysis_bool\": 1") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"1\"") ? 1 :
                          e.AIAnswerData.Contains("\"automatic_analysis_bool\": 2") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"2\"") ? 2 :
-                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 3") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"3\"") ? 3 : null) : null
+                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 3") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"3\"") ? 3 : null) : null,
+                    HasDiagnosis = _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "ecg" && d.AnalysisId == e.Id)
                 })
                 .ToListAsync();
 
@@ -471,7 +523,9 @@ namespace EkgAnalyzerApi.Services
             string? search = null,
             int? status = null,
             DateTime? dateFrom = null,
-            DateTime? dateTo = null)
+            DateTime? dateTo = null,
+            int? aiStatus = null,
+            bool? hasDiagnosis = null)
         {
             var query = _context.ECGAnalyse
                 .Where(e => e.CreatedDoctorId == doctorId)
@@ -485,22 +539,50 @@ namespace EkgAnalyzerApi.Services
             if (dateFrom.HasValue)
             {
                 var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
-                query = query.Where(e => e.CreatedAt >= utcFrom);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) >= utcFrom);
             }
 
             if (dateTo.HasValue)
             {
                 var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
-                query = query.Where(e => e.CreatedAt <= utcTo);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) <= utcTo);
+            }
+
+            if (aiStatus.HasValue)
+            {
+                var val = aiStatus.Value.ToString();
+                query = query.Where(e => e.AIAnswerData != null && (
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": {val}") ||
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":{val}") ||
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": \"{val}\"") ||
+                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":\"{val}\"")));
+            }
+
+            if (hasDiagnosis.HasValue)
+            {
+                if (hasDiagnosis.Value)
+                {
+                    query = query.Where(e => _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "ecg" && d.AnalysisId == e.Id));
+                }
+                else
+                {
+                    query = query.Where(e => !_context.AnalysisDiagnoses.Any(d => d.AnalysisType == "ecg" && d.AnalysisId == e.Id));
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                var sLower = search.Trim().ToLower();
-                query = query.Where(e =>
-                    (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(sLower)) ||
-                    (e.Patcient.LastName  != null && e.Patcient.LastName.ToLower().Contains(sLower))  ||
-                    (e.Patcient.SureName  != null && e.Patcient.SureName.ToLower().Contains(sLower)));
+                var s = search.Trim();
+                var words = s.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (var word in words)
+                {
+                    query = query.Where(e =>
+                        (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(word)) ||
+                        (e.Patcient.LastName  != null && e.Patcient.LastName.ToLower().Contains(word))  ||
+                        (e.Patcient.SureName  != null && e.Patcient.SureName.ToLower().Contains(word)) ||
+                        (e.Patcient.Passport  != null && e.Patcient.Passport.Replace(" ", "").Contains(s.Replace(" ", "").ToUpper())));
+                }
             }
 
             var totalCount = await query.CountAsync();
@@ -514,6 +596,7 @@ namespace EkgAnalyzerApi.Services
                     Id        = e.Id,
                     Status    = e.Status,
                     CreatedAt = e.CreatedAt,
+                    AnalysisDate = e.AnalysisDate,
                     IsViewed  = null,
                     Patcient  = new PatcientForECG
                     {
@@ -535,7 +618,8 @@ namespace EkgAnalyzerApi.Services
                     AIStatus = e.AIAnswerData != null ?
                         (e.AIAnswerData.Contains("\"automatic_analysis_bool\": 1") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"1\"") ? 1 :
                          e.AIAnswerData.Contains("\"automatic_analysis_bool\": 2") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"2\"") ? 2 :
-                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 3") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"3\"") ? 3 : null) : null
+                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 3") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"3\"") ? 3 : null) : null,
+                    HasDiagnosis = _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "ecg" && d.AnalysisId == e.Id)
                 })
                 .ToListAsync();
 

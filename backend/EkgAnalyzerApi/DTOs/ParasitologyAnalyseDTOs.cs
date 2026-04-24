@@ -10,6 +10,7 @@ public class ParasitologyAnalyseCreateDto
     public int? EggCountPerField { get; set; }
     public int[]? DoctorIds { get; set; }
     public string Lang { get; set; } = "uz";
+    public DateTime? AnalysisDate { get; set; }
 }
 
 public class ParasitologyResultDto
@@ -38,6 +39,7 @@ public class ParasitologyAnalyseDTO
     public int? JiddiylikDarajasi { get; set; }
     public string? Lang { get; set; }
     public DateTime? CreatedAt { get; set; }
+    public DateTime? AnalysisDate { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public PatcientForECG? Patcient { get; set; }
     public DoctorForECGData? CreatedDoctor { get; set; }
@@ -92,6 +94,7 @@ public class ParasitologyAnalyseListDTO
     public string AnalysisStatus { get; set; } = "pending";
     public int? JiddiylikDarajasi { get; set; }
     public DateTime? CreatedAt { get; set; }
+    public DateTime? AnalysisDate { get; set; }
     public PatcientForECG? Patcient { get; set; }
     public DoctorForECGData? CreatedDoctor { get; set; }
 }

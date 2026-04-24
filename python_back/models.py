@@ -14,6 +14,7 @@ class ECGAnalyse(Base):
     generated_file_link = Column(Text)
     generated_short_file_link = Column(Text)
     ai_answer_data = Column(Text, nullable=True)  
+    analysis_date = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)
 
@@ -29,6 +30,7 @@ class LabAnalyses(Base):
 
     analyse_file_link = Column(String, nullable=True)
     ai_answer_data = Column(String, nullable=True)  # text
+    analysis_date = Column(DateTime, nullable=True)
 
     # Qon tahlili
     hb = Column(Numeric, nullable=True)       # g/L
@@ -92,6 +94,7 @@ class HolterAnalyses(Base):
 
     analyse_file_link = Column(String, nullable=True)
     ai_answer_data = Column(String, nullable=True)  # text
+    analysis_date = Column(DateTime, nullable=True)
 
 
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
@@ -110,6 +113,7 @@ class SmadAnalyses(Base):
 
     analyse_file_link = Column(String, nullable=True)
     ai_answer_data = Column(String, nullable=True)  # text
+    analysis_date = Column(DateTime, nullable=True)
 
 
     created_at = Column(DateTime, default=datetime.datetime.utcnow)

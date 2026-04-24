@@ -24,6 +24,9 @@ export const BREADCRUMB_CONFIG = {
   '/diagnoses-create':      { labelKey: 'new_diagnose',       parent: '/patient-diagnoses' },
   '/patient-diagnoses/view':{ labelKey: 'view_analyse',       parent: '/patient-diagnoses' },
   '/patcients':             { labelKey: 'patcients',          parent: '/' },
+  '/parasitology-analyses': { labelKey: 'parasitology_analyse', parent: '/' },
+  '/parasitology-analyzer': { labelKey: 'new_parasitology_analyse', parent: '/parasitology-analyses' },
+  '/parasitology-analyses/view': { labelKey: 'view_analyse',    parent: '/parasitology-analyses' },
 };
 
 /**
@@ -32,7 +35,11 @@ export const BREADCRUMB_CONFIG = {
  * @returns {{ path: string, labelKey: string }[]}
  */
 export function buildCrumbs(pathname) {
-  const normalizedPath = pathname.replace(/\/doctor\/create\/\d+$/, '/doctor/create');
+  // Dinamik ID larni olib tashlash (masalan, /ecg-analyses/view/123 -> /ecg-analyses/view)
+  const normalizedPath = pathname
+    .replace(/\/doctor\/create\/\d+$/, '/doctor/create')
+    .replace(/\/view\/\d+$/, '/view');
+  
   const crumbs = [];
   let current = normalizedPath;
   while (current && BREADCRUMB_CONFIG[current]) {

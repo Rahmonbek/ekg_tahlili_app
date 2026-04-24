@@ -10,7 +10,9 @@ public class ECGAnalyseListDTO
     public int? Status { get; set; } = 0;
     public int? AIStatus { get; set; } // 1: Normal, 2: Average, 3: Danger
     public DateTime? CreatedAt { get; set; }
+    public DateTime? AnalysisDate { get; set; }
     public bool? IsViewed { get; set; }
+    public bool HasDiagnosis { get; set; }
     public PatcientForECG? Patcient { get; set; }
     public DoctorForECGData? CreatedDoctor { get; set; }
 }

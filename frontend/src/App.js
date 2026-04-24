@@ -11,11 +11,7 @@ import { deleteTokenAccess, getTokenAccess } from './host/Host'
 import {useNavigate} from 'react-router-dom'
 import { get_user_data } from './host/requests/UserRequest';
 import Loader from './components/Loader';
-import { get_ecg_unviewed_count } from './host/requests/ECGAnalyseRequest'
-import { get_holter_unviewed_count } from './host/requests/HolterAnalyseRequest'
-import { get_smad_unviewed_count } from './host/requests/SmadAnalyseRequest'
-import { get_lab_unviewed_count } from './host/requests/LabAnalyseRequest'
-import { get_diagnose_unviewed_count } from './host/requests/DiagnoseRequest'
+import { get_unviewed_counts } from './host/requests/DashboardRequest'
 
 export default function App() {
   const {t}=useTranslation()
@@ -70,18 +66,13 @@ getUserData()
 
     const fetchUnreadCounts=async()=>{
       try{
-        const [ecg, holter, smad, lab, diag] = await Promise.allSettled([
-          get_ecg_unviewed_count(),
-          get_holter_unviewed_count(),
-          get_smad_unviewed_count(),
-          get_lab_unviewed_count(),
-          get_diagnose_unviewed_count(),
-        ])
-        if(ecg.status==='fulfilled') setecg_unread(ecg.value.data?.count || 0)
-        if(holter.status==='fulfilled') setholter_unread(holter.value.data?.count || 0)
-        if(smad.status==='fulfilled') setsmad_unread(smad.value.data?.count || 0)
-        if(lab.status==='fulfilled') setlab_unread(lab.value.data?.count || 0)
-        if(diag.status==='fulfilled') setdiagnoses_unread(diag.value.data?.count || 0)
+        const res = await get_unviewed_counts();
+        const data = res.data;
+        setecg_unread(data.ecg || 0);
+        setholter_unread(data.holter || 0);
+        setsmad_unread(data.smad || 0);
+        setlab_unread(data.lab || 0);
+        setdiagnoses_unread(data.diagnoses || 0);
       }catch(err){
         console.log(err)
       }

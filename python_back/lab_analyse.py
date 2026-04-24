@@ -59,7 +59,8 @@ def create_lab_analyse(
     daily_protein: Optional[float] = None,
     daily_creatinine: Optional[float] = None,
     daily_calcium: Optional[float] = None,
-    daily_sodium: Optional[float] = None
+    daily_sodium: Optional[float] = None,
+    analysis_date: Optional[datetime.datetime] = None
 ) -> LabAnalyses:
     """
     Yangi laboratoriya tahlilini yaratadi.
@@ -111,6 +112,7 @@ def create_lab_analyse(
         daily_creatinine=daily_creatinine,
         daily_calcium=daily_calcium,
         daily_sodium=daily_sodium,
+        analysis_date=analysis_date,
         created_at=datetime.datetime.utcnow(),
         updated_at=datetime.datetime.utcnow()
     )

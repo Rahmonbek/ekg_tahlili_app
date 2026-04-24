@@ -7,6 +7,8 @@ import { FaHospital } from 'react-icons/fa';
 import EcgOldResult from '../../../components/results/EcgOldResult';
 import { get_ecg_analyse_by_id } from '../../../host/requests/ECGAnalyseRequest';
 import { useStore } from '../../../store/Store';
+import DownloadReportButton from '../../../components/DownloadReportButton';
+import DoctorDiagnosisBlock from '../../../components/results/DoctorDiagnosisBlock';
 
 const { Title, Text } = Typography;
 
@@ -52,7 +54,8 @@ export default function EcgAnalyseView() {
 
     return (
         <div>
-            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                {/* Chap: orqaga tugma */}
                 <Button
                     onClick={() => navigate('/ecg-analyses')}
                     icon={<IoArrowBack />}
@@ -62,13 +65,23 @@ export default function EcgAnalyseView() {
                     {t('back')}
                 </Button>
 
+                {/* Markazga yaqin: PDF yuklab olish — faqat AI natija tayyor bo'lganda */}
+                {data.status === 2 && (
+                    <DownloadReportButton
+                        type="ecg"
+                        id={data.id}
+                        size="middle"
+                    />
+                )}
+
+                {/* O'ng: klinika nomi */}
                 {clinic && (
-                    <div 
+                    <div
                         onClick={() => setClinicModalVisible(true)}
-                        style={{ 
-                            cursor: 'pointer', 
-                            color: '#1890ff', 
-                            fontWeight: 600, 
+                        style={{
+                            cursor: 'pointer',
+                            color: '#1890ff',
+                            fontWeight: 600,
                             fontSize: '16px',
                             display: 'flex',
                             alignItems: 'center',
@@ -85,6 +98,8 @@ export default function EcgAnalyseView() {
             </div>
 
             <EcgOldResult data={data} initialOpen={true} />
+
+            <DoctorDiagnosisBlock analysisType="ecg" analysisId={data.id} />
 
             {/* Clinic Info Modal */}
             <Modal

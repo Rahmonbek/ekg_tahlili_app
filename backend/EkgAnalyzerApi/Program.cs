@@ -31,6 +31,7 @@ builder.Services.AddScoped<PythonApiProxyService>();
 builder.Services.AddScoped<AuditLogService>();
 builder.Services.AddScoped<ParasitologyAnalyseService>();
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<PdfReportService>();     // PDF hisobot generatsiyasi
 builder.Services.AddSingleton<EncryptionService>(); // AES-256 shifrlash
 
 // Python API proxy uchun HttpClient

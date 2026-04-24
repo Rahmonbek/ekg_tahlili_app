@@ -3,6 +3,7 @@ import io
 import os
 import re
 import math
+import datetime
 from sqlalchemy.orm import Session
 from fastapi import Depends
 from openai import OpenAI
@@ -1059,7 +1060,8 @@ async def analyze(
     patcient_id: int = Form(...),
     gender: str = Form(...),
     lang: str = Form(...),
-    age: int = Form(...)
+    age: int = Form(...),
+    analysis_date: str | None = Form(None)
 ):
    
     if OPENAI_API_KEY is None:
@@ -1079,7 +1081,8 @@ async def analyze(
         created_doctor_id=created_doctor_id,
         clinic_id=clinic_id,
         status=0,
-        analyse_file_link=analyse_file_path
+        analyse_file_link=analyse_file_path,
+        analysis_date=datetime.datetime.fromisoformat(analysis_date.replace("Z", "+00:00")) if analysis_date else None
     )
     if doctor_id:
         for d_id in doctor_id:
@@ -1234,7 +1237,8 @@ async def analyze_save(
     patcient_id: int = Form(...),
     gender: str = Form(...),
     lang: str = Form(...),
-    age: int = Form(...)
+    age: int = Form(...),
+    analysis_date: str | None = Form(None)
 ):
    
     if OPENAI_API_KEY is None:
@@ -1249,7 +1253,8 @@ async def analyze_save(
         created_doctor_id=created_doctor_id,
         clinic_id=clinic_id,
         status=0,
-        analyse_file_link=analyse_file_path
+        analyse_file_link=analyse_file_path,
+        analysis_date=datetime.datetime.fromisoformat(analysis_date.replace("Z", "+00:00")) if analysis_date else None
     )
     if doctor_id:
         for d_id in doctor_id:

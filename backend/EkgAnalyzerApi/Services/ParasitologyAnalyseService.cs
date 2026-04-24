@@ -44,6 +44,7 @@ namespace EkgAnalyzerApi.Services
                 EggCountPerField = dto.EggCountPerField,
                 AnalysisStatus = "pending",
                 Lang = dto.Lang,
+                AnalysisDate = dto.AnalysisDate,
             };
             _context.ParasitologyAnalyses.Add(analysis);
             await _context.SaveChangesAsync();
@@ -63,7 +64,7 @@ namespace EkgAnalyzerApi.Services
 
             await RunAiAndSaveAsync(analysis, file, dto, jwtToken);
 
-            return await BuildDtoAsync(analysis.Id);
+            return await GetByIdAsync(analysis.Id);
         }
 
         public async Task<ParasitologyAnalyseDTO?> SendToAiAsync(int id, string jwtToken)
@@ -105,7 +106,7 @@ namespace EkgAnalyzerApi.Services
             await RunAiWithBytesAsync(analysis, fileBytes, fileName, dto, age,
                 patcient?.Gender == true ? "erkak" : "ayol", jwtToken);
 
-            return await BuildDtoAsync(analysis.Id);
+            return await GetByIdAsync(analysis.Id);
         }
 
         public async Task<PagedResult<ParasitologyAnalyseDTO>> GetByPatientIdAsync(int patientId, int page = 1, int pageSize = 5)
@@ -124,7 +125,7 @@ namespace EkgAnalyzerApi.Services
 
             var items = new List<ParasitologyAnalyseDTO>();
             foreach (var id in ids)
-                items.Add(await BuildDtoAsync(id));
+                items.Add(await GetByIdAsync(id));
 
             return new PagedResult<ParasitologyAnalyseDTO>
             {
@@ -143,7 +144,8 @@ namespace EkgAnalyzerApi.Services
             string? status = null,
             DateTime? dateFrom = null,
             DateTime? dateTo = null,
-            int? jiddiylik = null)
+            int? jiddiylik = null,
+            bool? hasDiagnosis = null)
         {
             var query = _context.ParasitologyAnalyses
                 .Where(a => a.ClinicId == clinicId)
@@ -151,7 +153,7 @@ namespace EkgAnalyzerApi.Services
                 .Include(a => a.CreatedDoctor)
                 .AsQueryable();
 
-            query = ApplyParasitologyFilters(query, search, status, dateFrom, dateTo, jiddiylik, clinicId);
+            query = ApplyParasitologyFilters(query, search, status, dateFrom, dateTo, jiddiylik, clinicId, hasDiagnosis);
 
             var total = await query.CountAsync();
 
@@ -165,6 +167,7 @@ namespace EkgAnalyzerApi.Services
                     AnalysisStatus = a.AnalysisStatus,
                     JiddiylikDarajasi = a.JiddiylikDarajasi,
                     CreatedAt = a.CreatedAt,
+                    AnalysisDate = a.AnalysisDate,
                     Patcient = a.Patcient == null ? null : new PatcientForECG
                     {
                         Id = a.Patcient.Id,
@@ -202,7 +205,8 @@ namespace EkgAnalyzerApi.Services
             string? status = null,
             DateTime? dateFrom = null,
             DateTime? dateTo = null,
-            int? jiddiylik = null)
+            int? jiddiylik = null,
+            bool? hasDiagnosis = null)
         {
             var query = _context.ParasitologyAnalyses
                 .Where(a => a.Doctors!.Any(d => d.DoctorId == doctorId))
@@ -211,7 +215,7 @@ namespace EkgAnalyzerApi.Services
                 .Include(a => a.Doctors)
                 .AsQueryable();
 
-            query = ApplyParasitologyFilters(query, search, status, dateFrom, dateTo, jiddiylik, null);
+            query = ApplyParasitologyFilters(query, search, status, dateFrom, dateTo, jiddiylik, null, hasDiagnosis);
 
             var total = await query.CountAsync();
 
@@ -225,6 +229,7 @@ namespace EkgAnalyzerApi.Services
                     AnalysisStatus = a.AnalysisStatus,
                     JiddiylikDarajasi = a.JiddiylikDarajasi,
                     CreatedAt = a.CreatedAt,
+                    AnalysisDate = a.AnalysisDate,
                     Patcient = a.Patcient == null ? null : new PatcientForECG
                     {
                         Id = a.Patcient.Id,
@@ -262,7 +267,8 @@ namespace EkgAnalyzerApi.Services
             string? status = null,
             DateTime? dateFrom = null,
             DateTime? dateTo = null,
-            int? jiddiylik = null)
+            int? jiddiylik = null,
+            bool? hasDiagnosis = null)
         {
             var query = _context.ParasitologyAnalyses
                 .Where(a => a.CreatedDoctorId == doctorId)
@@ -270,7 +276,7 @@ namespace EkgAnalyzerApi.Services
                 .Include(a => a.CreatedDoctor)
                 .AsQueryable();
 
-            query = ApplyParasitologyFilters(query, search, status, dateFrom, dateTo, jiddiylik, null);
+            query = ApplyParasitologyFilters(query, search, status, dateFrom, dateTo, jiddiylik, null, hasDiagnosis);
 
             var total = await query.CountAsync();
 
@@ -284,6 +290,7 @@ namespace EkgAnalyzerApi.Services
                     AnalysisStatus = a.AnalysisStatus,
                     JiddiylikDarajasi = a.JiddiylikDarajasi,
                     CreatedAt = a.CreatedAt,
+                    AnalysisDate = a.AnalysisDate,
                     Patcient = a.Patcient == null ? null : new PatcientForECG
                     {
                         Id = a.Patcient.Id,
@@ -320,7 +327,8 @@ namespace EkgAnalyzerApi.Services
             DateTime? dateFrom,
             DateTime? dateTo,
             int? jiddiylik,
-            int? clinicId)
+            int? clinicId,
+            bool? hasDiagnosis)
         {
             if (!string.IsNullOrWhiteSpace(status))
                 query = query.Where(a => a.AnalysisStatus == status);
@@ -328,17 +336,29 @@ namespace EkgAnalyzerApi.Services
             if (dateFrom.HasValue)
             {
                 var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
-                query = query.Where(a => a.CreatedAt >= utcFrom);
+                query = query.Where(a => (a.AnalysisDate ?? a.CreatedAt) >= utcFrom);
             }
 
             if (dateTo.HasValue)
             {
                 var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
-                query = query.Where(a => a.CreatedAt <= utcTo);
+                query = query.Where(a => (a.AnalysisDate ?? a.CreatedAt) <= utcTo);
             }
 
             if (jiddiylik.HasValue)
                 query = query.Where(a => a.JiddiylikDarajasi == jiddiylik.Value);
+
+            if (hasDiagnosis.HasValue)
+            {
+                if (hasDiagnosis.Value)
+                {
+                    query = query.Where(e => _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "para" && d.AnalysisId == e.Id));
+                }
+                else
+                {
+                    query = query.Where(e => !_context.AnalysisDiagnoses.Any(d => d.AnalysisType == "para" && d.AnalysisId == e.Id));
+                }
+            }
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -408,8 +428,8 @@ namespace EkgAnalyzerApi.Services
 
             var analysisIds = results.Select(r => r.ParasitologyAnalysisId).Distinct().ToList();
             var jamiTahlillar = await _context.ParasitologyAnalyses
-                .Where(a => dateFrom == null || a.CreatedAt >= dateFrom)
-                .Where(a => dateTo == null || a.CreatedAt <= dateTo)
+                .Where(a => dateFrom == null || (a.AnalysisDate ?? a.CreatedAt) >= dateFrom)
+                .Where(a => dateTo == null || (a.AnalysisDate ?? a.CreatedAt) <= dateTo)
                 .CountAsync();
 
             var gijjaTopilgan = analysisIds.Count;
@@ -640,7 +660,7 @@ namespace EkgAnalyzerApi.Services
             }
         }
 
-        private async Task<ParasitologyAnalyseDTO> BuildDtoAsync(int id)
+        public async Task<ParasitologyAnalyseDTO> GetByIdAsync(int id)
         {
             var e = await _context.ParasitologyAnalyses
                 .Include(a => a.Patcient)

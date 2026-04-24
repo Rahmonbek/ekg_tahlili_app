@@ -164,7 +164,8 @@ namespace EkgAnalyzerApi.Services
             int? status = null,
             DateTime? dateFrom = null,
             DateTime? dateTo = null,
-            int? automaticAnalysisBool = null)
+            int? automaticAnalysisBool = null,
+            bool? hasDiagnosis = null)
         {
             var query = _context.LabAnalyse
                 .Where(e => e.ClinicId == clinicId)
@@ -178,13 +179,13 @@ namespace EkgAnalyzerApi.Services
             if (dateFrom.HasValue)
             {
                 var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
-                query = query.Where(e => e.CreatedAt >= utcFrom);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) >= utcFrom);
             }
 
             if (dateTo.HasValue)
             {
                 var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
-                query = query.Where(e => e.CreatedAt <= utcTo);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) <= utcTo);
             }
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -219,6 +220,18 @@ namespace EkgAnalyzerApi.Services
                     e.AIAnswerData.Contains($"\"automatic_analysis_bool\":\"{val}\"")));
             }
 
+            if (hasDiagnosis.HasValue)
+            {
+                if (hasDiagnosis.Value)
+                {
+                    query = query.Where(e => _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "lab" && d.AnalysisId == e.Id));
+                }
+                else
+                {
+                    query = query.Where(e => !_context.AnalysisDiagnoses.Any(d => d.AnalysisType == "lab" && d.AnalysisId == e.Id));
+                }
+            }
+
             var totalCount = await query.CountAsync();
 
             var items = await query
@@ -230,6 +243,7 @@ namespace EkgAnalyzerApi.Services
                     Id = e.Id,
                     Status = e.Status,
                     CreatedAt = e.CreatedAt,
+                    AnalysisDate = e.AnalysisDate,
                     Patcient = e.Patcient == null ? null : new PatcientForECG
                     {
                         Id = e.Patcient.Id,
@@ -272,7 +286,8 @@ namespace EkgAnalyzerApi.Services
             string? search = null,
             int? status = null,
             DateTime? dateFrom = null,
-            DateTime? dateTo = null)
+            DateTime? dateTo = null,
+            bool? hasDiagnosis = null)
         {
             var query = _context.LabAnalyse
                 .Where(e => e.Doctors!.Any(d => d.DoctorId == doctorId))
@@ -287,13 +302,25 @@ namespace EkgAnalyzerApi.Services
             if (dateFrom.HasValue)
             {
                 var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
-                query = query.Where(e => e.CreatedAt >= utcFrom);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) >= utcFrom);
             }
 
             if (dateTo.HasValue)
             {
                 var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
-                query = query.Where(e => e.CreatedAt <= utcTo);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) <= utcTo);
+            }
+
+            if (hasDiagnosis.HasValue)
+            {
+                if (hasDiagnosis.Value)
+                {
+                    query = query.Where(e => _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "lab" && d.AnalysisId == e.Id));
+                }
+                else
+                {
+                    query = query.Where(e => !_context.AnalysisDiagnoses.Any(d => d.AnalysisType == "lab" && d.AnalysisId == e.Id));
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -316,6 +343,7 @@ namespace EkgAnalyzerApi.Services
                     Id        = e.Id,
                     Status    = e.Status,
                     CreatedAt = e.CreatedAt,
+                    AnalysisDate = e.AnalysisDate,
                     IsViewed  = e.Doctors!.Where(d => d.DoctorId == doctorId).Select(d => d.IsViewed).FirstOrDefault(),
                     Patcient  = e.Patcient == null ? null : new PatcientForECG
                     {
@@ -376,7 +404,8 @@ namespace EkgAnalyzerApi.Services
             string? search = null,
             int? status = null,
             DateTime? dateFrom = null,
-            DateTime? dateTo = null)
+            DateTime? dateTo = null,
+            bool? hasDiagnosis = null)
         {
             var query = _context.LabAnalyse
                 .Where(e => e.CreatedDoctorId == doctorId)
@@ -390,13 +419,25 @@ namespace EkgAnalyzerApi.Services
             if (dateFrom.HasValue)
             {
                 var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
-                query = query.Where(e => e.CreatedAt >= utcFrom);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) >= utcFrom);
             }
 
             if (dateTo.HasValue)
             {
                 var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
-                query = query.Where(e => e.CreatedAt <= utcTo);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) <= utcTo);
+            }
+
+            if (hasDiagnosis.HasValue)
+            {
+                if (hasDiagnosis.Value)
+                {
+                    query = query.Where(e => _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "lab" && d.AnalysisId == e.Id));
+                }
+                else
+                {
+                    query = query.Where(e => !_context.AnalysisDiagnoses.Any(d => d.AnalysisType == "lab" && d.AnalysisId == e.Id));
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -419,6 +460,7 @@ namespace EkgAnalyzerApi.Services
                     Id        = e.Id,
                     Status    = e.Status,
                     CreatedAt = e.CreatedAt,
+                    AnalysisDate = e.AnalysisDate,
                     IsViewed  = null,
                     Patcient  = e.Patcient == null ? null : new PatcientForECG
                     {

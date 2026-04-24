@@ -7,6 +7,8 @@ import { FaHospital } from 'react-icons/fa';
 import LabOldResult from '../../../components/results/lab_analyse/LabOldResult';
 import { get_lab_analyse_by_id } from '../../../host/requests/LabAnalyseRequest';
 import { useStore } from '../../../store/Store';
+import DownloadReportButton from '../../../components/DownloadReportButton';
+import DoctorDiagnosisBlock from '../../../components/results/DoctorDiagnosisBlock';
 
 const { Title, Text } = Typography;
 
@@ -52,7 +54,7 @@ export default function LabAnalyseView() {
 
     return (
         <div>
-            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <Button
                     onClick={() => navigate('/lab-analyses')}
                     icon={<IoArrowBack />}
@@ -61,6 +63,10 @@ export default function LabAnalyseView() {
                 >
                     {t('back')}
                 </Button>
+
+                {data.status === 2 && (
+                    <DownloadReportButton type="lab" id={data.id} size="middle" />
+                )}
 
                 {clinic && (
                     <div
@@ -85,6 +91,8 @@ export default function LabAnalyseView() {
             </div>
 
             <LabOldResult data={data} initialOpen={true} />
+
+            <DoctorDiagnosisBlock analysisType="lab" analysisId={data.id} />
 
             {/* Clinic Info Modal */}
             <Modal

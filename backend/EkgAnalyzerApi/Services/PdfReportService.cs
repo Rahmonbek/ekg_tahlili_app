@@ -1,0 +1,1712 @@
+using EkgAnalyzerApi.Data;
+using EkgAnalyzerApi.DTOs;
+using EkgAnalyzerApi.Models;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+
+namespace EkgAnalyzerApi.Services;
+
+/// <summary>
+/// NMED — klinik PDF hujjat generatori (v2).
+/// iTextSharp.LGPLv2.Core · A4 · 18/12 mm chegaralar
+/// Rang palitasi: #1D9E75 (NMED yashil) · #2C3E6B (to'q ko'k)
+/// Imzo/muhr yo'q — NMED raqamli tasdiqlash bloki ishlatiladi.
+/// </summary>
+public class PdfReportService
+{
+    private readonly MedDataDB          _context;
+    private readonly EncryptionService  _encryption;
+    private readonly IWebHostEnvironment _env;
+    private readonly ILogger<PdfReportService> _logger;
+
+    // ── Sahifa geometriyasi (mm → pt: 1 mm = 2.8346 pt) ────────────────
+    private const float MrgSide   = 51.02f;  // 18 mm
+    private const float MrgTop    = 34.02f;  // 12 mm
+    private const float MrgBottom = 34.02f;  // 12 mm
+
+    // ── NMED rang palitasi ───────────────────────────────────────────────
+    private static readonly BaseColor CL_Green       = new( 29, 158, 117); // #1D9E75
+    private static readonly BaseColor CL_DarkBlue    = new( 44,  62, 107); // #2C3E6B
+    private static readonly BaseColor CL_Black       = new( 17,  17,  17); // #111
+    private static readonly BaseColor CL_Gray        = new(102, 102, 102); // #666
+    private static readonly BaseColor CL_LightGray   = new(150, 150, 150); // #999
+    private static readonly BaseColor CL_Border      = new(224, 224, 224); // #E0E0E0
+    private static readonly BaseColor CL_RowAlt      = new(249, 249, 249); // #F9F9F9
+    private static readonly BaseColor CL_White       = new(255, 255, 255);
+    private static readonly BaseColor CL_AiBg        = new(240, 250, 245); // #F0FAF5
+    private static readonly BaseColor CL_DisclBg     = new(255, 245, 245); // #FFF5F5
+    private static readonly BaseColor CL_DisclBorder = new(204,   0,   0); // #CC0000
+    private static readonly BaseColor CL_WarnText    = new(153, 102,   0); // dark amber
+    private static readonly BaseColor CL_GoodText    = new(  0, 120,  60);
+    private static readonly BaseColor CL_BadText     = new(180,   0,   0);
+    private static readonly BaseColor CL_HrvCardBg   = new(245, 245, 245); // #F5F5F5
+    private static readonly BaseColor CL_VerifyBg    = new(250, 250, 250); // #FAFAFA
+
+    public PdfReportService(
+        MedDataDB context,
+        EncryptionService encryption,
+        IWebHostEnvironment env,
+        ILogger<PdfReportService> logger)
+    {
+        _context    = context;
+        _encryption = encryption;
+        _env        = env;
+        _logger     = logger;
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  PUBLIC ENTRY POINTS
+    // ════════════════════════════════════════════════════════════════════
+
+    public async Task<byte[]> GenerateEcgReport(int id, string lang)
+    {
+        var tr  = PdfTranslations.Get(lang);
+        var row = await _context.ECGAnalyse
+            .Include(e => e.Patcient)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
+            .Include(e => e.CreatedDoctor)
+            .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
+            .Include(e => e.Complaints).ThenInclude(c => c.Complaint)
+            .FirstOrDefaultAsync(e => e.Id == id)
+            ?? throw new KeyNotFoundException($"EKG #{id}");
+
+        var docNum = DocNum("EKG", row.CreatedAt, id);
+        var aiData = ParseAi(row.AIAnswerData);
+
+        return Build(tr, docNum, row.CreatedAt, row.Clinic, row.Patcient,
+            tr["ecg_title"], row.AnalysisDate ?? row.CreatedAt,
+            GetAnalysisTypeName(tr, "ecg"),
+            row.CreatedDoctor,
+            DoctorNames(row.Doctors?.Select(d => d.Doctor).ToList()),
+            ComplaintNames(row.Complaints),
+            "ecg", id,
+            doc =>
+            {
+                AddEcgImage(doc, tr, row.GeneratedFileLink);
+                AddEcgTable(doc, tr, aiData);
+                AddAiBlock(doc, tr, aiData);
+            });
+    }
+
+    public async Task<byte[]> GenerateSmadReport(int id, string lang)
+    {
+        var tr  = PdfTranslations.Get(lang);
+        var row = await _context.SmadAnalyses
+            .Include(e => e.Patcient)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
+            .Include(e => e.CreatedDoctor)
+            .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
+            .FirstOrDefaultAsync(e => e.Id == id)
+            ?? throw new KeyNotFoundException($"SMAD #{id}");
+
+        var docNum = DocNum("SMAD", row.CreatedAt, id);
+        var aiData = ParseAi(row.AIAnswerData);
+
+        return Build(tr, docNum, row.CreatedAt, row.Clinic, row.Patcient,
+            tr["smad_title"], row.AnalysisDate ?? row.CreatedAt,
+            GetAnalysisTypeName(tr, "smad"),
+            row.CreatedDoctor,
+            DoctorNames(row.Doctors?.Select(d => d.Doctor).ToList()),
+            null,
+            "smad", id,
+            doc =>
+            {
+                AddSmadTable(doc, tr, aiData);
+                AddAiBlock(doc, tr, aiData);
+            });
+    }
+
+    public async Task<byte[]> GenerateHolterReport(int id, string lang)
+    {
+        var tr  = PdfTranslations.Get(lang);
+        var row = await _context.HolterAnalyses
+            .Include(e => e.Patcient)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
+            .Include(e => e.CreatedDoctor)
+            .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
+            .FirstOrDefaultAsync(e => e.Id == id)
+            ?? throw new KeyNotFoundException($"Holter #{id}");
+
+        var docNum = DocNum("HOL", row.CreatedAt, id);
+        var aiData = ParseAi(row.AIAnswerData);
+
+        return Build(tr, docNum, row.CreatedAt, row.Clinic, row.Patcient,
+            tr["holter_title"], row.AnalysisDate ?? row.CreatedAt,
+            GetAnalysisTypeName(tr, "holter"),
+            row.CreatedDoctor,
+            DoctorNames(row.Doctors?.Select(d => d.Doctor).ToList()),
+            null,
+            "holter", id,
+            doc =>
+            {
+                AddHolterResults(doc, tr, aiData);
+                AddAiBlock(doc, tr, aiData);
+            });
+    }
+
+    public async Task<byte[]> GenerateLabReport(int id, string lang)
+    {
+        var tr  = PdfTranslations.Get(lang);
+        var row = await _context.LabAnalyse
+            .Include(e => e.Patcient)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
+            .Include(e => e.CreatedDoctor)
+            .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
+            .FirstOrDefaultAsync(e => e.Id == id)
+            ?? throw new KeyNotFoundException($"Lab #{id}");
+
+        var docNum = DocNum("LAB", row.CreatedAt, id);
+        var aiData = ParseAi(row.AIAnswerData);
+
+        return Build(tr, docNum, row.CreatedAt, row.Clinic, row.Patcient,
+            tr["lab_title"], row.AnalysisDate ?? row.CreatedAt,
+            GetAnalysisTypeName(tr, "lab"),
+            row.CreatedDoctor,
+            DoctorNames(row.Doctors?.Select(d => d.Doctor).ToList()),
+            null,
+            "lab", id,
+            doc =>
+            {
+                AddLabTable(doc, tr, row);
+                AddAiBlock(doc, tr, aiData);
+            });
+    }
+
+    public async Task<byte[]> GenerateParasitologyReport(int id, string lang)
+    {
+        var tr  = PdfTranslations.Get(lang);
+        var row = await _context.ParasitologyAnalyses
+            .Include(e => e.Patcient)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
+            .Include(e => e.CreatedDoctor)
+            .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
+            .Include(e => e.Results)
+            .FirstOrDefaultAsync(e => e.Id == id)
+            ?? throw new KeyNotFoundException($"Parazitologiya #{id}");
+
+        var docNum = DocNum("PARA", row.CreatedAt, id);
+
+        return Build(tr, docNum, row.CreatedAt, row.Clinic, row.Patcient,
+            tr["parasitology_title"], row.AnalysisDate ?? row.CreatedAt,
+            GetAnalysisTypeName(tr, "para"),
+            row.CreatedDoctor,
+            DoctorNames(row.Doctors?.Select(d => d.Doctor).ToList()),
+            null,
+            "para", id,
+            doc =>
+            {
+                AddParaResults(doc, tr, row, lang);
+                AddParaAiBlock(doc, tr, row);
+            });
+    }
+
+    public async Task<byte[]> GenerateCombinedReport(int patientId, string lang)
+    {
+        var tr = PdfTranslations.Get(lang);
+
+        var patient = await _context.Patcients
+            .FirstOrDefaultAsync(p => p.Id == patientId)
+            ?? throw new KeyNotFoundException($"Bemor #{patientId}");
+
+        var ecgList = await _context.ECGAnalyse
+            .Where(e => e.PatcientId == patientId && e.Status == 2)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
+            .Include(e => e.CreatedDoctor)
+            .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
+            .Include(e => e.Complaints).ThenInclude(c => c.Complaint)
+            .OrderByDescending(e => e.CreatedAt).ToListAsync();
+
+        var smadList = await _context.SmadAnalyses
+            .Where(e => e.PatcientId == patientId && e.Status == 2)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
+            .Include(e => e.CreatedDoctor)
+            .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
+            .OrderByDescending(e => e.CreatedAt).ToListAsync();
+
+        var holterList = await _context.HolterAnalyses
+            .Where(e => e.PatcientId == patientId && e.Status == 2)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
+            .Include(e => e.CreatedDoctor)
+            .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
+            .OrderByDescending(e => e.CreatedAt).ToListAsync();
+
+        var labList = await _context.LabAnalyse
+            .Where(e => e.PatcientId == patientId && e.Status == 2)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
+            .Include(e => e.CreatedDoctor)
+            .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
+            .OrderByDescending(e => e.CreatedAt).ToListAsync();
+
+        var paraList = await _context.ParasitologyAnalyses
+            .Where(e => e.PatcientId == patientId && e.AnalysisStatus == "analyzed")
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
+            .Include(e => e.CreatedDoctor)
+            .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
+            .Include(e => e.Results)
+            .OrderByDescending(e => e.CreatedAt).ToListAsync();
+
+        var docNum  = DocNum("COMB", DateTime.UtcNow, patientId);
+        var clinic  = ecgList.FirstOrDefault()?.Clinic
+            ?? smadList.FirstOrDefault()?.Clinic
+            ?? holterList.FirstOrDefault()?.Clinic
+            ?? labList.FirstOrDefault()?.Clinic
+            ?? paraList.FirstOrDefault()?.Clinic;
+
+        var ms     = new MemoryStream();
+        var doc    = CreateDoc();
+        var writer = PdfWriter.GetInstance(doc, ms);
+        var fonts  = BuildFonts();
+        writer.PageEvent = new FooterEvent(fonts, tr, docNum);
+        doc.Open();
+
+        ComposeHeader(doc, tr, fonts, clinic, docNum, DateTime.UtcNow,
+            tr["combined_title"], tr["combined_title"]);
+        ComposePatientBlock(doc, tr, fonts, patient, DateTime.UtcNow);
+
+        void Divider(string title)
+        {
+            doc.NewPage();
+            var p = new Paragraph(title, fonts["h_white"]) { SpacingBefore = 4, SpacingAfter = 6 };
+            p.Alignment = Element.ALIGN_CENTER;
+            doc.Add(p);
+        }
+
+        foreach (var ecg in ecgList)
+        {
+            var ai = ParseAi(ecg.AIAnswerData);
+            Divider($"{tr["ecg_title"]}  —  {(ecg.AnalysisDate ?? ecg.CreatedAt):dd.MM.yyyy HH:mm}");
+            ComposeAnalysisBlock(doc, tr, fonts, (ecg.AnalysisDate ?? ecg.CreatedAt),
+                GetAnalysisTypeName(tr, "ecg"), ecg.CreatedDoctor,
+                DoctorNames(ecg.Doctors?.Select(d => d.Doctor).ToList()),
+                ComplaintNames(ecg.Complaints));
+            AddEcgImage(doc, tr, ecg.GeneratedFileLink);
+            AddEcgTable(doc, tr, ai);
+            AddAiBlock(doc, tr, ai);
+        }
+
+        foreach (var smad in smadList)
+        {
+            var ai = ParseAi(smad.AIAnswerData);
+            Divider($"{tr["smad_title"]}  —  {(smad.AnalysisDate ?? smad.CreatedAt):dd.MM.yyyy HH:mm}");
+            ComposeAnalysisBlock(doc, tr, fonts, (smad.AnalysisDate ?? smad.CreatedAt),
+                GetAnalysisTypeName(tr, "smad"), smad.CreatedDoctor,
+                DoctorNames(smad.Doctors?.Select(d => d.Doctor).ToList()), null);
+            AddSmadTable(doc, tr, ai);
+            AddAiBlock(doc, tr, ai);
+        }
+
+        foreach (var h in holterList)
+        {
+            var ai = ParseAi(h.AIAnswerData);
+            Divider($"{tr["holter_title"]}  —  {(h.AnalysisDate ?? h.CreatedAt):dd.MM.yyyy HH:mm}");
+            ComposeAnalysisBlock(doc, tr, fonts, (h.AnalysisDate ?? h.CreatedAt),
+                GetAnalysisTypeName(tr, "holter"), h.CreatedDoctor,
+                DoctorNames(h.Doctors?.Select(d => d.Doctor).ToList()), null);
+            AddHolterResults(doc, tr, ai);
+            AddAiBlock(doc, tr, ai);
+        }
+
+        foreach (var lab in labList)
+        {
+            var ai = ParseAi(lab.AIAnswerData);
+            Divider($"{tr["lab_title"]}  —  {(lab.AnalysisDate ?? lab.CreatedAt):dd.MM.yyyy HH:mm}");
+            ComposeAnalysisBlock(doc, tr, fonts, (lab.AnalysisDate ?? lab.CreatedAt),
+                GetAnalysisTypeName(tr, "lab"), lab.CreatedDoctor,
+                DoctorNames(lab.Doctors?.Select(d => d.Doctor).ToList()), null);
+            AddLabTable(doc, tr, lab);
+            AddAiBlock(doc, tr, ai);
+        }
+
+        foreach (var para in paraList)
+        {
+            Divider($"{tr["parasitology_title"]}  —  {(para.AnalysisDate ?? para.CreatedAt):dd.MM.yyyy HH:mm}");
+            ComposeAnalysisBlock(doc, tr, fonts, (para.AnalysisDate ?? para.CreatedAt),
+                GetAnalysisTypeName(tr, "para"), para.CreatedDoctor,
+                DoctorNames(para.Doctors?.Select(d => d.Doctor).ToList()), null);
+            AddParaResults(doc, tr, para, lang);
+            AddParaAiBlock(doc, tr, para);
+        }
+
+        ComposeNmedVerification(doc, tr, fonts, docNum, DateTime.UtcNow);
+        ComposeDisclaimer(doc, tr, fonts);
+        doc.Close();
+        return ms.ToArray();
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  ASOSIY BUILDER
+    // ════════════════════════════════════════════════════════════════════
+
+    private byte[] Build(
+        Dictionary<string, string> tr,
+        string docNum,
+        DateTime? createdAt,
+        Clinic? clinic,
+        Patcient patient,
+        string analysisTitle,
+        DateTime? analysisDate,
+        string analysisTypeName,
+        Doctor? createdDoctor,
+        string? treatingDoctors,
+        string? complaints,
+        string? analysisType,
+        int? analysisId,
+        Action<Document> content)
+    {
+        var ms     = new MemoryStream();
+        var doc    = CreateDoc();
+        var writer = PdfWriter.GetInstance(doc, ms);
+        var fonts  = BuildFonts();
+
+        writer.PageEvent = new FooterEvent(fonts, tr, docNum);
+        doc.Open();
+
+        ComposeHeader(doc, tr, fonts, clinic, docNum, createdAt,
+            analysisTitle, tr["doc_title"]);
+        ComposePatientBlock(doc, tr, fonts, patient, analysisDate);
+        ComposeAnalysisBlock(doc, tr, fonts, analysisDate, analysisTypeName,
+            createdDoctor, treatingDoctors, complaints);
+
+        ComposeSectionHeader(doc, fonts, tr["results_title"], CL_DarkBlue);
+        content(doc);
+
+        // Shifokor tashxislari (agar mavjud bo'lsa)
+        if (!string.IsNullOrEmpty(analysisType) && analysisId.HasValue)
+            ComposeDoctorDiagnoses(doc, tr, fonts, analysisType, analysisId.Value);
+
+        ComposeNmedVerification(doc, tr, fonts, docNum, createdAt ?? DateTime.UtcNow);
+        ComposeDisclaimer(doc, tr, fonts);
+
+        doc.Close();
+        return ms.ToArray();
+    }
+
+    private static Document CreateDoc() =>
+        new Document(PageSize.A4, MrgSide, MrgSide, MrgTop, MrgBottom);
+
+    // ════════════════════════════════════════════════════════════════════
+    //  BLOK 1 — HEADER
+    // ════════════════════════════════════════════════════════════════════
+
+    private void ComposeHeader(
+        Document doc,
+        Dictionary<string, string> tr,
+        Dictionary<string, Font> fonts,
+        Clinic? clinic,
+        string docNum,
+        DateTime? date,
+        string analysisTitle,
+        string docTitle)
+    {
+        // ── 2-ustunli jadval: [Klinika | NMED] ─────────────────────────
+        var tbl = new PdfPTable(2) { WidthPercentage = 100 };
+        tbl.SetWidths(new[] { 55f, 45f });
+        tbl.SpacingAfter = 0;
+
+        // ──── CHAP: klinika logotipi + nomi ──────────────────────────
+        var leftCell = new PdfPCell
+        {
+            Border           = Rectangle.RIGHT_BORDER,
+            BorderColorRight = CL_Border,
+            BorderWidthRight = 0.5f,
+            PaddingRight     = 10,
+            PaddingBottom    = 6,
+            PaddingTop       = 2,
+        };
+
+        // Klinika logotipi
+        var logoPath = GetLogoPath(clinic);
+        if (logoPath != null)
+        {
+            try
+            {
+                var logo = Image.GetInstance(logoPath);
+                logo.ScaleToFit(110f, 55f);
+                logo.Alignment = Element.ALIGN_LEFT;
+                leftCell.AddElement(logo);
+                leftCell.AddElement(new Phrase(" ", fonts["p8gray"]));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Klinika logotipi yuklanmadi: {p}", logoPath);
+            }
+        }
+
+        var clinicPhrase = new Phrase();
+        clinicPhrase.Add(new Chunk(clinic?.ClinicName ?? "Shifoxona", fonts["h_13b"]));
+
+        if (clinic?.ClinicDetail?.Address is { } addr)
+            clinicPhrase.Add(new Chunk($"\n{addr}", fonts["p9gray"]));
+
+        if (clinic?.ClinicPhoneNumber?.Count > 0)
+        {
+            var phones = string.Join("  |  ",
+                clinic.ClinicPhoneNumber.Select(p => p.PhoneNumber));
+            clinicPhrase.Add(new Chunk($"\nTel: {phones}", fonts["p9gray"]));
+        }
+
+        leftCell.AddElement(new Paragraph(clinicPhrase));
+        tbl.AddCell(leftCell);
+
+        // ──── O'NG: NMED logotipi + nomed.uz + hujjat ma'lumotlari ───
+        var rightCell = new PdfPCell
+        {
+            Border      = Rectangle.NO_BORDER,
+            PaddingLeft = 10,
+            PaddingBottom = 6,
+            PaddingTop  = 2,
+            HorizontalAlignment = Element.ALIGN_RIGHT,
+        };
+
+        // NMED logotipi
+        var nmedLogoPath = Path.Combine(_env.WebRootPath ?? "", "nmed-logo.png");
+        if (File.Exists(nmedLogoPath))
+        {
+            try
+            {
+                var nmedLogo = Image.GetInstance(nmedLogoPath);
+                nmedLogo.ScaleToFit(90f, 40f);
+                nmedLogo.Alignment = Element.ALIGN_RIGHT;
+                rightCell.AddElement(nmedLogo);
+            }
+            catch { /* fallback matn */ }
+        }
+        else
+        {
+            // Fallback: "NMED" matn + nmed.uz
+            rightCell.AddElement(new Paragraph("NMED", fonts["nmed_logo"]));
+        }
+
+        var rightPhrase = new Phrase();
+        rightPhrase.Add(new Chunk("nmed.uz", fonts["nmed_url"]));
+        rightPhrase.Add(new Chunk(
+            $"\n{tr["doc_number_prefix"]}: {docNum}",
+            fonts["p9bold"]));
+        rightPhrase.Add(new Chunk(
+            $"\n{tr["analysis_date"]}: {date:dd.MM.yyyy}  {date:HH:mm}",
+            fonts["p9gray"]));
+
+        rightCell.AddElement(new Paragraph(rightPhrase) { Alignment = Element.ALIGN_RIGHT });
+        tbl.AddCell(rightCell);
+
+        doc.Add(tbl);
+
+        // ── Header osti: #1D9E75 chiziq (2 pt) ───────────────────────
+        HLine(doc, 2f, CL_Green);
+
+        // ── Hujjat sarlavhasi ─────────────────────────────────────────
+        var title1 = new Paragraph(docTitle, fonts["doc_title"])
+        {
+            Alignment    = Element.ALIGN_CENTER,
+            SpacingBefore = 6,
+            SpacingAfter  = 2,
+        };
+        doc.Add(title1);
+
+        var title2 = new Paragraph(analysisTitle, fonts["analysis_title"])
+        {
+            Alignment    = Element.ALIGN_CENTER,
+            SpacingAfter = 8,
+        };
+        doc.Add(title2);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  BLOK 2 — BEMOR MA'LUMOTLARI
+    // ════════════════════════════════════════════════════════════════════
+
+    private void ComposePatientBlock(
+        Document doc,
+        Dictionary<string, string> tr,
+        Dictionary<string, Font> fonts,
+        Patcient patient,
+        DateTime? refDate)
+    {
+        ComposeSectionHeader(doc, fonts, tr["patient_info"], CL_Green);
+
+        var tbl = InfoTable();
+
+        var fio = $"{patient.LastName?.ToUpper()} {patient.FirstName} {patient.SureName}".Trim();
+        InfoRow(tbl, tr["fio"] + ":", fio, fonts, 0);
+
+        var age = Age(patient.BirthDate, refDate ?? DateTime.Now);
+        InfoRow(tbl, tr["birth_date"] + ":",
+            $"{patient.BirthDate:dd.MM.yyyy}  ({age} {tr["age_suffix"]})", fonts, 1);
+
+        InfoRow(tbl, tr["gender"] + ":",
+            patient.Gender ? tr["gender_male"] : tr["gender_female"], fonts, 0);
+
+        InfoRow(tbl, tr["passport"] + ":",
+            MaskPassport(patient.Passport), fonts, 1);
+
+        if (!string.IsNullOrWhiteSpace(patient.Address))
+            InfoRow(tbl, tr["address"] + ":", patient.Address, fonts, 0);
+
+        if (!string.IsNullOrWhiteSpace(patient.Phone))
+            InfoRow(tbl, tr["phone"] + ":", patient.Phone, fonts, 1);
+
+        doc.Add(tbl);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  BLOK 3 — TAHLIL MA'LUMOTLARI
+    // ════════════════════════════════════════════════════════════════════
+
+    private void ComposeAnalysisBlock(
+        Document doc,
+        Dictionary<string, string> tr,
+        Dictionary<string, Font> fonts,
+        DateTime? date,
+        string typeName,
+        Doctor? createdDoctor,
+        string? doctors,
+        string? complaints)
+    {
+        ComposeSectionHeader(doc, fonts, tr["analysis_info"], CL_DarkBlue);
+
+        var tbl = InfoTable();
+        int row = 0;
+
+        InfoRow(tbl, tr["analysis_date"] + ":",
+            $"{date:dd.MM.yyyy}  {date:HH:mm}", fonts, row++);
+
+        InfoRow(tbl, tr["analysis_type"] + ":", typeName, fonts, row++);
+
+        InfoRow(tbl, tr["device"] + ":", tr["device_value"], fonts, row++);
+
+        if (createdDoctor != null)
+            InfoRow(tbl, tr["created_by"] + ":",
+                DoctorFullName(createdDoctor), fonts, row++);
+
+        InfoRow(tbl, tr["treating_doctors"] + ":",
+            string.IsNullOrWhiteSpace(doctors) ? tr["not_assigned"] : doctors,
+            fonts, row++);
+
+        if (!string.IsNullOrWhiteSpace(complaints))
+            InfoRow(tbl, tr["complaints"] + ":", complaints, fonts, row);
+
+        doc.Add(tbl);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  BLOK 4 — TAHLIL NATIJALARI: EKG
+    // ════════════════════════════════════════════════════════════════════
+
+    private void AddEcgImage(Document doc, Dictionary<string, string> tr, string? fileLink)
+    {
+        if (string.IsNullOrWhiteSpace(fileLink)) return;
+
+        var path = PhysicalPath(fileLink);
+        if (!File.Exists(path)) return;
+
+        try
+        {
+            var img = Image.GetInstance(path);
+            img.ScaleToFit(doc.PageSize.Width - MrgSide * 2, 180f);
+            img.Alignment   = Element.ALIGN_CENTER;
+            img.SpacingBefore = 4;
+            img.SpacingAfter  = 4;
+            doc.Add(img);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "EKG rasmi yuklanmadi: {p}", path);
+        }
+    }
+
+    private static readonly (string key, string label, string unit, string normal)[] EcgRows =
+    {
+        ("HR",           "Yurak urish tezligi", "bpm",  "60–100"),
+        ("PR_interval",  "PR interval",          "ms",   "120–200"),
+        ("QRS_duration", "QRS davomiyligi",       "ms",   "60–120"),
+        ("QT_interval",  "QT interval",           "ms",   "350–450"),
+        ("QTc_Bazett",   "QTc (Bazett)",           "ms",   "< 440 (erkak)"),
+        ("ST_depression","ST depressiya",          "mV",   "≤ 0.1"),
+        ("ST_elevation", "ST elevatsiya",          "mV",   "≤ 0.1"),
+        ("Sokolow_Lyon", "Sokolov-Lyon indeksi",   "mV",   "< 3.5"),
+    };
+
+    private void AddEcgTable(Document doc, Dictionary<string, string> tr, AIAnswerDataDTO? ai)
+    {
+        if (ai?.DigitalMeasurements == null || ai.DigitalMeasurements.Count == 0) return;
+
+        var fonts = BuildFonts();
+        var tbl   = new PdfPTable(4) { WidthPercentage = 100, SpacingBefore = 6, SpacingAfter = 4 };
+        tbl.SetWidths(new[] { 38f, 20f, 22f, 20f });
+
+        TableHead(tbl, fonts,
+            tr["parameter"], tr["value"], tr["normal_range"], tr["assessment"]);
+
+        int rowIdx = 0;
+        foreach (var (key, label, unit, normal) in EcgRows)
+        {
+            if (!FindDmValue(ai.DigitalMeasurements, key, out var rawVal)) continue;
+
+            var valStr = rawVal?.ToString() ?? "-";
+            var (assess, color) = EcgAssess(key, valStr);
+            var bg = rowIdx++ % 2 == 0 ? CL_White : CL_RowAlt;
+
+            TblCell(tbl, label,              fonts["td9"],        bg, Element.ALIGN_LEFT);
+            TblCell(tbl, $"{valStr} {unit}", fonts["td9bold"],    bg, Element.ALIGN_CENTER);
+            TblCell(tbl, normal,             fonts["td9gray"],    bg, Element.ALIGN_CENTER);
+
+            var assessFont = new Font(fonts["td9bold"].BaseFont, 9, Font.NORMAL, color);
+            var ac = new PdfPCell(new Phrase(assess, assessFont))
+            {
+                BackgroundColor     = bg,
+                Border              = Rectangle.BOTTOM_BORDER,
+                BorderColorBottom   = CL_Border,
+                BorderWidthBottom   = 0.3f,
+                Padding             = 4f,
+                HorizontalAlignment = Element.ALIGN_CENTER,
+            };
+            tbl.AddCell(ac);
+        }
+
+        doc.Add(tbl);
+    }
+
+    private (string text, BaseColor color) EcgAssess(string key, string valStr)
+    {
+        if (!decimal.TryParse(valStr, System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture, out var v))
+            return ("—", CL_LightGray);
+
+        return key switch
+        {
+            "HR"           => v < 60   ? ("↓ Bradikardiya", CL_BadText)
+                            : v > 100  ? ("↑ Taxikardiya",  CL_BadText)
+                            :            ("✓ Normal",        CL_GoodText),
+            "PR_interval"  => v < 120  ? ("↓ Qisqa",       CL_WarnText)
+                            : v > 200  ? ("↑ Uzun",         CL_BadText)
+                            :            ("✓ Normal",        CL_GoodText),
+            "QRS_duration" => v > 120  ? ("↑ Keng QRS",    CL_BadText)
+                            :            ("✓ Normal",        CL_GoodText),
+            "QTc_Bazett"   => v > 500  ? ("✗ Juda uzun",   CL_BadText)
+                            : v > 440  ? ("⚠ Uzaygan",      CL_WarnText)
+                            :            ("✓ Normal",        CL_GoodText),
+            "Sokolow_Lyon" => v >= 3.5m? ("⚠ Gipertrofiya", CL_WarnText)
+                            :            ("✓ Normal",        CL_GoodText),
+            _              =>            ("✓ Normal",        CL_GoodText),
+        };
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  BLOK 4 — TAHLIL NATIJALARI: SMAD
+    // ════════════════════════════════════════════════════════════════════
+
+    private static readonly (string dmKey, string label, string normal)[] SmadRows =
+    {
+        ("day_systolic",   "Kunduzi sistolik",  "< 135 mmHg"),
+        ("day_diastolic",  "Kunduzi diastolik", "< 85 mmHg"),
+        ("night_systolic", "Tunda sistolik",    "< 120 mmHg"),
+        ("night_diastolic","Tunda diastolik",   "< 75 mmHg"),
+        ("pulse_pressure", "Impuls bosimi",     "40–60 mmHg"),
+    };
+
+    private void AddSmadTable(Document doc, Dictionary<string, string> tr, AIAnswerDataDTO? ai)
+    {
+        if (ai?.DigitalMeasurements == null) return;
+
+        var fonts = BuildFonts();
+        var tbl   = new PdfPTable(3) { WidthPercentage = 100, SpacingBefore = 6 };
+        tbl.SetWidths(new[] { 48f, 26f, 26f });
+        TableHead(tbl, fonts, tr["parameter"], tr["value"], tr["normal_range"]);
+
+        int rowIdx = 0;
+        foreach (var (dmKey, label, normal) in SmadRows)
+        {
+            var val = FindDmValue(ai.DigitalMeasurements, dmKey, out var v)
+                ? v?.ToString() ?? "—" : "—";
+            var bg = rowIdx++ % 2 == 0 ? CL_White : CL_RowAlt;
+            TblCell(tbl, label,  fonts["td9"],     bg, Element.ALIGN_LEFT);
+            TblCell(tbl, val,    fonts["td9bold"], bg, Element.ALIGN_CENTER);
+            TblCell(tbl, normal, fonts["td9gray"], bg, Element.ALIGN_CENTER);
+        }
+
+        doc.Add(tbl);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  BLOK 4 — TAHLIL NATIJALARI: HOLTER
+    // ════════════════════════════════════════════════════════════════════
+
+    private void AddHolterResults(Document doc, Dictionary<string, string> tr, AIAnswerDataDTO? ai)
+    {
+        if (ai?.DigitalMeasurements == null || ai.DigitalMeasurements.Count == 0) return;
+
+        var dm    = ai.DigitalMeasurements;
+        var fonts = BuildFonts();
+
+        // ── Asosiy ko'rsatkichlar: 2 ustunli mini-jadval ─────────────
+        var mainKeys = new[]
+        {
+            ("monitoring_duration", "Monitoring davomiyligi"),
+            ("total_complexes",     "Jami komplekslar"),
+            ("mean_hr",             "O'rtacha ChSS"),
+            ("max_min_hr",          "Maks/Min ChSS"),
+            ("sve",                 "SVE / NJES"),
+            ("ve",                  "VE / JES"),
+            ("st_changes",          "ST siljishi"),
+            ("qtc_mean",            "QTc o'rtacha"),
+        };
+
+        var left  = mainKeys.Take(4).ToArray();
+        var right = mainKeys.Skip(4).ToArray();
+
+        var tbl2 = new PdfPTable(2) { WidthPercentage = 100, SpacingBefore = 6, SpacingAfter = 4 };
+        tbl2.SetWidths(new[] { 50f, 50f });
+
+        var leftSubTbl  = BuildHolterSubTable(dm, left,  fonts);
+        var rightSubTbl = BuildHolterSubTable(dm, right, fonts);
+
+        var lc = new PdfPCell(leftSubTbl)  { Border = Rectangle.NO_BORDER, PaddingRight = 4 };
+        var rc = new PdfPCell(rightSubTbl) { Border = Rectangle.NO_BORDER, PaddingLeft  = 4 };
+        tbl2.AddCell(lc);
+        tbl2.AddCell(rc);
+        doc.Add(tbl2);
+
+        // ── HRV kartochkalar ──────────────────────────────────────────
+        ComposeHrvCards(doc, dm, fonts);
+    }
+
+    private static PdfPTable BuildHolterSubTable(
+        Dictionary<string, object> dm,
+        (string key, string label)[] rows,
+        Dictionary<string, Font> fonts)
+    {
+        var tbl = new PdfPTable(2) { WidthPercentage = 100 };
+        tbl.SetWidths(new[] { 58f, 42f });
+
+        int i = 0;
+        foreach (var (key, label) in rows)
+        {
+            var val = FindDmValue(dm, key, out var v) ? v?.ToString() ?? "—" : "—";
+            var bg  = i++ % 2 == 0 ? CL_White : CL_RowAlt;
+
+            TblCell(tbl, label, fonts["td9"],     bg, Element.ALIGN_LEFT);
+            TblCell(tbl, val,   fonts["td9bold"], bg, Element.ALIGN_CENTER);
+        }
+
+        return tbl;
+    }
+
+    private static void ComposeHrvCards(
+        Document doc,
+        Dictionary<string, object> dm,
+        Dictionary<string, Font> fonts)
+    {
+        var hrv = new[]
+        {
+            ("SDNN",   "sdnn"),
+            ("SDANN",  "sdann"),
+            ("rMSSD",  "rmssd"),
+            ("pNN50",  "pnn50"),
+        };
+
+        bool anyFound = hrv.Any(h => FindDmValue(dm, h.Item2, out _));
+        if (!anyFound) return;
+
+        var tbl = new PdfPTable(4) { WidthPercentage = 100, SpacingBefore = 4, SpacingAfter = 4 };
+        tbl.SetWidths(new[] { 25f, 25f, 25f, 25f });
+
+        foreach (var (display, key) in hrv)
+        {
+            var val = FindDmValue(dm, key, out var v) ? v?.ToString() ?? "—" : "—";
+
+            var inner = new PdfPTable(1) { WidthPercentage = 100 };
+            inner.AddCell(new PdfPCell(new Phrase(val, fonts["hrv_val"]))
+            {
+                BackgroundColor     = CL_HrvCardBg,
+                Border              = Rectangle.NO_BORDER,
+                HorizontalAlignment = Element.ALIGN_CENTER,
+                Padding             = 6,
+                PaddingBottom       = 2,
+            });
+            inner.AddCell(new PdfPCell(new Phrase(display, fonts["hrv_label"]))
+            {
+                BackgroundColor     = CL_HrvCardBg,
+                Border              = Rectangle.NO_BORDER,
+                HorizontalAlignment = Element.ALIGN_CENTER,
+                Padding             = 4,
+                PaddingTop          = 0,
+            });
+
+            var outer = new PdfPCell(inner)
+            {
+                Border        = Rectangle.BOX,
+                BorderColor   = CL_Border,
+                BorderWidth   = 0.4f,
+                Padding       = 0,
+                PaddingLeft   = 3,
+                PaddingRight  = 3,
+            };
+            tbl.AddCell(outer);
+        }
+
+        doc.Add(tbl);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  BLOK 4 — TAHLIL NATIJALARI: LABORATORIYA
+    // ════════════════════════════════════════════════════════════════════
+
+    private static readonly (string name, string unit, string normM, string normF,
+        Func<LabAnalyses, decimal?> get)[] LabRows =
+    {
+        ("Gemoglobin (Hb)",      "g/L",      "130–170",  "120–155", e => e.hb),
+        ("Eritrositlar (RBC)",   "×10¹²/L",  "4.5–5.5",  "3.8–4.8", e => e.rbc),
+        ("Leykositlar (WBC)",    "×10⁹/L",   "4.0–9.0",  "4.0–9.0", e => e.wbc),
+        ("Trombotsitlar (PLT)",  "×10⁹/L",   "150–400",  "150–400", e => e.plt),
+        ("Gematokrit (HCT)",     "%",         "40–50",    "37–47",   e => e.hct),
+        ("MCV",                  "fL",        "80–100",   "80–100",  e => e.mcv),
+        ("MCH",                  "pg",        "27–34",    "27–34",   e => e.mch),
+        ("MCHC",                 "g/L",       "315–360",  "315–360", e => e.mchc),
+        ("EChT (ESR)",           "mm/soat",   "0–15",     "0–20",    e => e.esr),
+        ("Glyukoza",             "mmol/L",    "3.9–5.5",  "3.9–5.5", e => e.glucose),
+        ("Umumiy xolesterol",    "mmol/L",    "< 5.2",    "< 5.2",   e => e.cholesterol),
+        ("ALT",                  "U/L",       "0–40",     "0–40",    e => e.alt),
+        ("AST",                  "U/L",       "0–40",     "0–40",    e => e.ast),
+        ("Bilirubin umumiy",     "µmol/L",    "5–21",     "5–21",    e => e.bilirubin_total),
+        ("Bilirubin to'g'ri",    "µmol/L",    "0–5",      "0–5",     e => e.bilirubin_direct),
+        ("Kreatinin",            "µmol/L",    "62–115",   "53–97",   e => e.creatinine),
+        ("Siydikchil (Urea)",    "mmol/L",    "2.5–8.3",  "2.5–8.3", e => e.urea),
+        ("Umumiy oqsil",         "g/L",       "65–85",    "65–85",   e => e.total_protein),
+        ("Albumin",              "g/L",       "35–52",    "35–52",   e => e.albumin),
+        ("Kaltsiy",              "mmol/L",    "2.12–2.62","2.12–2.62",e => e.calcium),
+        ("Natriy",               "mmol/L",    "136–145",  "136–145", e => e.sodium),
+        ("Kaliy",                "mmol/L",    "3.5–5.1",  "3.5–5.1", e => e.potassium),
+        ("Temir",                "µmol/L",    "11.6–30.4","8.8–27.0",e => e.iron),
+        ("TTG",                  "µIU/mL",    "0.27–4.2", "0.27–4.2",e => e.tsh),
+        ("Erkin T4",             "pmol/L",    "12–22",    "12–22",   e => e.free_t4),
+        ("Insulin",              "µIU/mL",    "2–25",     "2–25",    e => e.insulin),
+        ("Siydik hajmi",         "mL/kun",    "1000–2000","1000–2000",e => e.urine_volume),
+        ("Siydik zichligi",      "",          "1.010–1.025","1.010–1.025",e => e.urine_density),
+        ("Siydik pH",            "",          "5.0–8.0",  "5.0–8.0", e => e.urine_ph),
+        ("Siydik oqsili",        "g/L",       "0–0.1",    "0–0.1",   e => e.urine_protein),
+        ("Siydik glyukozasi",    "mmol/L",    "0",        "0",       e => e.urine_glucose),
+        ("Siydik eritrosit",     "maydon",    "0–2",      "0–2",     e => e.urine_rbc),
+        ("Siydik leykosit",      "maydon",    "0–5",      "0–5",     e => e.urine_wbc),
+        ("Kunlik oqsil",         "mg/24h",    "0–150",    "0–150",   e => e.daily_protein),
+    };
+
+    private void AddLabTable(Document doc, Dictionary<string, string> tr, LabAnalyses lab)
+    {
+        var fonts  = BuildFonts();
+        var isMale = lab.Patcient?.Gender ?? true;
+
+        var tbl = new PdfPTable(5) { WidthPercentage = 100, SpacingBefore = 6 };
+        tbl.SetWidths(new[] { 32f, 14f, 14f, 20f, 20f });
+        TableHead(tbl, fonts,
+            tr["parameter"], tr["value"],
+            tr["lab_param_unit"], tr["normal_range"], tr["assessment"]);
+
+        int rowIdx = 0;
+        foreach (var (name, unit, normM, normF, getter) in LabRows)
+        {
+            var val = getter(lab);
+            if (val == null) continue;
+
+            var norm   = isMale ? normM : normF;
+            var valStr = val.Value.ToString("G6");
+            var (badge, color, prefix) = LabAssess(val.Value, norm);
+            var bg     = rowIdx++ % 2 == 0 ? CL_White : CL_RowAlt;
+
+            var valFont  = new Font(fonts["td9bold"].BaseFont, 9, Font.NORMAL, color);
+            var badgeFont= new Font(fonts["td9bold"].BaseFont, 9, Font.NORMAL, color);
+
+            TblCell(tbl, name,           fonts["td9"],   bg, Element.ALIGN_LEFT);
+            TblCell(tbl, prefix + valStr,valFont,        bg, Element.ALIGN_CENTER);
+            TblCell(tbl, unit,           fonts["td9gray"],bg, Element.ALIGN_CENTER);
+            TblCell(tbl, norm,           fonts["td9gray"],bg, Element.ALIGN_CENTER);
+
+            var bc = new PdfPCell(new Phrase(badge, badgeFont))
+            {
+                BackgroundColor     = bg,
+                Border              = Rectangle.BOTTOM_BORDER,
+                BorderColorBottom   = CL_Border,
+                BorderWidthBottom   = 0.3f,
+                Padding             = 3,
+                HorizontalAlignment = Element.ALIGN_CENTER,
+            };
+            tbl.AddCell(bc);
+        }
+
+        doc.Add(tbl);
+    }
+
+    private (string badge, BaseColor color, string prefix) LabAssess(decimal val, string norm)
+    {
+        try
+        {
+            if (norm.StartsWith("< ") &&
+                decimal.TryParse(norm[2..], System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture, out var up))
+                return val > up
+                    ? ("↑ Yuqori", CL_BadText,  "↑ ")
+                    : ("✓ Normal",  CL_GoodText, "");
+
+            if (norm == "0")
+                return val > 0
+                    ? ("↑ Aniqlandi", CL_WarnText, "")
+                    : ("✓ Normal",     CL_GoodText, "");
+
+            if (norm.Contains('–') || norm.Contains('-'))
+            {
+                var sep   = norm.Contains('–') ? '–' : '-';
+                var parts = norm.Split(sep);
+                if (parts.Length == 2 &&
+                    decimal.TryParse(parts[0].Trim(), System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture, out var lo) &&
+                    decimal.TryParse(parts[1].Trim(), System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture, out var hi))
+                {
+                    if (val < lo) return ("↓ Past",    CL_WarnText,  "↓ ");
+                    if (val > hi) return ("↑ Yuqori",  CL_BadText,   "↑ ");
+                    return              ("✓ Normal",   CL_GoodText,  "");
+                }
+            }
+        }
+        catch { /* ignore */ }
+
+        return ("✓ Normal", CL_GoodText, "");
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  BLOK 4 — TAHLIL NATIJALARI: PARAZITOLOGIYA
+    // ════════════════════════════════════════════════════════════════════
+
+    private void AddParaResults(Document doc, Dictionary<string, string> tr,
+        ParasitologyAnalyses row, string lang)
+    {
+        var fonts = BuildFonts();
+
+        // Mikroskop rasmi
+        if (!string.IsNullOrWhiteSpace(row.FilePath))
+        {
+            var imgPath = PhysicalPath(row.FilePath);
+            if (File.Exists(imgPath))
+            {
+                try
+                {
+                    var img = Image.GetInstance(imgPath);
+                    img.ScaleToFit(doc.PageSize.Width - MrgSide * 2, 200f);
+                    img.Alignment = Element.ALIGN_CENTER;
+                    img.SpacingBefore = 4;
+                    img.SpacingAfter  = 4;
+                    doc.Add(img);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Parazitologiya rasmi yuklanmadi: {p}", imgPath);
+                }
+            }
+        }
+
+        // Usul va kattalashtirish
+        var infoTbl = InfoTable();
+        int ri = 0;
+        if (!string.IsNullOrWhiteSpace(row.MicroscopyMethod))
+            InfoRow(infoTbl, tr["para_method"] + ":", row.MicroscopyMethod, fonts, ri++);
+        if (!string.IsNullOrWhiteSpace(row.Magnification))
+            InfoRow(infoTbl, tr["para_magnification"] + ":", row.Magnification, fonts, ri++);
+        if (row.EggCountPerField.HasValue)
+            InfoRow(infoTbl, tr["para_egg_count"] + ":",
+                row.EggCountPerField.Value.ToString(), fonts, ri);
+        doc.Add(infoTbl);
+
+        if (row.Results == null || row.Results.Count == 0)
+        {
+            doc.Add(new Paragraph($"[ {tr["para_no_parasites"]} ]",
+                fonts["p9gray"]) { SpacingBefore = 4 });
+            return;
+        }
+
+        var tbl = new PdfPTable(4) { WidthPercentage = 100, SpacingBefore = 4 };
+        tbl.SetWidths(new[] { 30f, 30f, 20f, 20f });
+        TableHead(tbl, fonts,
+            tr["para_helminth_type"], tr["para_latin_name"],
+            tr["para_confidence"],    tr["para_level"]);
+
+        int rowIdx = 0;
+        foreach (var r in row.Results)
+        {
+            var name = lang == "ru" ? r.HelminthNameRu
+                     : lang == "en" ? r.HelminthNameEn
+                     : r.HelminthNameUz;
+            var bg = rowIdx++ % 2 == 0 ? CL_White : CL_RowAlt;
+            TblCell(tbl, name ?? r.HelminthType ?? "—", fonts["td9bold"], bg, Element.ALIGN_LEFT);
+            TblCell(tbl, r.HelminthType ?? "—",         fonts["td9gray"], bg, Element.ALIGN_LEFT);
+            TblCell(tbl, r.Confidence.HasValue ? $"{r.Confidence.Value:F0}%" : "—",
+                         fonts["td9bold"], bg, Element.ALIGN_CENTER);
+            TblCell(tbl, r.InfectionLevel ?? "—",       fonts["td9"],     bg, Element.ALIGN_CENTER);
+        }
+
+        doc.Add(tbl);
+    }
+
+    private void AddParaAiBlock(Document doc, Dictionary<string, string> tr,
+        ParasitologyAnalyses row)
+    {
+        if (string.IsNullOrWhiteSpace(row.AiResponse)) return;
+
+        var fonts = BuildFonts();
+        ComposeSectionHeader(doc, fonts, tr["ai_section_title"], CL_Green);
+        AddAiTextBlock(doc, fonts, row.AiResponse.Trim());
+
+        if (row.JiddiylikDarajasi.HasValue)
+            ComposeSeverityBar(doc, tr, fonts, row.JiddiylikDarajasi.Value);
+
+        ComposeDisclaimer(doc, tr, fonts);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  BLOK 5 — AI XULOSASI
+    // ════════════════════════════════════════════════════════════════════
+
+    private void AddAiBlock(Document doc, Dictionary<string, string> tr, AIAnswerDataDTO? ai)
+    {
+        var fonts = BuildFonts();
+        ComposeSectionHeader(doc, fonts, tr["ai_section_title"], CL_Green);
+
+        if (ai == null)
+        {
+            doc.Add(new Paragraph($"[ {tr["not_analyzed"]} ]", fonts["p9gray"])
+                { SpacingBefore = 4, SpacingAfter = 4 });
+            return;
+        }
+
+        // Xulosa matni
+        var text = ai.AutomaticAnalysis ?? ai.FinalSummary ?? ai.Raw;
+        if (!string.IsNullOrWhiteSpace(text))
+            AddAiTextBlock(doc, fonts, text.Trim());
+
+        // Jiddiylik va tavsiyalar — 2 ustunli blok
+        var severityRaw = ai.AutomaticAnalysisBool?.ToString() ?? "0";
+        int.TryParse(severityRaw, out var severityInt);
+
+        bool hasRecs = !string.IsNullOrWhiteSpace(ai.AIRecommendations);
+
+        if (severityInt > 0 || hasRecs)
+        {
+            var bottomTbl = new PdfPTable(hasRecs ? 2 : 1)
+            {
+                WidthPercentage = 100,
+                SpacingBefore   = 4,
+                SpacingAfter    = 4,
+            };
+            if (hasRecs) bottomTbl.SetWidths(new[] { 40f, 60f });
+
+            // CHAP: jiddiylik
+            if (severityInt > 0)
+            {
+                var leftContent = new PdfPCell { Border = Rectangle.NO_BORDER, Padding = 0 };
+                leftContent.AddElement(ComposeSeverityWidget(tr, fonts, severityInt));
+
+                bottomTbl.AddCell(leftContent);
+            }
+
+            // O'NG: tavsiyalar
+            if (hasRecs)
+            {
+                var recCell = new PdfPCell { Border = Rectangle.NO_BORDER, PaddingLeft = 6 };
+                recCell.AddElement(new Paragraph(tr["recommendations"] + ":", fonts["p9label"])
+                    { SpacingAfter = 2 });
+
+                foreach (var line in ai.AIRecommendations!
+                             .Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    recCell.AddElement(new Paragraph($"• {line.Trim()}", fonts["p8"])
+                        { SpacingBefore = 1 });
+                }
+
+                bottomTbl.AddCell(recCell);
+            }
+
+            doc.Add(bottomTbl);
+        }
+
+        // Yakuniy xulosa (ayrı bo'lsa)
+        if (!string.IsNullOrWhiteSpace(ai.FinalSummary) && ai.FinalSummary != text)
+        {
+            doc.Add(new Paragraph(tr["final_summary"] + ":", fonts["p9label"])
+                { SpacingBefore = 4 });
+            doc.Add(new Paragraph(ai.FinalSummary.Trim(), fonts["p8"])
+                { SpacingAfter = 4 });
+        }
+    }
+
+    private static void AddAiTextBlock(Document doc, Dictionary<string, Font> fonts, string text)
+    {
+        var cell = new PdfPCell(new Phrase(text, fonts["p8_ai"]))
+        {
+            BackgroundColor = CL_AiBg,
+            Border          = Rectangle.BOX,
+            BorderColor     = CL_Green,
+            BorderWidth     = 0.8f,
+            Padding         = 8,
+        };
+        var w = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 4, SpacingAfter = 4 };
+        w.AddCell(cell);
+        doc.Add(w);
+    }
+
+    private static void ComposeSeverityBar(Document doc, Dictionary<string, string> tr,
+        Dictionary<string, Font> fonts, int level)
+    {
+        doc.Add(ComposeSeverityWidget(tr, fonts, level));
+    }
+
+    private static IElement ComposeSeverityWidget(Dictionary<string, string> tr,
+        Dictionary<string, Font> fonts, int level)
+    {
+        // 3 ta rangli blok (progress bar)
+        var (label, barColor) = level switch
+        {
+            1 => (tr["severity_mild"],     CL_GoodText),
+            2 => (tr["severity_moderate"], CL_WarnText),
+            3 => (tr["severity_severe"],   CL_BadText),
+            _ => (tr["severity_mild"],     CL_GoodText),
+        };
+
+        var barTbl = new PdfPTable(3) { WidthPercentage = 60 };
+        barTbl.SetWidths(new[] { 33f, 33f, 34f });
+
+        for (int i = 1; i <= 3; i++)
+        {
+            var bg = i <= level ? barColor : CL_Border;
+            var c  = new PdfPCell(new Phrase(" "))
+            {
+                BackgroundColor = bg,
+                Border          = Rectangle.BOX,
+                BorderColor     = CL_White,
+                BorderWidth     = 1.5f,
+                FixedHeight     = 10f,
+            };
+            barTbl.AddCell(c);
+        }
+
+        var wrapper = new PdfPTable(1) { WidthPercentage = 100 };
+        wrapper.AddCell(new PdfPCell(
+            new Phrase($"{tr["severity"]}:", fonts["p9label"]))
+        {
+            Border        = Rectangle.NO_BORDER,
+            PaddingBottom = 2,
+        });
+
+        var barCell = new PdfPCell(barTbl) { Border = Rectangle.NO_BORDER, PaddingBottom = 2 };
+        wrapper.AddCell(barCell);
+
+        var labelFont = new Font(fonts["p9label"].BaseFont, 10, Font.NORMAL, barColor);
+        wrapper.AddCell(new PdfPCell(new Phrase($"{label.ToUpper()}  ({level}/3)", labelFont))
+        {
+            Border        = Rectangle.NO_BORDER,
+            PaddingBottom = 4,
+        });
+
+        return wrapper;
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  BLOK 5.5 — SHIFOKOR TASHXISLARI
+    // ════════════════════════════════════════════════════════════════════
+
+    private void ComposeDoctorDiagnoses(Document doc, Dictionary<string, string> tr,
+        Dictionary<string, Font> fonts, string analysisType, int analysisId)
+    {
+        var diagnoses = _context.AnalysisDiagnoses
+            .Where(d => d.AnalysisType == analysisType && d.AnalysisId == analysisId)
+            .Include(d => d.Doctor)
+            .OrderByDescending(d => d.CreatedAt)
+            .ToList();
+
+        if (diagnoses.Count == 0) return;
+
+        ComposeSectionHeader(doc, fonts, tr["doctor_diagnosis_title"], CL_DarkBlue);
+
+        foreach (var diag in diagnoses)
+        {
+            var doctorName = $"{diag.Doctor?.LastName ?? ""} {diag.Doctor?.FirstName ?? ""}".Trim();
+
+            // Tashxis matni
+            var diagCell = new PdfPCell(new Phrase(diag.DiagnosisText, fonts["td9"]))
+            {
+                BackgroundColor = CL_White,
+                Border          = Rectangle.BOX,
+                BorderColor     = CL_Border,
+                BorderWidth     = 0.5f,
+                Padding         = 6,
+            };
+            var diagTbl = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 4 };
+            diagTbl.AddCell(diagCell);
+            doc.Add(diagTbl);
+
+            // Shifokor nomi va sana
+            var metaPhrase = new Phrase();
+            metaPhrase.Add(new Chunk($"{tr["diagnosed_by"]}: {doctorName}", fonts["p8gray"]));
+            if (diag.CreatedAt.HasValue)
+                metaPhrase.Add(new Chunk(
+                    $"   |   {tr["diagnosed_at"]}: {diag.CreatedAt.Value:dd.MM.yyyy HH:mm}",
+                    fonts["p8gray"]));
+
+            doc.Add(new Paragraph(metaPhrase) { SpacingAfter = 4 });
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  BLOK 6 — NMED RAQAMLI TASDIQLASH (imzo o'rniga)
+    // ════════════════════════════════════════════════════════════════════
+
+    private void ComposeNmedVerification(Document doc, Dictionary<string, string> tr,
+        Dictionary<string, Font> fonts, string docNum, DateTime date)
+    {
+        // ── Ikki ustunli: [Logo + matnlar | bo'sh (QR kelajakda)] ─────
+        var outer = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 8, SpacingAfter = 4 };
+
+        var inner = new PdfPTable(2) { WidthPercentage = 100 };
+        inner.SetWidths(new[] { 15f, 85f });
+
+        // ── CHAP: NMED logotipi ───────────────────────────────────────
+        var logoCell = new PdfPCell { Border = Rectangle.NO_BORDER, Padding = 6, VerticalAlignment = Element.ALIGN_MIDDLE };
+
+        var nmedLogoPath = Path.Combine(_env.WebRootPath ?? "", "nmed-logo.png");
+        if (File.Exists(nmedLogoPath))
+        {
+            try
+            {
+                var nmedLogo = Image.GetInstance(nmedLogoPath);
+                nmedLogo.ScaleToFit(50f, 30f);
+                nmedLogo.Alignment = Element.ALIGN_CENTER;
+                logoCell.AddElement(nmedLogo);
+            }
+            catch
+            {
+                logoCell.AddElement(new Paragraph("NMED", fonts["nmed_logo"]) { Alignment = Element.ALIGN_CENTER });
+            }
+        }
+        else
+        {
+            logoCell.AddElement(new Paragraph("NMED", fonts["nmed_logo"]) { Alignment = Element.ALIGN_CENTER });
+        }
+        inner.AddCell(logoCell);
+
+        // ── O'NG: Tasdiqlash matnlari ─────────────────────────────────
+        var textCell = new PdfPCell { Border = Rectangle.NO_BORDER, Padding = 6 };
+        textCell.AddElement(new Paragraph(tr["nmed_verified"], fonts["verify_title"])
+            { SpacingAfter = 1 });
+        textCell.AddElement(new Paragraph(
+            $"{tr["doc_number_prefix"]}: {docNum}", fonts["verify_sub"])
+            { SpacingAfter = 1 });
+        textCell.AddElement(new Paragraph(
+            $"{tr["verified_at"]}: {date:dd.MM.yyyy  HH:mm}", fonts["verify_sub"])
+            { SpacingAfter = 1 });
+        textCell.AddElement(new Paragraph("nmed.uz", fonts["verify_url"]));
+        inner.AddCell(textCell);
+
+        var outerCell = new PdfPCell(inner)
+        {
+            BackgroundColor = CL_VerifyBg,
+            Border          = Rectangle.BOX,
+            BorderColor     = CL_Border,
+            BorderWidth     = 0.5f,
+            Padding         = 0,
+        };
+        outer.AddCell(outerCell);
+        doc.Add(outer);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  BLOK 7 — MUHIM ESLATMA
+    // ════════════════════════════════════════════════════════════════════
+
+    private static void ComposeDisclaimer(Document doc,
+        Dictionary<string, string> tr, Dictionary<string, Font> fonts)
+    {
+        var cell = new PdfPCell(new Phrase($"⚠  {tr["disclaimer"]}", fonts["disclaimer"]))
+        {
+            BackgroundColor = CL_DisclBg,
+            Border          = Rectangle.BOX,
+            BorderColor     = CL_DisclBorder,
+            BorderWidth     = 0.5f,
+            Padding         = 7,
+        };
+
+        var tbl = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 6, SpacingAfter = 4 };
+        tbl.AddCell(cell);
+        doc.Add(tbl);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  UMUMIY YORDAMCHI METODLAR
+    // ════════════════════════════════════════════════════════════════════
+
+    /// <summary>Rangli sarlavha satri — ComposeSectionHeader</summary>
+    private static void ComposeSectionHeader(Document doc,
+        Dictionary<string, Font> fonts, string title, BaseColor bg)
+    {
+        var cell = new PdfPCell(new Phrase(title, fonts["h_white"]))
+        {
+            BackgroundColor = bg,
+            Border          = Rectangle.NO_BORDER,
+            Padding         = 5,
+            PaddingLeft     = 6,
+        };
+
+        var tbl = new PdfPTable(1)
+        {
+            WidthPercentage = 100,
+            SpacingBefore   = 8,
+            SpacingAfter    = 0,
+        };
+        tbl.AddCell(cell);
+        doc.Add(tbl);
+    }
+
+    /// <summary>2-ustunli ma'lumot jadvali</summary>
+    private static PdfPTable InfoTable()
+    {
+        var tbl = new PdfPTable(2) { WidthPercentage = 100, SpacingAfter = 0 };
+        tbl.SetWidths(new[] { 35f, 65f });
+        return tbl;
+    }
+
+    private static void InfoRow(PdfPTable tbl, string label, string val,
+        Dictionary<string, Font> fonts, int rowIndex)
+    {
+        var bg = rowIndex % 2 == 0 ? CL_White : CL_RowAlt;
+
+        var lc = new PdfPCell(new Phrase(label, fonts["th9"]))
+        {
+            BackgroundColor   = bg,
+            Border            = Rectangle.BOTTOM_BORDER,
+            BorderColorBottom = CL_Border,
+            BorderWidthBottom = 0.3f,
+            Padding           = 4,
+            PaddingLeft       = 6,
+        };
+
+        var vc = new PdfPCell(new Phrase(val, fonts["td9"]))
+        {
+            BackgroundColor   = bg,
+            Border            = Rectangle.BOTTOM_BORDER,
+            BorderColorBottom = CL_Border,
+            BorderWidthBottom = 0.3f,
+            Padding           = 4,
+        };
+
+        tbl.AddCell(lc);
+        tbl.AddCell(vc);
+    }
+
+    private static void TableHead(PdfPTable tbl,
+        Dictionary<string, Font> fonts, params string[] headers)
+    {
+        foreach (var h in headers)
+        {
+            tbl.AddCell(new PdfPCell(new Phrase(h, fonts["th9_inv"]))
+            {
+                BackgroundColor     = CL_DarkBlue,
+                Border              = Rectangle.NO_BORDER,
+                Padding             = 5,
+                HorizontalAlignment = Element.ALIGN_CENTER,
+            });
+        }
+    }
+
+    private static void TblCell(PdfPTable tbl, string text, Font font,
+        BaseColor bg, int align)
+    {
+        tbl.AddCell(new PdfPCell(new Phrase(text, font))
+        {
+            BackgroundColor     = bg,
+            Border              = Rectangle.BOTTOM_BORDER,
+            BorderColorBottom   = CL_Border,
+            BorderWidthBottom   = 0.3f,
+            Padding             = 4,
+            HorizontalAlignment = align,
+        });
+    }
+
+    private static void HLine(Document doc, float width, BaseColor color)
+    {
+        var cell = new PdfPCell { FixedHeight = width, BackgroundColor = color,
+            Border = Rectangle.NO_BORDER };
+        var tbl  = new PdfPTable(1) { WidthPercentage = 100 };
+        tbl.AddCell(cell);
+        doc.Add(tbl);
+    }
+
+    private string? GetLogoPath(Clinic? clinic)
+    {
+        if (string.IsNullOrWhiteSpace(clinic?.ClinicLogo)) return null;
+        try
+        {
+            var path = Path.Combine(
+                _env.WebRootPath ?? "",
+                clinic.ClinicLogo.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+            return File.Exists(path) ? path : null;
+        }
+        catch { return null; }
+    }
+
+    private string PhysicalPath(string rel) =>
+        Path.Combine(_env.WebRootPath ?? "",
+            rel.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+
+    private string MaskPassport(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return "—";
+        try
+        {
+            var d = _encryption.Decrypt(raw);
+            return d.Length >= 4 ? $"** ****{d[^4..]}" : "**";
+        }
+        catch { return "**"; }
+    }
+
+    private static int Age(DateOnly bd, DateTime now)
+    {
+        var a = now.Year - bd.Year;
+        if (new DateOnly(now.Year, bd.Month, bd.Day) > DateOnly.FromDateTime(now)) a--;
+        return a;
+    }
+
+    private static string DoctorFullName(Doctor? d)
+    {
+        if (d == null) return "—";
+        return $"{d.LastName} {d.FirstName} {d.SureName}".Trim();
+    }
+
+    private static string? DoctorNames(List<Doctor?>? list)
+    {
+        if (list == null || list.Count == 0) return null;
+        return string.Join(", ", list
+            .Where(d => d != null)
+            .Select(d => $"{d!.LastName} {d.FirstName?[..1]}. {d.SureName?[..1]}."));
+    }
+
+    private static string? ComplaintNames(IEnumerable<ECGAnalyseComplaints>? list)
+    {
+        if (list == null) return null;
+        var names = list
+            .Where(c => c.Complaint != null)
+            .Select(c => c.Complaint!.NameUz ?? c.Complaint.NameRu ?? c.Complaint.NameEn)
+            .Where(n => !string.IsNullOrWhiteSpace(n))
+            .ToList();
+        return names.Count > 0 ? string.Join(", ", names) : null;
+    }
+
+    private static string DocNum(string prefix, DateTime? dt, int id) =>
+        $"{prefix}-{dt ?? DateTime.UtcNow:yyyyMM}-{id:D4}";
+
+    private static string GetAnalysisTypeName(Dictionary<string, string> tr, string key) =>
+        key switch
+        {
+            "ecg"    => "EKG (Elektrokardiografiya)",
+            "smad"   => "SMAD (Sutkali qon bosimi monitoringi)",
+            "holter" => "Holter (24 soatlik yurak monitoringi)",
+            "lab"    => "Laboratoriya tahlili",
+            "para"   => "Parazitologik tahlil",
+            _        => key,
+        };
+
+    /// <summary>DigitalMeasurements ga case-insensitive qidiruv</summary>
+    private static bool FindDmValue(Dictionary<string, object> dm, string key,
+        out object? value)
+    {
+        foreach (var kv in dm)
+        {
+            if (string.Equals(kv.Key, key, StringComparison.OrdinalIgnoreCase))
+            {
+                value = kv.Value;
+                return true;
+            }
+        }
+        value = null;
+        return false;
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  AI JSON PARSE
+    // ════════════════════════════════════════════════════════════════════
+
+    private AIAnswerDataDTO? ParseAi(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return null;
+        try
+        {
+            var s = raw.Trim()
+                .Replace("\r\n", "\\n").Replace("\n", "\\n").Replace("\t", "\\t")
+                .Replace("\\n", "");
+            if (s.StartsWith("`") && s.EndsWith("`")) s = s[1..^1];
+
+            return JsonSerializer.Deserialize<AIAnswerDataDTO>(s,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "AI JSON parse xatolik");
+            return new AIAnswerDataDTO { Raw = raw };
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  SHRIFTLAR
+    // ════════════════════════════════════════════════════════════════════
+
+    private Dictionary<string, Font>? _fontsCache;
+
+    private Dictionary<string, Font> BuildFonts()
+    {
+        if (_fontsCache != null) return _fontsCache;
+
+        BaseFont bf;
+        try
+        {
+            string[] candidates =
+            {
+                @"C:\Windows\Fonts\arial.ttf",
+                @"C:\Windows\Fonts\Arial.ttf",
+                "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+            };
+            var found = candidates.FirstOrDefault(File.Exists);
+            bf = found != null
+                ? BaseFont.CreateFont(found, BaseFont.IDENTITY_H, BaseFont.EMBEDDED)
+                : BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+        }
+        catch
+        {
+            bf = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+        }
+
+        Font F(float sz, int style = Font.NORMAL, BaseColor? c = null) =>
+            new Font(bf, sz, style, c ?? CL_Black);
+
+        _fontsCache = new Dictionary<string, Font>
+        {
+            // Header
+            ["h_13b"]         = F(13, Font.BOLD),
+            ["doc_title"]     = F(11, Font.BOLD),
+            ["analysis_title"]= F(10, Font.BOLD,  CL_Green),
+            ["nmed_logo"]     = F(14, Font.BOLD,  CL_Green),
+            ["nmed_url"]      = F(9,  Font.ITALIC,CL_Green),
+            ["p9bold"]        = F(9,  Font.NORMAL), // BOLD -> NORMAL
+            ["p9gray"]        = F(9,  Font.NORMAL,CL_Gray),
+            ["p8gray"]        = F(8,  Font.NORMAL,CL_Gray),
+
+            // Label (section sub-labels — yengil)
+            ["p9label"]       = F(9,  Font.NORMAL,new BaseColor(68,68,68)), // #444 yengil label
+
+            // Section headers
+            ["h_white"]       = F(9,  Font.BOLD,  CL_White),
+
+            // Info table
+            ["th9"]           = F(9,  Font.BOLD,  new BaseColor(51,51,51)),
+            ["td9"]           = F(9,  Font.NORMAL,CL_Black),
+            ["td9bold"]       = F(9,  Font.NORMAL,CL_Black),   // BOLD → NORMAL (o'qish oson)
+            ["td9gray"]       = F(9,  Font.NORMAL,CL_Gray),
+            ["th9_inv"]       = F(9,  Font.BOLD,  CL_White),
+
+            // AI
+            ["p8_ai"]         = F(8,  Font.NORMAL,new BaseColor(34,34,34)),
+            ["p8"]            = F(8,  Font.NORMAL,CL_Black),
+
+            // HRV cards
+            ["hrv_val"]       = F(12, Font.BOLD,  CL_Black),
+            ["hrv_label"]     = F(8,  Font.NORMAL,CL_Gray),
+
+            // NMED verification
+            ["verify_title"]  = F(8,  Font.NORMAL,CL_Green),   // BOLD → NORMAL
+            ["verify_sub"]    = F(8,  Font.NORMAL,new BaseColor(85,85,85)),
+            ["verify_url"]    = F(8,  Font.ITALIC,CL_Green),
+
+            // Disclaimer
+            ["disclaimer"]    = F(8,  Font.NORMAL,CL_DisclBorder), // BOLD → NORMAL (o'qish oson)
+        };
+
+        return _fontsCache;
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  FOOTER — har bir sahifa pastida (total pages bilan)
+    // ════════════════════════════════════════════════════════════════════
+
+    private class FooterEvent : PdfPageEventHelper
+    {
+        private readonly Dictionary<string, Font>   _f;
+        private readonly Dictionary<string, string> _tr;
+        private readonly string _docNum;
+        private PdfTemplate? _totalPages;
+
+        public FooterEvent(Dictionary<string, Font> f,
+            Dictionary<string, string> tr, string docNum)
+        {
+            _f = f; _tr = tr; _docNum = docNum;
+        }
+
+        public override void OnOpenDocument(PdfWriter writer, Document document)
+        {
+            _totalPages = writer.DirectContent.CreateTemplate(30, 16);
+        }
+
+        public override void OnEndPage(PdfWriter writer, Document document)
+        {
+            var cb = writer.DirectContent;
+            var ps = document.PageSize;
+            var y  = document.BottomMargin - 8;
+
+            // ── #1D9E75 chiziq ────────────────────────────────────────
+            cb.SetColorStroke(CL_Green);
+            cb.SetLineWidth(0.5f);
+            cb.MoveTo(document.LeftMargin, y + 8);
+            cb.LineTo(ps.Width - document.RightMargin, y + 8);
+            cb.Stroke();
+
+            // ── CHAP: platforma nomi ──────────────────────────────────
+            ColumnText.ShowTextAligned(cb, Element.ALIGN_LEFT,
+                new Phrase($"{_tr["footer_platform"]} | nmed.uz", _f["p8gray"]),
+                document.LeftMargin, y, 0);
+
+            // ── MARKAZDA: hujjat raqami ───────────────────────────────
+            ColumnText.ShowTextAligned(cb, Element.ALIGN_CENTER,
+                new Phrase($"{_tr["doc_number_prefix"]}: {_docNum}", _f["p8gray"]),
+                ps.Width / 2, y, 0);
+
+            // ── O'NG: sahifa raqami (X / Y) ───────────────────────────
+            var pageText = $"{_tr["footer_page"]} {writer.PageNumber} {_tr["footer_of"]} ";
+            var rightX = ps.Width - document.RightMargin;
+            var textWidth = _f["p8gray"].BaseFont.GetWidthPoint(pageText, 8);
+            var totalWidth = _f["p8gray"].BaseFont.GetWidthPoint("00", 8); // max 2 raqam
+            var startX = rightX - textWidth - totalWidth;
+
+            // Avval matn, keyin template
+            ColumnText.ShowTextAligned(cb, Element.ALIGN_LEFT,
+                new Phrase(pageText, _f["p8gray"]), startX, y, 0);
+            cb.AddTemplate(_totalPages!, startX + textWidth, y);
+        }
+
+        public override void OnCloseDocument(PdfWriter writer, Document document)
+        {
+            if (_totalPages == null) return;
+            _totalPages.BeginText();
+            _totalPages.SetFontAndSize(_f["p8gray"].BaseFont, 8);
+            _totalPages.SetColorFill(new BaseColor(136, 136, 136)); // #888
+            _totalPages.ShowText(writer.PageNumber.ToString());
+            _totalPages.EndText();
+        }
+    }
+}

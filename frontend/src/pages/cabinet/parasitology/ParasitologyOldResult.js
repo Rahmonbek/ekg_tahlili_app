@@ -5,6 +5,7 @@ import { IoIosArrowBack, IoIosArrowDown } from 'react-icons/io';
 import { imgApi } from '../../../host/Host';
 import { formatDateTime } from '../../../tools/formatters';
 import ParasitologyResult from './ParasitologyResult';
+import DownloadReportButton from '../../../components/DownloadReportButton';
 
 function parseAiResponse(raw) {
     if (!raw) return null;
@@ -46,7 +47,7 @@ export default function ParasitologyOldResult({ data, initialOpen = false }) {
     return (
         <div className={`old_analyse main_card ${open ? 'opened_main_card' : 'closed_main_card'} ${statusClass(data.analysisStatus, data.jiddiylikDarajasi)}`}>
             <h1 onClick={() => setOpen(!open)}>
-                <p>{formatDateTime(data.createdAt)}</p>
+                <p>{data.analysisDate ? <span><b>{t('analysis_date')}:</b> {formatDateTime(data.analysisDate)}</span> : formatDateTime(data.createdAt)}</p>
                 <p>
                     {data.magnification ? `${data.magnification} · ` : ''}{statusLabel}
                     <span>{open ? <IoIosArrowDown /> : <IoIosArrowBack />}</span>
@@ -54,6 +55,11 @@ export default function ParasitologyOldResult({ data, initialOpen = false }) {
             </h1>
             {open && (
                 <div className="main_card_content">
+                    {data.analysisStatus === 'analyzed' && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+                            <DownloadReportButton type="parasitology" id={data.id} size="small" />
+                        </div>
+                    )}
                     {data.createdDoctor && (
                         <div>
                             <p className="ecg_label">{t('doctor_of_created')}</p>

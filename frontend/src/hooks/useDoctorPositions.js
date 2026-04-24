@@ -14,34 +14,6 @@ export function useDoctorPositions() {
     const [doctorDatas, setDoctorDatas] = useState([]);
     const [positionDatas, setPositionDatas] = useState([]);
     const [selectedDoctors, setSelectedDoctors] = useState([]);
-
-    useEffect(() => {
-        if (positions.length === 0) {
-            fetchParams();
-        } else {
-            const filtered = positions.filter((item) => item.roleId === 4);
-            setPositionDatas([...filtered]);
-        }
-
-        if (doctors.length === 0 && user != null) {
-            fetchDoctors();
-        } else {
-            setDoctorDatas(doctors);
-        }
-    }, [user]);
-
-    const fetchParams = useCallback(async () => {
-        try {
-            const res = await get_params_for_add_staff();
-            setpositions([...res.data.positions]);
-            setroles(res.data.roles);
-            const filtered = res.data.positions.filter((item) => item.roleId === 4);
-            setPositionDatas(filtered);
-        } catch (err) {
-            // Lavozimlarni yuklashda xatolik
-        }
-    }, [setpositions, setroles]);
-
     const fetchDoctors = useCallback(async () => {
         try {
             const res = await get_doctor_by_clinic_id({ id: user.clinic.id });
@@ -51,6 +23,15 @@ export function useDoctorPositions() {
             // Shifokorlarni yuklashda xatolik
         }
     }, [user, setdoctors]);
+    useEffect(() => {
+        if (doctors.length === 0 && user != null) {
+            fetchDoctors();
+        } else {
+            setDoctorDatas(doctors);
+        }
+    }, [user, doctors, fetchDoctors]);
+
+
 
     const onChangeDoctors = useCallback((val) => {
         setSelectedDoctors((prev) => {

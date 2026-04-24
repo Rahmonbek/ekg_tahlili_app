@@ -1,4 +1,4 @@
-import { Button, Checkbox, Col, Form, Radio, Row, Select, Tooltip, Upload } from 'antd';
+import { Button, Checkbox, Col, Form, Radio, Row, Select, Tooltip, Upload, DatePicker } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -36,6 +36,7 @@ export default function EcgAnalyzer() {
     const [gender, setGender] = useState(true);
     const [selectedComplaints, setSelectedComplaints] = useState([]);
     const [checkAI, setCheckAI] = useState(false);
+    const [analysisDateValue, setAnalysisDateValue] = useState('');
 
     const { complaints, user, setloader } = useStore();
 
@@ -109,6 +110,9 @@ export default function EcgAnalyzer() {
             formData.append('clinic_id', user.clinic.id);
             formData.append('lang', state.lang);
             formData.append('age', calculateAge(patcient.birthDate));
+            if (state.analysis_date) {
+                formData.append('analysis_date', state.analysis_date);
+            }
 
             let res;
             if (checkAI) {
@@ -154,6 +158,7 @@ export default function EcgAnalyzer() {
         resetDoctorSelection();
         setSelectedComplaints([]);
         setCheckAI(false);
+        setAnalysisDateValue('');
         resetAll();
         form.resetFields();
         form1.resetFields();
@@ -165,10 +170,14 @@ export default function EcgAnalyzer() {
         resetDoctorSelection();
         setSelectedComplaints([]);
         setCheckAI(false);
+        setAnalysisDateValue('');
         resetAll();
         form.resetFields();
         form2.resetFields();
     }, [resetPatient, resetDoctorSelection, resetAll, form, form2]);
+
+    // Tugmani ko'rsatish sharti: fayl + sana + kamida 1 shifokor
+    const canSubmit = state.files.length > 0 && !!analysisDateValue && selectedDoctors.length > 0;
 
     // ─── RENDER ───
     return (
@@ -216,7 +225,7 @@ export default function EcgAnalyzer() {
                     <div className="main_card_content">
                         <Form form={form2} name="ecgUpload" labelCol={{ span: 24 }} wrapperCol={{ span: 24 }}>
                             <Row>
-                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
+                                <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
                                     <Form.Item name="select_ecg_file" label={t('select_ecg_file')} rules={[{ required: true, message: '' }]}>
                                         <Upload.Dragger
                                             accept=".xml,.jpg,.png"
@@ -236,12 +245,12 @@ export default function EcgAnalyzer() {
                                     </Form.Item>
                                 </Col>
                                 <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
-                                    <Form.Item name="lang" label={t('lang_analyse')} rules={[{ required: true, message: '' }]}>
+                                    <div className="filter_item" style={{ paddingBottom: 8 }}>
+                                        <label className="filter_label">{t('lang_analyse')}</label>
                                         <Select
                                             style={{ width: '100%' }}
+                                            className="login_input"
                                             value={state.lang}
-                                            prefix={<MdLanguage />}
-                                            defaultValue={state.lang}
                                             onChange={(value) => dispatch({ type: 'SET_FIELD', field: 'lang', value })}
                                             options={[
                                                 { value: 'uz', label: <>{t('uzbek')}</> },
@@ -249,7 +258,21 @@ export default function EcgAnalyzer() {
                                                 { value: 'en', label: <>{t('english')}</> },
                                             ]}
                                         />
-                                    </Form.Item>
+                                    </div>
+                                </Col>
+                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
+                                    <div className="filter_item" style={{ paddingBottom: 8 }}>
+                                        <label className="filter_label">{t('analysis_date')}</label>
+                                        <input
+                                            className="input_date login_input"
+                                            type="date"
+                                            value={analysisDateValue}
+                                            onChange={(e) => {
+                                                setAnalysisDateValue(e.target.value);
+                                                dispatch({ type: 'SET_FIELD', field: 'analysis_date', value: e.target.value ? new Date(e.target.value).toISOString() : null });
+                                            }}
+                                        />
+                                    </div>
                                 </Col>
 
                                 <DoctorSelectSection
@@ -298,7 +321,7 @@ export default function EcgAnalyzer() {
                                     </Radio.Group>
                                 </Col>
 
-                                {state.showBtn && (
+                                {canSubmit && state.showBtn && (
                                     <>
                                         <Col lg={9} xs={24} sm={24} md={24} />
                                         <Col lg={6} xs={24} sm={24} md={24}>

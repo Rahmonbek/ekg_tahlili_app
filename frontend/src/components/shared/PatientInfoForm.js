@@ -37,6 +37,11 @@ export default function PatientInfoForm({
     fetchDistricts,
 }) {
     const { t } = useTranslation();
+    const [isDirty, setIsDirty] = React.useState(false);
+
+    React.useEffect(() => {
+        setIsDirty(false);
+    }, [patcient]);
 
     return (
         <div className={`hidden_box ${patcient ? 'showed_box' : ''}`}>
@@ -46,7 +51,11 @@ export default function PatientInfoForm({
                 labelCol={{ span: 24 }}
                 wrapperCol={{ span: 24 }}
                 initialValues={{ remember: true }}
-                onFinish={onFinish}
+                onFinish={(vals) => {
+                    onFinish(vals);
+                    setIsDirty(false);
+                }}
+                onValuesChange={() => setIsDirty(true)}
             >
                 <Row>
                     <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
@@ -196,15 +205,17 @@ export default function PatientInfoForm({
                         </Form.Item>
                     </Col>
 
-                    <div className="save-pat-data">
-                        <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
-                            <div className="form_div">
-                                <Button className="btn_form" loading={loading} htmlType="submit">
-                                    {t('saveData')}
-                                </Button>
-                            </div>
-                        </Col>
-                    </div>
+                    {isDirty && (
+                        <div className="save-pat-data">
+                            <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
+                                <div className="form_div">
+                                    <Button className="btn_form" loading={loading} htmlType="submit">
+                                        {t('saveData')}
+                                    </Button>
+                                </div>
+                            </Col>
+                        </div>
+                    )}
                 </Row>
             </Form>
         </div>

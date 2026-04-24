@@ -7,6 +7,8 @@ import { FaHospital } from 'react-icons/fa';
 import SmadOldResult from '../../../components/results/smad_analyse/SmadOldResult';
 import { get_smad_analyse_by_id } from '../../../host/requests/SmadAnalyseRequest';
 import { useStore } from '../../../store/Store';
+import DownloadReportButton from '../../../components/DownloadReportButton';
+import DoctorDiagnosisBlock from '../../../components/results/DoctorDiagnosisBlock';
 
 const { Title, Text } = Typography;
 
@@ -52,7 +54,7 @@ export default function SmadAnalyseView() {
 
     return (
         <div>
-            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <Button
                     onClick={() => navigate('/smad-analyses')}
                     icon={<IoArrowBack />}
@@ -62,13 +64,17 @@ export default function SmadAnalyseView() {
                     {t('back')}
                 </Button>
 
+                {data.status === 2 && (
+                    <DownloadReportButton type="smad" id={data.id} size="middle" />
+                )}
+
                 {clinic && (
-                    <div 
+                    <div
                         onClick={() => setClinicModalVisible(true)}
-                        style={{ 
-                            cursor: 'pointer', 
-                            color: '#1890ff', 
-                            fontWeight: 600, 
+                        style={{
+                            cursor: 'pointer',
+                            color: '#1890ff',
+                            fontWeight: 600,
                             fontSize: '16px',
                             display: 'flex',
                             alignItems: 'center',
@@ -85,6 +91,8 @@ export default function SmadAnalyseView() {
             </div>
 
             <SmadOldResult data={data} initialOpen={true} />
+
+            <DoctorDiagnosisBlock analysisType="smad" analysisId={data.id} />
 
             {/* Clinic Info Modal */}
             <Modal

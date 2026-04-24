@@ -14,7 +14,8 @@ def create_ecg_analyse(session: Session, patient_id: int, created_doctor_id: int
                        analyse_file_link: bytes = None,
                        generated_file_link: bytes = None,
                        generated_short_file_link: bytes = None,
-                       ai_answer_data: bytes = None) -> ECGAnalyse:
+                       ai_answer_data: bytes = None,
+                       analysis_date: datetime.datetime = None) -> ECGAnalyse:
     new_ecg = ECGAnalyse(
         patcient_id=patient_id,
         created_doctor_id=created_doctor_id,
@@ -24,6 +25,7 @@ def create_ecg_analyse(session: Session, patient_id: int, created_doctor_id: int
         generated_file_link=generated_file_link,
         generated_short_file_link=generated_short_file_link,
         ai_answer_data=ai_answer_data,
+        analysis_date=analysis_date,
         created_at=datetime.datetime.utcnow(),
         updated_at=datetime.datetime.utcnow()
     )

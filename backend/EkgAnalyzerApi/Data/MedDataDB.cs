@@ -46,6 +46,7 @@ namespace EkgAnalyzerApi.Data
         public DbSet<ParasitologyAnalyses> ParasitologyAnalyses { get; set; }
         public DbSet<ParasitologyAnalysisDoctors> ParasitologyAnalysisDoctors { get; set; }
         public DbSet<ParasitologyResults> ParasitologyResults { get; set; }
+        public DbSet<AnalysisDiagnosis> AnalysisDiagnoses { get; set; }
 
         public override int SaveChanges()
         {
@@ -109,6 +110,9 @@ namespace EkgAnalyzerApi.Data
                 .HasOne(c => c.ClinicDetail)
                 .WithOne()
                 .HasForeignKey<ClinicDetail>(cd => cd.ClinicId);
+            // AnalysisDiagnosis — composite index
+            modelBuilder.Entity<AnalysisDiagnosis>()
+                .HasIndex(d => new { d.AnalysisType, d.AnalysisId });
         }
     }
 

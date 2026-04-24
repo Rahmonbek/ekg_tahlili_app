@@ -31,7 +31,7 @@
 
   /* Sidebar */
   --sidebar_width: 260px;
-  --sidebar_closed_width: 100px;
+  --sidebar_closed_width: 82px;
   --card_radius: 12px;
 }
 
@@ -452,10 +452,11 @@ input:-webkit-autofill:active {
   padding-left: 10px;
   display: flex;
   align-items: center;
+  transition: 0.3s;
 }
 
 .sidebar_head img {
-  height: 100%;
+  width: 60px;
   transition: 0.3s;
   margin-right: 15px;
 }
@@ -488,7 +489,7 @@ input:-webkit-autofill:active {
   overflow: hidden;
   align-items: center;
   margin: 10px 0px;
-  padding:5px;
+  padding: 5px;
   border-radius: 12px;
 }
 
@@ -503,7 +504,7 @@ input:-webkit-autofill:active {
   font-size: var(--large_size);
   color: var(--back_color);
   margin-right: 10px;
-  box-shadow: rgba(0, 0, 0, 0.02) 0px 3.5px 5.5px;
+  box-shadow: rgba(14, 63, 126, 0.06) 0px 0px 0px 1px, rgba(42, 51, 70, 0.03) 0px 1px 1px -0.5px, rgba(42, 51, 70, 0.04) 0px 2px 2px -1px, rgba(42, 51, 70, 0.04) 0px 3px 3px -1.5px, rgba(42, 51, 70, 0.03) 0px 5px 5px -2.5px, rgba(42, 51, 70, 0.03) 0px 10px 10px -5px, rgba(42, 51, 70, 0.03) 0px 24px 24px -8px;
 }
 
 .sidebar_title {
@@ -647,7 +648,7 @@ input:-webkit-autofill:active {
 
 .content {
   width: 100%;
-  padding: 0 var(--main_padding);
+  padding: var(--main_padding);
   height: calc(100vh - 64px);
   overflow: auto;
 }
@@ -768,6 +769,15 @@ input:-webkit-autofill:active {
 
 .closed_menu .sidebar_title {
   margin-left: 20px;
+}
+
+.closed_menu .sidebar_head {
+  padding-left: 0px;
+}
+
+.closed_menu .sidebar_head img {
+  height: auto;
+  width: 50px;
 }
 
 .form_div {
@@ -1258,6 +1268,11 @@ input::placeholder,
   height: 100%;
 }
 
+.filter_item {
+  display: flex;
+  flex-direction: column;
+}
+
 .filter_form_box input,
 .filter_form_box .ant-select-selection-item {
   padding: 5px 10px !important;
@@ -1280,7 +1295,14 @@ td {
   font-size: var(--small_size);
 }
 
-.main_card h1 .btn_form{margin-top: 0px !important;}
+.main_card h1 .btn_form {
+  margin-top: 0px !important;
+}
+
+.ant-upload input {
+  display: none !important;
+}
+
 @media (max-width:1700px) {
   .login_img img {
     width: 100%;
@@ -1369,9 +1391,11 @@ td {
   border-color: var(--back_hover_color) !important;
   color: white !important;
 }
+
 .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before {
   background-color: var(--back_hover_color) !important;
 }
+
 .ant-radio-button-wrapper:hover {
   color: var(--back_color) !important;
 }
@@ -1380,6 +1404,7 @@ td {
 .ant-upload-drag:hover {
   border-color: var(--back_color) !important;
 }
+
 .ant-upload-drag-icon .anticon {
   color: var(--back_color) !important;
 }
@@ -1388,6 +1413,7 @@ td {
 .table_row_unviewed td {
   background-color: #FFFBEB !important;
 }
+
 .table_row_unviewed:hover td {
   background-color: #FEF3C7 !important;
 }

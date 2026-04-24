@@ -1,7 +1,8 @@
-﻿using EkgAnalyzerApi.Data;
+using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 [ApiController]
@@ -23,8 +24,9 @@ public class ComplaintsController : ControllerBase
         if (userIdClaim == null)
             return Unauthorized(new { message = "Token invalid" });
 
-        var complaints = _context.Complaints.OrderBy(v => v.NameUz);
-
+        var complaints = await _context.Complaints
+            .OrderBy(v => v.NameUz)
+            .ToListAsync();
 
         return Ok(complaints);
     }

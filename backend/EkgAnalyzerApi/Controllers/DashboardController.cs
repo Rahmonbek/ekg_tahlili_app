@@ -29,4 +29,15 @@ public class DashboardController : ControllerBase
         var result = await _service.GetStatisticsAsync(userId, roleId);
         return Ok(result);
     }
+
+    [HttpGet("unviewed-counts")]
+    public async Task<IActionResult> GetUnviewedCounts()
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
+            return Unauthorized(new { message = "Token invalid" });
+
+        var result = await _service.GetUnviewedCountsAsync(userId);
+        return Ok(result);
+    }
 }

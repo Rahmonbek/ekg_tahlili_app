@@ -65,7 +65,8 @@ public class HolterAnalyseController : ControllerBase
         [FromQuery] int? status = null,
         [FromQuery] DateTime? dateFrom = null,
         [FromQuery] DateTime? dateTo = null,
-        [FromQuery] int? automaticAnalysisBool = null)
+        [FromQuery] int? automaticAnalysisBool = null,
+        [FromQuery] bool? hasDiagnosis = null)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
@@ -81,7 +82,7 @@ public class HolterAnalyseController : ControllerBase
         var userClinicId = user.ClinicId.Value;
 
         var results = await _holterService.GetHolterAnalysesByClinicIdAsync(
-            userClinicId, page, pageSize, search, status, dateFrom, dateTo, automaticAnalysisBool);
+            userClinicId, page, pageSize, search, status, dateFrom, dateTo, automaticAnalysisBool, hasDiagnosis);
 
         return Ok(results);
     }
@@ -100,7 +101,8 @@ public class HolterAnalyseController : ControllerBase
     public async Task<IActionResult> GetByDoctor(
         int page = 1, int pageSize = 10,
         string? search = null, int? status = null,
-        DateTime? dateFrom = null, DateTime? dateTo = null)
+        DateTime? dateFrom = null, DateTime? dateTo = null,
+        bool? hasDiagnosis = null)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         if (userIdClaim == null) return Unauthorized(new { message = "Token invalid" });
@@ -110,7 +112,7 @@ public class HolterAnalyseController : ControllerBase
         if (doctor == null) return NotFound(new { message = "Shifokor topilmadi" });
 
         var results = await _holterService.GetHolterAnalysesByDoctorAsync(
-            doctor.Id, page, pageSize, search, status, dateFrom, dateTo);
+            doctor.Id, page, pageSize, search, status, dateFrom, dateTo, hasDiagnosis);
         return Ok(results);
     }
 
@@ -148,7 +150,8 @@ public class HolterAnalyseController : ControllerBase
     public async Task<IActionResult> GetByNurse(
         int page = 1, int pageSize = 10,
         string? search = null, int? status = null,
-        DateTime? dateFrom = null, DateTime? dateTo = null)
+        DateTime? dateFrom = null, DateTime? dateTo = null,
+        bool? hasDiagnosis = null)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         if (userIdClaim == null) return Unauthorized(new { message = "Token invalid" });
@@ -158,7 +161,7 @@ public class HolterAnalyseController : ControllerBase
         if (doctor == null) return NotFound(new { message = "Hamshira topilmadi" });
 
         var results = await _holterService.GetHolterAnalysesByNurseAsync(
-            doctor.Id, page, pageSize, search, status, dateFrom, dateTo);
+            doctor.Id, page, pageSize, search, status, dateFrom, dateTo, hasDiagnosis);
         return Ok(results);
     }
 

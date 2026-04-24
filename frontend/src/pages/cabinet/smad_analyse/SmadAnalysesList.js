@@ -1,12 +1,13 @@
 import { Button, DatePicker, Input, Select, Table, Tag, Row, Col, Tooltip, Modal, Space, Image, Typography } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaPlus, FaSearch, FaHeartbeat } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaHeartbeat, FaCheck } from 'react-icons/fa';
 import { FaEye } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
 import { get_smad_analyses_by_clinic, get_smad_analyses_by_doctor, get_smad_analyses_by_nurse, mark_smad_viewed } from '../../../host/requests/SmadAnalyseRequest';
 import { formatDate, calculateAge } from '../../../tools/formatters';
 import { useStore } from '../../../store/Store';
+import { check_has_diagnosis } from '../../../host/requests/AnalysisDiagnosisRequest';
 import EmptyState from '../../../components/shared/EmptyState';
 
 const { Option } = Select;
@@ -41,6 +42,8 @@ export default function SmadAnalysesList() {
     const [statusFilter, setStatusFilter] = useState(null);
     const [dateRange, setDateRange] = useState([null, null]);
     const [autoAnalysisFilter, setAutoAnalysisFilter] = useState(null);
+    const [hasDiagnosisFilter, setHasDiagnosisFilter] = useState(null);
+    const [diagnosisMap, setDiagnosisMap] = useState([]);
 
     const [clinicModalVisible, setClinicModalVisible] = useState(false);
     const [selectedClinic, setSelectedClinic] = useState(null);
@@ -56,13 +59,23 @@ export default function SmadAnalysesList() {
             if (dr && dr[0]) params.dateFrom = dr[0].format('YYYY-MM-DD');
             if (dr && dr[1]) params.dateTo = dr[1].format('YYYY-MM-DD');
             if (ab !== null && ab !== undefined) params.automaticAnalysisBool = ab;
+            if (hasDiagnosisFilter !== null) params.hasDiagnosis = hasDiagnosisFilter;
             const res = isDoctor
                 ? await get_smad_analyses_by_doctor(params)
                 : isNurse
                     ? await get_smad_analyses_by_nurse(params)
                     : await get_smad_analyses_by_clinic(params);
-            setData(res.data.items);
+            const items = res.data.items;
+            setData(items);
             setTotal(res.data.totalCount);
+
+            if (items.length > 0) {
+                check_has_diagnosis('smad', items.map(i => i.id))
+                    .then(diagRes => setDiagnosisMap(diagRes.data))
+                    .catch(() => { });
+            } else {
+                setDiagnosisMap([]);
+            }
         } catch (err) {
             // handleApiError
         } finally {
@@ -71,7 +84,7 @@ export default function SmadAnalysesList() {
     }, [isDoctor, isNurse]);
 
     useEffect(() => {
-        fetchData(page, searchInput, statusFilter, dateRange, autoAnalysisFilter);
+        fetchData(page, searchInput, statusFilter, dateRange, autoAnalysisFilter, hasDiagnosisFilter);
         if (isDoctor) {
             mark_smad_viewed().then(() => setsmad_unread(0)).catch(() => { });
         }
@@ -79,7 +92,7 @@ export default function SmadAnalysesList() {
 
     const handleSearch = () => {
         setPage(1);
-        fetchData(1, searchInput, statusFilter, dateRange, autoAnalysisFilter);
+        fetchData(1, searchInput, statusFilter, dateRange, autoAnalysisFilter, hasDiagnosisFilter);
     };
 
     const handleStatusChange = (val) => {
@@ -90,15 +103,16 @@ export default function SmadAnalysesList() {
         setDateRange(dates || [null, null]);
     };
 
-    const hasActiveFilters = searchInput || statusFilter !== null || autoAnalysisFilter !== null || (dateRange[0] || dateRange[1]);
+    const hasActiveFilters = searchInput || statusFilter !== null || autoAnalysisFilter !== null || hasDiagnosisFilter !== null || (dateRange[0] || dateRange[1]);
 
     const handleClearFilters = () => {
         setSearchInput('');
         setStatusFilter(null);
         setAutoAnalysisFilter(null);
+        setHasDiagnosisFilter(null);
         setDateRange([null, null]);
         setPage(1);
-        fetchData(1, '', null, [null, null], null);
+        fetchData(1, '', null, [null, null], null, null);
     };
 
     const showClinicInfo = (clinic) => {
@@ -128,10 +142,10 @@ export default function SmadAnalysesList() {
     const columns = [
         {
             title: '#',
-            dataIndex: 'id',
-            key: 'id',
+            key: 'index',
             align: 'center',
             width: 60,
+            render: (_, __, index) => (page - 1) * PAGE_SIZE + index + 1,
         },
         ...(isDoctor ? [{
             title: '',
@@ -207,21 +221,36 @@ export default function SmadAnalysesList() {
         },
         {
             title: t('status'),
-            dataIndex: 'status',
             key: 'status',
             align: 'center',
-            render: (status) => (
-                <Tag color={STATUS_COLORS[status] ?? 'default'}>
-                    {statusLabel(status)}
-                </Tag>
-            ),
+            render: (_, row) => {
+                const hasDiag = diagnosisMap.includes(row.id);
+                if (hasDiag) {
+                    return (
+                        <Tag color="success" style={{ borderRadius: '4px', fontWeight: 500 }}>
+                            <FaCheck style={{ marginRight: 4 }} /> {t('diagnosis_written') || 'Tashxis yozilgan'}
+                        </Tag>
+                    );
+                }
+                return (
+                    <Tag color="default" style={{ borderRadius: '4px' }}>
+                        {t('diagnosis_not_written') || 'Tashxis yozilmagan'}
+                    </Tag>
+                );
+            },
         },
+        // Removed redundant diagnosis column
         {
-            title: t('created_at'),
-            dataIndex: 'createdAt',
+            title: t('created_at') || 'Tizimga kiritilgan sana',
             key: 'createdAt',
             align: 'center',
-            render: (val) => (val ? formatDate(val) : '—'),
+            render: (_, row) => formatDate(row.createdAt),
+        },
+        {
+            title: t('analysis_date') || 'Tahlil olingan sana',
+            key: 'analysisDate',
+            align: 'center',
+            render: (_, row) => (row.analysisDate ? formatDate(row.analysisDate) : formatDate(row.createdAt)),
         },
         {
             title: '',
@@ -247,15 +276,15 @@ export default function SmadAnalysesList() {
                 <h1>
                     <span>
                         {t('analyse_smad') || 'SMAD Tahlillar'}
-                        
+
                     </span>
-                     <button
-                    onClick={() => navigate('/analyse-smad')}
-                    className="btn_form"
-                    style={{ width: 'auto', padding: '0 24px', marginTop: 0 }}
-                >
-                 {t('create_new_smad_analyse') || 'Yangi SMAD tahlil'}
-                </button>
+                    <button
+                        onClick={() => navigate('/analyse-smad')}
+                        className="btn_form"
+                        style={{ width: 'auto', padding: '0 24px', marginTop: 0 }}
+                    >
+                        {t('create_new_smad_analyse') || 'Yangi SMAD tahlil'}
+                    </button>
                 </h1>
                 <div className="main_card_content big_card_content">
 
@@ -263,22 +292,22 @@ export default function SmadAnalysesList() {
                     <div style={{ padding: '0 0 20px 0' }} className='filter_form_box'>
                         <Row gutter={[12, 12]} align="bottom">
                             <Col xs={24} sm={12} md={6}>
-                                <div>
+                                <div className="filter_item">
                                     <label className="filter_label">{t('search_by_patient')}</label>
                                     <Input
-                                        
                                         placeholder={t('search_by_patient')}
                                         value={searchInput}
                                         onChange={(e) => setSearchInput(e.target.value)}
                                         onPressEnter={handleSearch}
                                         className="login_input"
+
                                         allowClear
-                                        onClear={() => { setSearchInput(''); fetchData(1, '', statusFilter, dateRange, autoAnalysisFilter); }}
+                                        onClear={() => { setSearchInput(''); fetchData(1, '', statusFilter, dateRange, autoAnalysisFilter, hasDiagnosisFilter); }}
                                     />
                                 </div>
                             </Col>
                             <Col xs={24} sm={12} md={6}>
-                                <div>
+                                <div className="filter_item">
                                     <label className="filter_label">{t("date_filter")}</label>
                                     <DatePicker.RangePicker
                                         className="login_input"
@@ -291,7 +320,7 @@ export default function SmadAnalysesList() {
                                 </div>
                             </Col>
                             <Col xs={24} sm={12} md={4}>
-                                <div>
+                                <div className="filter_item">
                                     <label className="filter_label">{t('filter_by_status')}</label>
                                     <Select
                                         className="login_input custom_select"
@@ -309,7 +338,7 @@ export default function SmadAnalysesList() {
                                 </div>
                             </Col>
                             <Col xs={24} sm={12} md={4}>
-                                <div>
+                                <div className="filter_item">
                                     <label className="filter_label">{t('filter_by_ai') || 'AI bo\'yicha'}</label>
                                     <Select
                                         className="login_input custom_select"
@@ -326,13 +355,34 @@ export default function SmadAnalysesList() {
                                 </div>
                             </Col>
                             <Col xs={24} sm={12} md={4}>
-                                <button onClick={handleSearch} className="btn_form" style={{ width: '100%', margin: 0, height: '48px' }}>
-                                    {t('search_patcient')}
-                                </button>
+                                <div className="filter_item">
+                                    <label className="filter_label">{t('diagnosis_status') || 'Tashxis holati'}</label>
+                                    <Select
+                                        className="login_input custom_select"
+                                        placeholder={t('diagnosis_status') || 'Tashxis holati'}
+                                        value={hasDiagnosisFilter}
+                                        allowClear
+                                        onChange={(val) => setHasDiagnosisFilter(val ?? null)}
+                                        style={{ width: '100%' }}
+                                    >
+                                        <Option value={true}>{t('diagnosis_written') || 'Tashxis yozilgan'}</Option>
+                                        <Option value={false}>{t('diagnosis_not_written') || 'Tashxis yozilmagan'}</Option>
+                                    </Select>
+                                </div>
+                            </Col>
+                            <Col xs={24} sm={12} md={4}>
+                                <div style={{ display: 'flex', gap: 8, height: '48px' }}>
+                                    <button onClick={handleSearch} className="btn_form" style={{ flex: 1, margin: 0, height: '48px' }}>
+                                        {t('search')}
+                                    </button>
+                                    <button onClick={() => navigate('/analyse-smad')} className="btn_form" style={{ width: '48px', flexShrink: 0, margin: 0, height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <FaPlus />
+                                    </button>
+                                </div>
                                 {hasActiveFilters && (
                                     <button
                                         onClick={handleClearFilters}
-                                        style={{ marginTop: 6, background: 'none', color: '#94a3b8', fontSize: 13, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                                        style={{ marginTop: 6, background: 'none', color: '#94a3b8', fontSize: 13, cursor: 'pointer', padding: 0, textDecoration: 'underline', width: '100%', textAlign: 'center' }}
                                     >
                                         {t('clear_filters') || 'Filtrlarni tozalash'}
                                     </button>

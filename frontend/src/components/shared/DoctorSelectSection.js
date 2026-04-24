@@ -26,21 +26,7 @@ export default function DoctorSelectSection({
 
     return (
         <>
-            <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
-                <Form.Item name="positions" label={t('position')}>
-                    <Select
-                        onChange={(val) => filterByPosition(val)}
-                        style={{ width: '100%' }}
-                        mode="multiple"
-                        prefix={<FaUserDoctor />}
-                        placeholder={t('enter_position_doctor')}
-                        options={positionDatas.map((item) => ({
-                            value: item.id,
-                            label: item[`name${t('data_lang')}`],
-                        }))}
-                    />
-                </Form.Item>
-            </Col>
+
             <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
                 <p className="ecg_label">{t('select_doctor_of_patcient')}</p>
                 <br />

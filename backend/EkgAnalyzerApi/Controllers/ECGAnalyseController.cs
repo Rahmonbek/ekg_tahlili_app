@@ -37,7 +37,9 @@ public class ECGAnalyseController : ControllerBase
         string? search = null,
         int? status = null,
         DateTime? dateFrom = null,
-        DateTime? dateTo = null)
+        DateTime? dateTo = null,
+        int? automaticAnalysisBool = null,
+        bool? hasDiagnosis = null)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
@@ -51,7 +53,7 @@ public class ECGAnalyseController : ControllerBase
             return Unauthorized(new { message = "Klinika aniqlanmadi" });
 
         var results = await _ecgService.GetECGAnalysesByClinicIdAsync(
-            user.ClinicId.Value, page, pageSize, search, status, dateFrom, dateTo, null);
+            user.ClinicId.Value, page, pageSize, search, status, dateFrom, dateTo, automaticAnalysisBool, hasDiagnosis);
 
         return Ok(results);
     }
@@ -82,7 +84,9 @@ public class ECGAnalyseController : ControllerBase
     public async Task<IActionResult> GetByDoctor(
         int page = 1, int pageSize = 10,
         string? search = null, int? status = null,
-        DateTime? dateFrom = null, DateTime? dateTo = null)
+        DateTime? dateFrom = null, DateTime? dateTo = null,
+        int? automaticAnalysisBool = null,
+        bool? hasDiagnosis = null)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         if (userIdClaim == null) return Unauthorized(new { message = "Token invalid" });
@@ -92,7 +96,7 @@ public class ECGAnalyseController : ControllerBase
         if (doctor == null) return NotFound(new { message = "Shifokor topilmadi" });
 
         var results = await _ecgService.GetECGAnalysesByDoctorAsync(
-            doctor.Id, page, pageSize, search, status, dateFrom, dateTo);
+            doctor.Id, page, pageSize, search, status, dateFrom, dateTo, automaticAnalysisBool, hasDiagnosis);
         return Ok(results);
     }
 
@@ -130,7 +134,9 @@ public class ECGAnalyseController : ControllerBase
     public async Task<IActionResult> GetByNurse(
         int page = 1, int pageSize = 10,
         string? search = null, int? status = null,
-        DateTime? dateFrom = null, DateTime? dateTo = null)
+        DateTime? dateFrom = null, DateTime? dateTo = null,
+        int? automaticAnalysisBool = null,
+        bool? hasDiagnosis = null)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         if (userIdClaim == null) return Unauthorized(new { message = "Token invalid" });
@@ -140,7 +146,7 @@ public class ECGAnalyseController : ControllerBase
         if (doctor == null) return NotFound(new { message = "Hamshira topilmadi" });
 
         var results = await _ecgService.GetECGAnalysesByNurseAsync(
-            doctor.Id, page, pageSize, search, status, dateFrom, dateTo);
+            doctor.Id, page, pageSize, search, status, dateFrom, dateTo, automaticAnalysisBool, hasDiagnosis);
         return Ok(results);
     }
 

@@ -165,5 +165,34 @@ namespace EkgAnalyzerApi.Services
                     : _context.ParasitologyAnalyses.Where(e => e.CreatedDoctorId == did)).CountAsync(),
             };
         }
+
+        public async Task<UnviewedCountsDto> GetUnviewedCountsAsync(int userId)
+        {
+            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
+            if (doctor == null) return new UnviewedCountsDto();
+
+            var did = doctor.Id;
+            return new UnviewedCountsDto
+            {
+                Ecg = await _context.ECGAnalyseDoctor
+                    .Where(d => d.DoctorId == did && !d.IsViewed)
+                    .CountAsync(),
+                Holter = await _context.HolterAnalyseDoctor
+                    .Where(d => d.DoctorId == did && !d.IsViewed)
+                    .CountAsync(),
+                Smad = await _context.SmadAnalyseDoctor
+                    .Where(d => d.DoctorId == did && !d.IsViewed)
+                    .CountAsync(),
+                Lab = await _context.LabAnalyseDoctor
+                    .Where(d => d.DoctorId == did && !d.IsViewed)
+                    .CountAsync(),
+                Diagnoses = await _context.MedicalDiagnose
+                    .Where(d => d.MainDoctorId == did && !d.IsViewed)
+                    .CountAsync(),
+                Parasitology = await _context.ParasitologyAnalysisDoctors
+                    .Where(d => d.DoctorId == did && !d.IsViewed)
+                    .CountAsync(),
+            };
+        }
     }
 }

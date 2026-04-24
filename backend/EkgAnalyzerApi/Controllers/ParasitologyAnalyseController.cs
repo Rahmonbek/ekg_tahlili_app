@@ -62,6 +62,18 @@ public class ParasitologyAnalyseController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+            return Unauthorized(new { message = "Token invalid" });
+
+        var result = await _service.GetByIdAsync(id);
+        if (result == null || result.Id == 0) return NotFound(new { message = "Tahlil topilmadi" });
+        return Ok(result);
+    }
+
     [HttpPost("send-to-ai/{id}")]
     [EnableRateLimiting("ai-analysis")]
     public async Task<IActionResult> SendToAi(int id)
@@ -100,7 +112,8 @@ public class ParasitologyAnalyseController : ControllerBase
         [FromQuery] string? status = null,
         [FromQuery] DateTime? dateFrom = null,
         [FromQuery] DateTime? dateTo = null,
-        [FromQuery] int? jiddiylik = null)
+        [FromQuery] int? jiddiylik = null,
+        [FromQuery] bool? hasDiagnosis = null)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         if (userIdClaim == null) return Unauthorized();
@@ -109,7 +122,7 @@ public class ParasitologyAnalyseController : ControllerBase
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null || user.ClinicId == null) return BadRequest(new { message = "Klinika aniqlanmadi" });
 
-        var result = await _service.GetByClinicAsync(user.ClinicId.Value, page, pageSize, search, status, dateFrom, dateTo, jiddiylik);
+        var result = await _service.GetByClinicAsync(user.ClinicId.Value, page, pageSize, search, status, dateFrom, dateTo, jiddiylik, hasDiagnosis);
         return Ok(result);
     }
 
@@ -121,7 +134,8 @@ public class ParasitologyAnalyseController : ControllerBase
         [FromQuery] string? status = null,
         [FromQuery] DateTime? dateFrom = null,
         [FromQuery] DateTime? dateTo = null,
-        [FromQuery] int? jiddiylik = null)
+        [FromQuery] int? jiddiylik = null,
+        [FromQuery] bool? hasDiagnosis = null)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         if (userIdClaim == null) return Unauthorized();
@@ -130,7 +144,7 @@ public class ParasitologyAnalyseController : ControllerBase
         var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
         if (doctor == null) return BadRequest(new { message = "Shifokor topilmadi" });
 
-        var result = await _service.GetByDoctorAsync(doctor.Id, page, pageSize, search, status, dateFrom, dateTo, jiddiylik);
+        var result = await _service.GetByDoctorAsync(doctor.Id, page, pageSize, search, status, dateFrom, dateTo, jiddiylik, hasDiagnosis);
         return Ok(result);
     }
 
@@ -142,7 +156,8 @@ public class ParasitologyAnalyseController : ControllerBase
         [FromQuery] string? status = null,
         [FromQuery] DateTime? dateFrom = null,
         [FromQuery] DateTime? dateTo = null,
-        [FromQuery] int? jiddiylik = null)
+        [FromQuery] int? jiddiylik = null,
+        [FromQuery] bool? hasDiagnosis = null)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         if (userIdClaim == null) return Unauthorized();
@@ -151,7 +166,7 @@ public class ParasitologyAnalyseController : ControllerBase
         var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
         if (doctor == null) return BadRequest(new { message = "Xodim topilmadi" });
 
-        var result = await _service.GetByNurseAsync(doctor.Id, page, pageSize, search, status, dateFrom, dateTo, jiddiylik);
+        var result = await _service.GetByNurseAsync(doctor.Id, page, pageSize, search, status, dateFrom, dateTo, jiddiylik, hasDiagnosis);
         return Ok(result);
     }
 

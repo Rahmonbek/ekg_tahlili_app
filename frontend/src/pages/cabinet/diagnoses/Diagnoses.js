@@ -9,6 +9,7 @@ import { get_patcient_by_passport, save_patcient_data } from '../../../host/requ
 import {  formatDate, formatPhoneNumber, formatPhoneNumberForForm } from '../../../tools/formatters';
 
 import { FaDownload, FaUserDoctor } from 'react-icons/fa6';
+import DownloadReportButton from '../../../components/DownloadReportButton';
 import { diagnoseFileSave } from '../../../host/EkgService';
 import { successAlert, warningAlert } from '../../../tools/Alerts';
 import { get_doctor_by_clinic_id } from '../../../host/requests/DoctorRequest';
@@ -653,6 +654,16 @@ rules={[{ required: true, message: '' }]}
       </div>
       </div>:<></>}
      
+          {patcient && old_anylyses.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+              <DownloadReportButton
+                type="combined"
+                id={patcient.id}
+                size="middle"
+              />
+            </div>
+          )}
+
           <div className=' diagnoses_table'>
 {old_anylyses.length > 0 && (
 <Table

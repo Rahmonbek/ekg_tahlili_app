@@ -1,7 +1,7 @@
 import { Button, DatePicker, Input, Select, Table, Tag, Row, Col, Tooltip } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaPlus, FaSearch } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaCheck } from 'react-icons/fa';
 import { FaEye } from 'react-icons/fa6';
 import { GiMicroscope } from 'react-icons/gi';
 import { useNavigate } from 'react-router-dom';
@@ -10,8 +10,9 @@ import {
     get_parasitology_analyses_by_doctor,
     get_parasitology_analyses_by_nurse,
 } from '../../../host/requests/ParasitologyRequest';
-import { formatDate, calculateAge } from '../../../tools/formatters';
+import { formatDateTime, calculateAge, formatDate } from '../../../tools/formatters';
 import { useStore } from '../../../store/Store';
+import { check_has_diagnosis } from '../../../host/requests/AnalysisDiagnosisRequest';
 import EmptyState from '../../../components/shared/EmptyState';
 
 const { Option } = Select;
@@ -48,6 +49,8 @@ export default function ParasitologyAnalysesList() {
     const [statusFilter, setStatusFilter] = useState(null);
     const [dateRange, setDateRange] = useState([null, null]);
     const [jiddiylikFilter, setJiddiylikFilter] = useState(null);
+    const [hasDiagnosisFilter, setHasDiagnosisFilter] = useState(null);
+    const [diagnosisMap, setDiagnosisMap] = useState([]);
 
     const fetchData = useCallback(async (p, s, st, dr, jd) => {
         setLoading(true);
@@ -58,6 +61,7 @@ export default function ParasitologyAnalysesList() {
             if (dr && dr[0]) params.dateFrom = dr[0].format('YYYY-MM-DD');
             if (dr && dr[1]) params.dateTo = dr[1].format('YYYY-MM-DD');
             if (jd !== null && jd !== undefined) params.jiddiylik = jd;
+            if (hasDiagnosisFilter !== null) params.hasDiagnosis = hasDiagnosisFilter;
 
             const res = isDoctor
                 ? await get_parasitology_analyses_by_doctor(params)
@@ -65,8 +69,17 @@ export default function ParasitologyAnalysesList() {
                     ? await get_parasitology_analyses_by_nurse(params)
                     : await get_parasitology_analyses_by_clinic(params);
 
-            setData(res.data.items);
+            const items = res.data.items;
+            setData(items);
             setTotal(res.data.totalCount);
+
+            if (items.length > 0) {
+                check_has_diagnosis('para', items.map(i => i.id))
+                    .then(diagRes => setDiagnosisMap(diagRes.data))
+                    .catch(() => { });
+            } else {
+                setDiagnosisMap([]);
+            }
         } catch {
             // silent
         } finally {
@@ -75,23 +88,24 @@ export default function ParasitologyAnalysesList() {
     }, [isDoctor, isNurse]);
 
     useEffect(() => {
-        fetchData(page, searchInput, statusFilter, dateRange, jiddiylikFilter);
+        fetchData(page, searchInput, statusFilter, dateRange, jiddiylikFilter, hasDiagnosisFilter);
     }, [page, fetchData]);
 
     const handleSearch = () => {
         setPage(1);
-        fetchData(1, searchInput, statusFilter, dateRange, jiddiylikFilter);
+        fetchData(1, searchInput, statusFilter, dateRange, jiddiylikFilter, hasDiagnosisFilter);
     };
 
-    const hasActiveFilters = searchInput || statusFilter || jiddiylikFilter !== null || (dateRange[0] || dateRange[1]);
+    const hasActiveFilters = searchInput || statusFilter || jiddiylikFilter !== null || hasDiagnosisFilter !== null || (dateRange[0] || dateRange[1]);
 
     const handleClearFilters = () => {
         setSearchInput('');
         setStatusFilter(null);
         setJiddiylikFilter(null);
+        setHasDiagnosisFilter(null);
         setDateRange([null, null]);
         setPage(1);
-        fetchData(1, '', null, [null, null], null);
+        fetchData(1, '', null, [null, null], null, null);
     };
 
     const statusLabel = (s) => {
@@ -116,10 +130,10 @@ export default function ParasitologyAnalysesList() {
     const columns = [
         {
             title: '#',
-            dataIndex: 'id',
-            key: 'id',
+            key: 'index',
             align: 'center',
             width: 60,
+            render: (_, __, index) => (page - 1) * PAGE_SIZE + index + 1,
         },
         {
             title: t('patient_fullname'),
@@ -169,22 +183,36 @@ export default function ParasitologyAnalysesList() {
                 ) : '—',
         },
         {
-            title: t('status') || 'Holat',
-            dataIndex: 'analysisStatus',
-            key: 'analysisStatus',
+            title: t('status'),
+            key: 'status',
             align: 'center',
-            render: (s) => (
-                <Tag color={STATUS_COLORS[s] ?? 'default'}>
-                    {statusLabel(s)}
-                </Tag>
-            ),
+            render: (_, row) => {
+                const hasDiag = diagnosisMap.includes(row.id);
+                if (hasDiag) {
+                    return (
+                        <Tag color="success" style={{ borderRadius: '4px', fontWeight: 500 }}>
+                            <FaCheck style={{ marginRight: 4 }} /> {t('diagnosis_written') || 'Tashxis yozilgan'}
+                        </Tag>
+                    );
+                }
+                return (
+                    <Tag color="default" style={{ borderRadius: '4px' }}>
+                        {t('diagnosis_not_written') || 'Tashxis yozilmagan'}
+                    </Tag>
+                );
+            },
         },
         {
-            title: t('created_at'),
-            dataIndex: 'createdAt',
+            title: t('created_at') || 'Tizimga kiritilgan sana',
             key: 'createdAt',
             align: 'center',
-            render: (val) => (val ? formatDate(val) : '—'),
+            render: (_, row) => formatDate(row.createdAt),
+        },
+        {
+            title: t('analysis_date') || 'Tahlil olingan sana',
+            key: 'analysisDate',
+            align: 'center',
+            render: (_, row) => (row.analysisDate ? formatDate(row.analysisDate) : formatDate(row.createdAt)),
         },
         {
             title: '',
@@ -209,14 +237,6 @@ export default function ParasitologyAnalysesList() {
             <div className="main_card">
                 <h1>
                     {t('parasitology_analyse') || 'Parazitologik tahlillar'}
-                   
-                     <button
-                    onClick={() => navigate('/parasitology-analyzer')}
-                    className="btn_form"
-                    style={{ width: 'auto', padding: '0 24px', marginTop: 0 }}
-                >
-                    {t('create_new_parasitology_analyse') || 'Yangi tahlil'}
-                </button>
                 </h1>
                 <div className="main_card_content big_card_content">
 
@@ -224,26 +244,23 @@ export default function ParasitologyAnalysesList() {
                     <div style={{ padding: '0 0 20px 0' }} className="filter_form_box">
                         <Row gutter={[12, 12]} align="bottom">
                             <Col xs={24} sm={12} md={6}>
-                                <div>
+                                <div className="filter_item">
                                     <label className="filter_label">{t('search_by_patient')}</label>
                                     <Input
-                                        
                                         placeholder={t('search_by_patient')}
                                         value={searchInput}
                                         onChange={(e) => setSearchInput(e.target.value)}
                                         onPressEnter={handleSearch}
                                         className="login_input"
+
                                         allowClear
-                                        onClear={() => {
-                                            setSearchInput('');
-                                            fetchData(1, '', statusFilter, dateRange, jiddiylikFilter);
-                                        }}
+                                        onClear={() => { setSearchInput(''); fetchData(1, '', statusFilter, dateRange, jiddiylikFilter, hasDiagnosisFilter); }}
                                     />
                                 </div>
                             </Col>
                             <Col xs={24} sm={12} md={6}>
-                                <div>
-                                    <label className="filter_label">{t('date_filter')}</label>
+                                <div className="filter_item">
+                                    <label className="filter_label">{t("date_filter")}</label>
                                     <DatePicker.RangePicker
                                         className="login_input"
                                         value={dateRange[0] || dateRange[1] ? dateRange : null}
@@ -255,62 +272,69 @@ export default function ParasitologyAnalysesList() {
                                 </div>
                             </Col>
                             <Col xs={24} sm={12} md={4}>
-                                <div>
+                                <div className="filter_item">
                                     <label className="filter_label">{t('filter_by_status')}</label>
                                     <Select
                                         className="login_input custom_select"
                                         placeholder={t('filter_by_status')}
                                         value={statusFilter}
                                         allowClear
-                                        onChange={(val) => setStatusFilter(val ?? null)}
+                                        onChange={(val) => setStatusFilter(val)}
                                         style={{ width: '100%' }}
                                     >
-                                        <Option value="pending">{t('status_pending')}</Option>
-                                        <Option value="analyzed">{t('status_done')}</Option>
-                                        <Option value="not_analyzed">{t('not_analysed')}</Option>
-                                        <Option value="failed">{t('status_error')}</Option>
+                                        <Option value="pending">{t('para_status_pending')}</Option>
+                                        <Option value="analyzed">{t('para_status_analyzed')}</Option>
+                                        <Option value="not_analyzed">{t('para_status_not_analyzed')}</Option>
+                                        <Option value="failed">{t('para_status_failed')}</Option>
                                     </Select>
                                 </div>
                             </Col>
                             <Col xs={24} sm={12} md={4}>
-                                <div>
-                                    <label className="filter_label">{t('infection_level') || 'Jiddiylik'}</label>
+                                <div className="filter_item">
+                                    <label className="filter_label">{t('para_filter_jiddiylik') || 'AI natija'}</label>
                                     <Select
                                         className="login_input custom_select"
-                                        placeholder={t('infection_level') || 'Jiddiylik'}
+                                        placeholder={t('para_filter_jiddiylik')}
                                         value={jiddiylikFilter}
                                         allowClear
-                                        onChange={(val) => setJiddiylikFilter(val ?? null)}
+                                        onChange={(val) => setJiddiylikFilter(val)}
                                         style={{ width: '100%' }}
                                     >
-                                        <Option value={1}>{t('normal') || 'Normal'}</Option>
-                                        <Option value={2}>{t('avarage') || "O'rta"}</Option>
-                                        <Option value={3}>{t('danger') || 'Xavfli'}</Option>
+                                        <Option value={1}>{t('normal')}</Option>
+                                        <Option value={2}>{t('avarage')}</Option>
+                                        <Option value={3}>{t('danger')}</Option>
+                                    </Select>
+                                </div>
+                            </Col>
+                            <Col xs={24} sm={12} md={4}>
+                                <div className="filter_item">
+                                    <label className="filter_label">{t('diagnosis_status') || 'Tashxis holati'}</label>
+                                    <Select
+                                        className="login_input custom_select"
+                                        placeholder={t('diagnosis_status') || 'Tashxis holati'}
+                                        value={hasDiagnosisFilter}
+                                        allowClear
+                                        onChange={(val) => setHasDiagnosisFilter(val ?? null)}
+                                        style={{ width: '100%' }}
+                                    >
+                                        <Option value={true}>{t('diagnosis_written') || 'Tashxis yozilgan'}</Option>
+                                        <Option value={false}>{t('diagnosis_not_written') || 'Tashxis yozilmagan'}</Option>
                                     </Select>
                                 </div>
                             </Col>
                             <Col xs={24} sm={12} md={4}>
                                 <div style={{ display: 'flex', gap: 8, height: '48px' }}>
-                                    <button
-                                        onClick={handleSearch}
-                                        className="btn_form"
-                                        style={{ flex: 1, margin: 0, height: '48px' }}
-                                    >
-                                        {t('search_patcient')}
+                                    <button onClick={handleSearch} className="btn_form" style={{ flex: 1, margin: 0, height: '48px' }}>
+                                        {t('search')}
+                                    </button>
+                                    <button onClick={() => navigate('/parasitology/analyze')} className="btn_form" style={{ width: '48px', flexShrink: 0, margin: 0, height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <FaPlus />
                                     </button>
                                 </div>
                                 {hasActiveFilters && (
                                     <button
                                         onClick={handleClearFilters}
-                                        style={{
-                                            marginTop: 6,
-                                            background: 'none',
-                                            color: '#94a3b8',
-                                            fontSize: 13,
-                                            cursor: 'pointer',
-                                            padding: 0,
-                                            textDecoration: 'underline',
-                                        }}
+                                        style={{ marginTop: 6, background: 'none', color: '#94a3b8', fontSize: 13, cursor: 'pointer', padding: 0, textDecoration: 'underline', width: '100%', textAlign: 'center' }}
                                     >
                                         {t('clear_filters') || 'Filtrlarni tozalash'}
                                     </button>

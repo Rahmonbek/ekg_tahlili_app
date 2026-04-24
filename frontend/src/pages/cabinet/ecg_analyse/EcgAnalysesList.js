@@ -1,14 +1,14 @@
 import { Button, DatePicker, Input, Select, Table, Tag, Row, Col, Tooltip, Modal, Space, Image, Typography } from 'antd';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaPlus, FaSearch, FaHospital } from 'react-icons/fa';
 import { FaEye } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
 import { get_ecg_analyses_by_clinic, get_ecg_analyses_by_doctor, get_ecg_analyses_by_nurse, mark_ecg_viewed } from '../../../host/requests/ECGAnalyseRequest';
-import { formatDate, calculateAge } from '../../../tools/formatters';
+import { formatDateTime, calculateAge, formatDate } from '../../../tools/formatters';
 import { useStore } from '../../../store/Store';
 import EmptyState from '../../../components/shared/EmptyState';
-import { FaHeartbeat } from 'react-icons/fa';
+import { FaHeartbeat, FaCheck, FaClock, FaSpinner, FaExclamationCircle } from 'react-icons/fa';
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -42,26 +42,43 @@ export default function EcgAnalysesList() {
     const [statusFilter, setStatusFilter] = useState(null);
     const [aiStatusFilter, setAiStatusFilter] = useState(null);
     const [dateRange, setDateRange] = useState([null, null]);
+    const [hasDiagnosisFilter, setHasDiagnosisFilter] = useState(null);
+
+    const [diagnosisMap, setDiagnosisMap] = useState([]);
 
     const [clinicModalVisible, setClinicModalVisible] = useState(false);
     const [selectedClinic, setSelectedClinic] = useState(null);
 
+    // Qidiruv tugmasi bosilganda ishlatiladigan filtrlar qiymati
+    const filterRef = useRef({
+        search: '',
+        status: null,
+        aiStatus: null,
+        dateRange: [null, null],
+        hasDiagnosis: null
+    });
+
     const PAGE_SIZE = 10;
 
-    const fetchData = useCallback(async (p, s, st, dr, aiSt) => {
+    const fetchData = useCallback(async (p) => {
         setLoading(true);
         try {
+            const { search, status, aiStatus, dateRange: dr, hasDiagnosis } = filterRef.current;
             const params = { page: p, pageSize: PAGE_SIZE };
-            if (s) params.search = s;
-            if (st !== null && st !== undefined) params.status = st;
-            if (aiSt !== null && aiSt !== undefined) params.automaticAnalysisBool = aiSt;
+
+            if (search) params.search = search;
+            if (status !== null && status !== undefined) params.status = status;
+            if (aiStatus !== null && aiStatus !== undefined) params.automaticAnalysisBool = aiStatus;
             if (dr && dr[0]) params.dateFrom = dr[0].format('YYYY-MM-DD');
             if (dr && dr[1]) params.dateTo = dr[1].format('YYYY-MM-DD');
+            if (hasDiagnosis !== null) params.hasDiagnosis = hasDiagnosis;
+
             const res = isDoctor
                 ? await get_ecg_analyses_by_doctor(params)
                 : isNurse
                     ? await get_ecg_analyses_by_nurse(params)
                     : await get_ecg_analyses_by_clinic(params);
+
             setData(res.data.items);
             setTotal(res.data.totalCount);
         } catch (err) {
@@ -72,15 +89,23 @@ export default function EcgAnalysesList() {
     }, [isDoctor, isNurse]);
 
     useEffect(() => {
-        fetchData(page, searchInput, statusFilter, dateRange, aiStatusFilter);
+        fetchData(page);
         if (isDoctor) {
             mark_ecg_viewed().then(() => setecg_unread(0)).catch(() => { });
         }
-    }, [page, fetchData]);
+    }, [page, isDoctor, fetchData]);
 
     const handleSearch = () => {
+        // Hozirgi state dagi qiymatlarni ref ga saqlaymiz
+        filterRef.current = {
+            search: searchInput,
+            status: statusFilter,
+            aiStatus: aiStatusFilter,
+            dateRange: dateRange,
+            hasDiagnosis: hasDiagnosisFilter
+        };
         setPage(1);
-        fetchData(1, searchInput, statusFilter, dateRange, aiStatusFilter);
+        fetchData(1);
     };
 
     const handleAIStatusChange = (val) => {
@@ -122,10 +147,10 @@ export default function EcgAnalysesList() {
     const columns = [
         {
             title: '#',
-            dataIndex: 'id',
-            key: 'id',
+            key: 'index',
             align: 'center',
             width: 60,
+            render: (_, __, index) => (page - 1) * PAGE_SIZE + index + 1,
         },
         ...(isDoctor ? [{
             title: '',
@@ -172,10 +197,16 @@ export default function EcgAnalysesList() {
             },
         },
         {
-            title: t('passport_seria'),
+            title: t('passport'),
             key: 'passport',
             align: 'center',
             render: (_, row) => row.patcient?.passport || '—',
+        },
+        {
+            title: t('birthdate'),
+            key: 'birthdate',
+            align: 'center',
+            render: (_, row) => row.patcient ? formatDate(row.patcient.birthDate) : '—',
         },
         {
             title: t('doctor'),
@@ -185,6 +216,27 @@ export default function EcgAnalysesList() {
                 if (!d) return '—';
                 return `${d.lastName ?? ''} ${d.firstName ?? ''}`.trim() || '—';
             },
+        },
+
+        {
+            title: t('processing_status') || 'Tahlil holati',
+            dataIndex: 'status',
+            key: 'status',
+            align: 'center',
+            render: (st) => {
+                const colors = { 0: 'default', 1: 'processing', 2: 'success', '-1': 'error' };
+                const icons = {
+                    0: <FaClock style={{ marginRight: 4 }} />,
+                    1: <FaSpinner className="ant-spin-dot-spin" style={{ marginRight: 4 }} />,
+                    2: <FaCheck style={{ marginRight: 4 }} />,
+                    '-1': <FaExclamationCircle style={{ marginRight: 4 }} />
+                };
+                return (
+                    <Tag color={colors[st]} style={{ borderRadius: '4px', fontWeight: 500 }}>
+                        {icons[st]} {statusLabel(st)}
+                    </Tag>
+                );
+            }
         },
         {
             title: t('ai_result') || 'AI Natija',
@@ -202,22 +254,37 @@ export default function EcgAnalysesList() {
             ),
         },
         {
-            title: t('status'),
-            dataIndex: 'status',
-            key: 'status',
+            title: t('diagnosis_written') || 'Holati',
+            key: 'diagnosis_written',
             align: 'center',
-            render: (status) => (
-                <Tag color={STATUS_COLORS[status] ?? 'default'}>
-                    {statusLabel(status)}
-                </Tag>
-            ),
+            render: (_, row) => {
+                if (row.hasDiagnosis) {
+                    return (
+                        <Tag color="success" style={{ borderRadius: '4px', fontWeight: 500 }}>
+                            <FaCheck style={{ marginRight: 4 }} /> {t('diagnosis_written') || 'Tashxis yozilgan'}
+                        </Tag>
+                    );
+                }
+                return (
+                    <Tag color="default" style={{ borderRadius: '4px' }}>
+                        {t('diagnosis_not_written') || 'Tashxis yozilmagan'}
+                    </Tag>
+                );
+            },
         },
+
+        // Removed redundant diagnosis column
         {
-            title: t('created_at'),
-            dataIndex: 'createdAt',
+            title: t('date_filter') || 'Tizimga kiritilgan sana',
             key: 'createdAt',
             align: 'center',
-            render: (val) => (val ? formatDate(val) : '—'),
+            render: (_, row) => formatDate(row.createdAt),
+        },
+        {
+            title: t('analysis_date') || 'Tahlil olingan sana',
+            key: 'analysisDate',
+            align: 'center',
+            render: (_, row) => (row.analysisDate ? formatDate(row.analysisDate) : formatDate(row.createdAt)),
         },
         {
             title: '',
@@ -237,15 +304,16 @@ export default function EcgAnalysesList() {
         },
     ];
 
-    const hasActiveFilters = searchInput || statusFilter !== null || aiStatusFilter !== null || (dateRange[0] || dateRange[1]);
+    const hasActiveFilters = searchInput || statusFilter !== null || aiStatusFilter !== null || hasDiagnosisFilter !== null || (dateRange[0] || dateRange[1]);
 
     const handleClearFilters = () => {
         setSearchInput('');
         setStatusFilter(null);
         setAiStatusFilter(null);
+        setHasDiagnosisFilter(null);
         setDateRange([null, null]);
         setPage(1);
-        fetchData(1, '', null, [null, null], null);
+        fetchData(1, '', null, [null, null], null, null);
     };
 
     return (
@@ -254,38 +322,44 @@ export default function EcgAnalysesList() {
                 <h1>
                     <span>
                         {t('analyse_ecg') || 'EKG Tahlillar'}
-                       
+
                     </span>
                     <button
-                    onClick={() => navigate('/analyse-ecg')}
-                    className="btn_form"
-                    style={{ width: 'auto', padding: '0 24px', marginTop: 0 }}
-                >
-                    {t('create_new_ecg_analyse') || 'Yangi EKG tahlil'}
-                </button>
+                        onClick={() => navigate('/analyse-ecg')}
+                        className="btn_form"
+                        style={{ width: 'auto', padding: '0 24px', marginTop: 0 }}
+                    >
+                        {t('create_new_ecg_analyse') || 'Yangi EKG tahlil'}
+                    </button>
                 </h1>
                 <div className="main_card_content big_card_content">
 
                     {/* Toolbar */}
                     <div style={{ padding: '0 0 20px 0' }} className='filter_form_box'>
                         <Row gutter={[12, 12]} align="bottom">
-                            <Col xs={24} sm={12} md={6}>
-                                <div>
-                                    <label className="filter_label">{t('search_by_patient')}</label>
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
+                                <div className="filter_item">
+                                    <label className="filter_label">{t('search_by_label')}</label>
+
                                     <Input
-                                        
                                         placeholder={t('search_by_patient')}
                                         value={searchInput}
                                         onChange={(e) => setSearchInput(e.target.value)}
                                         onPressEnter={handleSearch}
                                         className="login_input"
+
                                         allowClear
-                                        onClear={() => { setSearchInput(''); fetchData(1, '', statusFilter, dateRange, aiStatusFilter); }}
+                                        onClear={() => {
+                                            setSearchInput('');
+                                            filterRef.current.search = '';
+                                            setPage(1);
+                                            fetchData(1);
+                                        }}
                                     />
                                 </div>
                             </Col>
-                            <Col xs={24} sm={12} md={6}>
-                                <div>
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
+                                <div className="filter_item">
                                     <label className="filter_label">{t("date_filter")}</label>
                                     <DatePicker.RangePicker
                                         className="login_input"
@@ -294,17 +368,31 @@ export default function EcgAnalysesList() {
                                         placeholder={[t('date_from'), t('date_to')]}
                                         format="DD.MM.YYYY"
                                         style={{ width: '100%' }}
+                                        allowEmpty={[true, true]}
+                                        allowClear
+                                        onClear={() => {
+                                            setDateRange([null, null]);
+                                            filterRef.current.dateRange = [null, null];
+                                            setPage(1);
+                                            fetchData(1);
+                                        }}
                                     />
                                 </div>
                             </Col>
-                            <Col xs={24} sm={12} md={4}>
-                                <div>
-                                    <label className="filter_label">{t('filter_by_status')}</label>
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
+                                <div className="filter_item">
+                                    <label className="filter_label">{t('processing_status')}</label>
                                     <Select
                                         className="login_input custom_select"
-                                        placeholder={t('filter_by_status')}
+                                        placeholder={t('processing_status')}
                                         value={statusFilter}
                                         allowClear
+                                        onClear={() => {
+                                            setStatusFilter(null);
+                                            filterRef.current.status = null;
+                                            setPage(1);
+                                            fetchData(1);
+                                        }}
                                         onChange={handleStatusChange}
                                         style={{ width: '100%' }}
                                     >
@@ -315,14 +403,20 @@ export default function EcgAnalysesList() {
                                     </Select>
                                 </div>
                             </Col>
-                            <Col xs={24} sm={12} md={4}>
-                                <div>
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
+                                <div className="filter_item">
                                     <label className="filter_label">{t('filter_by_ai') || 'AI bo\'yicha'}</label>
                                     <Select
                                         className="login_input custom_select"
                                         placeholder={t('filter_by_ai') || 'AI bo\'yicha'}
                                         value={aiStatusFilter}
                                         allowClear
+                                        onClear={() => {
+                                            setAiStatusFilter(null);
+                                            filterRef.current.aiStatus = null;
+                                            setPage(1);
+                                            fetchData(1);
+                                        }}
                                         onChange={handleAIStatusChange}
                                         style={{ width: '100%' }}
                                     >
@@ -332,18 +426,33 @@ export default function EcgAnalysesList() {
                                     </Select>
                                 </div>
                             </Col>
-                            <Col xs={24} sm={12} md={4}>
-                                <button onClick={handleSearch} className="btn_form" style={{ width: '100%', margin: 0, height: '48px' }}>
-                                    {t('search_patcient')}
-                                </button>
-                                {hasActiveFilters && (
-                                    <button
-                                        onClick={handleClearFilters}
-                                        style={{ marginTop: 6, background: 'none', color: '#94a3b8', fontSize: 13, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
+                                <div className="filter_item">
+                                    <label className="filter_label">{t('diagnosis_written') || 'Tashxis holati'}</label>
+                                    <Select
+                                        className="login_input custom_select"
+                                        placeholder={t('diagnosis_written') || 'Tashxis holati'}
+                                        value={hasDiagnosisFilter}
+                                        allowClear
+                                        onClear={() => {
+                                            setHasDiagnosisFilter(null);
+                                            filterRef.current.hasDiagnosis = null;
+                                            setPage(1);
+                                            fetchData(1);
+                                        }}
+                                        onChange={(val) => setHasDiagnosisFilter(val ?? null)}
+                                        style={{ width: '100%' }}
                                     >
-                                        {t('clear_filters') || 'Filtrlarni tozalash'}
-                                    </button>
-                                )}
+                                        <Option value={true}>{t('diagnosis_written') || 'Tashxis yozilgan'}</Option>
+                                        <Option value={false}>{t('diagnosis_not_written') || 'Tashxis yozilmagan'}</Option>
+                                    </Select>
+                                </div>
+                            </Col>
+                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
+                                <button onClick={handleSearch} className="btn_form" style={{ width: '100%', margin: 0, height: '48px' }}>
+                                    {t('search')}
+                                </button>
+
                             </Col>
                         </Row>
                     </div>

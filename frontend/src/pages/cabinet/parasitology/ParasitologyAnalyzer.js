@@ -1,4 +1,4 @@
-import { Alert, Button, Col, Form, Row, Select, Tooltip } from 'antd';
+import { Alert, Button, Col, Form, Row, Select, Tooltip, DatePicker } from 'antd';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IoAlertCircleSharp } from 'react-icons/io5';
@@ -94,6 +94,9 @@ export default function ParasitologyAnalyzer() {
             formData.append('ClinicId', user.clinic.id);
             formData.append('Magnification', values.magnification);
             formData.append('Lang', state.lang);
+            if (state.analysis_date) {
+                formData.append('AnalysisDate', state.analysis_date);
+            }
 
             const res = await analyzeParasitologyFile(formData);
 
@@ -175,7 +178,7 @@ export default function ParasitologyAnalyzer() {
                 <div className="main_card">
                     <h1>
                         {t('parasitology_analyse')}{' '}
-                        <Tooltip placement="bottomRight" title={t('alert_ecg')}>
+                        <Tooltip placement="bottomRight" title={t('alert_parasitology')}>
                             <span className="alert_icon"><IoAlertCircleSharp /></span>
                         </Tooltip>
                     </h1>
@@ -229,6 +232,19 @@ export default function ParasitologyAnalyzer() {
                                                 { value: '400x', label: '400x' },
                                                 { value: '1000x', label: '1000x' },
                                             ]}
+                                        />
+                                    </Form.Item>
+                                </Col>
+                                <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
+                                    <Form.Item
+                                        name="analysis_date"
+                                        label={t('analysis_date')}
+                                        rules={[{ required: true, message: t('enter_analysis_date') || '' }]}
+                                    >
+                                        <input
+                                            className="input_date"
+                                            type="datetime-local"
+                                            onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'analysis_date', value: e.target.value ? new Date(e.target.value).toISOString() : null })}
                                         />
                                     </Form.Item>
                                 </Col>
