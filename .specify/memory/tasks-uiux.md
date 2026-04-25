@@ -205,7 +205,7 @@
 
 ### Frontend (List Filter UI parity)
 
-- [ ] T052 [P1] Holter/SMAD/Lab/Parasitology list filter toolbar joylashuvini EKG list (`EcgAnalysesList`) layoutiga keltirish (responsive Col breakpoints, bir xil label/placeholder, `allowClear/onClear`); Search tugmasi yonidagi `+` create tugmani olib tashlash (create tugma faqat headerda qolsin)
+- [x] T052 [P1] Holter/SMAD/Lab/Parasitology list filter toolbar joylashuvini EKG list (`EcgAnalysesList`) layoutiga keltirish (responsive Col breakpoints, bir xil label/placeholder, `allowClear/onClear`); Search tugmasi yonidagi `+` create tugmani olib tashlash (create tugma faqat headerda qolsin)
 
 ### Frontend (Analyzer layout + default values)
 

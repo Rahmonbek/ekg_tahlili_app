@@ -80,6 +80,7 @@ public static class PdfTranslations
         ["st_segment"]              = "ST segment",
         ["sokolow_lyon"]            = "Sokolow-Lyon indeksi",
         ["ecg_image_not_available"] = "EKG grafigi mavjud emas",
+        ["ecg_source_file"]         = "Yuklangan manba fayli",
 
         // Laboratoriya
         ["lab_param_unit"]          = "Birlik",
@@ -204,6 +205,7 @@ public static class PdfTranslations
         ["st_segment"]              = "Сегмент ST",
         ["sokolow_lyon"]            = "Индекс Соколова-Лайона",
         ["ecg_image_not_available"] = "График ЭКГ недоступен",
+        ["ecg_source_file"]         = "Загруженный исходный файл",
 
         ["lab_param_unit"]          = "Единица",
         ["lab_param_note"]          = "Примечание",
@@ -320,6 +322,7 @@ public static class PdfTranslations
         ["st_segment"]              = "ST Segment",
         ["sokolow_lyon"]            = "Sokolow-Lyon Index",
         ["ecg_image_not_available"] = "ECG chart not available",
+        ["ecg_source_file"]         = "Uploaded source file",
 
         ["lab_param_unit"]          = "Unit",
         ["lab_param_note"]          = "Note",

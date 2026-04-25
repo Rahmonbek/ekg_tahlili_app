@@ -606,6 +606,44 @@ public class PdfReportService
     //  BLOK 4 — TAHLIL NATIJALARI: EKG
     // ════════════════════════════════════════════════════════════════════
 
+    private void AddEcgSourceFile(Document doc, Dictionary<string, string> tr, string? fileLink)
+    {
+        if (string.IsNullOrWhiteSpace(fileLink)) return;
+
+        var path = PhysicalPath(fileLink);
+        if (!File.Exists(path)) return;
+
+        var fonts = BuildFonts();
+        var ext   = Path.GetExtension(path).ToLowerInvariant();
+
+        ComposeSectionHeader(doc, fonts,
+            tr.GetValueOrDefault("ecg_source_file", "Yuklangan manba fayli"), CL_DarkBlue);
+
+        if (ext is ".jpg" or ".jpeg" or ".png")
+        {
+            try
+            {
+                var img = Image.GetInstance(path);
+                img.ScaleToFit(doc.PageSize.Width - MrgSide * 2, 200f);
+                img.Alignment     = Element.ALIGN_CENTER;
+                img.SpacingBefore = 4;
+                img.SpacingAfter  = 4;
+                doc.Add(img);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "EKG manba rasmi yuklanmadi: {p}", path);
+                doc.Add(new Paragraph($"[ {Path.GetFileName(path)} ]",
+                    fonts["p9gray"]) { SpacingBefore = 4 });
+            }
+        }
+        else
+        {
+            doc.Add(new Paragraph(Path.GetFileName(path),
+                fonts["p9gray"]) { SpacingBefore = 4, SpacingAfter = 4 });
+        }
+    }
+
     private void AddEcgImage(Document doc, Dictionary<string, string> tr, string? fileLink)
     {
         if (string.IsNullOrWhiteSpace(fileLink)) return;

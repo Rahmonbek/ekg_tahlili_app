@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Button, Spin, Modal, Space, Image, Typography } from 'antd';
+import { Button, Spin, Modal, Space, Image, Typography, Tag } from 'antd';
 import { IoArrowBack } from 'react-icons/io5';
 import { FaHospital } from 'react-icons/fa';
 import SmadOldResult from '../../../components/results/smad_analyse/SmadOldResult';
 import { get_smad_analyse_by_id } from '../../../host/requests/SmadAnalyseRequest';
+import { formatDate, calculateAge } from '../../../tools/formatters';
 import { useStore } from '../../../store/Store';
 import DownloadReportButton from '../../../components/DownloadReportButton';
 import DoctorDiagnosisBlock from '../../../components/results/DoctorDiagnosisBlock';
@@ -88,6 +89,29 @@ export default function SmadAnalyseView() {
                         <FaHospital /> {clinic.clinicName}
                     </div>
                 )}
+            </div>
+
+            {/* Bemor va tahlil meta-ma'lumotlari */}
+            <div style={{ marginBottom: 12, padding: '8px 14px', background: '#fafafa', borderRadius: 8, border: '1px solid #f0f0f0', display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+                <Text strong style={{ fontSize: 14 }}>
+                    {[data.patcient?.lastName, data.patcient?.firstName, data.patcient?.sureName].filter(Boolean).join(' ') || '—'}
+                </Text>
+                {data.patcient?.birthDate && (
+                    <Text type="secondary" style={{ fontSize: 13 }}>
+                        {calculateAge(data.patcient.birthDate)} {t('age') || 'yosh'}
+                    </Text>
+                )}
+                <Tag color={{ 0: 'default', 1: 'processing', 2: 'success', '-1': 'error' }[data.status]}>
+                    {{ 0: t('status_pending'), 1: t('status_processing'), 2: t('status_done'), '-1': t('status_error') }[data.status] ?? data.status}
+                </Tag>
+                {data.createdDoctor && (
+                    <Text type="secondary" style={{ fontSize: 13 }}>
+                        {t('doctor') || 'Shifokor'}: <strong>{`${data.createdDoctor.lastName ?? ''} ${data.createdDoctor.firstName ?? ''}`.trim()}</strong>
+                    </Text>
+                )}
+                <Text type="secondary" style={{ fontSize: 13 }}>
+                    {t('analysis_date') || 'Sana'}: {formatDate(data.analysisDate || data.createdAt)}
+                </Text>
             </div>
 
             <SmadOldResult data={data} initialOpen={true} />

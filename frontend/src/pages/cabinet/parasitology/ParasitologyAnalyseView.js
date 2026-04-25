@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Button, Spin, Modal, Space, Image, Typography } from 'antd';
+import { Button, Spin, Modal, Space, Image, Typography, Tag } from 'antd';
 import { IoArrowBack } from 'react-icons/io5';
 import { FaHospital } from 'react-icons/fa';
 import ParasitologyOldResult from './ParasitologyOldResult';
@@ -9,6 +9,7 @@ import { useStore } from '../../../store/Store';
 import DownloadReportButton from '../../../components/DownloadReportButton';
 import DoctorDiagnosisBlock from '../../../components/results/DoctorDiagnosisBlock';
 import { get_parasitology_analyse_by_id } from '../../../host/requests/ParasitologyRequest';
+import { formatDate, calculateAge } from '../../../tools/formatters';
 
 const { Title, Text } = Typography;
 
@@ -88,6 +89,29 @@ export default function ParasitologyAnalyseView() {
                         <FaHospital /> {clinic.clinicName}
                     </div>
                 )}
+            </div>
+
+            {/* Bemor va tahlil meta-ma'lumotlari */}
+            <div style={{ marginBottom: 12, padding: '8px 14px', background: '#fafafa', borderRadius: 8, border: '1px solid #f0f0f0', display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+                <Text strong style={{ fontSize: 14 }}>
+                    {[data.patcient?.lastName, data.patcient?.firstName, data.patcient?.sureName].filter(Boolean).join(' ') || '—'}
+                </Text>
+                {data.patcient?.birthDate && (
+                    <Text type="secondary" style={{ fontSize: 13 }}>
+                        {calculateAge(data.patcient.birthDate)} {t('age') || 'yosh'}
+                    </Text>
+                )}
+                <Tag color={{ pending: 'processing', analyzed: 'success', not_analyzed: 'default', failed: 'error' }[data.analysisStatus]}>
+                    {{ pending: t('status_pending'), analyzed: t('status_done'), not_analyzed: t('not_analysed'), failed: t('status_error') }[data.analysisStatus] ?? data.analysisStatus}
+                </Tag>
+                {data.createdDoctor && (
+                    <Text type="secondary" style={{ fontSize: 13 }}>
+                        {t('doctor') || 'Shifokor'}: <strong>{`${data.createdDoctor.lastName ?? ''} ${data.createdDoctor.firstName ?? ''}`.trim()}</strong>
+                    </Text>
+                )}
+                <Text type="secondary" style={{ fontSize: 13 }}>
+                    {t('analysis_date') || 'Sana'}: {formatDate(data.analysisDate || data.createdAt)}
+                </Text>
             </div>
 
             <ParasitologyOldResult data={data} initialOpen={true} />

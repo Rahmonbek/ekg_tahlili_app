@@ -1,4 +1,5 @@
-import { Alert, Button, Col, Form, Row, Select, Tooltip, DatePicker } from 'antd';
+import { Alert, Button, Col, Form, Row, Select, Tooltip, Upload } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IoAlertCircleSharp } from 'react-icons/io5';
@@ -16,7 +17,7 @@ import DoctorSelectSection from '../../../components/shared/DoctorSelectSection'
 
 import { analyzeParasitologyFile, getParasitologyByPatientId } from '../../../host/parasitologyService';
 import { useStore } from '../../../store/Store';
-import { warningAlert } from '../../../tools/Alerts';
+import { warningAlert, dangerAlert } from '../../../tools/Alerts';
 
 import ParasitologyResult from './ParasitologyResult';
 import ParasitologyOldResult from './ParasitologyOldResult';
@@ -74,17 +75,16 @@ export default function ParasitologyAnalyzer() {
         onPatientFound: (data) => getOldAnalyses(data.id, 'first'),
     });
 
-    const handleChange = useCallback((e) => {
-        dispatch({
-            type: 'SET_FILES',
-            files: Array.from(e.target.files),
-            fileInput: e.target.value,
-        });
+    const handleUploadFile = useCallback((file) => {
+        dispatch({ type: 'SET_FILES', files: [file], fileInput: '' });
         if (patcient?.id) getOldAnalyses(patcient.id, 'first');
+        return false;
     }, [patcient, getOldAnalyses, dispatch]);
 
+    const canSubmit = state.files.length > 0 && !!analysisDateValue && selectedDoctors.length > 0;
+
     const handleSubmit = useCallback(async () => {
-        if (state.files.length === 0) return alert(t('select_file_error'));
+        if (state.files.length === 0) return dangerAlert(t('select_file_error'));
 
         let values;
         try {
@@ -200,16 +200,22 @@ export default function ParasitologyAnalyzer() {
                         <Form form={form2} name="parasitologyUpload" labelCol={{ span: 24 }} wrapperCol={{ span: 24 }}>
                             <Row>
                                 <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
-                                    <Form.Item name="select_file" label={t('select_lab_file')} rules={[{ required: true, message: '' }]}>
-                                        <div>
-                                            <input
-                                                className="file_input"
-                                                type="file"
-                                                onChange={handleChange}
-                                                accept=".jpg,.jpeg,.png"
-                                            />
-                                            <p className="file_input_bottom_text">{t('access_file_types')}: jpg, jpeg, png</p>
-                                        </div>
+                                    <Form.Item name="select_parasitology_file" label={t('select_parasitology_file')} rules={[{ required: true, message: '' }]}>
+                                        <Upload.Dragger
+                                            accept=".jpg,.jpeg,.png"
+                                            beforeUpload={handleUploadFile}
+                                            onRemove={() => dispatch({ type: 'SET_FILES', files: [], fileInput: '' })}
+                                            maxCount={1}
+                                            fileList={state.files.map((f, i) => ({
+                                                uid: String(i), name: f.name, status: 'done', originFileObj: f,
+                                            }))}
+                                        >
+                                            <p className="ant-upload-drag-icon"><InboxOutlined /></p>
+                                            <p className="ant-upload-text" style={{ fontSize: 14 }}>
+                                                {t('click_or_drag_file') || 'Fayl tanlang yoki bu yerga tashlang'}
+                                            </p>
+                                            <p className="ant-upload-hint">{t('access_file_types')}: jpg, jpeg, png</p>
+                                        </Upload.Dragger>
                                     </Form.Item>
                                 </Col>
 
@@ -277,7 +283,7 @@ export default function ParasitologyAnalyzer() {
 
                                 <Col lg={9} xs={24} sm={24} md={24} />
                                 <Col lg={6} xs={24} sm={24} md={24}>
-                                    {state.showBtn && (
+                                    {canSubmit && state.showBtn && (
                                         <Button
                                             onClick={handleSubmit}
                                             loading={state.loading3}

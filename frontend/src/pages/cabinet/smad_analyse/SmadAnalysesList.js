@@ -405,10 +405,10 @@ export default function SmadAnalysesList() {
                             </Col>
                             <Col xs={24} sm={24} md={12} lg={8} xl={4}>
                                 <div className="filter_item">
-                                    <label className="filter_label">{t('diagnosis_status') || 'Tashxis holati'}</label>
+                                    <label className="filter_label">{t('diagnosis_written') || 'Tashxis holati'}</label>
                                     <Select
                                         className="login_input custom_select"
-                                        placeholder={t('diagnosis_status') || 'Tashxis holati'}
+                                        placeholder={t('diagnosis_written') || 'Tashxis holati'}
                                         value={hasDiagnosisFilter}
                                         allowClear
                                         onClear={() => {
