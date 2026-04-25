@@ -64,7 +64,7 @@ public class AuthController : ControllerBase
             message = result.Message
         });
     }
-    private async Task<bool> IsReCaptchaValid(string token)
+    private async Task<bool> IsReCaptchaValid(string? token)
     {
         if (string.IsNullOrEmpty(token)) return false;
 
@@ -80,10 +80,13 @@ public class AuthController : ControllerBase
         if (!response.IsSuccessStatusCode) return false;
 
         var jsonString = await response.Content.ReadAsStringAsync();
-        dynamic result = Newtonsoft.Json.JsonConvert.DeserializeObject(jsonString);
+        dynamic result = Newtonsoft.Json.JsonConvert.DeserializeObject(jsonString)!;
 
+        // Google JSON boolean true qaytaradi (string "true" emas!)
         // v3 da 'success' true bo'lishi va 'score' (ball) kamida 0.5 bo'lishi tavsiya etiladi
-        return result.success == "true" && (double)result.score >= 0.5;
+        bool success = result.success == true;
+        double score = result.score != null ? (double)result.score : 0.0;
+        return success && score >= 0.5;
     }
     // ========================= LOGIN =========================
     [HttpPost("login")]

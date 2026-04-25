@@ -302,5 +302,12 @@
   "select_district": "Выберите район",
   "admin_panel": "Панель администратора",
   "doctors_management": "Управление сотрудниками",
-  "waiting_activation_hint": "После активации клиники все функции будут доступны"
+  "waiting_activation_hint": "После активации клиники все функции будут доступны",
+  "recaptcha_not_ready": "reCAPTCHA ещё не готова, подождите немного",
+  "registration_failed": "Ошибка регистрации. Попробуйте ещё раз",
+  "invalid_email": "Неверный формат адреса электронной почты",
+  "login_or_password_incorrect": "Неверный логин или пароль",
+  "please_verify_email": "Подтвердите email. Код подтверждения был отправлен",
+  "account_temporarily_locked": "Аккаунт временно заблокирован. Попробуйте позже",
+  "something_went_wrong_try_again": "Произошла ошибка. Попробуйте ещё раз"
 }

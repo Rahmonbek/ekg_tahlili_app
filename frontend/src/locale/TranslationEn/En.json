@@ -300,5 +300,12 @@
   "select_district": "Select district",
   "admin_panel": "Admin panel",
   "doctors_management": "Staff management",
-  "waiting_activation_hint": "All features will be enabled after clinic activation"
+  "waiting_activation_hint": "All features will be enabled after clinic activation",
+  "recaptcha_not_ready": "reCAPTCHA is not ready yet, please wait a moment",
+  "registration_failed": "Registration failed. Please try again",
+  "invalid_email": "Invalid email address format",
+  "login_or_password_incorrect": "Incorrect login or password",
+  "please_verify_email": "Please verify your email. A verification code was sent",
+  "account_temporarily_locked": "Account temporarily locked. Please try again later",
+  "something_went_wrong_try_again": "Something went wrong. Please try again"
 }

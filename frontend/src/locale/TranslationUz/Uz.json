@@ -309,5 +309,16 @@
   "select_district": "Tumanni tanlang",
   "admin_panel": "Admin paneli",
   "doctors_management": "Xodimlar boshqaruvi",
-  "waiting_activation_hint": "Klinika faollashtirilishi bilan barcha funksiyalar yoqiladi"
+  "waiting_activation_hint": "Klinika faollashtirilishi bilan barcha funksiyalar yoqiladi",
+  "recaptcha_not_ready": "reCAPTCHA hali tayyor emas, iltimos biroz kuting",
+  "registration_failed": "Ro'yhatdan o'tishda xatolik yuz berdi. Qayta urinib ko'ring",
+  "invalid_email": "Email manzili noto'g'ri formatda",
+  "login_or_password_incorrect": "Login yoki parol noto'g'ri",
+  "please_verify_email": "Emailingizni tasdiqlang. Tasdiqlash kodi yuborilgan edi",
+  "account_temporarily_locked": "Akkaunt vaqtincha bloklangan. Keyinroq urinib ko'ring",
+  "something_went_wrong_try_again": "Xatolik yuz berdi. Qayta urinib ko'ring",
+  "addres": "Manzil",
+  "clinic_info": "Shifoxona ma'lumotlari",
+  "phones": "Telefon raqamlar",
+  "select_parasitology_file": "Mikroskopiya rasmini tanlang"
 }

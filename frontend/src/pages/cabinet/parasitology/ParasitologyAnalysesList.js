@@ -230,7 +230,7 @@ export default function ParasitologyAnalysesList() {
                 <h1>
                     {t('parasitology_analyse') || 'Parazitologik tahlillar'}
                     <button
-                        onClick={() => navigate('/parasitology/analyze')}
+                        onClick={() => navigate('/parasitology-analyzer')}
                         className="btn_form"
                         style={{ width: 'auto', padding: '0 24px', marginTop: 0 }}
                     >

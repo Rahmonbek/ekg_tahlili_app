@@ -29,90 +29,79 @@ def _build_prompt(magnification: str, gender: str, age: int,
     )
     complaints_text = ", ".join(complaints) if complaints else "ko'rsatilmagan"
 
-    return f"""Sen NMED tibbiy laboratoriya platformasining TAJRIBALI parazitolog-laborant mutaxassisisan.
-Quyidagi MIKROSKOPIK TASVIR najas (koprologik) preparatidan olingan.
+    return f"""
+Sen NMED tibbiy laboratoriya platformasining tajribali parazitolog mutaxassisisan.
+Quyidagi mikroskopik tasvir najas (kal) preparatidan olingan.
 
-═══ TAHLIL KONTEKSTI ═══
+TAHLIL MA'LUMOTLARI:
 - Kattalashtirish: {magnification}
 - Bemor: {age} yosh, {gender}
 - Shikoyatlar: {complaints_text}
-- Metod: Yorug'lik mikroskopiyasi, koprologik tekshiruv
 
-═══ QADAMMA-QADAM TAHLIL TARTIBI ═══
-QADAM 1 — RASM SIFATINI BAHOLASHTIR:
-  • Fokus aniqligini tekshir (tuxum konturlari ko'rinyaptimi?)
-  • Fon ifloslanish darajasini baholashtir
-  • Yorug'lik va zichlik mos keladimi?
-
-QADAM 2 — PARAZIT ELEMENTLARNI QIDIR:
-  Quyidagi MORFOLOGIK BELGILARGA QARAB qidirish:
-  A) NEMATODA tuxumlari:
-     • Ascaris lumbricoides: 45-75µm oval, burchakli/silliq qobiq, ichida blastomer
-     • Trichuris trichiura: 50-55µm "limon" shakl, ikkala uchida zich tiqin
-     • Enterobius vermicularis: 50-60µm bir tomoni yassi, o'txonli ichki tuzilish
-     • Toxocara spp: 85-95µm qalin g'adir-budir qobiq, qorong'i ichki massa
-  B) CESTODA tuxumlari/proglottidlari:
-     • Taenia spp: 30-35µm, qalin radial tarvaqaylangan qobiq, ichida hexakant
-     • Hymenolepis nana: 40-50µm oval, ichki zar, 6 ilmoq
-  C) TREMATODA tuxumlari:
-     • Opisthorchis/Clonorchis: 25-35µm "qovoq urug'i" shakl, qopqoqli
-     • Fasciola hepatica: 130-150µm KATTA oval, sariq-jigarrang
-  D) PROTOZOA (agar ko'rinsa):
-     • Kista yoki trofozoit shaklida
-
-QADAM 3 — ARTEFAKTDAN FARQLASHTIR:
-  ❌ Artefaktlar (PARAZIT EMAS): o'simlik tolalari, yog' tomchilari,
-     havo pufakchalari, iplar, fermentlanmagan qoldiqlar, hujayralar
-
-QADAM 4 — HAR BIR TOPILGAN TUR UCHUN:
-  • Tuxumlar SONINI sanash (juda ko'p → -1)
-  • Morfologiya tasvirini tayyorlash
-  • Ishonch darajasini FAQAT rasmda ko'ringan belgilarga asoslab belgilash
-
-═══ MUHIM QOIDALAR ═══
-⚠ Ishonch darajasi 0.7 dan past bo'lsa — "qoshimcha_izoh"da SABAB ko'rsat
-⚠ Rasm sifati "past" bo'lsa — "qoshimcha_izoh"da tushuntir
-⚠ Bir xil morfologiyaga ega tuxumlar bor bo'lsa — eng yuqori ishonch darajasinikini tanlash
-⚠ Noaniqlik bo'lsa — ishonch_darajasi 0.4 dan past, izoh yoz
+VAZIFANG — RASMNI DIQQAT BILAN KO'RIB CHIQ:
+1. Rasmda ko'rinayotgan BARCHA gijja (parazit) turlari va ularning TUXUMLARINI aniqlash
+2. Har bir topilgan tur uchun RASMDAN TO'G'RIDAN-TO'G'RI:
+   - Ko'rinayotgan TUXUMLAR SONINI sanash (50 tadan ko'p bo'lsa: -1)
+   - Voyaga yetgan parazit (gijja tanasi, segment, lichinka) bor-yo'qligini aniqlash
+   - Tuxum morfologiyasini tasvirlash: shakl, qobiq qalinligi, o'lchami, ichki tuzilishi
+3. Artefaktlarni (soch, tolalar, havo pufakchalari, qoldiqlar) parazit deb hisoblatma
+4. Noaniq bo'lsa — ishonch_darajasini past qo'y va izoh qoldir
 
 JAVOB QAT'IY FAQAT JSON FORMATIDA, {language} TILIDA:
+MUHIM MORFOLOGIK AJRATISH:
 
+- Agar tuxum ichida markaziy embrion va aniq ko‘rinadigan ilgakchalar (hooklets) bo‘lsa:
+  -> bu Ascaris EMAS
+  -> Hymenolepis yoki boshqa cestode ehtimoli yuqori
+
+- Agar tuxum qobig‘i ikki qavatli (double contour) va ichida ipga o‘xshash strukturalar (polar filaments) bo‘lsa:
+  -> Hymenolepis nana deb bahola
+
+- Ascaris tuxumi uchun:
+  -> tashqi qobiq notekis (mamillated)
+  -> ichida hooklets bo‘lmaydi
+
+- Agar hooklets mavjud bo‘lsa:
+  -> Ascaris variantini butunlay chiqarib tashla
 {{
   "gijja_topildimi": true,
   "aniqlangan_turlar": [
     {{
-      "lotin_nomi": "Gijja lotincha ilmiy nomi",
+      "lotin_nomi": "Gijja lotincha nomi",
       "uz_nomi": "Gijja nomi va turi (tibbiyot tilida) O'zbek tilida",
       "ru_nomi": "Гельминт на русском языке",
       "en_nomi": "Helminth name in English",
-      "ishonch_darajasi": 0.0_dan_1.0_gacha_son,
-      "voyaga_yetgan_bor": true_yoki_false,
-      "tuxum_soni": butun_son_yo_-1_yo_0,
-      "tuxum_morfologiyasi": "Tuxumning batafsil vizual tavsifi: shakl, o'lcham, qobiq, ichki tuzilish",
-      "infektsiya_darajasi": "light",
-      "infektsiya_uz": "Yengil"
+      "ishonch_darajasi": Ishonch darajasi 0.0 dan 1.0 gacha,
+      "voyaga_yetgan_bor": true yoki false,
+      "tuxum_soni": ko'rinayotgan tuxumlar soni (butun son); juda ko'p bo'lsa -1; yo'q bo'lsa 0,
+      "tuxum_morfologiyasi": "Tuxumning vizual tavsifi va morfologiyasi, yo'q bo'lsa ''",
+      "infektsiya_darajasi": "light" | "moderate" | "heavy",
+      "infektsiya_uz": "O'zbek tilida infektsiya darajasi: Yengil, O'rtacha yoki Og'ir"
     }}
   ],
-  "jami_tuxum_soni": 0,
-  "jami_jiddiylik": 1,
-  "davolash_tavsiyasi": "Davolash bo'yicha tavsiyalar",
-  "shifokorga_tavsiya": "Shifokorga maxsus tavsiyalar",
-  "rasm_sifati": "yaxshi",
-  "qoshimcha_izoh": "Qo'shimcha izohlar, noaniqliklar, cheklovlar",
-  "yakuniy_xulosa": "Tahlil natijalari asosida yakuniy tibbiy xulosa"
+  "jami_tuxum_soni": Jami tuxum soni barcha turlar bo'yicha,
+  "jami_jiddiylik": Umumiy jiddiylik darajasi 1 (engil) | 2 (o'rta) | 3 (og'ir),
+  "davolash_tavsiyasi": "Davolash bo'yicha tavsiyalar, agar mavjud bo'lsa",
+  "shifokorga_tavsiya": "Shifokorga tavsiyalar, agar mavjud bo'lsa",
+  "rasm_sifati": "yaxshi" | "qoniqarli" | "past",
+  "qoshimcha_izoh": "Qo'shimcha izohlar yoki tavsiyalar, agar mavjud bo'lsa",
+  "yakuniy_xulosa": "Rasm va tahlil asosida yakuniy xulosa va tavsiyalar"
 }}
 
-MAJBURIY QOIDALAR:
-- "gijja_topildimi": faqat true yoki false
-- "ishonch_darajasi": 0.0 — 1.0 (faqat ko'rinadigan morfologik belgilarga asosla, taxmin emas)
-- "voyaga_yetgan_bor": rasmda voyaga yetgan parazit tanasi ko'rinsa true
-- "tuxum_soni": sanab chiqilgan tuxumlar soni; juda ko'p bo'lsa -1; yo'q bo'lsa 0
-- "infektsiya_darajasi": FAQAT "light" YOKI "moderate" YOKI "heavy"
-- "infektsiya_uz": FAQAT "Yengil" YOKI "O'rtacha" YOKI "Og'ir"
-- "jami_jiddiylik": FAQAT 1 (engil) YOKI 2 (o'rta) YOKI 3 (og'ir)
-- "rasm_sifati": FAQAT "yaxshi" YOKI "qoniqarli" YOKI "past"
-- Gijja topilmasa: "gijja_topildimi": false, "aniqlangan_turlar": [], "jami_tuxum_soni": 0, "jami_jiddiylik": 1
-- JSON dan tashqarida HECH QANDAY matn yozilmasin — na ```json, na izoh, na tushuntirish"""
+QOIDALAR (QAT'IY BAJAR):
+- "gijja_topildimi": true yoki false
+- "ishonch_darajasi": 0.0 — 1.0 (faqat ko'rinadigan belgilarga asosla)
+- "voyaga_yetgan_bor": rasmda voyaga yetgan parazit ko'rinsa true, aks holda false
+- "tuxum_soni": ko'rinayotgan tuxumlar soni (butun son); juda ko'p bo'lsa -1; yo'q bo'lsa 0
+- "tuxum_morfologiyasi": tuxumning vizual tavsifi, yo'q bo'lsa ""
+- "infektsiya_darajasi": "light" | "moderate" | "heavy"
+- "infektsiya_uz": "Yengil" | "O'rtacha" | "Og'ir"
+- "jami_tuxum_soni": barcha turlar bo'yicha umumiy tuxum soni
+- "jami_jiddiylik": 1 (engil) | 2 (o'rta) | 3 (og'ir)
+- "rasm_sifati": "yaxshi" | "qoniqarli" | "past"
+- Gijja topilmasa: "gijja_topildimi": false, "aniqlangan_turlar": [], "jami_tuxum_soni": 0
+- JSON dan tashqarida HECH QANDAY matn yozilmasin
+"""
 
 
 @router.post("/analyze-parasitology")
@@ -170,8 +159,7 @@ async def analyze_parasitology(
             ],
             response_format={"type": "json_object"},
             max_tokens=2500,
-            temperature=0,
-            seed=42,
+            temperature=0
         )
 
         # Model refusal yoki bo'sh content ni tekshirish
