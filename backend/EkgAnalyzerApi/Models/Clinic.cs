@@ -16,6 +16,12 @@ public class Clinic
         [Column("clinic_logo")]
         public string? ClinicLogo { get; set; }
 
+        /// <summary>
+        /// SuperAdmin tomonidan faollashtirilganda true bo'ladi.
+        /// false bo'lsa klinika xodimlari tahlil qila olmaydi.
+        /// </summary>
+        [Column("is_active")]
+        public bool IsActive { get; set; } = false;
 
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;

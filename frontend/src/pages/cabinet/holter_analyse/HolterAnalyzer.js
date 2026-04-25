@@ -3,7 +3,6 @@ import { InboxOutlined } from '@ant-design/icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IoAlertCircleSharp } from 'react-icons/io5';
-import { MdLanguage } from 'react-icons/md';
 import { FaUserDoctor } from 'react-icons/fa6';
 import { MoonLoader } from 'react-spinners';
 

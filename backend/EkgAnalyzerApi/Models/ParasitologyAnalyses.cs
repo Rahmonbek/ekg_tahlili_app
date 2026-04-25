@@ -26,6 +26,9 @@ namespace EkgAnalyzerApi.Models
         [ForeignKey(nameof(CreatedDoctorId))]
         public Doctor CreatedDoctor { get; set; } = null!;
 
+        [Column("document_number")]
+        public string? DocumentNumber { get; set; }
+
         [Column("file_path")]
         public string? FilePath { get; set; }
 

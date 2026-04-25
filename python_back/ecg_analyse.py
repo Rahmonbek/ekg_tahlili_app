@@ -32,6 +32,11 @@ def create_ecg_analyse(session: Session, patient_id: int, created_doctor_id: int
     session.add(new_ecg)
     session.commit()
     session.refresh(new_ecg)  # Get the ID after commit
+
+    # Document number generatsiya (o'zgarmas, takrorlanmas)
+    new_ecg.document_number = f"NMED-EKG-{str(new_ecg.id).zfill(8)}"
+    session.commit()
+
     return new_ecg
 
 def update_ecg_analyse(session: Session, ecg_id: int,

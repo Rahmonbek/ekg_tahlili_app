@@ -59,6 +59,8 @@ public class ClinicDto
     public int Id { get; set; }
     public string? ClinicName { get; set; }
     public string? ClinicLogo { get; set; }
+    /// <summary>SuperAdmin tomonidan faollashtirilgan klinika. false bo'lsa tahlil qilib bo'lmaydi.</summary>
+    public bool IsActive { get; set; }
     public ClinicDetailDto? ClinicDetail { get; set; }
 }
 

@@ -60,17 +60,16 @@ namespace EkgAnalyzerApi.Services
                 {
                     Id = user.Clinic.Id,
                     ClinicName = user.Clinic.ClinicName,
+                    IsActive = user.Clinic.IsActive,
                     ClinicDetail = user.Clinic.ClinicDetail == null ? null : new ClinicDetailDto
                     {
                         Id = user.Clinic.ClinicDetail.Id,
                         Address = user.Clinic.ClinicDetail.Address,
                         BankAccaunt = user.Clinic.ClinicDetail.BankAccaunt,
                         BankName = user.Clinic.ClinicDetail.BankName,
-                        
                         MFO = user.Clinic.ClinicDetail.MFO,
                         License = user.Clinic.ClinicDetail.License,
                         INN = user.Clinic.ClinicDetail.INN,
-
                     }
                 };
             }

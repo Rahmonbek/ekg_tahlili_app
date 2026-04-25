@@ -268,6 +268,20 @@ namespace EkgAnalyzerApi.Services
 
         }
 
-        
+
+        /// <summary>
+        /// SuperAdmin tomonidan klinikani faollashtirish yoki o'chirish.
+        /// </summary>
+        public async Task<bool> SetClinicActiveAsync(int clinicId, bool isActive)
+        {
+            var clinic = await _context.Clinics
+                .FirstOrDefaultAsync(c => c.Id == clinicId)
+                ?? throw new Exception($"Klinika topilmadi (id={clinicId})");
+
+            clinic.IsActive = isActive;
+            clinic.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return clinic.IsActive;
+        }
         }
 }

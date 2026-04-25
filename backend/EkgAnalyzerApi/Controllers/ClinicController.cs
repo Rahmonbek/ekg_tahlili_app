@@ -84,4 +84,28 @@ public class ClinicController : ControllerBase
 
     //    return Ok(clinic);
     //}
+
+    /// <summary>
+    /// SuperAdmin klinikani faollashtiradi yoki o'chiradi.
+    /// PATCH /api/clinic/{id}/set-active?isActive=true
+    /// </summary>
+    [HttpPatch("{id}/set-active")]
+    [Authorize]
+    public async Task<IActionResult> SetClinicActive(int id, [FromQuery] bool isActive)
+    {
+        // Faqat SuperAdmin (roleId=1) uchun ruxsat
+        var roleClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role);
+        if (roleClaim == null || roleClaim.Value != "1")
+            return Forbid();
+
+        try
+        {
+            var result = await _clinicService.SetClinicActiveAsync(id, isActive);
+            return Ok(new { clinicId = id, isActive = result });
+        }
+        catch (Exception ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
 }

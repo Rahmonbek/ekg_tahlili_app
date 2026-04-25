@@ -2,10 +2,10 @@ using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
 using EkgAnalyzerApi.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 [ApiController]
 [Route("api/patcient")]
@@ -35,7 +35,6 @@ public class PatcientController : ControllerBase
 
         var result = await _patcientService.GetPatcientsAsync(page, userId);
 
-        // Passportlarni deshifrlash
         if (result?.data != null)
         {
             foreach (var p in result.data)
@@ -54,24 +53,23 @@ public class PatcientController : ControllerBase
         if (userIdClaim == null)
             return Unauthorized(new { message = "Token invalid" });
 
-        DateOnly birthDate = DateOnly.Parse(birthdate);
+        if (!DateOnly.TryParse(birthdate, out DateOnly birthDate))
+            return BadRequest(new { message = "Invalid birthdate format" });
 
-        // Passportni shifrlangan holda qidirish
-        var encryptedPassport = passport;
+        var normalizedPassport = NormalizeDocumentSeries(passport);
 
-        // Avval shifrlangan qiymat bilan qidirish, topilmasa — ochiq qiymat bilan (migration davri uchun)
-        var patient = await _context.Patcients.Include(x => x.District).ThenInclude(d => d.Region)
-            .FirstOrDefaultAsync(v =>
-                (v.Passport == encryptedPassport || v.Passport == passport.ToUpper()) &&
-                v.BirthDate == birthDate
-            );
+        var patients = await _context.Patcients
+            .Include(x => x.District).ThenInclude(d => d.Region)
+            .Where(v => v.BirthDate == birthDate)
+            .ToListAsync();
+
+        var patient = patients.FirstOrDefault(v =>
+            NormalizeDocumentSeries(v.Passport) == normalizedPassport);
 
         if (patient == null)
             return NotFound(new { message = "Patient not found" });
 
-        // Deshifrlash
         patient.Passport = patient.Passport;
-
         return Ok(patient);
     }
 
@@ -82,24 +80,21 @@ public class PatcientController : ControllerBase
         if (userIdClaim == null)
             return Unauthorized(new { message = "Token invalid" });
 
-        // Parse birthdate
         if (!DateOnly.TryParse(patientDto.birthdate, out DateOnly birthDate))
             return BadRequest(new { message = "Invalid birthdate format" });
 
-        // Passportni shifrlash
-        var encryptedPassport = patientDto.passport.ToUpper();
+        var normalizedPassport = NormalizeDocumentSeries(patientDto.passport);
 
-        // Tekshirish: patient mavjudmi (ochiq va shifrlangan passport bilan)
-        var existingPatient = await _context.Patcients
-            .FirstOrDefaultAsync(p =>
-                (p.Passport == encryptedPassport || p.Passport == patientDto.passport.ToUpper()) &&
-                p.BirthDate == birthDate
-            );
+        var patientsByBirthDate = await _context.Patcients
+            .Where(p => p.BirthDate == birthDate)
+            .ToListAsync();
+
+        var existingPatient = patientsByBirthDate.FirstOrDefault(p =>
+            NormalizeDocumentSeries(p.Passport) == normalizedPassport);
 
         if (existingPatient != null)
         {
-            // ✅ Update mavjud patient
-            existingPatient.Passport = encryptedPassport; // Eski ochiq passport ni shifrlash
+            existingPatient.Passport = normalizedPassport;
             existingPatient.FirstName = patientDto.firstname;
             existingPatient.Address = patientDto.address;
             existingPatient.DistrictId = patientDto.district_id;
@@ -112,39 +107,31 @@ public class PatcientController : ControllerBase
             _context.Patcients.Update(existingPatient);
             await _context.SaveChangesAsync();
 
-            // Response da deshifrlangan passport qaytarish
             existingPatient.Passport = existingPatient.Passport;
             return Ok(existingPatient);
         }
-        else
+
+        var newPatient = new Patcient
         {
-            // ✅ Create yangi patient (shifrlangan passport bilan)
-            var newPatient = new Patcient
-            {
-                Passport = encryptedPassport,
-                BirthDate = birthDate,
-                FirstName = patientDto.firstname,
-                Address = patientDto.address,
-                DistrictId = patientDto.district_id,
-                LastName = patientDto.lastname,
-                SureName = patientDto.surename,
-                Gender = patientDto.gender,
-                Phone = patientDto.phone,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+            Passport = normalizedPassport,
+            BirthDate = birthDate,
+            FirstName = patientDto.firstname,
+            Address = patientDto.address,
+            DistrictId = patientDto.district_id,
+            LastName = patientDto.lastname,
+            SureName = patientDto.surename,
+            Gender = patientDto.gender,
+            Phone = patientDto.phone,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
 
-            await _context.Patcients.AddAsync(newPatient);
-            await _context.SaveChangesAsync();
+        await _context.Patcients.AddAsync(newPatient);
+        await _context.SaveChangesAsync();
 
-            // Response da deshifrlangan passport qaytarish
-            newPatient.Passport = newPatient.Passport;
-            return Ok(newPatient);
-        }
+        newPatient.Passport = newPatient.Passport;
+        return Ok(newPatient);
     }
-
-
-
 
     [HttpGet("get-all-patients")]
     public async Task<IActionResult> GetAllPatient()
@@ -158,7 +145,6 @@ public class PatcientController : ControllerBase
         if (patients == null || !patients.Any())
             return NotFound(new { message = "Patients not found" });
 
-        // Passportlarni deshifrlash
         foreach (var p in patients)
         {
             p.Passport = p.Passport;
@@ -166,5 +152,14 @@ public class PatcientController : ControllerBase
 
         return Ok(patients);
     }
-}
 
+    private static string NormalizeDocumentSeries(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        var upper = value.Trim().ToUpperInvariant();
+
+        return Regex.Replace(upper, @"[\s\-\/\.]", string.Empty);
+    }
+}

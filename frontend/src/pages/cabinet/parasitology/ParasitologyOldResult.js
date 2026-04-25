@@ -28,7 +28,7 @@ function statusClass(status, jiddiylik) {
     return 'unknown_analyse';
 }
 
-export default function ParasitologyOldResult({ data, initialOpen = false }) {
+export default function ParasitologyOldResult({ data, initialOpen = false, showDownloadButton = true }) {
     const { t } = useTranslation();
     const [open, setOpen] = useState(initialOpen);
 
@@ -55,7 +55,7 @@ export default function ParasitologyOldResult({ data, initialOpen = false }) {
             </h1>
             {open && (
                 <div className="main_card_content">
-                    {data.analysisStatus === 'analyzed' && (
+                    {showDownloadButton && data.analysisStatus === 'analyzed' && (
                         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
                             <DownloadReportButton type="parasitology" id={data.id} size="small" />
                         </div>

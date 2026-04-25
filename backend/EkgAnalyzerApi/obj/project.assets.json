@@ -58,10 +58,10 @@
           }
         }
       },
-      "MailKit/4.14.1": {
+      "MailKit/4.16.0": {
         "type": "package",
         "dependencies": {
-          "MimeKit": "4.14.0",
+          "MimeKit": "4.16.0",
           "System.Formats.Asn1": "8.0.1"
         },
         "compile": {
@@ -523,10 +523,10 @@
           }
         }
       },
-      "MimeKit/4.14.0": {
+      "MimeKit/4.16.0": {
         "type": "package",
         "dependencies": {
-          "BouncyCastle.Cryptography": "2.6.1",
+          "BouncyCastle.Cryptography": "2.6.2",
           "System.Security.Cryptography.Pkcs": "8.0.1"
         },
         "compile": {
@@ -961,10 +961,10 @@
         "lib/netstandard2.0/iTextSharp.LGPLv2.Core.xml"
       ]
     },
-    "MailKit/4.14.1": {
-      "sha512": "Rawu+h3lSSjKra0AxR+IUB99VQ7jWI+MvxThekqLhf+ic7VQ7a69lmPFW+LXuRYHla4ADcn3x16Gsvju3LTq9w==",
+    "MailKit/4.16.0": {
+      "sha512": "trJ82DOpAmo8i1jO1vNE+dGn4mPRyeYfy4swRcAGgMJhPoI1Kohf4OFJJf0+YIj4iUxgxPn8W+ht7e7KiYzSjg==",
       "type": "package",
-      "path": "mailkit/4.14.1",
+      "path": "mailkit/4.16.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -973,6 +973,10 @@
         "docs/GMailOAuth2.md",
         "docs/README.md",
         "icons/mailkit-50.png",
+        "lib/net10.0/MailKit.dll",
+        "lib/net10.0/MailKit.dll.config",
+        "lib/net10.0/MailKit.pdb",
+        "lib/net10.0/MailKit.xml",
         "lib/net462/MailKit.dll",
         "lib/net462/MailKit.dll.config",
         "lib/net462/MailKit.pdb",
@@ -997,7 +1001,7 @@
         "lib/netstandard2.1/MailKit.dll.config",
         "lib/netstandard2.1/MailKit.pdb",
         "lib/netstandard2.1/MailKit.xml",
-        "mailkit.4.14.1.nupkg.sha512",
+        "mailkit.4.16.0.nupkg.sha512",
         "mailkit.nuspec"
       ]
     },
@@ -1865,16 +1869,20 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "MimeKit/4.14.0": {
-      "sha512": "g0LtsMC8DCTkc030C3UgVqbltOJmV5cz4AX8ASowz2ZA+lxopXSYtC1XXYmenxy606aWFLwi5Xy4cC/zyYjbjQ==",
+    "MimeKit/4.16.0": {
+      "sha512": "X0LFxeM4gPRIhODyY/HYS9b+zRZ7y//v59rFzgS6wLxcPuZThnMtNZHtrr0fjLyRRkg3gqJBtvW36XfUzZ7Djw==",
       "type": "package",
-      "path": "mimekit/4.14.0",
+      "path": "mimekit/4.16.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "docs/FAQ.md",
         "docs/README.md",
         "icons/mimekit-50.png",
+        "lib/net10.0/MimeKit.dll",
+        "lib/net10.0/MimeKit.dll.config",
+        "lib/net10.0/MimeKit.pdb",
+        "lib/net10.0/MimeKit.xml",
         "lib/net462/MimeKit.dll",
         "lib/net462/MimeKit.pdb",
         "lib/net462/MimeKit.xml",
@@ -1896,7 +1904,7 @@
         "lib/netstandard2.1/MimeKit.dll.config",
         "lib/netstandard2.1/MimeKit.pdb",
         "lib/netstandard2.1/MimeKit.xml",
-        "mimekit.4.14.0.nupkg.sha512",
+        "mimekit.4.16.0.nupkg.sha512",
         "mimekit.nuspec"
       ]
     },
@@ -2496,7 +2504,7 @@
   "projectFileDependencyGroups": {
     "net8.0": [
       "BCrypt.Net-Next >= 4.0.3",
-      "MailKit >= 4.14.1",
+      "MailKit >= 4.16.0",
       "Microsoft.AspNetCore.Authentication.JwtBearer >= 7.0.11",
       "Microsoft.AspNetCore.OpenApi >= 7.0.19",
       "Microsoft.EntityFrameworkCore >= 7.0.20",
@@ -2509,7 +2517,7 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\HP\\.nuget\\packages\\": {},
+    "C:\\Users\\lolil\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
@@ -2518,7 +2526,7 @@
       "projectUniqueName": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\EkgAnalyzerApi.csproj",
       "projectName": "EkgAnalyzerApi",
       "projectPath": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\EkgAnalyzerApi.csproj",
-      "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
+      "packagesPath": "C:\\Users\\lolil\\.nuget\\packages\\",
       "outputPath": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
@@ -2526,7 +2534,7 @@
       ],
       "configFilePaths": [
         "D:\\git\\ekg_tahlili_app\\NuGet.Config",
-        "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\lolil\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -2534,6 +2542,7 @@
         "net8.0"
       ],
       "sources": {
+        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -2552,7 +2561,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.200"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net8.0": {
@@ -2564,7 +2573,7 @@
           },
           "MailKit": {
             "target": "Package",
-            "version": "[4.14.1, )"
+            "version": "[4.16.0, )"
           },
           "Microsoft.AspNetCore.Authentication.JwtBearer": {
             "target": "Package",
@@ -2624,20 +2633,8 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.307/PortableRuntimeIdentifierGraph.json"
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1902",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "У пакета \"MailKit\" 4.14.1 есть известная уязвимость https://github.com/advisories/GHSA-9j88-vvj5-vhgr (уровень серьезности: средний уровень)",
-      "libraryId": "MailKit",
-      "targetGraphs": [
-        "net8.0"
-      ]
-    }
-  ]
+  }
 }

@@ -222,6 +222,7 @@ public class AuthService
     public async Task<VerifyCodeResult> LoginAsync(LoginDto dto)
     {
         var user = await _context.Users
+            .Include(u => u.Clinic)
             .FirstOrDefaultAsync(x => x.Username == dto.Username);
 
         if (user == null)
@@ -232,6 +233,15 @@ public class AuthService
 
         if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
             return Fail("invalid_password");
+
+        // SuperAdmin (1), Admin (2), Direktor (3) uchun klinika bloklanmaydi
+        // Shifokor (4), Hamshira (5) uchun klinika is_active tekshiriladi
+        bool isPrivileged = user.RoleId == RoleConstants.SuperAdmin
+                         || user.RoleId == RoleConstants.Admin
+                         || user.RoleId == RoleConstants.Director;
+
+        if (!isPrivileged && user.Clinic != null && !user.Clinic.IsActive)
+            return Fail("clinic_not_active");
 
         return new VerifyCodeResult
         {

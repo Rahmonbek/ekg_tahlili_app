@@ -292,5 +292,22 @@
   "search_by_label": "Qidirish",
   "date_filter": "Kiritilgan sana",
   "search": "Qidirish",
-  "passport": "Passport"
+  "passport": "Passport",
+  "clinic_setup_title": "Klinika ma'lumotlarini to'ldiring",
+  "clinic_setup_desc": "Tizimdan foydalanish uchun klinikangiz asosiy ma'lumotlarini to'ldirishingiz zarur.",
+  "clinic_not_active_title": "Klinikangiz hali faollashtirilmagan",
+  "clinic_not_active_desc": "Sizning klinikangiz NMED administrator tomonidan tekshirilmoqda. Faollashtirilgandan so'ng barcha sahifalar ochiladi.",
+  "clinic_not_active_login": "Klinikangiz hali faollashtirilmagan. Iltimos, tizim administratori bilan bog'laning.",
+  "onboarding_step1": "1-qadam: Shaxsiy ma'lumotlar",
+  "onboarding_step2": "2-qadam: Klinika ma'lumotlari",
+  "onboarding_waiting": "Tasdiqlash kutilmoqda",
+  "page_locked": "Sahifa yopiq",
+  "page_locked_reason": "Klinikangiz faollashtirilgandan so'ng bu sahifa ochiladi.",
+  "clinic_name_label": "Klinika nomi",
+  "clinic_address_label": "Manzil",
+  "select_region": "Viloyatni tanlang",
+  "select_district": "Tumanni tanlang",
+  "admin_panel": "Admin paneli",
+  "doctors_management": "Xodimlar boshqaruvi",
+  "waiting_activation_hint": "Klinika faollashtirilishi bilan barcha funksiyalar yoqiladi"
 }

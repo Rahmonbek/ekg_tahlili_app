@@ -29,22 +29,51 @@ def _build_prompt(magnification: str, gender: str, age: int,
     )
     complaints_text = ", ".join(complaints) if complaints else "ko'rsatilmagan"
 
-    return f"""Sen NMED tibbiy laboratoriya platformasining tajribali parazitolog mutaxassisisan.
-Quyidagi mikroskopik tasvir najas (kal) preparatidan olingan.
+    return f"""Sen NMED tibbiy laboratoriya platformasining TAJRIBALI parazitolog-laborant mutaxassisisan.
+Quyidagi MIKROSKOPIK TASVIR najas (koprologik) preparatidan olingan.
 
-TAHLIL MA'LUMOTLARI:
+═══ TAHLIL KONTEKSTI ═══
 - Kattalashtirish: {magnification}
 - Bemor: {age} yosh, {gender}
 - Shikoyatlar: {complaints_text}
+- Metod: Yorug'lik mikroskopiyasi, koprologik tekshiruv
 
-VAZIFANG — RASMNI DIQQAT BILAN KO'RIB CHIQ:
-1. Rasmda ko'rinayotgan BARCHA gijja (parazit) turlari va ularning TUXUMLARINI aniqlash
-2. Har bir topilgan tur uchun RASMDAN TO'G'RIDAN-TO'G'RI:
-   - Ko'rinayotgan TUXUMLAR SONINI sanash (50 tadan ko'p bo'lsa: -1)
-   - Voyaga yetgan parazit (gijja tanasi, segment, lichinka) bor-yo'qligini aniqlash
-   - Tuxum morfologiyasini tasvirlash: shakl, qobiq qalinligi, o'lchami, ichki tuzilishi
-3. Artefaktlarni (soch, tolalar, havo pufakchalari, qoldiqlar) parazit deb hisoblatma
-4. Noaniq bo'lsa — ishonch_darajasini past qo'y va izoh qoldir
+═══ QADAMMA-QADAM TAHLIL TARTIBI ═══
+QADAM 1 — RASM SIFATINI BAHOLASHTIR:
+  • Fokus aniqligini tekshir (tuxum konturlari ko'rinyaptimi?)
+  • Fon ifloslanish darajasini baholashtir
+  • Yorug'lik va zichlik mos keladimi?
+
+QADAM 2 — PARAZIT ELEMENTLARNI QIDIR:
+  Quyidagi MORFOLOGIK BELGILARGA QARAB qidirish:
+  A) NEMATODA tuxumlari:
+     • Ascaris lumbricoides: 45-75µm oval, burchakli/silliq qobiq, ichida blastomer
+     • Trichuris trichiura: 50-55µm "limon" shakl, ikkala uchida zich tiqin
+     • Enterobius vermicularis: 50-60µm bir tomoni yassi, o'txonli ichki tuzilish
+     • Toxocara spp: 85-95µm qalin g'adir-budir qobiq, qorong'i ichki massa
+  B) CESTODA tuxumlari/proglottidlari:
+     • Taenia spp: 30-35µm, qalin radial tarvaqaylangan qobiq, ichida hexakant
+     • Hymenolepis nana: 40-50µm oval, ichki zar, 6 ilmoq
+  C) TREMATODA tuxumlari:
+     • Opisthorchis/Clonorchis: 25-35µm "qovoq urug'i" shakl, qopqoqli
+     • Fasciola hepatica: 130-150µm KATTA oval, sariq-jigarrang
+  D) PROTOZOA (agar ko'rinsa):
+     • Kista yoki trofozoit shaklida
+
+QADAM 3 — ARTEFAKTDAN FARQLASHTIR:
+  ❌ Artefaktlar (PARAZIT EMAS): o'simlik tolalari, yog' tomchilari,
+     havo pufakchalari, iplar, fermentlanmagan qoldiqlar, hujayralar
+
+QADAM 4 — HAR BIR TOPILGAN TUR UCHUN:
+  • Tuxumlar SONINI sanash (juda ko'p → -1)
+  • Morfologiya tasvirini tayyorlash
+  • Ishonch darajasini FAQAT rasmda ko'ringan belgilarga asoslab belgilash
+
+═══ MUHIM QOIDALAR ═══
+⚠ Ishonch darajasi 0.7 dan past bo'lsa — "qoshimcha_izoh"da SABAB ko'rsat
+⚠ Rasm sifati "past" bo'lsa — "qoshimcha_izoh"da tushuntir
+⚠ Bir xil morfologiyaga ega tuxumlar bor bo'lsa — eng yuqori ishonch darajasinikini tanlash
+⚠ Noaniqlik bo'lsa — ishonch_darajasi 0.4 dan past, izoh yoz
 
 JAVOB QAT'IY FAQAT JSON FORMATIDA, {language} TILIDA:
 
@@ -52,40 +81,38 @@ JAVOB QAT'IY FAQAT JSON FORMATIDA, {language} TILIDA:
   "gijja_topildimi": true,
   "aniqlangan_turlar": [
     {{
-      "lotin_nomi": "Gijja lotincha nomi",
+      "lotin_nomi": "Gijja lotincha ilmiy nomi",
       "uz_nomi": "Gijja nomi va turi (tibbiyot tilida) O'zbek tilida",
       "ru_nomi": "Гельминт на русском языке",
       "en_nomi": "Helminth name in English",
-      "ishonch_darajasi": Ishonch darajasi 0.0 dan 1.0 gacha,
-      "voyaga_yetgan_bor": true yoki false,
-      "tuxum_soni": ko'rinayotgan tuxumlar soni (butun son); juda ko'p bo'lsa -1; yo'q bo'lsa 0,
-      "tuxum_morfologiyasi": "Tuxumning vizual tavsifi va morfologiyasi, yo'q bo'lsa ''",
-      "infektsiya_darajasi": "light" | "moderate" | "heavy",
-      "infektsiya_uz": "O'zbek tilida infektsiya darajasi: Yengil, O'rtacha yoki Og'ir"
+      "ishonch_darajasi": 0.0_dan_1.0_gacha_son,
+      "voyaga_yetgan_bor": true_yoki_false,
+      "tuxum_soni": butun_son_yo_-1_yo_0,
+      "tuxum_morfologiyasi": "Tuxumning batafsil vizual tavsifi: shakl, o'lcham, qobiq, ichki tuzilish",
+      "infektsiya_darajasi": "light",
+      "infektsiya_uz": "Yengil"
     }}
   ],
-  "jami_tuxum_soni": Jami tuxum soni barcha turlar bo'yicha,
-  "jami_jiddiylik": Umumiy jiddiylik darajasi 1 (engil) | 2 (o'rta) | 3 (og'ir),
-  "davolash_tavsiyasi": "Davolash bo'yicha tavsiyalar, agar mavjud bo'lsa",
-  "shifokorga_tavsiya": "Shifokorga tavsiyalar, agar mavjud bo'lsa",
-  "rasm_sifati": "yaxshi" | "qoniqarli" | "past",
-  "qoshimcha_izoh": "Qo'shimcha izohlar yoki tavsiyalar, agar mavjud bo'lsa",
-  "yakuniy_xulosa": "Rasm va tahlil asosida yakuniy xulosa va tavsiyalar"
+  "jami_tuxum_soni": 0,
+  "jami_jiddiylik": 1,
+  "davolash_tavsiyasi": "Davolash bo'yicha tavsiyalar",
+  "shifokorga_tavsiya": "Shifokorga maxsus tavsiyalar",
+  "rasm_sifati": "yaxshi",
+  "qoshimcha_izoh": "Qo'shimcha izohlar, noaniqliklar, cheklovlar",
+  "yakuniy_xulosa": "Tahlil natijalari asosida yakuniy tibbiy xulosa"
 }}
 
-QOIDALAR (QAT'IY BAJAR):
-- "gijja_topildimi": true yoki false
-- "ishonch_darajasi": 0.0 — 1.0 (faqat ko'rinadigan belgilarga asosla)
-- "voyaga_yetgan_bor": rasmda voyaga yetgan parazit ko'rinsa true, aks holda false
-- "tuxum_soni": ko'rinayotgan tuxumlar soni (butun son); juda ko'p bo'lsa -1; yo'q bo'lsa 0
-- "tuxum_morfologiyasi": tuxumning vizual tavsifi, yo'q bo'lsa ""
-- "infektsiya_darajasi": "light" | "moderate" | "heavy"
-- "infektsiya_uz": "Yengil" | "O'rtacha" | "Og'ir"
-- "jami_tuxum_soni": barcha turlar bo'yicha umumiy tuxum soni
-- "jami_jiddiylik": 1 (engil) | 2 (o'rta) | 3 (og'ir)
-- "rasm_sifati": "yaxshi" | "qoniqarli" | "past"
-- Gijja topilmasa: "gijja_topildimi": false, "aniqlangan_turlar": [], "jami_tuxum_soni": 0
-- JSON dan tashqarida HECH QANDAY matn yozilmasin"""
+MAJBURIY QOIDALAR:
+- "gijja_topildimi": faqat true yoki false
+- "ishonch_darajasi": 0.0 — 1.0 (faqat ko'rinadigan morfologik belgilarga asosla, taxmin emas)
+- "voyaga_yetgan_bor": rasmda voyaga yetgan parazit tanasi ko'rinsa true
+- "tuxum_soni": sanab chiqilgan tuxumlar soni; juda ko'p bo'lsa -1; yo'q bo'lsa 0
+- "infektsiya_darajasi": FAQAT "light" YOKI "moderate" YOKI "heavy"
+- "infektsiya_uz": FAQAT "Yengil" YOKI "O'rtacha" YOKI "Og'ir"
+- "jami_jiddiylik": FAQAT 1 (engil) YOKI 2 (o'rta) YOKI 3 (og'ir)
+- "rasm_sifati": FAQAT "yaxshi" YOKI "qoniqarli" YOKI "past"
+- Gijja topilmasa: "gijja_topildimi": false, "aniqlangan_turlar": [], "jami_tuxum_soni": 0, "jami_jiddiylik": 1
+- JSON dan tashqarida HECH QANDAY matn yozilmasin — na ```json, na izoh, na tushuntirish"""
 
 
 @router.post("/analyze-parasitology")
@@ -126,37 +153,65 @@ async def analyze_parasitology(
                 {
                     "role": "system",
                     "content": (
-                        "Sen tajribali parazitolog laboratoriya mutaxassisisan. "
-                        "Berilgan mikroskopik tasvir asosida parazitologik tekshiruv natijasini aniqlashtir. "
-                        "Faqat JSON formatida javob ber, boshqa matn yozma."
+                        "Sen tajribali parazitolog-laborant mutaxassisisan. "
+                        "Berilgan mikroskopik tasvirdagi ANIQ ko'rinadigan morfologik belgilarga asoslanib, "
+                        "koprologik tekshiruv natijasini aniqlash. "
+                        "FAQAT sof JSON formatida javob ber. Markdown, ```, izoh, boshqa matn YOZILMASIN. "
+                        "Har safar bir xil rasm uchun bir xil natija ber — taxmin emas, faqat ko'ringan belgilar."
                     )
                 },
                 {
                     "role": "user",
                     "content": [
                         {"type": "text", "text": prompt},
-                        {"type": "image_url", "image_url": {"url": data_url}}
+                        {"type": "image_url", "image_url": {"url": data_url, "detail": "high"}}
                     ]
                 }
             ],
             response_format={"type": "json_object"},
-            max_tokens=2000,
+            max_tokens=2500,
+            temperature=0,
+            seed=42,
         )
-        raw = resp.choices[0].message.content or ""
+
+        # Model refusal yoki bo'sh content ni tekshirish
+        raw = resp.choices[0].message.content
+        if not raw or not raw.strip():
+            logger.warning("Parasitology AI: model bo'sh javob qaytardi (refusal yoki xatolik)")
+            return JSONResponse(content={
+                "xato": "model_rad_etdi",
+                "xabar": "AI model rasm tahlilini rad etdi yoki bo'sh javob qaytardi. Rasmni tekshirib qayta yuboring."
+            }, status_code=422)
+
+        # JSON parse qilish — markdown wrapper ni ham olib tashlash
+        raw = raw.strip()
+        if raw.startswith("```"):
+            # Markdown code block ni olib tashlash
+            lines = raw.split("\n")
+            raw = "\n".join(
+                line for line in lines
+                if not line.strip().startswith("```")
+            ).strip()
+
         try:
             parsed = json.loads(raw)
-        except Exception:
-            parsed = {"raw": raw}
+        except Exception as parse_err:
+            logger.error("Parasitology AI JSON parse xatolik: %s | Raw: %.200s", str(parse_err), raw)
+            return JSONResponse(content={
+                "xato": "json_parse_xatolik",
+                "xabar": "AI javobini JSON ko'rinishiga o'girib bo'lmadi. Qayta urinib ko'ring."
+            }, status_code=500)
 
         if isinstance(parsed, dict):
             rasm_sifati = parsed.get("rasm_sifati", "")
             if rasm_sifati == "past":
                 return JSONResponse(content={
                     "xato": "rasm_sifati_past",
-                    "xabar": "Rasm sifati past — qayta yuklang"
+                    "xabar": "Rasm sifati past — aniqroq rasm bilan qayta yuklang"
                 }, status_code=422)
 
-        logger.info("Parasitology AI tahlil muvaffaqiyatli")
+        logger.info("Parasitology AI tahlil muvaffaqiyatli, gijja_topildimi=%s",
+                    parsed.get("gijja_topildimi", "?"))
 
     except Exception as e:
         logger.error("Parasitology AI xatolik: %s", str(e))

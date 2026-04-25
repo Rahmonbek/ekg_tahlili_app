@@ -49,6 +49,10 @@ namespace EkgAnalyzerApi.Services
             _context.ParasitologyAnalyses.Add(analysis);
             await _context.SaveChangesAsync();
 
+            // Document number generatsiya — ID olingandan keyin (o'zgarmas, takrorlanmas)
+            analysis.DocumentNumber = $"NMED-PARA-{analysis.Id:D8}";
+            await _context.SaveChangesAsync();
+
             if (dto.DoctorIds != null)
             {
                 foreach (var doctorId in dto.DoctorIds)

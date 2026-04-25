@@ -30,43 +30,61 @@ import SmadAnalyseView from './smad_analyse/SmadAnalyseView'
 import LabAnalyseView from './lab_analyse/LabAnalyseView'
 import DiagnoseView from './diagnoses/DiagnoseView'
 import Dashboard from './Dashboard'
-const ProtectedRoute = ({ allowedRoles, userRole, children }) => {
-    // Agar berilgan ruxsatlar bo'sh bo'lsa (barchaga) YOKI foydalanuvchi roli ruxsat etilganlar ruyxatida bo'lsa
-    if (allowedRoles.length === 0 || allowedRoles.includes(userRole)) {
-        return children;
-    }
-    // Ruxsat yo'q bo'lsa majburiy asosiy (Home) sahifaga qaytsin
-    return <Navigate to="/" replace />;
-};
+import ClinicActivationGate from '../../components/ClinicActivationGate'
 
+// ─── Rol asosida himoya ──────────────────────────────────────────────────────
+const ProtectedRoute = ({ allowedRoles, userRole, children }) => {
+    if (allowedRoles.length === 0 || allowedRoles.includes(userRole)) {
+        return children
+    }
+    return <Navigate to="/" replace />
+}
+
+// ─── Klinika faollik gate: is_active=false bo'lsa blok xabari ko'rsatadi ────
+// Faqat admin/direktor uchun qo'llaniladi (shifokor/hamshira loginda bloklanadi)
+const ClinicGatedRoute = ({ allowedRoles, userRole, clinicIsActive, children }) => {
+    if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
+        return <Navigate to="/" replace />
+    }
+    return (
+        <ClinicActivationGate isActive={clinicIsActive}>
+            {children}
+        </ClinicActivationGate>
+    )
+}
 
 export default function Main() {
     const { t } = useTranslation()
     const { complaints, setcomplaints, user, setlab_values, lab_values } = useStore()
+
+    // Klinika faollik holati — SuperAdmin (1) uchun har doim true
+    const clinicIsActive = user?.roleId === 1
+        ? true
+        : (user?.clinic?.isActive ?? false)
+
     useEffect(() => {
-        if (complaints.length == 0) {
+        if (complaints.length === 0) {
             getComplaints()
         }
-        if (lab_values.length == 0) {
+        if (lab_values.length === 0) {
             getLabValuesTypes()
         }
     }, [])
+
     const getComplaints = async () => {
         try {
-            var res = await get_complaints_data()
+            const res = await get_complaints_data()
             setcomplaints(res.data)
-        } catch (err) {
-
-        }
+        } catch (err) { }
     }
+
     const getLabValuesTypes = async () => {
         try {
-            var res = await get_lab_values_data()
+            const res = await get_lab_values_data()
             setlab_values(res.data)
-        } catch (err) {
-
-        }
+        } catch (err) { }
     }
+
     return (
         <div className='main_box'>
             <SideBar />
@@ -74,92 +92,145 @@ export default function Main() {
                 <Header />
                 {user != null ? <div className='content'>
                     <Routes>
-                        {/* Birlamchi yo'naltirishlar (Default Routes) */}
-                        <Route path="/" element={user.roleId === 2 || user.roleId === 3 ? <Dashboard /> : <EcgAnalysesList />} />
+                        {/* ── Bosh sahifa va Dashboard ───────────────────────── */}
+                        <Route path="/" element={
+                            user.roleId === 2 || user.roleId === 3
+                                ? <Dashboard />
+                                : <ClinicActivationGate isActive={clinicIsActive}>
+                                    <EcgAnalysesList />
+                                </ClinicActivationGate>
+                        } />
                         <Route path="/cabinet" element={<Navigate to="/" replace />} />
                         <Route path="/dashboard" element={<Dashboard />} />
 
-                        {/* Admin/Menejer kabi maxsus rollar uchun marshrutlar (Role: 2, 3) */}
+                        {/* ── Admin/Direktor: klinika faollashtirilmasa ham kirishi mumkin ── */}
                         <Route path="/doctor" element={
-                            <ProtectedRoute allowedRoles={[2, 3]} userRole={user.roleId}><Doctors /></ProtectedRoute>
+                            <ProtectedRoute allowedRoles={[2, 3]} userRole={user.roleId}>
+                                <Doctors />
+                            </ProtectedRoute>
                         } />
                         <Route path="/doctor/create" element={
-                            <ProtectedRoute allowedRoles={[2, 3]} userRole={user.roleId}><CreateUpdateDoctor /></ProtectedRoute>
+                            <ProtectedRoute allowedRoles={[2, 3]} userRole={user.roleId}>
+                                <CreateUpdateDoctor />
+                            </ProtectedRoute>
                         } />
                         <Route path="/doctor/create/:id" element={
-                            <ProtectedRoute allowedRoles={[2, 3]} userRole={user.roleId}><CreateUpdateDoctor /></ProtectedRoute>
+                            <ProtectedRoute allowedRoles={[2, 3]} userRole={user.roleId}>
+                                <CreateUpdateDoctor />
+                            </ProtectedRoute>
                         } />
                         <Route path="/settings" element={
-                            <ProtectedRoute allowedRoles={[2, 3]} userRole={user.roleId}><ClinicInfo /></ProtectedRoute>
+                            <ProtectedRoute allowedRoles={[2, 3]} userRole={user.roleId}>
+                                <ClinicInfo />
+                            </ProtectedRoute>
                         } />
 
-                        {/* Barchaga ochiq marshrutlar */}
-                        {/* 1. Tahlillar Ro'yxati (List) */}
+                        {/* ── Tahlil ro'yxatlari — klinika faol bo'lsa ochiladi ── */}
                         <Route path="/ecg-analyses" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><EcgAnalysesList /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <EcgAnalysesList />
+                            </ClinicGatedRoute>
                         } />
                         <Route path="/smad-analyses" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><SmadAnalysesList /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <SmadAnalysesList />
+                            </ClinicGatedRoute>
                         } />
                         <Route path="/holter-analyses" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><HolterAnalysesList /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <HolterAnalysesList />
+                            </ClinicGatedRoute>
                         } />
                         <Route path="/lab-analyses" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><LabAnalysesList /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <LabAnalysesList />
+                            </ClinicGatedRoute>
                         } />
                         <Route path="/patient-diagnoses" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><DiagnosesList /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <DiagnosesList />
+                            </ClinicGatedRoute>
                         } />
 
-                        {/* 2. Tahlil yaratish/ko'rish (Details/Analyze) */}
+                        {/* ── Tahlil yaratish — klinika faol bo'lsa ochiladi ── */}
                         <Route path="/analyse-ecg" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><EcgAnalyzer /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <EcgAnalyzer />
+                            </ClinicGatedRoute>
                         } />
                         <Route path="/analyse-holter" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><HolterAnalyzer /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <HolterAnalyzer />
+                            </ClinicGatedRoute>
                         } />
                         <Route path="/analyse-smad" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><SmadAnalyzer /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <SmadAnalyzer />
+                            </ClinicGatedRoute>
                         } />
                         <Route path="/analyse-lab" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><LabAnalyzer /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <LabAnalyzer />
+                            </ClinicGatedRoute>
                         } />
                         <Route path="/diagnoses-create" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><Diagnoses /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <Diagnoses />
+                            </ClinicGatedRoute>
                         } />
 
-                        {/* 3. Ko'rish (View) sahifalari */}
+                        {/* ── Ko'rish sahifalari — klinika faol bo'lsa ochiladi ── */}
                         <Route path="/ecg-analyses/view/:id" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><EcgAnalyseView /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <EcgAnalyseView />
+                            </ClinicGatedRoute>
                         } />
                         <Route path="/holter-analyses/view/:id" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><HolterAnalyseView /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <HolterAnalyseView />
+                            </ClinicGatedRoute>
                         } />
                         <Route path="/smad-analyses/view/:id" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><SmadAnalyseView /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <SmadAnalyseView />
+                            </ClinicGatedRoute>
                         } />
                         <Route path="/lab-analyses/view/:id" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><LabAnalyseView /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <LabAnalyseView />
+                            </ClinicGatedRoute>
                         } />
                         <Route path="/patient-diagnoses/view/:id" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><DiagnoseView /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <DiagnoseView />
+                            </ClinicGatedRoute>
                         } />
 
+                        {/* ── Parazitologiya — klinika faol bo'lsa ochiladi ── */}
                         <Route path="/parasitology-analyses" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><ParasitologyAnalysesList /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <ParasitologyAnalysesList />
+                            </ClinicGatedRoute>
                         } />
                         <Route path="/parasitology-analyzer" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><ParasitologyAnalyzer /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <ParasitologyAnalyzer />
+                            </ClinicGatedRoute>
                         } />
                         <Route path="/parasitology-analyses/view/:id" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><ParasitologyAnalyseView /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <ParasitologyAnalyseView />
+                            </ClinicGatedRoute>
                         } />
 
-                        {/* Bemorlar va Boshqalar */}
+                        {/* ── Bemorlar — klinika faol bo'lsa ochiladi ── */}
                         <Route path="/patcients" element={
-                            <ProtectedRoute allowedRoles={[]} userRole={user.roleId}><Patcients /></ProtectedRoute>
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <Patcients />
+                            </ClinicGatedRoute>
                         } />
-                        {/* Notog'ri linkka (404) kirsangiz, avtomatik bosh sahifaga qaytaradi */}
+
+                        {/* 404 */}
                         <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                 </div> : <></>}

@@ -1,5 +1,18 @@
 import { create } from "zustand";
 
+const SIDEBAR_MENU_STORAGE_KEY = 'nmed.sidebar.open.desktop';
+
+const getDesktopMenuState = () => {
+    if (typeof window === 'undefined') return true;
+
+    const isDesktop = window.innerWidth > 1024;
+    if (!isDesktop) return false;
+
+    const saved = window.localStorage.getItem(SIDEBAR_MENU_STORAGE_KEY);
+    if (saved == null) return true;
+    return saved === '1';
+};
+
 export const useStore = create((set) => ({
     user_id: null,
     setuser_id: (id) => set({ user_id: id }),
@@ -21,13 +34,27 @@ export const useStore = create((set) => ({
     setroles: (id) => set({ roles: id }),
     positions: [],
     setpositions: (id) => set({ positions: id }),
-    open_menu: true,
-    setopen_menu: (id) => set({ open_menu: id }),
+    open_menu: getDesktopMenuState(),
+    setopen_menu: (id) =>
+        set(() => {
+            const nextValue = !!id;
+            if (typeof window !== 'undefined' && window.innerWidth > 1024) {
+                window.localStorage.setItem(SIDEBAR_MENU_STORAGE_KEY, nextValue ? '1' : '0');
+            }
+            return { open_menu: nextValue };
+        }),
     initMenu: () =>
-    set({
-    open_menu: window.innerWidth > 768,
-     }),
-     user: null,
+        set(() => {
+            if (typeof window === 'undefined') return { open_menu: true };
+
+            if (window.innerWidth <= 1024) {
+                return { open_menu: false };
+            }
+
+            const saved = window.localStorage.getItem(SIDEBAR_MENU_STORAGE_KEY);
+            return { open_menu: saved == null ? true : saved === '1' };
+        }),
+    user: null,
     setuser: (id) => set({ user: id }),
 
     // ─── Phase 3: Region cache (har mount da qayta fetch qilmaslik uchun) ───
@@ -45,4 +72,9 @@ export const useStore = create((set) => ({
     setlab_unread: (n) => set({ lab_unread: n }),
     diagnoses_unread: 0,
     setdiagnoses_unread: (n) => set({ diagnoses_unread: n }),
+
+    // ─── Klinika onboarding va faollik holati ──────────────────────────────
+    // null = tekshirilmagan, false = to'ldirilmagan, true = to'ldirilgan
+    clinic_setup_modal: false,
+    setclinic_setup_modal: (v) => set({ clinic_setup_modal: v }),
 }))

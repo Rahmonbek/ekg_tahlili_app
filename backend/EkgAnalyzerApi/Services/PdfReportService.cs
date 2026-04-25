@@ -4,7 +4,9 @@ using EkgAnalyzerApi.Models;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace EkgAnalyzerApi.Services;
 
@@ -65,7 +67,7 @@ public class PdfReportService
         var tr  = PdfTranslations.Get(lang);
         var row = await _context.ECGAnalyse
             .Include(e => e.Patcient)
-            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail).ThenInclude(d => d!.District).ThenInclude(d => d!.Region)
             .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
             .Include(e => e.CreatedDoctor)
             .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
@@ -73,7 +75,7 @@ public class PdfReportService
             .FirstOrDefaultAsync(e => e.Id == id)
             ?? throw new KeyNotFoundException($"EKG #{id}");
 
-        var docNum = DocNum("EKG", row.CreatedAt, id);
+        var docNum = row.DocumentNumber ?? DocNum("EKG", row.CreatedAt, id);
         var aiData = ParseAi(row.AIAnswerData);
 
         return Build(tr, docNum, row.CreatedAt, row.Clinic, row.Patcient,
@@ -97,14 +99,14 @@ public class PdfReportService
         var tr  = PdfTranslations.Get(lang);
         var row = await _context.SmadAnalyses
             .Include(e => e.Patcient)
-            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail).ThenInclude(d => d!.District).ThenInclude(d => d!.Region)
             .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
             .Include(e => e.CreatedDoctor)
             .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
             .FirstOrDefaultAsync(e => e.Id == id)
             ?? throw new KeyNotFoundException($"SMAD #{id}");
 
-        var docNum = DocNum("SMAD", row.CreatedAt, id);
+        var docNum = row.DocumentNumber ?? DocNum("SMAD", row.CreatedAt, id);
         var aiData = ParseAi(row.AIAnswerData);
 
         return Build(tr, docNum, row.CreatedAt, row.Clinic, row.Patcient,
@@ -126,14 +128,14 @@ public class PdfReportService
         var tr  = PdfTranslations.Get(lang);
         var row = await _context.HolterAnalyses
             .Include(e => e.Patcient)
-            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail).ThenInclude(d => d!.District).ThenInclude(d => d!.Region)
             .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
             .Include(e => e.CreatedDoctor)
             .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
             .FirstOrDefaultAsync(e => e.Id == id)
             ?? throw new KeyNotFoundException($"Holter #{id}");
 
-        var docNum = DocNum("HOL", row.CreatedAt, id);
+        var docNum = row.DocumentNumber ?? DocNum("HOL", row.CreatedAt, id);
         var aiData = ParseAi(row.AIAnswerData);
 
         return Build(tr, docNum, row.CreatedAt, row.Clinic, row.Patcient,
@@ -155,14 +157,14 @@ public class PdfReportService
         var tr  = PdfTranslations.Get(lang);
         var row = await _context.LabAnalyse
             .Include(e => e.Patcient)
-            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail).ThenInclude(d => d!.District).ThenInclude(d => d!.Region)
             .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
             .Include(e => e.CreatedDoctor)
             .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
             .FirstOrDefaultAsync(e => e.Id == id)
             ?? throw new KeyNotFoundException($"Lab #{id}");
 
-        var docNum = DocNum("LAB", row.CreatedAt, id);
+        var docNum = row.DocumentNumber ?? DocNum("LAB", row.CreatedAt, id);
         var aiData = ParseAi(row.AIAnswerData);
 
         return Build(tr, docNum, row.CreatedAt, row.Clinic, row.Patcient,
@@ -184,7 +186,7 @@ public class PdfReportService
         var tr  = PdfTranslations.Get(lang);
         var row = await _context.ParasitologyAnalyses
             .Include(e => e.Patcient)
-            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail).ThenInclude(d => d!.District).ThenInclude(d => d!.Region)
             .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
             .Include(e => e.CreatedDoctor)
             .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
@@ -192,7 +194,7 @@ public class PdfReportService
             .FirstOrDefaultAsync(e => e.Id == id)
             ?? throw new KeyNotFoundException($"Parazitologiya #{id}");
 
-        var docNum = DocNum("PARA", row.CreatedAt, id);
+        var docNum = row.DocumentNumber ?? DocNum("PARA", row.CreatedAt, id);
 
         return Build(tr, docNum, row.CreatedAt, row.Clinic, row.Patcient,
             tr["parasitology_title"], row.AnalysisDate ?? row.CreatedAt,
@@ -424,8 +426,9 @@ public class PdfReportService
             BorderColorRight = CL_Border,
             BorderWidthRight = 0.5f,
             PaddingRight     = 10,
-            PaddingBottom    = 6,
-            PaddingTop       = 2,
+            PaddingBottom    = 8,
+            PaddingTop       = 6,
+            BackgroundColor  = new BaseColor(250, 252, 255),
         };
 
         // Klinika logotipi
@@ -449,17 +452,36 @@ public class PdfReportService
         var clinicPhrase = new Phrase();
         clinicPhrase.Add(new Chunk(clinic?.ClinicName ?? "Shifoxona", fonts["h_13b"]));
 
+        // Region va District ko'rsatish
+        var district = clinic?.ClinicDetail?.District;
+        var region   = district?.Region;
+        if (region != null || district != null)
+        {
+            var regionName   = region?.NameUz   ?? region?.NameRu ?? "";
+            var districtName = district?.NameUz ?? district?.NameRu ?? "";
+            var geo = string.Join(", ",
+                new[] { regionName, districtName }
+                    .Where(s => !string.IsNullOrWhiteSpace(s)));
+            if (!string.IsNullOrWhiteSpace(geo))
+                clinicPhrase.Add(new Chunk($"\n{geo}", fonts["p9gray"]));
+        }
+
         if (clinic?.ClinicDetail?.Address is { } addr)
             clinicPhrase.Add(new Chunk($"\n{addr}", fonts["p9gray"]));
 
-        if (clinic?.ClinicPhoneNumber?.Count > 0)
+        var clinicPhones = clinic?.ClinicPhoneNumber?
+            .Select(p => p.PhoneNumber?.Trim())
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .Distinct()
+            .ToList();
+
+        if (clinicPhones?.Count > 0)
         {
-            var phones = string.Join("  |  ",
-                clinic.ClinicPhoneNumber.Select(p => p.PhoneNumber));
-            clinicPhrase.Add(new Chunk($"\nTel: {phones}", fonts["p9gray"]));
+            var phones = string.Join("  |  ", clinicPhones);
+            clinicPhrase.Add(new Chunk($"\n{tr["phone"]}: {phones}", fonts["p9gray"]));
         }
 
-        leftCell.AddElement(new Paragraph(clinicPhrase));
+        leftCell.AddElement(new Paragraph(clinicPhrase) { Leading = 13f });
         tbl.AddCell(leftCell);
 
         // ──── O'NG: NMED logotipi + nomed.uz + hujjat ma'lumotlari ───
@@ -467,8 +489,9 @@ public class PdfReportService
         {
             Border      = Rectangle.NO_BORDER,
             PaddingLeft = 10,
-            PaddingBottom = 6,
-            PaddingTop  = 2,
+            PaddingBottom = 8,
+            PaddingTop  = 6,
+            BackgroundColor = new BaseColor(247, 252, 249),
             HorizontalAlignment = Element.ALIGN_RIGHT,
         };
 
@@ -479,7 +502,7 @@ public class PdfReportService
             try
             {
                 var nmedLogo = Image.GetInstance(nmedLogoPath);
-                nmedLogo.ScaleToFit(90f, 40f);
+                nmedLogo.ScaleToFit(104f, 42f);
                 nmedLogo.Alignment = Element.ALIGN_RIGHT;
                 rightCell.AddElement(nmedLogo);
             }
@@ -500,7 +523,7 @@ public class PdfReportService
             $"\n{tr["analysis_date"]}: {date:dd.MM.yyyy}  {date:HH:mm}",
             fonts["p9gray"]));
 
-        rightCell.AddElement(new Paragraph(rightPhrase) { Alignment = Element.ALIGN_RIGHT });
+        rightCell.AddElement(new Paragraph(rightPhrase) { Alignment = Element.ALIGN_RIGHT, Leading = 13f });
         tbl.AddCell(rightCell);
 
         doc.Add(tbl);
@@ -614,33 +637,32 @@ public class PdfReportService
         if (!File.Exists(path)) return;
 
         var fonts = BuildFonts();
-        var ext   = Path.GetExtension(path).ToLowerInvariant();
 
         ComposeSectionHeader(doc, fonts,
             tr.GetValueOrDefault("ecg_source_file", "Yuklangan manba fayli"), CL_DarkBlue);
 
-        if (ext is ".jpg" or ".jpeg" or ".png")
+        try
         {
-            try
-            {
-                var img = Image.GetInstance(path);
-                img.ScaleToFit(doc.PageSize.Width - MrgSide * 2, 200f);
-                img.Alignment     = Element.ALIGN_CENTER;
-                img.SpacingBefore = 4;
-                img.SpacingAfter  = 4;
-                doc.Add(img);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "EKG manba rasmi yuklanmadi: {p}", path);
-                doc.Add(new Paragraph($"[ {Path.GetFileName(path)} ]",
-                    fonts["p9gray"]) { SpacingBefore = 4 });
-            }
+            // Extensionga bog'lanmaymiz: real fayl image bo'lsa PDF'ga chiqaramiz.
+            var img = Image.GetInstance(path);
+            img.ScaleToFit(doc.PageSize.Width - MrgSide * 2, 200f);
+            img.Alignment     = Element.ALIGN_CENTER;
+            img.SpacingBefore = 4;
+            img.SpacingAfter  = 4;
+            doc.Add(img);
+            return;
         }
-        else
+        catch (Exception ex)
         {
-            doc.Add(new Paragraph(Path.GetFileName(path),
-                fonts["p9gray"]) { SpacingBefore = 4, SpacingAfter = 4 });
+            _logger.LogDebug(ex, "EKG manba fayli rasm formatida emas yoki parse bo'lmadi: {p}", path);
+        }
+
+        // Image bo'lmasa baribir fayl identifikatori ko'rsatiladi.
+        doc.Add(new Paragraph(Path.GetFileName(path),
+            fonts["p9gray"]) { SpacingBefore = 4, SpacingAfter = 4 });
+        if (!string.IsNullOrWhiteSpace(fileLink))
+        {
+            doc.Add(new Paragraph(fileLink, fonts["p8gray"]) { SpacingAfter = 4 });
         }
     }
 
@@ -1019,7 +1041,10 @@ public class PdfReportService
                 }
             }
         }
-        catch { /* ignore */ }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Lab norma parsingda xatolik. Norm: {Norm}", norm);
+        }
 
         return ("✓ Normal", CL_GoodText, "");
     }
@@ -1107,16 +1132,15 @@ public class PdfReportService
 
         if (jsonText == null)
         {
-            AddAiTextBlock(doc, fonts, raw);
+            AddParaAiLooseFallback(doc, tr, fonts, raw, lang);
             if (row.JiddiylikDarajasi.HasValue)
                 ComposeSeverityBar(doc, tr, fonts, row.JiddiylikDarajasi.Value);
-            ComposeDisclaimer(doc, tr, fonts);
             return;
         }
 
-        try
+        if (TryParseJsonDocument(jsonText, out var jsonDoc) && jsonDoc != null)
         {
-            using var json = JsonDocument.Parse(jsonText);
+            using var json = jsonDoc;
             var root = json.RootElement;
 
             // Qisqa umumiy ma'lumotlar (key/value)
@@ -1209,14 +1233,13 @@ public class PdfReportService
             if (row.JiddiylikDarajasi.HasValue)
                 ComposeSeverityBar(doc, tr, fonts, row.JiddiylikDarajasi.Value);
         }
-        catch
+        else
         {
-            AddAiTextBlock(doc, fonts, raw);
+            AddParaAiLooseFallback(doc, tr, fonts, raw, lang);
             if (row.JiddiylikDarajasi.HasValue)
                 ComposeSeverityBar(doc, tr, fonts, row.JiddiylikDarajasi.Value);
         }
 
-        ComposeDisclaimer(doc, tr, fonts);
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -1228,6 +1251,189 @@ public class PdfReportService
         var end = raw.LastIndexOf('}');
         if (end <= start) return null;
         return raw.Substring(start, end - start + 1);
+    }
+
+    private static bool TryParseJsonDocument(string raw, out JsonDocument? document)
+    {
+        document = null;
+        if (string.IsNullOrWhiteSpace(raw)) return false;
+
+        var candidates = new List<string>
+        {
+            raw.Trim(),
+            SanitizeJsonForParsing(raw),
+            Regex.Unescape(raw),
+            SanitizeJsonForParsing(Regex.Unescape(raw)),
+            raw.Replace("\\\"", "\""),
+        }
+        .Where(s => !string.IsNullOrWhiteSpace(s))
+        .Distinct()
+        .ToList();
+
+        foreach (var item in candidates)
+        {
+            try
+            {
+                document = JsonDocument.Parse(item);
+                return true;
+            }
+            catch
+            {
+                // next candidate
+            }
+        }
+
+        return false;
+    }
+
+    private static string SanitizeJsonForParsing(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return text;
+
+        var sb = new StringBuilder(text.Length);
+        bool inString = false;
+        bool escaped = false;
+
+        foreach (var ch in text)
+        {
+            if (escaped)
+            {
+                sb.Append(ch);
+                escaped = false;
+                continue;
+            }
+
+            if (ch == '\\')
+            {
+                sb.Append(ch);
+                escaped = true;
+                continue;
+            }
+
+            if (ch == '"')
+            {
+                sb.Append(ch);
+                inString = !inString;
+                continue;
+            }
+
+            if (inString && (ch == '\r' || ch == '\n' || ch == '\t'))
+            {
+                sb.Append(' ');
+                continue;
+            }
+
+            if (!inString && char.IsControl(ch))
+                continue;
+
+            sb.Append(ch);
+        }
+
+        return sb.ToString();
+    }
+
+    private void AddParaAiLooseFallback(Document doc, Dictionary<string, string> tr,
+        Dictionary<string, Font> fonts, string raw, string lang)
+    {
+        var cleaned = SanitizeJsonForParsing(raw);
+        var infoTbl = InfoTable();
+        int ri = 0;
+
+        var found = GetLooseBool(cleaned, "gijja_topildimi");
+        if (found.HasValue)
+            InfoRow(infoTbl, tr["para_worm_found"] + ":", found.Value ? tr["yes"] : tr["no"], fonts, ri++);
+
+        var totalEggs = GetLooseInt(cleaned, "jami_tuxum_soni");
+        if (totalEggs.HasValue)
+            InfoRow(infoTbl, tr["para_total_eggs"] + ":", totalEggs.Value.ToString(), fonts, ri++);
+
+        var totalSeverity = GetLooseInt(cleaned, "jami_jiddiylik");
+        if (totalSeverity.HasValue)
+            InfoRow(infoTbl, tr["para_total_severity"] + ":", totalSeverity.Value.ToString(), fonts, ri++);
+
+        var imageQuality = GetLooseString(cleaned, "rasm_sifati");
+        if (!string.IsNullOrWhiteSpace(imageQuality))
+            InfoRow(infoTbl, tr["para_image_quality"] + ":", imageQuality, fonts, ri++);
+
+        if (ri > 0)
+            doc.Add(infoTbl);
+
+        var names = GetLooseDetectedTypeNames(cleaned, lang).ToList();
+        if (names.Count > 0)
+        {
+            doc.Add(new Paragraph(tr["para_detected_types"], fonts["p10bold"])
+            {
+                SpacingBefore = 6,
+                SpacingAfter = 4,
+            });
+
+            foreach (var name in names)
+                doc.Add(new Paragraph($"• {name}", fonts["p8"]) { SpacingAfter = 2 });
+        }
+
+        AddParaAiTextIfExists(doc, fonts, tr["para_treatment"] + ":", GetLooseString(cleaned, "davolash_tavsiyasi"));
+        AddParaAiTextIfExists(doc, fonts, tr["recommendations"] + ":", GetLooseString(cleaned, "shifokorga_tavsiya"));
+        AddParaAiTextIfExists(doc, fonts, tr["para_additional_note"] + ":", GetLooseString(cleaned, "qoshimcha_izoh"));
+        AddParaAiTextIfExists(doc, fonts, tr["final_summary"] + ":", GetLooseString(cleaned, "yakuniy_xulosa"));
+
+        if (ri == 0 && names.Count == 0)
+        {
+            AddAiTextBlock(doc, fonts, cleaned);
+        }
+    }
+
+    private static bool? GetLooseBool(string raw, string key)
+    {
+        var match = Regex.Match(raw, $"\"{Regex.Escape(key)}\"\\s*:\\s*(true|false)", RegexOptions.IgnoreCase);
+        if (!match.Success) return null;
+        return string.Equals(match.Groups[1].Value, "true", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static int? GetLooseInt(string raw, string key)
+    {
+        var match = Regex.Match(raw, $"\"{Regex.Escape(key)}\"\\s*:\\s*(-?\\d+)");
+        if (!match.Success) return null;
+        return int.TryParse(match.Groups[1].Value, out var number) ? number : null;
+    }
+
+    private static string? GetLooseString(string raw, string key)
+    {
+        var match = Regex.Match(raw,
+            $"\"{Regex.Escape(key)}\"\\s*:\\s*\"(?<v>(?:\\\\.|[^\"])*)\"",
+            RegexOptions.Singleline);
+        if (!match.Success) return null;
+        var value = Regex.Unescape(match.Groups["v"].Value).Trim();
+        return string.IsNullOrWhiteSpace(value) ? null : value;
+    }
+
+    private static IEnumerable<string> GetLooseDetectedTypeNames(string raw, string lang)
+    {
+        var keys = lang switch
+        {
+            "ru" => new[] { "ru_nomi", "uz_nomi", "lotin_nomi" },
+            "en" => new[] { "en_nomi", "uz_nomi", "lotin_nomi" },
+            _ => new[] { "uz_nomi", "lotin_nomi", "ru_nomi", "en_nomi" },
+        };
+
+        var results = new List<string>();
+        foreach (var key in keys)
+        {
+            var matches = Regex.Matches(raw,
+                $"\"{Regex.Escape(key)}\"\\s*:\\s*\"(?<v>(?:\\\\.|[^\"])*)\"",
+                RegexOptions.Singleline);
+
+            foreach (Match match in matches)
+            {
+                var value = Regex.Unescape(match.Groups["v"].Value).Trim();
+                if (!string.IsNullOrWhiteSpace(value))
+                    results.Add(value);
+            }
+
+            if (results.Count > 0)
+                break;
+        }
+
+        return results.Distinct();
     }
 
     private static bool TryGetString(JsonElement el, string prop, out string value)
@@ -1701,11 +1907,15 @@ public class PdfReportService
         return $"{d.LastName} {d.FirstName} {d.SureName}".Trim();
     }
 
-    private static string? DoctorNames(List<Doctor?>? list)
+    private static string? DoctorNames(IEnumerable<Doctor?>? list)
     {
-        if (list == null || list.Count == 0) return null;
-        return string.Join(", ", list
+        if (list == null) return null;
+        var doctors = list
             .Where(d => d != null)
+            .ToList();
+        if (doctors.Count == 0) return null;
+
+        return string.Join(", ", doctors
             .Select(d => $"{d!.LastName} {d.FirstName?[..1]}. {d.SureName?[..1]}."));
     }
 
@@ -1811,34 +2021,35 @@ public class PdfReportService
         _fontsCache = new Dictionary<string, Font>
         {
             // Header
-            ["h_13b"]         = F(13, Font.BOLD),
-            ["doc_title"]     = F(11, Font.BOLD),
-            ["analysis_title"]= F(10, Font.BOLD,  CL_Green),
-            ["nmed_logo"]     = F(14, Font.BOLD,  CL_Green),
+            ["h_13b"]         = F(13, Font.NORMAL),
+            ["doc_title"]     = F(11, Font.NORMAL),
+            ["analysis_title"]= F(10, Font.NORMAL,  CL_Green),
+            ["nmed_logo"]     = F(14, Font.NORMAL,  CL_Green),
             ["nmed_url"]      = F(9,  Font.ITALIC,CL_Green),
             ["p9bold"]        = F(9,  Font.NORMAL), // BOLD -> NORMAL
             ["p9gray"]        = F(9,  Font.NORMAL,CL_Gray),
             ["p8gray"]        = F(8,  Font.NORMAL,CL_Gray),
+            ["p10bold"]       = F(10, Font.NORMAL,CL_Black),
 
             // Label (section sub-labels — yengil)
             ["p9label"]       = F(9,  Font.NORMAL,new BaseColor(68,68,68)), // #444 yengil label
 
             // Section headers
-            ["h_white"]       = F(9,  Font.BOLD,  CL_White),
+            ["h_white"]       = F(9,  Font.NORMAL,  CL_White),
 
             // Info table
-            ["th9"]           = F(9,  Font.BOLD,  new BaseColor(51,51,51)),
+            ["th9"]           = F(9,  Font.NORMAL,  new BaseColor(51,51,51)),
             ["td9"]           = F(9,  Font.NORMAL,CL_Black),
             ["td9bold"]       = F(9,  Font.NORMAL,CL_Black),   // BOLD → NORMAL (o'qish oson)
             ["td9gray"]       = F(9,  Font.NORMAL,CL_Gray),
-            ["th9_inv"]       = F(9,  Font.BOLD,  CL_White),
+            ["th9_inv"]       = F(9,  Font.NORMAL,  CL_White),
 
             // AI
             ["p8_ai"]         = F(8,  Font.NORMAL,new BaseColor(34,34,34)),
             ["p8"]            = F(8,  Font.NORMAL,CL_Black),
 
             // HRV cards
-            ["hrv_val"]       = F(12, Font.BOLD,  CL_Black),
+            ["hrv_val"]       = F(12, Font.NORMAL,  CL_Black),
             ["hrv_label"]     = F(8,  Font.NORMAL,CL_Gray),
 
             // NMED verification

@@ -3,6 +3,7 @@ using System;
 using EkgAnalyzerApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EkgAnalyzerApi.Migrations
 {
     [DbContext(typeof(MedDataDB))]
-    partial class EkgDataDBModelSnapshot : ModelSnapshot
+    [Migration("20260425082143_AddDocumentNumbers")]
+    partial class AddDocumentNumbers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -154,10 +157,6 @@ namespace EkgAnalyzerApi.Migrations
                     b.Property<string>("ClinicName")
                         .HasColumnType("text")
                         .HasColumnName("clinic_name");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_active");
 
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -497,10 +496,6 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("analyse_file_link");
 
-                    b.Property<string>("DocumentNumber")
-                        .HasColumnType("text")
-                        .HasColumnName("document_number");
-
                     b.Property<DateTime?>("AnalysisDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("analysis_date");
@@ -602,10 +597,6 @@ namespace EkgAnalyzerApi.Migrations
                     b.Property<string>("AnalyseFileLink")
                         .HasColumnType("text")
                         .HasColumnName("analyse_file_link");
-
-                    b.Property<string>("DocumentNumber")
-                        .HasColumnType("text")
-                        .HasColumnName("document_number");
 
                     b.Property<DateTime?>("AnalysisDate")
                         .HasColumnType("timestamp with time zone")
@@ -740,10 +731,6 @@ namespace EkgAnalyzerApi.Migrations
                     b.Property<string>("AnalyseFileLink")
                         .HasColumnType("text")
                         .HasColumnName("analyse_file_link");
-
-                    b.Property<string>("DocumentNumber")
-                        .HasColumnType("text")
-                        .HasColumnName("document_number");
 
                     b.Property<DateTime?>("AnalysisDate")
                         .HasColumnType("timestamp with time zone")
@@ -1143,10 +1130,6 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("ai_response");
 
-                    b.Property<string>("DocumentNumber")
-                        .HasColumnType("text")
-                        .HasColumnName("document_number");
-
                     b.Property<DateTime?>("AnalysisDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("analysis_date");
@@ -1521,10 +1504,6 @@ namespace EkgAnalyzerApi.Migrations
                     b.Property<string>("AnalyseFileLink")
                         .HasColumnType("text")
                         .HasColumnName("analyse_file_link");
-
-                    b.Property<string>("DocumentNumber")
-                        .HasColumnType("text")
-                        .HasColumnName("document_number");
 
                     b.Property<DateTime?>("AnalysisDate")
                         .HasColumnType("timestamp with time zone")

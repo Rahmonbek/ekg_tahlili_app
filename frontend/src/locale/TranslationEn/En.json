@@ -283,5 +283,22 @@
   "analysis_date": "Analysis date",
   "diagnosis_status": "Diagnosis status",
   "processing_status": "Analysis status",
-  "passport": "Passport"
+  "passport": "Passport",
+  "clinic_setup_title": "Fill in clinic information",
+  "clinic_setup_desc": "To use the system, you need to fill in the basic information about your clinic.",
+  "clinic_not_active_title": "Your clinic is not yet activated",
+  "clinic_not_active_desc": "Your clinic is being reviewed by NMED administrator. Once activated, all pages will be accessible.",
+  "clinic_not_active_login": "Your clinic is not yet activated. Please contact the system administrator.",
+  "onboarding_step1": "Step 1: Personal information",
+  "onboarding_step2": "Step 2: Clinic information",
+  "onboarding_waiting": "Waiting for approval",
+  "page_locked": "Page locked",
+  "page_locked_reason": "This page will be accessible after clinic activation.",
+  "clinic_name_label": "Clinic name",
+  "clinic_address_label": "Address",
+  "select_region": "Select region",
+  "select_district": "Select district",
+  "admin_panel": "Admin panel",
+  "doctors_management": "Staff management",
+  "waiting_activation_hint": "All features will be enabled after clinic activation"
 }

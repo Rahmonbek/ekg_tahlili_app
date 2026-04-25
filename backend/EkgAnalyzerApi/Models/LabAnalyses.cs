@@ -28,6 +28,9 @@ namespace EkgAnalyzerApi.Models
         [Column("status")]
         public int? Status { get; set; } = 0;
 
+        [Column("document_number")]
+        public string? DocumentNumber { get; set; }
+
         [Column("analyse_file_link")]
         public string? AnalyseFileLink { get; set; }
        

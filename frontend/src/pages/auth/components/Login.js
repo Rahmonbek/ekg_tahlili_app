@@ -72,12 +72,17 @@ export default function Login() {
     navigate('/register'); 
   }
 
-  // 3. Brute-force himoyasi (Backenddan keladigan blok xabari)
+  // 3. Klinika faollashtirilmagan (admin bo'lmagan xodimlar uchun)
+  else if (errorMsg === 'clinic_not_active') {
+    dangerAlert(t("clinic_not_active_login"));
+  }
+
+  // 4. Brute-force himoyasi (Backenddan keladigan blok xabari)
   else if (errorMsg === 'too_many_attempts') {
     dangerAlert(t("account_temporarily_locked"));
   }
 
-  // 4. Boshqa kutilmagan xatoliklar
+  // 5. Boshqa kutilmagan xatoliklar
   else {
     dangerAlert(t("something_went_wrong_try_again"));
   }

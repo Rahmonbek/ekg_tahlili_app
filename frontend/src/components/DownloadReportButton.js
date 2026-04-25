@@ -14,7 +14,7 @@ import { downloadReport } from '../host/requests/ReportRequest';
  *   block    — true bo'lsa butun kenglikni egallaydi
  *   style    — qo'shimcha CSS
  */
-const DownloadReportButton = ({ type, id, size = 'small', block = false, style = {} }) => {
+const DownloadReportButton = ({ type, id, size = 'small', block = false, style = {}, className = '' }) => {
     const { t, i18n } = useTranslation();
     const [modalOpen, setModalOpen]   = useState(false);
     const [loading, setLoading]       = useState(false);
@@ -45,6 +45,7 @@ const DownloadReportButton = ({ type, id, size = 'small', block = false, style =
                 icon={<FilePdfOutlined />}
                 size={size}
                 block={block}
+                className={className}
                 loading={loading}
                 onClick={() => setModalOpen(true)}
                 style={{

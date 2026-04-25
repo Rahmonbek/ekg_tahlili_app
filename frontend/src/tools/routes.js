@@ -12,10 +12,9 @@ export const routers=[
         title:"staffs",
         tools:"doctor",
         role_id:[2, 3],
-        unread_key: null
+        unread_key: null,
+        requires_active: false   // Admin doim kira oladi
     },
-
-
 
      {
         path:'/ecg-analyses',
@@ -23,7 +22,8 @@ export const routers=[
         title:"analyse_ecg",
         tools:"ecg-analyses",
         role_id:[],
-        unread_key: 'ecg_unread'
+        unread_key: 'ecg_unread',
+        requires_active: true
     },
     {
         path:'/holter-analyses',
@@ -31,7 +31,8 @@ export const routers=[
         title:"analyse_holter",
         tools:"holter-analyses",
         role_id:[],
-        unread_key: 'holter_unread'
+        unread_key: 'holter_unread',
+        requires_active: true
     },
     {
         path:'/smad-analyses',
@@ -39,7 +40,8 @@ export const routers=[
         title:"analyse_smad",
         tools:"smad-analyses",
         role_id:[],
-        unread_key: 'smad_unread'
+        unread_key: 'smad_unread',
+        requires_active: true
     },
      {
         path:'/lab-analyses',
@@ -47,7 +49,8 @@ export const routers=[
         title:"analyse_lab",
         tools:"lab-analyses",
         role_id:[],
-        unread_key: 'lab_unread'
+        unread_key: 'lab_unread',
+        requires_active: true
     },
      {
         path:'/patient-diagnoses',
@@ -55,7 +58,8 @@ export const routers=[
         title:"patient_diagnostics",
         tools:"patient-diagnoses",
         role_id:[],
-        unread_key: 'diagnoses_unread'
+        unread_key: 'diagnoses_unread',
+        requires_active: true
     },
     {
         path:'/parasitology-analyses',
@@ -63,21 +67,24 @@ export const routers=[
         title:"parasitology_analyse",
         tools:"parasitology-analyses",
         role_id:[],
-        unread_key: null
+        unread_key: null,
+        requires_active: true
     },
     //  {
     //     path:'/patcients',
     //     icon:<FaPeopleGroup />,
     //     title:"patcients",
     //     tools:"patcients",
-    //     role_id:[]
+    //     role_id:[],
+    //     requires_active: true
     // },
     // {
     //     path:'/billings',
     //     icon:<IoIosCard />,
     //     title:"billings",
     //     tools:"billings",
-    //     role_id:[2, 3]
+    //     role_id:[2, 3],
+    //     requires_active: false
     // },
     {
         path:'/settings',
@@ -85,7 +92,8 @@ export const routers=[
         title:"organization_info",
         tools:"settings",
         role_id:[2, 3],
-        unread_key: null
+        unread_key: null,
+        requires_active: false   // Admin doim kira oladi
     },
 
 ]

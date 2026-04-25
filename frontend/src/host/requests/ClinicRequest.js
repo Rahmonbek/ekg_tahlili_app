@@ -1,4 +1,4 @@
-import { httpGetRequest, httpPostRequest } from "../Host"
+import { httpGetRequest, httpPatchRequest, httpPostRequest } from "../Host"
 
 
 export const get_clinic_by_id=(data)=>{
@@ -17,4 +17,9 @@ export const send_clinic_phone=(data)=>{
 
 export const send_clinic_detail=(data)=>{
     return httpPostRequest("/clinic/create-update-clinic-detail", data)
+}
+
+// SuperAdmin: klinikani faollashtirish / o'chirish
+export const set_clinic_active=(clinicId, isActive)=>{
+    return httpPatchRequest(`/clinic/${clinicId}/set-active?isActive=${isActive}`)
 }

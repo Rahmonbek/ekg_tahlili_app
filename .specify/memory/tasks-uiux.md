@@ -1,276 +1,38 @@
-# Tasks: NMED AI — UI/UX Yaxshilash
+# Tasks: NMED AI — UI/UX va PDF Polish
 
-**Input**: UI/UX Audit natijasi (2026-04-23)
-**Loyiha**: `d:\git\ekg_tahlili_app\frontend\src\`
-**Maqsad**: Audit hisobotidagi barcha muammolarni ustuvorlik bo'yicha bartaraf etish
-
-## Format: `[ID] [P?] [Story] Tavsif`
-
-- **[P]**: Parallel bajarish mumkin (turli fayllar, bog'liqlik yo'q)
-- **[Story]**: Qaysi UI/UX user story ga tegishli
+**Yangilandi**: 2026-04-25  
+**Loyiha**: `D:\git\ekg_tahlili_app`
 
 ---
 
-## Phase 1: Setup
+## Yakunlangan bloklar
 
-**Maqsad**: Mavjud kod bazasini o'rganish va muhitni tayyorlash
-
-- [x] T001 Mavjud CSS o'zgaruvchilarni va komponent strukturasini o'rganish
-- [x] T002 UI/UX audit hisobotini tayyorlash va ustuvorlik matritsasini tuzish
+- [x] T042–T051 Phase 11 (Analizlar pariteti)
+- [x] T052–T056 Phase 12 (EKG UI/PDF pariteti va view polish)
 
 ---
 
-## Phase 2: Foundational — Global CSS Tuzatishlar
+## Phase 13: View + PDF Qo‘shimcha Polish
 
-**Maqsad**: Barcha sahifalarni qamrab oladigan asosiy CSS muammolarini tuzatish
+**Maqsad**: View header action qismini tizim dizayniga moslash, PDF o‘qilishini yaxshilash, Parazitologiya AI blokini chiroyli chiqarish, va backend buildni toza holatga keltirish.
 
-**⚠️ KRITIK**: Bu phase tugamasdan keyingi user storylar boshlansa global muammolar saqlanib qoladi
-
-- [ ] T003 `outline: none` global resetni olib tashlash va `:focus-visible` qo'shish `frontend/src/App.css` (WCAG 2.4.7)
-- [ ] T004 Form validation xatolari ko'rinishini tiklash — `.ant-form-item-explain-error { display: none }` ni olib tashlash `frontend/src/App.css`
-- [ ] T005 Majburiy maydon ko'rsatkichlarini tiklash — `::before` va `::after` yashirishni bekor qilish `frontend/src/App.css`
-- [ ] T006 [P] `vw` asosidagi padding o'zgaruvchilarini `px` qiymatlarga almashtirish `frontend/src/App.css`
-- [ ] T007 [P] Jadval sarlavhasi rangini teal gradientdan yengil kulrang ga almashtirish `frontend/src/App.css`
-
-**Checkpoint**: Global CSS tuzatishlar tayyor — barcha sahifalar yaxshilangan
+- [x] T057 [P1] `.NET` backend build xatolarini bartaraf etish (`backend/EkgAnalyzerApi`) va buildni yashil holatga keltirish
+- [x] T058 [P1] `/view` sahifalardagi `.analysis-view-actions` dizaynini tizimga mos, chiroyli va aniq ko‘rinishga keltirish
+- [x] T059 [P1] PDF font weightlarni yengillashtirish (qalin matnlarni o‘qilishi osonroq, ingichka stilga o‘tkazish)
+- [x] T060 [P1] Parazitologiya PDF `SUN'IY INTELLEKT TAHLILI XULOSASI` blokida JSON fallback holatini structured ko‘rinishda chiqarish (raw JSON ko‘rinmasin)
+- [x] T061 [P1] PDF header (logotiplar chiqadigan qism) dizaynini yaxshilash va klinika telefon raqamlarini aniq chiqarishni mustahkamlash
+- [x] T062 [P1] Frontend+Backend build tekshiruvlarini qayta ishga tushirish va natijalarni validatsiya qilish
 
 ---
 
-## Phase 3: US1 — Asosiy Mavjud Muammolarni Tuzatish (Priority: P1) 🎯 MVP
-
-**Maqsad**: Eng kritik funksional va accessibility muammolarni bartaraf etish
-
-**Independent Test**: Har bir input ga tab bosib focus ko'rinishini tekshirish; forma yuborishda inline xato xabarlarini ko'rish
-
-### Implementation for User Story 1
-
-- [ ] T008 [US1] EKG rasm paddingini tuzatish: `padding: 0px 30%` → `max-width: 800px; margin: auto` `frontend/src/App.css`
-- [ ] T009 [US1] `EcgResult.js` dagi emoji (✅⚠️❌⭐) larni Ant Design `<Tag>` komponentlari bilan almashtirish `frontend/src/components/results/EcgResult.js`
-- [ ] T010 [US1] `EcgResult.js` dagi hard-coded o'zbek matni i18n ga ko'chirish `frontend/src/components/results/EcgResult.js`
-- [ ] T011 [US1] `EcgAnalyzer.js` dagi `alert()` chaqiruvini `dangerAlert()` ga almashtirish `frontend/src/pages/cabinet/ecg_analyse/EcgAnalyzer.js`
-- [ ] T012 [P] [US1] Console.log larni production fayllardan olib tashlash (App.js, ClinicInfo.js)
-- [ ] T013 [P] [US1] `ClinicInfo.js` dagi takroriy `sm={24}` prop xatolarini tuzatish `frontend/src/pages/cabinet/pages/ClinicInfo.js`
-
-**Checkpoint**: Kritik muammolar bartaraf etildi — accessibility va funksional sifat yaxshilandi
-
----
-
-## Phase 4: US2 — Sidebar va Navigatsiya Dizayni (Priority: P1)
-
-**Maqsad**: Sidebar ko'rinishi va foydalanuvchi orientatsiyasini yaxshilash
-
-**Independent Test**: Sidebar ko'rsatgandagi aktiv element aniq ko'rinishi; yopilganda icon-only rejim
-
-### Implementation for User Story 2
-
-- [ ] T014 [US2] Sidebar kengligini 350px → 260px ga kamaytirish `frontend/src/App.css`
-- [ ] T015 [US2] Sidebarga oq fon va o'ng chegara qo'shish `frontend/src/App.css`
-- [ ] T016 [US2] Aktiv bo'lmagan sidebar elementi kontrastini oshirish: `#A0AEC0` → `#64748B` `frontend/src/App.css`
-- [ ] T017 [US2] Aktiv sidebar elementi stilini yaxshilash: chapdan rang chiziq + yengil teal fon `frontend/src/App.css`
-- [ ] T018 [P] [US2] Sidebar icon qutisidagi notifikatsiya badge o'rnini sarlavha o'ngiga ko'chirish `frontend/src/components/SideBar.js`
-
-**Checkpoint**: Sidebar professional ko'rinishga ega, navigatsiya aniq
-
----
-
-## Phase 5: US3 — Header va Umumiy Layout (Priority: P2)
-
-**Maqsad**: Header vizual ajratish va sahifa sarlavhasini qo'shish
-
-**Independent Test**: Header content dan vizual ajralgan; har bir sahifada sarlavha ko'rinadi
-
-### Implementation for User Story 3
-
-- [ ] T019 [US3] Headerga oq fon, pastki chegara va yengil soya qo'shish `frontend/src/App.css`
-- [ ] T020 [US3] `.main_card h1` gradientini yengil stil bilan almashtirish (oq fon, chegara, to'q matn) `frontend/src/App.css`
-- [ ] T021 [P] [US3] Login sahifasidagi gradient banner sarlavhani zamonaviy minimalist dizayn bilan almashtirish `frontend/src/App.css`
-
-**Checkpoint**: Header va karta sarlavhalari zamonaviy ko'rinishda
-
----
-
-## Phase 6: US4 — Analyzer Sahifalar UX (Priority: P2)
-
-**Maqsad**: EKG/Lab/Holter/SMAD tahlil sahifalarida foydalanuvchi tajribasini yaxshilash
-
-**Independent Test**: Fayl yuklash vizual va aniq; AI/save tugmalari farqli ko'rinadi
-
-### Implementation for User Story 4
-
-- [ ] T022 [US4] EkgAnalyzer faylni yuklash qismini Ant Design `Upload.Dragger` ga almashtirish `frontend/src/pages/cabinet/ecg_analyse/EcgAnalyzer.js`
-- [ ] T023 [US4] "AI orqali tekshirish" checkbox ni ikkita alohida tugmaga ajratish `frontend/src/pages/cabinet/ecg_analyse/EcgAnalyzer.js`
-- [ ] T024 [P] [US4] HolterAnalyzer uchun ham fayl yuklash va tugma UX ni yaxshilash `frontend/src/pages/cabinet/holter_analyse/HolterAnalyzer.js`
-- [ ] T025 [P] [US4] SmadAnalyzer uchun ham fayl yuklash va tugma UX ni yaxshilash `frontend/src/pages/cabinet/smad_analyse/SmadAnalyzer.js`
-- [ ] T026 [P] [US4] LabAnalyzer uchun ham fayl yuklash va tugma UX ni yaxshilash `frontend/src/pages/cabinet/lab_analyse/LabAnalyzer.js`
-
-**Checkpoint**: Barcha analyzer sahifalar yaxshilangan fayl yuklash va aniq action tugmalariga ega
-
----
-
-## Phase 7: US5 — Ro'yxat Sahifalar va Jadvallar (Priority: P2)
-
-**Maqsad**: Jadval sahifalarida navigatsiya, filtr va bo'sh holat UX ni yaxshilash
-
-**Independent Test**: Sahifada sarlavha va natija soni ko'rinadi; jadval bo'sh bo'lganda harakatga yo'naltiruvchi xabar ko'rinadi
-
-### Implementation for User Story 5
-
-- [ ] T027 [US5] EcgAnalysesList ga sahifa sarlavhasi va natija soni qo'shish `frontend/src/pages/cabinet/ecg_analyse/EcgAnalysesList.js`
-- [ ] T028 [US5] EcgAnalysesList da ko'rilmagan qator uchun alohida ustun o'rniga qator highlight qo'shish `frontend/src/pages/cabinet/ecg_analyse/EcgAnalysesList.js`
-- [ ] T029 [US5] EcgAnalysesList ga "Filtrlarni tozalash" tugmasi qo'shish `frontend/src/pages/cabinet/ecg_analyse/EcgAnalysesList.js`
-- [ ] T030 [P] [US5] SmadAnalysesList, HolterAnalysesList, LabAnalysesList, DiagnosesList uchun sarlavha va filtr tozalash qo'shish
-- [ ] T031 [P] [US5] Barcha ro'yxat sahifalar uchun bo'sh holat (EmptyState) komponenti yaratish `frontend/src/components/shared/EmptyState.js`
-
-**Checkpoint**: Ro'yxat sahifalar sarlavha, bo'sh holat va qulay filtr boshqaruviga ega
-
----
-
-## Phase 8: US6 — Dashboard Bosh Sahifa (Priority: P3)
-
-**Maqsad**: Tizimga kirgan foydalanuvchi uchun ma'lumotli bosh sahifa yaratish
-
-**Independent Test**: Bosh sahifada bugungi tahlillar soni va oxirgi yozuvlar ko'rinadi
-
-### Implementation for User Story 6
-
-- [ ] T032 [US6] Dashboard komponenti yaratish `frontend/src/pages/cabinet/Dashboard.js`
-- [ ] T033 [US6] Statistika kartochkalari komponenti yaratish (bugungi EKG, Lab, Holter, SMAD soni) `frontend/src/components/shared/StatCard.js`
-- [ ] T034 [US6] Dashboard ga tez harakat tugmalari qo'shish (Yangi EKG, Yangi Lab, Yangi Diagnoz) `frontend/src/pages/cabinet/Dashboard.js`
-- [ ] T035 [US6] Routerni yangilash — default route `/` ni Dashboard ga yo'naltirish `frontend/src/pages/cabinet/Main.js`
-
-**Checkpoint**: Foydalanuvchi tizimga kirganda ma'lumotli bosh sahifani ko'radi
-
----
-
-## Phase 9: US7 — Natija Ko'rsatish va Export (Priority: P3)
-
-**Maqsad**: Tahlil natijasini chop etish va eksport qilish imkonini berish
-
-**Independent Test**: EKG natija sahifasida "Chop etish" tugmasi ishlaydi
-
-### Implementation for User Story 7
-
-- [ ] T036 [US7] EcgResult ga Print tugmasi qo'shish `frontend/src/components/results/EcgResult.js`
-- [ ] T037 [P] [US7] Chop etish uchun print-specific CSS qo'shish `frontend/src/App.css`
-- [ ] T038 [P] [US7] Raqamli o'lchovlar uchun tablo ko'rinishi yaxshilash `frontend/src/components/results/EcgResult.js`
-
-**Checkpoint**: Natijalarni chop etish ishlaydi
-
----
-
-## Phase 10: Polish — Yozuv Xatolari va Tozalash
-
-**Maqsad**: Kod sifati va professional ko'rinishni oshirish
-
-- [ ] T039 [P] ClinicInfo.js dagi `console.log` va debug yozuvlarni tozalash `frontend/src/pages/cabinet/pages/ClinicInfo.js`
-- [ ] T040 [P] App.js dagi `console.log(res)` ni olib tashlash `frontend/src/App.js`
-- [ ] T041 [P] i18n tarjima fayllariga yangi kalitlar qo'shish (EcgResult uchun)
-
----
-
-## Phase 11: Analizlar Pariteti (EKG Reference) — Priority: P1/P2
-
-**Maqsad**: EKG tahlil sahifalaridagi filter/search/status/diagnosis/PDF ishlash prinsipi va UI joylashuvini Holter/SMAD/Lab/Parasitology sahifalariga ham bir xil qilish.
-
-### Backend (API contract)
-
-- [x] T042 [P1] Holter/SMAD/Lab doctor & nurse list endpointlariga `automaticAnalysisBool` va `hasDiagnosis` filterlarini to'liq qo'shish (controller+service)
-- [x] T043 [P1] Holter/SMAD/Lab list DTO lariga `HasDiagnosis` qo'shish va list projectionlarda to'ldirish (batch `has-diagnosis` chaqiruvisiz)
-- [x] T044 [P2] Holter/SMAD/Lab servicelarda ko'p so'zli qidiruvni (split by space) EKG kabi qilish (clinic/doctor/nurse)
-
-### Frontend (List sahifalar)
-
-- [x] T045 [P1] Holter/SMAD/Lab list sahifalarini EKG list standartiga keltirish: `filterRef` (Search bosilganda apply), `onClear` hammasiga, ustunlar: processing status + AI status + diagnosis status + createdAt + analysisDate
-- [x] T046 [P2] Parasitology list sahifasini ham shu standartga yaqinlashtirish (filterRef/onClear/HasDiagnosis) — status string bo'lsa ham UX bir xil
-
-### Frontend (Analyzer sahifalar)
-
-- [x] T047 [P1] Variant A: barcha analyzer sahifalarda `analysis_date` inputni `type="date"` qilib standart qilish (EKG kabi) va reset/gatingni bir xil qilish
-- [x] T048 [P2] Holter/SMAD/Lab analyzerdagi file upload UI ni Ant Design `Upload.Dragger`ga o'tkazish (EKG parity)
-- [x] T049 [P1] Analyzer submit gating: file + analysis_date + doctor(lar) + (Holter/SMAD main_doctor) majburiy bo'lsa tugma ko'rinishi sharti bilan bir xil qilish
-
-### Frontend (View sahifalar + Request layer)
-
-- [x] T050 [P2] Parasitology view sahifasida `axiosInstance.get`ni request layerga ko'chirish (bir xil pattern)
-
-### Locale / Consistency
-
-- [x] T051 [P2] List sahifalardagi `passport`/`passport_seria`, `date_filter`/`created_at`, `processing_status` keylarini bir xil qilish va uz/ru/en jsonlarda yo'q bo'lsa qo'shish
-
----
-
-## Phase 12: EKG UI/PDF Pariteti va View Polish — Priority: P1
-
-**Maqsad**: EKG list/analyzer/view/PDF dagi UX standardini qolgan tahlil modullariga ko'chirish va PDF exportlarni chiroyli/foydalanuvchiga qulay qilish.
-
-### Frontend (List Filter UI parity)
-
-- [x] T052 [P1] Holter/SMAD/Lab/Parasitology list filter toolbar joylashuvini EKG list (`EcgAnalysesList`) layoutiga keltirish (responsive Col breakpoints, bir xil label/placeholder, `allowClear/onClear`); Search tugmasi yonidagi `+` create tugmani olib tashlash (create tugma faqat headerda qolsin)
-
-### Frontend (Analyzer layout + default values)
-
-- [ ] T053 [P1] Barcha analyzer sahifalarda: AI tili default `uz`, `analysis_date` default bugungi sana, upload qismi to'liq qator, yonidagi lang/date/selectlar 1 qatorda 3 tadan; "Davolovchi shifokorlarni tanlang" kabi yirik bloklar full row bo'lsin (EKG parity)
-
-### PDF Export (EKG + Parasitology)
-
-- [ ] T054 [P1] Parasitology PDF export: `ishonch_darajasi` (confidence) ko'rsatilmasin; `SUN'IY INTELLEKT TAHLILI XULOSASI` JSON natijani EKGga o'xshash o'qilishi oson formatga chiqarish (sectionlar, ro'yxatlar, label/value)
-- [ ] T055 [P1] EKG PDF export: AI ga yuborilgan original fayl (image/pdf) ham PDFga qo'shilsin (kamida link/preview + kerak bo'lsa screenshot)
-
-### View sahifalar polish
-
-- [ ] T056 [P2] `/view` sahifalarda header qismidagi ma'lumotlarni chiroyli va tushunarli ko'rinishga keltirish (bemor, shifokor, statuslar, sanalar); Parasitology view dagi box+border layout buzilmasin, faqat boyitilsin
-
----
-
-## Dependencies & Execution Order
-
-### Phase Dependencies
-
-- **Phase 1 (Setup)**: Bajarildi
-- **Phase 2 (Foundational CSS)**: Birinchi bajariladi — barcha sahifalarni qamraydi
-- **Phase 3 (US1 Kritik)**: Phase 2 dan keyin — funksional muammolar
-- **Phase 4 (US2 Sidebar)**: Phase 2 dan keyin — parallel bajarish mumkin
-- **Phase 5 (US3 Header)**: Phase 2 dan keyin — parallel bajarish mumkin
-- **Phase 6 (US4 Analyzer)**: Phase 3 dan keyin
-- **Phase 7 (US5 Ro'yxat)**: Phase 3 dan keyin
-- **Phase 8 (US6 Dashboard)**: Phase 5 dan keyin
-- **Phase 9 (US7 Export)**: Phase 3 dan keyin
-- **Phase 10 (Polish)**: Istalgan vaqtda parallel
-
-### Parallel Opportunities
-
-```
-Phase 2 tugagach bir vaqtda:
-├── US1 (Kritik tuzatishlar) — T008-T013
-├── US2 (Sidebar)           — T014-T018
-└── US3 (Header)            — T019-T021
-
-Phase 3-5 tugagach bir vaqtda:
-├── US4 (Analyzer)          — T022-T026
-├── US5 (Ro'yxat)           — T027-T031
-└── US7 (Export)            — T036-T038
-```
-
----
-
-## Implementation Strategy
-
-### MVP (Birinchi deliverable)
-
-1. Phase 2: Global CSS tuzatishlar ✓
-2. Phase 3 US1: Kritik muammolar ✓
-3. Phase 4 US2: Sidebar ✓
-4. **Validate**: Vizual ko'rinish va accessibility tekshirish
-5. Deploy
-
-### Incremental Delivery
-
-1. Phase 2 + US1 → Accessibility va funksional muammolar bartaraf etildi
-2. US2 + US3 → Sidebar va header zamonaviy ko'rinishda
-3. US4 + US5 → Analyzer va ro'yxat sahifalar yaxshilandi
-4. US6 → Dashboard bosh sahifa
-5. US7 + Polish → Export va tozalash
-
----
-
-**Yaratildi**: 2026-04-23 | **Manbai**: UI/UX Audit Hisoboti
+## Phase 14: View Actions + Responsive + Sidebar Memory
+
+**Maqsad**: View sahifalardagi action panelni aniq joylashuvga keltirish, EKG PDF source image chiqishini mustahkamlash, platforma responsive qoidalarini to‘liq berish, desktop sidebar holatini localStorage’da saqlash va agent memory faylini tayyorlash.
+
+- [x] T063 [P1] `analysis-view-actions` ichidagi tugma/elementlar joylashuvi va ko‘rinishini yaxshilash (desktop/tablet/mobile)
+- [x] T064 [P1] EKG PDF: AI ga yuborilgan fayl image bo‘lsa albatta rasm preview chiqarishni mustahkamlash
+- [x] T065 [P1] Global responsive media qoidalarini to‘liq yozish (desktop/tablet/mobile) va layout elementlar uchun tizimli breakpoints
+- [x] T066 [P1] Desktop typography audit: asosiy yozuv o‘lchamlarini o‘qilishi yaxshi variantga keltirish
+- [x] T067 [P1] Sidebar ochiq/yopiq holatini localStorage’da saqlash va user qayta kirganda desktop’da shu holatni tiklash
+- [x] T068 [P2] Assistant uchun project quick-memory faylini yaratish (modullar, yo‘llar, muhim konventsiyalar)
+- [x] T069 [P1] Frontend/backend build tekshiruvlari va task statuslarini yangilash

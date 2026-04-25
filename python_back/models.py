@@ -10,10 +10,11 @@ class ECGAnalyse(Base):
     created_doctor_id = Column(Integer)
     clinic_id = Column(Integer)
     status = Column(Integer)
+    document_number = Column(Text, nullable=True)
     analyse_file_link = Column(Text)
     generated_file_link = Column(Text)
     generated_short_file_link = Column(Text)
-    ai_answer_data = Column(Text, nullable=True)  
+    ai_answer_data = Column(Text, nullable=True)
     analysis_date = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)
@@ -27,6 +28,7 @@ class LabAnalyses(Base):
     created_doctor_id = Column(Integer)
 
     status = Column(Integer, default=0)
+    document_number = Column(Text, nullable=True)
 
     analyse_file_link = Column(String, nullable=True)
     ai_answer_data = Column(String, nullable=True)  # text
@@ -91,6 +93,7 @@ class HolterAnalyses(Base):
     main_doctor_id = Column(Integer)
 
     status = Column(Integer, default=0)
+    document_number = Column(Text, nullable=True)
 
     analyse_file_link = Column(String, nullable=True)
     ai_answer_data = Column(String, nullable=True)  # text
@@ -110,6 +113,7 @@ class SmadAnalyses(Base):
     main_doctor_id = Column(Integer)
 
     status = Column(Integer, default=0)
+    document_number = Column(Text, nullable=True)
 
     analyse_file_link = Column(String, nullable=True)
     ai_answer_data = Column(String, nullable=True)  # text

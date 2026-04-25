@@ -40,6 +40,11 @@ def create_smad_analyse(
     session.add(new_lab)
     session.commit()
     session.refresh(new_lab)
+
+    # Document number generatsiya (o'zgarmas, takrorlanmas)
+    new_lab.document_number = f"NMED-SMAD-{str(new_lab.id).zfill(8)}"
+    session.commit()
+
     return new_lab
 
 
