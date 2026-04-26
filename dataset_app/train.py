@@ -8,6 +8,7 @@ def main():
     parser.add_argument("--epochs", type=int, default=50, help="Necha marta o‘qitish")
     parser.add_argument("--imgsz", type=int, default=640, help="Rasm o‘lchami")
     parser.add_argument("--batch", type=int, default=8, help="Batch size")
+    parser.add_argument("--device", default=None, help="cpu yoki 0 GPU uchun")
     args = parser.parse_args()
 
     model = YOLO(args.model)
@@ -17,6 +18,7 @@ def main():
         epochs=args.epochs,
         imgsz=args.imgsz,
         batch=args.batch,
+        device=args.device,
         project="runs/detect",
         name="nmed_parasite",
         exist_ok=True

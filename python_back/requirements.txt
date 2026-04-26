@@ -21,6 +21,7 @@ pdf2image
 
 # AI va API klentlar
 openai
+anthropic>=0.40.0
 requests
 
 # Matn va Qidiruv

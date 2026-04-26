@@ -1,7 +1,7 @@
 import { Button, Form, Input } from 'antd'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next';
-import login_img from '../../../images/login.png'
+import login_img from '../../../images/login1.png'
 import { IoMdLock } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../../../host/requests/AuthRequest';
@@ -37,59 +37,59 @@ export default function Login() {
       const res = await login({
         username: val.username,
         password: val.password,
-        recaptchaToken: token 
+        recaptchaToken: token
       });
 
       if (res.status === 200) {
         successAlert(t(res.data.message));
-        
+
         // Tokenni saqlash
         Cookies.set("NMED_token", res.data.token, {
-                 expires: 1,
-                 path: "/",
-                 secure: true, 
-                 sameSite: 'strict'
-               });
-        
+          expires: 1,
+          path: "/",
+          secure: true,
+          sameSite: 'strict'
+        });
+
         // Foydalanuvchi ID sini storega yozish
         setuser_id(res.data.userId);
-        
+
         // Kabinetga yo'naltirish
         navigate('/cabinet');
       }
-    }catch (err) {
-  const errorMsg = err.response?.data?.message;
+    } catch (err) {
+      const errorMsg = err.response?.data?.message;
 
-  // 1. Kiberxavfsizlik: Foydalanuvchi topilmaganda yoki parol xato bo'lganda 
-  // bir xil umumiy xabar ko'rsatish (Obfuscation)
-  if (errorMsg === 'user_not_find' || errorMsg === 'invalid_password') {
-    dangerAlert(t("login_or_password_incorrect")); 
-  } 
-  
-  // 2. Email tasdiqlanmagan bo'lsa, xavfsizlikka zarar etkazmagan holda yo'naltirish
-  else if (errorMsg === 'email_not_verified') {
-    dangerAlert(t("please_verify_email"));
-    navigate('/register'); 
-  }
+      // 1. Kiberxavfsizlik: Foydalanuvchi topilmaganda yoki parol xato bo'lganda 
+      // bir xil umumiy xabar ko'rsatish (Obfuscation)
+      if (errorMsg === 'user_not_find' || errorMsg === 'invalid_password') {
+        dangerAlert(t("login_or_password_incorrect"));
+      }
 
-  // 3. Klinika faollashtirilmagan (admin bo'lmagan xodimlar uchun)
-  else if (errorMsg === 'clinic_not_active') {
-    dangerAlert(t("clinic_not_active_login"));
-  }
+      // 2. Email tasdiqlanmagan bo'lsa, xavfsizlikka zarar etkazmagan holda yo'naltirish
+      else if (errorMsg === 'email_not_verified') {
+        dangerAlert(t("please_verify_email"));
+        navigate('/register');
+      }
 
-  // 4. Brute-force himoyasi (Backenddan keladigan blok xabari)
-  else if (errorMsg === 'too_many_attempts') {
-    dangerAlert(t("account_temporarily_locked"));
-  }
+      // 3. Klinika faollashtirilmagan (admin bo'lmagan xodimlar uchun)
+      else if (errorMsg === 'clinic_not_active') {
+        dangerAlert(t("clinic_not_active_login"));
+      }
 
-  // 5. Boshqa kutilmagan xatoliklar
-  else {
-    dangerAlert(t("something_went_wrong_try_again"));
-  }
+      // 4. Brute-force himoyasi (Backenddan keladigan blok xabari)
+      else if (errorMsg === 'too_many_attempts') {
+        dangerAlert(t("account_temporarily_locked"));
+      }
 
-} finally {
-  setloading(false);
-}
+      // 5. Boshqa kutilmagan xatoliklar
+      else {
+        dangerAlert(t("something_went_wrong_try_again"));
+      }
+
+    } finally {
+      setloading(false);
+    }
   };
 
   return (
@@ -99,9 +99,9 @@ export default function Login() {
           <h1>{t("ymed_login")}</h1>
           <div className='login_form_form'>
             <Form
-            name="user_profile_form"
+              name="user_profile_form"
               id="login-form"
-             
+
               onFinish={onFinish}
               layout="vertical"
               component="form" // Brauzer formani tanishi uchun muhim
@@ -111,12 +111,12 @@ export default function Login() {
                 label={t("username")}
                 rules={[{ required: true, message: t("please_enter_username") }]}
               >
-                <Input 
+                <Input
                   name="username" // Qo'shildi
-  autoComplete="username" // Qo'shildi
-                  prefix={<IoPerson />} 
-                  className='login_input' 
-                  placeholder={t("enter_username")} 
+                  autoComplete="username" // Qo'shildi
+                  prefix={<IoPerson />}
+                  className='login_input'
+                  placeholder={t("enter_username")}
                 />
               </Form.Item>
 
@@ -125,19 +125,19 @@ export default function Login() {
                 label={t("password")}
                 rules={[{ required: true, message: t("please_enter_password") }]}
               >
-                <Input.Password 
+                <Input.Password
                   name="password" // Qo'shildi
-  autoComplete="current-password" // Qo'shildi 
-                  prefix={<IoMdLock />} 
-                  className='login_input' 
+                  autoComplete="current-password" // Qo'shildi 
+                  prefix={<IoMdLock />}
+                  className='login_input'
                   placeholder={t("enter_password")}
                 />
               </Form.Item>
 
               <Form.Item wrapperCol={{ span: 24 }}>
-                <Button 
-                  className='btn_form' 
-                  loading={loading} 
+                <Button
+                  className='btn_form'
+                  loading={loading}
                   htmlType="submit" // Brauzerga "yuborish" signali
                 >
                   {t("login")}

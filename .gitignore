@@ -16,6 +16,7 @@ backend/EkgAnalyzerApi/.vs/EkgAnalyzerApi/CopilotIndices/17.14.1347.20289/Semant
 /backend/EkgAnalyzerApi/.vs
 /backend/EkgAnalyzerApi/obj
 /backend/EkgAnalyzerApi/.vs
+/backend/EkgAnalyzerApi/wwwroot
 /python_back/uploads
 
 # Maxfiy fayllar (secrets)
@@ -27,6 +28,9 @@ backend/EkgAnalyzerApi/.vs/EkgAnalyzerApi/CopilotIndices/17.14.1347.20289/Semant
 
 /dataset_app/.env
 /dataset_app/venv
+/dataset_app/venv311
+/dataset_app/dataset
+/dataset_app/balanced_dataset
 /dataset_app/__pycache__
 
 

@@ -495,6 +495,88 @@
       ]
     },
     {
+      "Route": "clinic_licenses/ce0409f0-a8f2-400c-a88f-251426dcc0ae.pdf",
+      "AssetFile": "clinic_licenses/ce0409f0-a8f2-400c-a88f-251426dcc0ae.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "261350"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"lmmvaUk8CtSNIm/NcdnrPO3quN7SPNcTR6NFbU+3eFo=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-lmmvaUk8CtSNIm/NcdnrPO3quN7SPNcTR6NFbU+3eFo="
+        }
+      ]
+    },
+    {
+      "Route": "clinic_licenses/ce0409f0-a8f2-400c-a88f-251426dcc0ae.qkcz461o8t.pdf",
+      "AssetFile": "clinic_licenses/ce0409f0-a8f2-400c-a88f-251426dcc0ae.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "261350"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"lmmvaUk8CtSNIm/NcdnrPO3quN7SPNcTR6NFbU+3eFo=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "qkcz461o8t"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-lmmvaUk8CtSNIm/NcdnrPO3quN7SPNcTR6NFbU+3eFo="
+        },
+        {
+          "Name": "label",
+          "Value": "clinic_licenses/ce0409f0-a8f2-400c-a88f-251426dcc0ae.pdf"
+        }
+      ]
+    },
+    {
       "Route": "clinic_licenses/e5d4183a-1c26-46a2-abff-369760ca5dd2.f3y8c1k1kj.pdf",
       "AssetFile": "clinic_licenses/e5d4183a-1c26-46a2-abff-369760ca5dd2.pdf",
       "Selectors": [],
@@ -819,6 +901,88 @@
         {
           "Name": "label",
           "Value": "clinicbrands/2585627e-cd56-4e73-adbe-4d8a3aafe999.png"
+        }
+      ]
+    },
+    {
+      "Route": "clinicbrands/2f7caad7-8258-40ce-b87b-ce83a96ea6c7.aja5h2x7hy.jpg",
+      "AssetFile": "clinicbrands/2f7caad7-8258-40ce-b87b-ce83a96ea6c7.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1825812"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"lo36DxZ8JQtGrikhqe3tQGd63VpUvXqRbCLRgKedhzc=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "aja5h2x7hy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-lo36DxZ8JQtGrikhqe3tQGd63VpUvXqRbCLRgKedhzc="
+        },
+        {
+          "Name": "label",
+          "Value": "clinicbrands/2f7caad7-8258-40ce-b87b-ce83a96ea6c7.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "clinicbrands/2f7caad7-8258-40ce-b87b-ce83a96ea6c7.jpg",
+      "AssetFile": "clinicbrands/2f7caad7-8258-40ce-b87b-ce83a96ea6c7.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1825812"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"lo36DxZ8JQtGrikhqe3tQGd63VpUvXqRbCLRgKedhzc=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-lo36DxZ8JQtGrikhqe3tQGd63VpUvXqRbCLRgKedhzc="
         }
       ]
     },
@@ -1725,6 +1889,88 @@
       ]
     },
     {
+      "Route": "uploads/parasitology/202604/1.bavesy5bi3.jpg",
+      "AssetFile": "uploads/parasitology/202604/1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "44263"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:28:49 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "bavesy5bi3"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/1.jpg",
+      "AssetFile": "uploads/parasitology/202604/1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "44263"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:28:49 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE="
+        }
+      ]
+    },
+    {
       "Route": "uploads/parasitology/202604/12.jpg",
       "AssetFile": "uploads/parasitology/202604/12.jpg",
       "Selectors": [],
@@ -1803,6 +2049,2138 @@
         {
           "Name": "label",
           "Value": "uploads/parasitology/202604/12.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/12_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/12_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "84960"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"SGCo0YuQhuYPYcYrgfT60Xb5UN0mOgO8KEPorFgRrko=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-SGCo0YuQhuYPYcYrgfT60Xb5UN0mOgO8KEPorFgRrko="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/12_1.sn3nmih676.jpg",
+      "AssetFile": "uploads/parasitology/202604/12_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "84960"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"SGCo0YuQhuYPYcYrgfT60Xb5UN0mOgO8KEPorFgRrko=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "sn3nmih676"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-SGCo0YuQhuYPYcYrgfT60Xb5UN0mOgO8KEPorFgRrko="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/12_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/1_1.bavesy5bi3.jpg",
+      "AssetFile": "uploads/parasitology/202604/1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "44263"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:36:22 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "bavesy5bi3"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/1_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/1_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "44263"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:36:22 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/1_2.bavesy5bi3.jpg",
+      "AssetFile": "uploads/parasitology/202604/1_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "44263"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:53:14 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "bavesy5bi3"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/1_2.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/1_2.jpg",
+      "AssetFile": "uploads/parasitology/202604/1_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "44263"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:53:14 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/1_3.bavesy5bi3.jpg",
+      "AssetFile": "uploads/parasitology/202604/1_3.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "44263"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:06:19 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "bavesy5bi3"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/1_3.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/1_3.jpg",
+      "AssetFile": "uploads/parasitology/202604/1_3.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "44263"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:06:19 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/1_4.bavesy5bi3.jpg",
+      "AssetFile": "uploads/parasitology/202604/1_4.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "44263"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:06:23 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "bavesy5bi3"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/1_4.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/1_4.jpg",
+      "AssetFile": "uploads/parasitology/202604/1_4.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "44263"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:06:23 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/1_5.bavesy5bi3.jpg",
+      "AssetFile": "uploads/parasitology/202604/1_5.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "44263"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:23:36 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "bavesy5bi3"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/1_5.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/1_5.jpg",
+      "AssetFile": "uploads/parasitology/202604/1_5.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "44263"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:23:36 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-HfZnZBwkGK3TMPrv83n0aLK6DjsdYuBJEPT34t2KPqE="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/2.3bfs1yxwe8.jpg",
+      "AssetFile": "uploads/parasitology/202604/2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "46134"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"f7XuleFwHkUA9G4pQn6Ggz7c96eyCZHOs8P6A6MzayU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:29:18 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "3bfs1yxwe8"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-f7XuleFwHkUA9G4pQn6Ggz7c96eyCZHOs8P6A6MzayU="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/2.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/2.jpg",
+      "AssetFile": "uploads/parasitology/202604/2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "46134"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"f7XuleFwHkUA9G4pQn6Ggz7c96eyCZHOs8P6A6MzayU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:29:18 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-f7XuleFwHkUA9G4pQn6Ggz7c96eyCZHOs8P6A6MzayU="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/2_1.3bfs1yxwe8.jpg",
+      "AssetFile": "uploads/parasitology/202604/2_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "46134"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"f7XuleFwHkUA9G4pQn6Ggz7c96eyCZHOs8P6A6MzayU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:48:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "3bfs1yxwe8"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-f7XuleFwHkUA9G4pQn6Ggz7c96eyCZHOs8P6A6MzayU="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/2_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/2_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/2_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "46134"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"f7XuleFwHkUA9G4pQn6Ggz7c96eyCZHOs8P6A6MzayU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:48:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-f7XuleFwHkUA9G4pQn6Ggz7c96eyCZHOs8P6A6MzayU="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/3.ff2rhvq1hj.jpg",
+      "AssetFile": "uploads/parasitology/202604/3.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "60587"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"C7Lzm+xp3AZ8ovH9xPMxpiPNWW1vSaxl8jyuESyPDKs=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:29:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "ff2rhvq1hj"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-C7Lzm+xp3AZ8ovH9xPMxpiPNWW1vSaxl8jyuESyPDKs="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/3.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/3.jpg",
+      "AssetFile": "uploads/parasitology/202604/3.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "60587"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"C7Lzm+xp3AZ8ovH9xPMxpiPNWW1vSaxl8jyuESyPDKs=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:29:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-C7Lzm+xp3AZ8ovH9xPMxpiPNWW1vSaxl8jyuESyPDKs="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/3_1.ff2rhvq1hj.jpg",
+      "AssetFile": "uploads/parasitology/202604/3_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "60587"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"C7Lzm+xp3AZ8ovH9xPMxpiPNWW1vSaxl8jyuESyPDKs=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:15:33 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "ff2rhvq1hj"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-C7Lzm+xp3AZ8ovH9xPMxpiPNWW1vSaxl8jyuESyPDKs="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/3_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/3_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/3_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "60587"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"C7Lzm+xp3AZ8ovH9xPMxpiPNWW1vSaxl8jyuESyPDKs=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:15:33 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-C7Lzm+xp3AZ8ovH9xPMxpiPNWW1vSaxl8jyuESyPDKs="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/3_2.ff2rhvq1hj.jpg",
+      "AssetFile": "uploads/parasitology/202604/3_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "60587"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"C7Lzm+xp3AZ8ovH9xPMxpiPNWW1vSaxl8jyuESyPDKs=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:08:19 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "ff2rhvq1hj"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-C7Lzm+xp3AZ8ovH9xPMxpiPNWW1vSaxl8jyuESyPDKs="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/3_2.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/3_2.jpg",
+      "AssetFile": "uploads/parasitology/202604/3_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "60587"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"C7Lzm+xp3AZ8ovH9xPMxpiPNWW1vSaxl8jyuESyPDKs=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:08:19 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-C7Lzm+xp3AZ8ovH9xPMxpiPNWW1vSaxl8jyuESyPDKs="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/3_3.ff2rhvq1hj.jpg",
+      "AssetFile": "uploads/parasitology/202604/3_3.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "60587"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"C7Lzm+xp3AZ8ovH9xPMxpiPNWW1vSaxl8jyuESyPDKs=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 21:03:16 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "ff2rhvq1hj"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-C7Lzm+xp3AZ8ovH9xPMxpiPNWW1vSaxl8jyuESyPDKs="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/3_3.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/3_3.jpg",
+      "AssetFile": "uploads/parasitology/202604/3_3.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "60587"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"C7Lzm+xp3AZ8ovH9xPMxpiPNWW1vSaxl8jyuESyPDKs=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 21:03:16 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-C7Lzm+xp3AZ8ovH9xPMxpiPNWW1vSaxl8jyuESyPDKs="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4.8ymtho381y.jpg",
+      "AssetFile": "uploads/parasitology/202604/4.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:30:15 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "8ymtho381y"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/4.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4.jpg",
+      "AssetFile": "uploads/parasitology/202604/4.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:30:15 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_1.8ymtho381y.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:36:51 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "8ymtho381y"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/4_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:36:51 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_10.8ymtho381y.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_10.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:07:38 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "8ymtho381y"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/4_10.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_10.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_10.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:07:38 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_11.8ymtho381y.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_11.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:24:04 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "8ymtho381y"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/4_11.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_11.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_11.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:24:04 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_12.8ymtho381y.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_12.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:51:03 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "8ymtho381y"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/4_12.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_12.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_12.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:51:03 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_13.8ymtho381y.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_13.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 21:02:32 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "8ymtho381y"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/4_13.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_13.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_13.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 21:02:32 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_2.8ymtho381y.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:40:30 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "8ymtho381y"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/4_2.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_2.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:40:30 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_3.8ymtho381y.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_3.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:53:45 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "8ymtho381y"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/4_3.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_3.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_3.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:53:45 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_4.8ymtho381y.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_4.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:55:30 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "8ymtho381y"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/4_4.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_4.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_4.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:55:30 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_5.8ymtho381y.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_5.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:07:27 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "8ymtho381y"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/4_5.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_5.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_5.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:07:27 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_6.8ymtho381y.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_6.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:09:31 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "8ymtho381y"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/4_6.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_6.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_6.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:09:31 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_7.8ymtho381y.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_7.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:12:03 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "8ymtho381y"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/4_7.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_7.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_7.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:12:03 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_8.8ymtho381y.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_8.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:14:31 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "8ymtho381y"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/4_8.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_8.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_8.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:14:31 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_9.8ymtho381y.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_9.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:21:13 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "8ymtho381y"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/4_9.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/4_9.jpg",
+      "AssetFile": "uploads/parasitology/202604/4_9.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "29452"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:21:13 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kKV/S6lfNomM5JJvOuU4lxeJWIon3iJEJRxXmhZGyD8="
         }
       ]
     },
@@ -1967,6 +4345,416 @@
         {
           "Name": "label",
           "Value": "uploads/parasitology/202604/5_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/5_2.2ckydo1px6.jpg",
+      "AssetFile": "uploads/parasitology/202604/5_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "39443"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:39:37 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "2ckydo1px6"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/5_2.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/5_2.jpg",
+      "AssetFile": "uploads/parasitology/202604/5_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "39443"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:39:37 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/5_3.2ckydo1px6.jpg",
+      "AssetFile": "uploads/parasitology/202604/5_3.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "39443"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:58:54 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "2ckydo1px6"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/5_3.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/5_3.jpg",
+      "AssetFile": "uploads/parasitology/202604/5_3.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "39443"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:58:54 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/5_4.2ckydo1px6.jpg",
+      "AssetFile": "uploads/parasitology/202604/5_4.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "39443"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:11:28 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "2ckydo1px6"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/5_4.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/5_4.jpg",
+      "AssetFile": "uploads/parasitology/202604/5_4.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "39443"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:11:28 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/5_5.2ckydo1px6.jpg",
+      "AssetFile": "uploads/parasitology/202604/5_5.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "39443"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:24:35 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "2ckydo1px6"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/5_5.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/5_5.jpg",
+      "AssetFile": "uploads/parasitology/202604/5_5.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "39443"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:24:35 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/5_6.2ckydo1px6.jpg",
+      "AssetFile": "uploads/parasitology/202604/5_6.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "39443"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 21:03:49 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "2ckydo1px6"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/5_6.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/5_6.jpg",
+      "AssetFile": "uploads/parasitology/202604/5_6.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "39443"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 21:03:49 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-cngR+7kGm1sCDTa2CNHuXdj4hdr9BnFZMFzZxRe3g6Y="
         }
       ]
     },
@@ -2381,6 +5169,908 @@
       ]
     },
     {
+      "Route": "uploads/parasitology/202604/Рисунок1_10.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_10.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_10.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_10.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_10.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_10_1.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_10_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:21:08 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_10_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_10_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_10_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:21:08 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_11.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_11.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 17:42:50 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_11.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_11.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_11.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 17:42:50 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_12.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_12.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:38:23 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_12.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_12.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_12.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:38:23 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_13.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_13.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:59:37 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_13.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_13.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_13.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:59:37 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_14.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_14.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:10:19 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_14.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_14.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_14.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:10:19 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_15.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_15.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:25:29 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_15.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_15.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_15.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:25:29 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_16.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_16.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 21:04:54 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_16.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_16.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_16.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 21:04:54 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_1_1.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_1_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_1_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_1_1_1.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_1_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 17:56:37 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_1_1_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_1_1_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_1_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 17:56:37 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_1_2.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_1_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_1_2.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_1_2.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_1_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
       "Route": "uploads/parasitology/202604/Рисунок1_2.j69kxp4qel.jpg",
       "AssetFile": "uploads/parasitology/202604/Рисунок1_2.jpg",
       "Selectors": [],
@@ -2709,6 +6399,88 @@
       ]
     },
     {
+      "Route": "uploads/parasitology/202604/Рисунок1_5_1.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_5_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_5_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_5_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_5_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
       "Route": "uploads/parasitology/202604/Рисунок1_6.j69kxp4qel.jpg",
       "AssetFile": "uploads/parasitology/202604/Рисунок1_6.jpg",
       "Selectors": [],
@@ -2781,6 +6553,662 @@
         {
           "Name": "Last-Modified",
           "Value": "Thu, 23 Apr 2026 18:48:12 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_6_1.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_6_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_6_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_6_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_6_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_6_1_1.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_6_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_6_1_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_6_1_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_6_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_6_1_2.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_6_1_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_6_1_2.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_6_1_2.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_6_1_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_6_2.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_6_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_6_2.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_6_2.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_6_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_6_3.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_6_3.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_6_3.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_6_3.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_6_3.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_6_3_1.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_6_3_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_6_3_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_6_3_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_6_3_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_6_3_2.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_6_3_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_6_3_2.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_6_3_2.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_6_3_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_6_4.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_6_4.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_6_4.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_6_4.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_6_4.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
         }
       ],
       "EndpointProperties": [
@@ -2873,6 +7301,252 @@
       ]
     },
     {
+      "Route": "uploads/parasitology/202604/Рисунок1_7_1.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_7_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:06:22 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_7_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_7_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_7_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:06:22 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_7_1_1.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_7_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:10:11 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_7_1_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_7_1_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_7_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:10:11 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_7_1_1_1.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_7_1_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:14:35 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_7_1_1_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_7_1_1_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_7_1_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:14:35 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
       "Route": "uploads/parasitology/202604/Рисунок1_8.jpg",
       "AssetFile": "uploads/parasitology/202604/Рисунок1_8.jpg",
       "Selectors": [],
@@ -2951,6 +7625,170 @@
         {
           "Name": "label",
           "Value": "uploads/parasitology/202604/Рисунок1_8.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_9.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_9.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 24 Apr 2026 15:55:44 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_9.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_9.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_9.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 24 Apr 2026 15:55:44 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_9_1.j69kxp4qel.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_9_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:01:39 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j69kxp4qel"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок1_9_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок1_9_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок1_9_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "53948"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:01:39 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-e/BW13szzcU5bWYb1tIBXnXwqDKkpfAbvINSJoAm14k="
         }
       ]
     },
@@ -3119,6 +7957,990 @@
       ]
     },
     {
+      "Route": "uploads/parasitology/202604/Рисунок2_10.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_10.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:08:41 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_10.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_10.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:08:41 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_10.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_11.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_11.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:25:07 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_11.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_11.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:25:07 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_11.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_12.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_12.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:53:31 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_12.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_12.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 20:53:31 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_12.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_13.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_13.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 21:04:20 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_13.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_13.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 21:04:20 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_13.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_1_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_1_1.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_1_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_1_1_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_1_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 17:57:06 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_1_1_1.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_1_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 17:57:06 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_1_1_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_1_1_1_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_1_1_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:21:39 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_1_1_1_1.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_1_1_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:21:39 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_1_1_1_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_1_1_2.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_1_1_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:00:41 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_1_1_2.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_1_1_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:00:41 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_1_1_2.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_1_1_2_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_1_1_2_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:15:08 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_1_1_2_1.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_1_1_2_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:15:08 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_1_1_2_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_1_2.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_1_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_1_2.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_1_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_1_2.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_1_3.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_1_3.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_1_3.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_1_3.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_1_3.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_1_4.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_1_4.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:05:55 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_1_4.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_1_4.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:05:55 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_1_4.jpg"
+        }
+      ]
+    },
+    {
       "Route": "uploads/parasitology/202604/Рисунок2_2.jpg",
       "AssetFile": "uploads/parasitology/202604/Рисунок2_2.jpg",
       "Selectors": [],
@@ -3283,6 +9105,908 @@
       ]
     },
     {
+      "Route": "uploads/parasitology/202604/Рисунок2_3_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_3_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "50967"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_3_1.yuoho9xixd.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_3_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "50967"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "yuoho9xixd"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_3_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_3_1_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_3_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "50967"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_3_1_1.yuoho9xixd.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_3_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "50967"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "yuoho9xixd"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_3_1_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_3_1_1_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_3_1_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "50967"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 17:57:41 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_3_1_1_1.yuoho9xixd.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_3_1_1_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "50967"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 17:57:41 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "yuoho9xixd"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_3_1_1_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_3_2.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_3_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "50967"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:15:31 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_3_2.yuoho9xixd.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_3_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "50967"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:15:31 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "yuoho9xixd"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_3_2.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_3_3.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_3_3.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "50967"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:22:13 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_3_3.yuoho9xixd.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_3_3.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "50967"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:22:13 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "yuoho9xixd"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-GgSaQFsYW3kjmiiVl4WAYrHZvda4VVSpLl3HM0XqVy0="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_3_3.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_4.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_4.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_4.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_4.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_4.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_5.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_5.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:38:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_5.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_5.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:38:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_5.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_6.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_6.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:40:07 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_6.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_6.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:40:07 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_6.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_7.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_7.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:00:32 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_7.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_7.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:00:32 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_7.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_8.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_8.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:06:44 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_8.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_8.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:06:44 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_8.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_9.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_9.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:13:21 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок2_9.uvc15mwsqy.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок2_9.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "90715"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:13:21 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "uvc15mwsqy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-hssxL/DIJ++Jce58RbFWZdUYHTO7RXCnTN7pbic8tdw="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок2_9.jpg"
+        }
+      ]
+    },
+    {
       "Route": "uploads/parasitology/202604/Рисунок3.jpg",
       "AssetFile": "uploads/parasitology/202604/Рисунок3.jpg",
       "Selectors": [],
@@ -3443,6 +10167,334 @@
         {
           "Name": "label",
           "Value": "uploads/parasitology/202604/Рисунок3_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок3_10.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок3_10.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "51513"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:39:10 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок3_10.wctazs8d0g.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок3_10.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "51513"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:39:10 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "wctazs8d0g"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок3_10.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок3_11.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок3_11.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "51513"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:59:18 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок3_11.wctazs8d0g.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок3_11.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "51513"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 18:59:18 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "wctazs8d0g"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок3_11.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок3_12.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок3_12.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "51513"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:11:02 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок3_12.wctazs8d0g.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок3_12.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "51513"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:11:02 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "wctazs8d0g"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок3_12.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок3_13.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок3_13.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "51513"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:15:14 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок3_13.wctazs8d0g.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок3_13.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "51513"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 19:15:14 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "wctazs8d0g"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок3_13.jpg"
         }
       ]
     },
@@ -3689,6 +10741,170 @@
         {
           "Name": "label",
           "Value": "uploads/parasitology/202604/Рисунок3_4.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок3_4_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок3_4_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "51513"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок3_4_1.wctazs8d0g.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок3_4_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "51513"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "wctazs8d0g"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок3_4_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок3_4_2.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок3_4_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "51513"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок3_4_2.wctazs8d0g.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок3_4_2.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "51513"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "wctazs8d0g"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок3_4_2.jpg"
         }
       ]
     },
@@ -4021,6 +11237,88 @@
       ]
     },
     {
+      "Route": "uploads/parasitology/202604/Рисунок3_8_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок3_8_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "51513"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок3_8_1.wctazs8d0g.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок3_8_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "51513"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "wctazs8d0g"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-IGZ0McdCGRd0dJOvvKtc0k/qlmnHvp/sXa9ackzX700="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок3_8_1.jpg"
+        }
+      ]
+    },
+    {
       "Route": "uploads/parasitology/202604/Рисунок3_9.8qegbbtf4b.jpg",
       "AssetFile": "uploads/parasitology/202604/Рисунок3_9.jpg",
       "Selectors": [],
@@ -4093,6 +11391,88 @@
         {
           "Name": "Last-Modified",
           "Value": "Fri, 24 Apr 2026 14:05:00 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-cMpKVVzt1lmXuTBe77MyaBvTFzcvN2+nAbN/LN9bPXE="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок3_9_1.8qegbbtf4b.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок3_9_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "59455"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"cMpKVVzt1lmXuTBe77MyaBvTFzcvN2+nAbN/LN9bPXE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "8qegbbtf4b"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-cMpKVVzt1lmXuTBe77MyaBvTFzcvN2+nAbN/LN9bPXE="
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/parasitology/202604/Рисунок3_9_1.jpg"
+        }
+      ]
+    },
+    {
+      "Route": "uploads/parasitology/202604/Рисунок3_9_1.jpg",
+      "AssetFile": "uploads/parasitology/202604/Рисунок3_9_1.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "59455"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"cMpKVVzt1lmXuTBe77MyaBvTFzcvN2+nAbN/LN9bPXE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 25 Apr 2026 13:12:48 GMT"
         }
       ],
       "EndpointProperties": [

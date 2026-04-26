@@ -1,7 +1,7 @@
 import { Button, Form, Input, Modal } from 'antd';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import register_img from '../../../images/doctor2.svg';
+import register_img from '../../../images/register1.png';
 import { IoIosMail, IoMdLock } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
 import { checkusername, registration, verify_code } from '../../../host/requests/AuthRequest';

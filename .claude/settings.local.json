@@ -24,7 +24,9 @@
       "Bash(python -m uvicorn main:app --host 127.0.0.1 --port 8000 --timeout-graceful-shutdown 1)",
       "Bash(curl -s http://127.0.0.1:8000/docs)",
       "Bash(kill %1)",
-      "Bash(taskkill /F /PID 24340)"
+      "Bash(taskkill /F /PID 24340)",
+      "Bash(sc query *)",
+      "Bash(net start *)"
     ],
     "deny": [
       "Bash(rm -rf /)",

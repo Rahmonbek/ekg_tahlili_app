@@ -23,6 +23,10 @@ if not OPENAI_API_KEY:
     )
 
 
+# ─────────────── Anthropic ───────────────
+ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
+
+
 # ─────────────── PostgreSQL ───────────────
 DATABASE_URL: str = os.getenv(
     "DATABASE_URL",

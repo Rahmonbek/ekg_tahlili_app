@@ -1,4 +1,4 @@
-path: D:/datasets_parsite/dataset
+path: balanced_dataset
 train: train/images
 val: valid/images
 test: test/images

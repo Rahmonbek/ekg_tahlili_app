@@ -1,16 +1,24 @@
-import os
 from pathlib import Path
 
-DATASET_DIR = Path("dataset")
+DATASET_DIR = Path("balanced_dataset")
 SPLITS = ["train", "valid", "test"]
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 
-def count_files(folder: Path, exts=None):
-    if not folder.exists():
-        return 0
-    if exts is None:
-        return len([p for p in folder.iterdir() if p.is_file()])
-    return len([p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in exts])
+CLASS_NAMES = {
+    0: "ascaris",
+    1: "trichuris",
+    2: "hookworm",
+    3: "schistosoma",
+    4: "taenia",
+    5: "enterobius",
+    6: "fasciolopsis",
+    7: "hymenolepis_nana",
+    8: "hymenolepis_diminuta",
+    9: "capillaria",
+    10: "opisthorchis",
+    11: "paragonimus",
+}
+
 
 def check_split(split: str):
     images_dir = DATASET_DIR / split / "images"
@@ -26,8 +34,15 @@ def check_split(split: str):
         print(f"❌ Labels papka topilmadi: {labels_dir}")
         return False
 
-    images = [p for p in images_dir.iterdir() if p.is_file() and p.suffix.lower() in IMAGE_EXTS]
-    labels = [p for p in labels_dir.iterdir() if p.is_file() and p.suffix.lower() == ".txt"]
+    images = [
+        p for p in images_dir.iterdir()
+        if p.is_file() and p.suffix.lower() in IMAGE_EXTS
+    ]
+
+    labels = [
+        p for p in labels_dir.iterdir()
+        if p.is_file() and p.suffix.lower() == ".txt"
+    ]
 
     print(f"Rasmlar soni: {len(images)}")
     print(f"Label txt soni: {len(labels)}")
@@ -40,14 +55,15 @@ def check_split(split: str):
 
     if missing_labels:
         print(f"⚠️ Label yo‘q rasmlar soni: {len(missing_labels)}")
-        print("Birinchi 10 tasi:")
         for name in missing_labels[:10]:
             print(" -", name)
     else:
         print("✅ Har bir rasmga mos label mavjud")
 
-    class_counts = {0: 0, 1: 0, 2: 0, 3: 0}
+    class_counts = {class_id: 0 for class_id in CLASS_NAMES}
     bad_lines = []
+
+    empty_labels = 0
 
     for txt in labels:
         try:
@@ -56,10 +72,12 @@ def check_split(split: str):
             content = txt.read_text(errors="ignore").strip()
 
         if not content:
+            empty_labels += 1
             continue
 
         for line_no, line in enumerate(content.splitlines(), start=1):
             parts = line.strip().split()
+
             if len(parts) != 5:
                 bad_lines.append((txt.name, line_no, line))
                 continue
@@ -71,45 +89,53 @@ def check_split(split: str):
                 bad_lines.append((txt.name, line_no, line))
                 continue
 
-            if cls in class_counts:
-                class_counts[cls] += 1
-            else:
+            if cls not in CLASS_NAMES:
                 bad_lines.append((txt.name, line_no, line))
+                continue
 
             if any(x < 0 or x > 1 for x in nums):
                 bad_lines.append((txt.name, line_no, line))
+                continue
 
-    print("Classlar bo‘yicha tuxumlar:")
-    print("  0 ascaris:", class_counts[0])
-    print("  1 trichuris:", class_counts[1])
-    print("  2 hookworm:", class_counts[2])
-    print("  3 schistosoma:", class_counts[3])
+            class_counts[cls] += 1
+
+    print("\nClasslar bo‘yicha obyektlar:")
+    for class_id, name in CLASS_NAMES.items():
+        print(f"  {class_id:2d} {name}: {class_counts[class_id]}")
+
+    if empty_labels:
+        print(f"\nℹ️ Bo‘sh label fayllar: {empty_labels}")
 
     if bad_lines:
-        print(f"⚠️ Xato label qatorlari: {len(bad_lines)}")
+        print(f"\n⚠️ Xato label qatorlari: {len(bad_lines)}")
         for item in bad_lines[:10]:
             print(" -", item)
+        return False
     else:
-        print("✅ Label formatlari to‘g‘ri ko‘rinadi")
+        print("\n✅ Label formatlari to‘g‘ri ko‘rinadi")
 
     return True
 
+
 def main():
     print("NMED dataset tekshiruv boshlandi...")
+
     if not DATASET_DIR.exists():
         print("❌ dataset papkasi topilmadi.")
-        print("dataset/train/images, dataset/train/labels kabi papkalarni yarating.")
         return
 
     ok = True
+
     for split in SPLITS:
         ok = check_split(split) and ok
 
     print("\nTUGADI")
+
     if ok:
         print("✅ Dataset training uchun tayyor ko‘rinadi.")
     else:
-        print("❌ Dataset papkalarida muammo bor.")
+        print("❌ Datasetda muammo bor.")
+
 
 if __name__ == "__main__":
     main()

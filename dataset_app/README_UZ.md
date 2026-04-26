@@ -1,30 +1,21 @@
-# 🧪 NMED Parasite Detection Dataset (YOLO)
+# 🧪 NMED Parasite Detection (YOLO AI)
 
-## 📌 Overview
+## 📌 Project haqida
 
-Ushbu dataset mikroskop orqali olingan najas (kal) preparatlaridagi **gijja tuxumlarini aniqlash** uchun mo‘ljallangan.
+Bu loyiha mikroskop orqali olingan najas (kal) rasmlarida **gijja tuxumlarini avtomatik aniqlash** uchun yaratilgan AI tizimdir.
 
-Dataset quyidagi manbalar asosida shakllantirilgan:
+Tizim YOLOv8 modeli yordamida:
 
-* AI4NTD Dataset
-* Chula-ParasiteEgg-11 Dataset
-
-Dataset **YOLOv8 object detection** modeli uchun tayyorlangan.
-
----
-
-## 🎯 Maqsad
-
-Model quyidagilarni aniqlaydi:
-
-* Gijja tuxumi mavjud yoki yo‘qligini
-* Gijja turini (class)
-* Rasm ichidagi joylashuvini (bounding box)
-* Taxminiy tuxum sonini
+* rasmda tuxum bor yoki yo‘qligini aniqlaydi
+* tuxumlarni joylashuvini (bbox) topadi
+* qaysi turga tegishli ekanini aniqlaydi
+* nechta tuxum borligini hisoblaydi
 
 ---
 
-## 🧬 Classlar
+## 🎯 Model nimalarni aniqlaydi?
+
+Quyidagi gijja tuxumlari aniqlanadi:
 
 ```txt
 0  ascaris
@@ -39,6 +30,30 @@ Model quyidagilarni aniqlaydi:
 9  capillaria
 10 opisthorchis
 11 paragonimus
+```
+
+---
+
+## 🧠 Qanday ishlaydi?
+
+Jarayon quyidagicha:
+
+```txt
+Rasm → YOLO model → tuxumlarni topadi → class beradi → natija qaytaradi
+```
+
+Misol:
+
+```txt
+1 rasm ichida:
+- 3 ta Ascaris
+- 2 ta Hymenolepis
+```
+
+Model natijasi:
+
+```txt
+bbox + class + confidence
 ```
 
 ---
@@ -58,13 +73,11 @@ dataset/
     labels/
 ```
 
-### 📌 Muhim
-
-Har bir rasmga mos `.txt` label fayl mavjud bo‘lishi kerak:
+Har bir rasmga mos `.txt` fayl bo‘lishi kerak:
 
 ```txt
-img1.jpg
-img1.txt
+img001.jpg
+img001.txt
 ```
 
 ---
@@ -83,19 +96,20 @@ Misol:
 
 ---
 
-## ⚙️ O‘rnatish
+## ⚙️ O‘rnatish (INSTALL)
 
-### 1. Virtual environment yaratish
+### 1. Python versiya
 
-```bash
-python -m venv venv
+```txt
+Python 3.11 tavsiya etiladi
 ```
 
-### 2. Aktivatsiya
+---
 
-**Windows:**
+### 2. Virtual environment yaratish
 
 ```bash
+py -3.11 -m venv venv
 venv\Scripts\activate
 ```
 
@@ -104,20 +118,38 @@ venv\Scripts\activate
 ### 3. Kutubxonalarni o‘rnatish
 
 ```bash
-pip install ultralytics
+pip install -r requirements.txt
 ```
 
 ---
 
-## 🚀 Modelni o‘qitish
+### 4. GPU (ixtiyoriy lekin tavsiya etiladi)
 
-### Test (tez):
+```bash
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+```
+
+Tekshirish:
+
+```bash
+python -c "import torch; print(torch.cuda.is_available())"
+```
+
+👉 `True` chiqsa — GPU ishlayapti
+
+---
+
+## 🚀 Modelni o‘qitish (TRAIN)
+
+### 🔹 Test (tez tekshiruv)
 
 ```bash
 python train.py --epochs 3
 ```
 
-### To‘liq training:
+---
+
+### 🔹 Asosiy training
 
 ```bash
 python train.py --epochs 50
@@ -125,19 +157,27 @@ python train.py --epochs 50
 
 ---
 
-## 📊 Natija
+### 🔹 GPU bilan (tezroq)
 
-Training tugagach:
+```bash
+python train.py --epochs 50 --device 0
+```
+
+---
+
+## 📊 Training natijasi
+
+Model shu joyda saqlanadi:
 
 ```txt
 runs/detect/nmed_parasite/weights/best.pt
 ```
 
-👉 bu **eng yaxshi model**
+👉 bu sizning tayyor AI modelingiz
 
 ---
 
-## 🔍 Prediction (test)
+## 🔍 Prediction (rasmni tekshirish)
 
 ```bash
 python predict.py --image test.jpg
@@ -151,18 +191,24 @@ runs/detect/predict/
 
 ---
 
-## 📦 JSON natija (AI integratsiya)
+## 📦 JSON natija olish
 
 ```bash
 python predict_json.py test.jpg
 ```
 
-Natija:
+Misol:
 
 ```json
 {
   "gijja_topildimi": true,
-  "aniqlangan_turlar": [...]
+  "aniqlangan_turlar": [
+    {
+      "lotin_nomi": "Ascaris lumbricoides",
+      "tuxum_soni": 3,
+      "ishonch_darajasi": 0.91
+    }
+  ]
 }
 ```
 
@@ -170,9 +216,9 @@ Natija:
 
 ## ⚠️ Muhim eslatmalar
 
-* Model faqat **tuxumlarni aniqlaydi**
-* Voyaga yetgan gijja tanasi uchun alohida dataset kerak
-* Natijalar **tibbiy tashxis emas**
+* Model faqat **gijja tuxumlarini aniqlaydi**
+* Voyaga yetgan gijja uchun alohida model kerak
+* Natija **yakuniy tibbiy tashxis emas**
 * Shifokor tasdig‘i talab qilinadi
 
 ---
@@ -180,21 +226,21 @@ Natija:
 ## 🧠 Tavsiyalar
 
 * Dataset balansini saqlang
-* Artefakt (noto‘g‘ri obyekt) rasmlar qo‘shing
-* Modelni muntazam qayta o‘qiting
+* Artefakt rasmlar qo‘shing
+* Noto‘g‘ri label bermang
+* Har 10–20 epochdan keyin modelni tekshirib boring
 
 ---
 
 ## 🚀 Keyingi bosqichlar
 
-* Gijja tanasi uchun alohida model yaratish
-* API (FastAPI / Django) qilish
-* Frontend (React / Flutter) bilan integratsiya
+* Voyaga yetgan gijja uchun dataset yaratish
+* 2-model (larva/gijja tanasi) train qilish
+* API (FastAPI / Django) yaratish
+* Frontend (React / Flutter) bilan ulash
 
 ---
 
 ## 👨‍💻 Muallif
 
 NMED AI Platformasi uchun ishlab chiqilgan
-
----
