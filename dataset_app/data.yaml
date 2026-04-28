@@ -1,4 +1,4 @@
-path: balanced_dataset
+path: dataset
 train: train/images
 val: valid/images
 test: test/images

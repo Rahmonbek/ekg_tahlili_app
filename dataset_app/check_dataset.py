@@ -1,6 +1,6 @@
 from pathlib import Path
 
-DATASET_DIR = Path("balanced_dataset")
+DATASET_DIR = Path("dataset")
 SPLITS = ["train", "valid", "test"]
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 
