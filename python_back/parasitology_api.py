@@ -1,7 +1,6 @@
 import base64
 import json
 import logging
-import re
 from typing import List, Optional
 
 from openai import OpenAI
@@ -13,103 +12,257 @@ from config import OPENAI_API_KEY
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(
-    prefix="",
-    tags=["Parasitology Analyses"]
-)
+router = APIRouter(prefix="", tags=["Parasitology Analyses"])
 
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
-
-# ─────────────────────────────────────────────────────────────
-# SYSTEM PROMPT — Professional parazitolog
-# ─────────────────────────────────────────────────────────────
-ANALYSIS_SYSTEM_PROMPT = """Sen professional parazitolog va tibbiy laboratoriya diagnostikistsan.
-men yuborayotgan mikroskopdan olingan rasmda qanday turlardagi gijja tuxumlari yoki voyaga yetgan  gijjalar borligini aniqlab ber.
-Sen beradigan natijani faqat shifokor mutaxasis ko'radi. Lekin mutaxassisni chalg'itmaslik uchun turlarni aniq aytishing kerak. Rasmni tahlil qilishda parazitalogiyaga oid barcha bilimlaringdan foydalan.
-Vizual ko'rinishda gijja turlari bir biriga katta ehtimollik bilan o'xshash bo'ladi, ammo ularni bir birida ajratadigan kichik belgilari ham mavjud shu belgilarni aniqlash va tekshirish orqali gijja turlarini chalkashtirmaslikka harakat qil.
-Mutaxassiga rasmda mavjud gijja turlarini va jsonda so'ralayotgan boshqa ma'lumotlarni taqdim etishing kerak. Maksimal tarzda sinchikovlik bilan tekshiruv o'tkaz.
-Artefaktlarni gijja deb hisoblama. Rasm atrofi qora aylana bilan o'rab turgan bo'lsa bu mikroskopning devori bo'lishi mumkin. Erinmasdan rasmni har bir pixelini ko'rib chiq. Askarida deb aytishdan oldin aniq askaridami yoki yo'qligini tekshir oldin. 100% ishonching komil bo'lsa keyin askarida deb ayt."""
-
-# double {{ }} — f-string ichida saqlanadi, .format() da { } ga aylanadi
-JSON_SCHEMA = """{{
-  "gijja_topildimi": true,
-  "aniqlangan_turlar": [
-    {{
-      "lotin_nomi": "...",
-      "uz_nomi": "...",
-      "ru_nomi": "...",
-      "en_nomi": "...",
-      "ishonch_darajasi": 0.0,
-      "voyaga_yetgan_bor": false,
-      "tuxum_soni": 0,
-      "tuxum_morfologiyasi": "...",
-      "infektsiya_darajasi": "light | moderate | heavy",
-      "infektsiya_uz": "Yengil | O'rtacha | Og'ir"
-    }}
-  ],
-  "jami_tuxum_soni": 0,
-  "jami_jiddiylik": 1,
-  "davolash_tavsiyasi": "...",
-  "shifokorga_tavsiya": "...",
-  "rasm_sifati": "yaxshi | o'rtacha | yomon",
-  "qoshimcha_izoh": "...",
-  "yakuniy_xulosa": "..."
-}}"""
+MAX_FILE_SIZE = 8 * 1024 * 1024  # 8 MB
 
 
-def _build_prompt(magnification: str, gender: str, age: int,
-                  complaints: List[str], lang: str) -> str:
-    language = "O'ZBEK" if lang == "uz" else "RUSCHA" if lang == "ru" else "ENGLISH"
-    complaints_text = ", ".join(complaints) if complaints else "ko'rsatilmagan"
+ANALYSIS_SYSTEM_PROMPT = """
+Sen tajribali tibbiy parazitolog va laboratoriya diagnostik mutaxassisisan.
 
-    return f"""BEMOR MA'LUMOTLARI:
-- Kattalashtirish: {magnification}
-- Bemor: {age} yosh, {gender}
-- Shikoyatlar: {complaints_text}
+VAZIFA:
+Mikroskopdan olingan najas/preparat rasmini tahlil qilasan.
+Faqat rasmda KO'RINIB TURGAN parazit/gijja tuxumi, kista, lichinka yoki voyaga yetgan shakllarni baholaysan.
 
-Rasmni tahlil qil va FAQAT JSON formatida ({language} tilida) javob ber:
-
-{JSON_SCHEMA}
+MUHIM QOIDALAR:
+1. Artefaktlarni gijja deb yozma.
+2. Kraxmal donachalari, o'simlik hujayralari, yog' tomchilari, havo pufakchalari, tolalar, najas detriti va kristallarni parazit deb hisoblama.
+3. Agar aniq morfologik belgi bo'lmasa, gijja_topildimi=false qil.
+4. Taxminiy o'xshashlik asosida Ascaris, Hymenolepis, Giardia yoki boshqa turni yozma.
+5. Tur nomini faqat quyidagi belgilar aniq ko'rinsa yoz:
+   - Ascaris lumbricoides: qalin qobiq, ko'pincha notekis/mammillated tashqi qavat, oval/yumaloq tuxum.
+   - Trichuris trichiura: limon/bochka shakl, ikki uchida aniq polar plug.
+   - Enterobius vermicularis: D-shakl, bir tomoni tekis, ichida lichinka.
+   - Hymenolepis nana: dumaloq/oval, ikki qavatli qobiq, onkosfera va polar filamentlar ko'rinishi mumkin.
+   - Taenia spp.: qalin radial chiziqli qobiq, ichida onkosfera.
+   - Ancylostoma/Necator: yupqa qobiq, segmentlangan embrion.
+   - Giardia lamblia: bu gijja emas, protozoy; oval kista, ichida yadrolar/ichki strukturalar.
+6. Agar rasm sifati yomon bo'lsa yoki obyekt noaniq bo'lsa, topilma bermasdan izohda qayta rasm olishni ayt.
+7. Davolash bo'yicha aniq dori nomi yoki doza yozma. Faqat shifokor/laborator tasdig'ini tavsiya qil.
+8. Faqat JSON qaytar. Markdown, izoh, matn qo'shma.
 """
 
 
-def _analyze_image_direct(client: OpenAI, img_b64: str, mime: str,
-                          magnification: str, gender: str,
-                          age: int, complaints: list, lang: str) -> str:
-    """GPT-4o — rasmni to'g'ridan-to'g'ri analiz qiladi, JSON qaytaradi."""
+PARASITOLOGY_JSON_SCHEMA = {
+    "name": "parasitology_analysis_response",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "additionalProperties": False,
+        "required": [
+            "gijja_topildimi",
+            "aniqlangan_turlar",
+            "jami_tuxum_soni",
+            "jami_jiddiylik",
+            "davolash_tavsiyasi",
+            "shifokorga_tavsiya",
+            "rasm_sifati",
+            "qoshimcha_izoh",
+            "yakuniy_xulosa"
+        ],
+        "properties": {
+            "gijja_topildimi": {"type": "boolean"},
+            "aniqlangan_turlar": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": [
+                        "lotin_nomi",
+                        "uz_nomi",
+                        "ru_nomi",
+                        "en_nomi",
+                        "ishonch_darajasi",
+                        "voyaga_yetgan_bor",
+                        "tuxum_soni",
+                        "tuxum_morfologiyasi",
+                        "infektsiya_darajasi",
+                        "infektsiya_uz"
+                    ],
+                    "properties": {
+                        "lotin_nomi": {"type": "string"},
+                        "uz_nomi": {"type": "string"},
+                        "ru_nomi": {"type": "string"},
+                        "en_nomi": {"type": "string"},
+                        "ishonch_darajasi": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                        },
+                        "voyaga_yetgan_bor": {"type": "boolean"},
+                        "tuxum_soni": {
+                            "type": "integer",
+                            "minimum": 0
+                        },
+                        "tuxum_morfologiyasi": {"type": "string"},
+                        "infektsiya_darajasi": {
+                            "type": "string",
+                            "enum": ["light", "moderate", "heavy", "unknown"]
+                        },
+                        "infektsiya_uz": {
+                            "type": "string",
+                            "enum": ["Yengil", "O'rtacha", "Og'ir", "Noma'lum"]
+                        }
+                    }
+                }
+            },
+            "jami_tuxum_soni": {
+                "type": "integer",
+                "minimum": 0
+            },
+            "jami_jiddiylik": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+            },
+            "davolash_tavsiyasi": {"type": "string"},
+            "shifokorga_tavsiya": {"type": "string"},
+            "rasm_sifati": {
+                "type": "string",
+                "enum": ["yaxshi", "o'rtacha", "yomon"]
+            },
+            "qoshimcha_izoh": {"type": "string"},
+            "yakuniy_xulosa": {"type": "string"}
+        }
+    }
+}
+
+
+def _build_prompt(
+    magnification: str,
+    gender: str,
+    age: int,
+    complaints: List[str],
+    lang: str
+) -> str:
+    language = "O'ZBEK" if lang == "uz" else "РУССКИЙ" if lang == "ru" else "ENGLISH"
+    complaints_text = ", ".join(complaints) if complaints else "ko'rsatilmagan"
+
+    return f"""
+TAHLIL MA'LUMOTLARI:
+- Preparat: najas / mikroskopik rasm
+- Kattalashtirish: {magnification}
+- Bemor yoshi: {age}
+- Bemor jinsi: {gender}
+- Shikoyatlar: {complaints_text}
+- Javob tili: {language}
+
+TALAB:
+Rasmda gijja tuxumi, protozoy kistasi, lichinka yoki voyaga yetgan parazit bormi — faqat vizual morfologik belgilarga asoslanib bahola.
+
+Agar rasmda faqat artefakt, kraxmal, o'simlik hujayrasi, tolalar, yog' tomchisi, havo pufagi yoki detrit ko'rinsa:
+- gijja_topildimi=false
+- aniqlangan_turlar=[]
+- jami_tuxum_soni=0
+- jami_jiddiylik=0
+
+Agar parazit aniq topilsa:
+- har bir tur uchun lotin, uz, ru, en nomlarini to'ldir
+- ishonch_darajasini 0 dan 1 gacha yoz
+- tuxum_soni aniq ko'ringan tuxum/kista soni bo'lsin
+- morfologik sababni qisqa yoz
+
+Faqat JSON qaytar.
+"""
+
+
+def _analyze_image_direct(
+    client: OpenAI,
+    img_b64: str,
+    mime: str,
+    magnification: str,
+    gender: str,
+    age: int,
+    complaints: List[str],
+    lang: str
+) -> dict:
     prompt = _build_prompt(magnification, gender, age, complaints, lang)
 
-    resp = client.chat.completions.create(
+    response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
-            {"role": "system", "content": ANALYSIS_SYSTEM_PROMPT},
+            {
+                "role": "system",
+                "content": ANALYSIS_SYSTEM_PROMPT
+            },
             {
                 "role": "user",
                 "content": [
+                    {
+                        "type": "text",
+                        "text": prompt
+                    },
                     {
                         "type": "image_url",
                         "image_url": {
                             "url": f"data:{mime};base64,{img_b64}",
                             "detail": "high"
                         }
-                    },
-                    {
-                        "type": "text",
-                        "text": prompt
                     }
                 ]
             }
         ],
-        response_format={"type": "json_object"},
-       temperature=0,
-    top_p=1,
-    max_tokens=3000,
-    presence_penalty=0,
-    frequency_penalty=0,
-    seed=42
-
+        response_format={
+            "type": "json_schema",
+            "json_schema": PARASITOLOGY_JSON_SCHEMA
+        },
+        temperature=0,
+        top_p=1,
+        max_tokens=3000,
+        seed=42
     )
-    return resp.choices[0].message.content or ""
+
+    content = response.choices[0].message.content
+
+    if not content:
+        raise ValueError("Model bo'sh javob qaytardi")
+
+    return json.loads(content)
+
+
+def _normalize_response(parsed: dict) -> dict:
+    """
+    Model schema bo'yicha qaytaradi, lekin biznes qoidalarni yana bir marta tekshiramiz.
+    JSON strukturani o'zgartirmaydi.
+    """
+
+    turlar = parsed.get("aniqlangan_turlar") or []
+
+    if not parsed.get("gijja_topildimi"):
+        parsed["aniqlangan_turlar"] = []
+        parsed["jami_tuxum_soni"] = 0
+        parsed["jami_jiddiylik"] = 0
+        return parsed
+
+    valid_turlar = []
+    total_count = 0
+
+    for tur in turlar:
+        confidence = float(tur.get("ishonch_darajasi", 0))
+        tuxum_soni = int(tur.get("tuxum_soni", 0))
+
+        # Juda past ishonchdagi topilmalarni olib tashlaymiz
+        if confidence < 0.55:
+            continue
+
+        valid_turlar.append(tur)
+        total_count += max(tuxum_soni, 0)
+
+    parsed["aniqlangan_turlar"] = valid_turlar
+    parsed["jami_tuxum_soni"] = total_count
+
+    if not valid_turlar:
+        parsed["gijja_topildimi"] = False
+        parsed["jami_tuxum_soni"] = 0
+        parsed["jami_jiddiylik"] = 0
+        parsed["yakuniy_xulosa"] = "Rasmda ishonchli parazit/gijja tuxumi aniqlanmadi."
+        parsed["qoshimcha_izoh"] = (
+            parsed.get("qoshimcha_izoh", "") +
+            " Past ishonchli taxminlar yakuniy natijaga kiritilmadi."
+        ).strip()
+
+    return parsed
 
 
 @router.post("/analyze-parasitology")
@@ -127,53 +280,82 @@ async def analyze_parasitology(
 
     fname = (file.filename or "upload").lower()
     ext = "." + fname.rsplit(".", 1)[-1] if "." in fname else ""
+
     if ext not in ALLOWED_EXTENSIONS:
-        return JSONResponse(content={
-            "xato": "noto'g'ri_fayl_turi",
-            "xabar": "Faqat JPG/PNG rasmlari qabul qilinadi."
-        }, status_code=400)
+        return JSONResponse(
+            content={
+                "xato": "notogri_fayl_turi",
+                "xabar": "Faqat JPG, JPEG yoki PNG rasmlari qabul qilinadi."
+            },
+            status_code=400
+        )
 
     content = await file.read()
-    img_b64 = base64.b64encode(content).decode("utf-8")
+
+    if not content:
+        return JSONResponse(
+            content={
+                "xato": "bosh_fayl",
+                "xabar": "Yuklangan fayl bo'sh."
+            },
+            status_code=400
+        )
+
+    if len(content) > MAX_FILE_SIZE:
+        return JSONResponse(
+            content={
+                "xato": "fayl_hajmi_katta",
+                "xabar": "Rasm hajmi 8 MB dan oshmasligi kerak."
+            },
+            status_code=400
+        )
+
     mime = "image/png" if ext == ".png" else "image/jpeg"
+    img_b64 = base64.b64encode(content).decode("utf-8")
 
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)
 
-        raw = _analyze_image_direct(
-            client, img_b64, mime,
-            magnification, gender, age,
-            complaints or [], lang
+        parsed = _analyze_image_direct(
+            client=client,
+            img_b64=img_b64,
+            mime=mime,
+            magnification=magnification,
+            gender=gender,
+            age=age,
+            complaints=complaints or [],
+            lang=lang
         )
 
-        if not raw:
-            return JSONResponse(content={"xato": "model_bo'sh_javob"}, status_code=422)
+        parsed = _normalize_response(parsed)
 
-        json_match = re.search(r'\{[\s\S]*\}', raw)
-        if not json_match:
-            logger.error(f"Parasitology JSON parse xatosi. raw[:300]: {raw[:300]}")
+        if parsed.get("rasm_sifati") == "yomon":
             return JSONResponse(
-                content={"xato": "model_json_qaytarmadi", "raw": raw[:300]},
-                status_code=422
+                content={
+                    "ai_response": parsed,
+                    "ogohlantirish": "Rasm sifati past. Natija laborator mutaxassis tomonidan tekshirilishi kerak."
+                },
+                status_code=200
             )
-        parsed = json.loads(json_match.group())
 
-        # Bonus logging
-        turlar = parsed.get("aniqlangan_turlar") or []
-        for tur in turlar:
-            if not tur.get("lotin_nomi") or tur.get("lotin_nomi") == "...":
-                logger.warning("Parasitology: lotin_nomi bo'sh yoki to'ldirilmagan")
-            if tur.get("ishonch_darajasi", 1) == 0:
-                logger.warning("Parasitology: ishonch_darajasi = 0")
+        return JSONResponse(content={"ai_response": parsed}, status_code=200)
 
-        if parsed.get("rasm_sifati") in ["past", "yomon"]:
-            return JSONResponse(content={
-                "xato": "rasm_sifati_past",
-                "xabar": "Rasm sifati tahlil uchun yetarli emas."
-            }, status_code=422)
-
-        return JSONResponse(content={"ai_response": parsed})
+    except json.JSONDecodeError:
+        logger.exception("Model JSON parse xatosi")
+        return JSONResponse(
+            content={
+                "xato": "json_parse_xatosi",
+                "xabar": "Model noto'g'ri JSON qaytardi."
+            },
+            status_code=422
+        )
 
     except Exception as e:
-        logger.error(f"Parasitology AI xatolik: {str(e)}")
-        return JSONResponse(content={"xato": "ai_xatolik", "xabar": str(e)}, status_code=500)
+        logger.exception("Parasitology AI xatolik")
+        return JSONResponse(
+            content={
+                "xato": "ai_xatolik",
+                "xabar": str(e)
+            },
+            status_code=500
+        )
