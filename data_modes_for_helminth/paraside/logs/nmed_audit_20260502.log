@@ -478,3 +478,21 @@
 2026-05-02 19:16:21,892 | INFO | Aniqlandi | total=1 | classes=1 | hash=bbe4881444a7c6a8
 2026-05-02 19:16:21,892 | INFO | Metadata | raw_a=1 | raw_b=0 | after_filters=1 | hash=bbe4881444a7c6a8
 2026-05-02 19:16:21,942 | INFO | Yakunlandi | hash=bbe4881444a7c6a8 | output=results\READY_FOR_AI_karlikoviy_sepen1.jpg
+2026-05-02 19:20:47,079 | INFO | Rasm yuklandi | hash=bbe4881444a7c6a8 | path=karlikoviy_sepen1.jpg
+2026-05-02 19:20:47,080 | INFO | Workflow chaqirilmoqda | hash=bbe4881444a7c6a8
+2026-05-02 19:20:47,365 | INFO | Workflow javobi olindi | hash=bbe4881444a7c6a8 | keys=['color_mapping', 'total_count', 'predictions', 'class_counts', 'image_dimensions', 'workflow_metadata']
+2026-05-02 19:20:47,366 | INFO | Aniqlandi | total=1 | classes=1 | hash=bbe4881444a7c6a8
+2026-05-02 19:20:47,366 | INFO | Metadata | raw_a=1 | raw_b=0 | after_filters=1 | hash=bbe4881444a7c6a8
+2026-05-02 19:20:47,415 | INFO | Yakunlandi | hash=bbe4881444a7c6a8 | output=results\READY_FOR_AI_karlikoviy_sepen1.jpg
+2026-05-02 19:30:28,644 | INFO | Rasm yuklandi | hash=bbe4881444a7c6a8 | path=karlikoviy_sepen1.jpg
+2026-05-02 19:30:28,645 | INFO | Workflow chaqirilmoqda | hash=bbe4881444a7c6a8
+2026-05-02 19:30:29,901 | INFO | Workflow javobi olindi | hash=bbe4881444a7c6a8 | keys=['color_mapping', 'total_count', 'predictions', 'class_counts', 'image_dimensions', 'workflow_metadata']
+2026-05-02 19:30:29,902 | INFO | Aniqlandi | total=1 | classes=1 | hash=bbe4881444a7c6a8
+2026-05-02 19:30:29,902 | INFO | Metadata | raw_a=1 | raw_b=0 | after_filters=1 | hash=bbe4881444a7c6a8
+2026-05-02 19:30:29,946 | INFO | Yakunlandi | hash=bbe4881444a7c6a8 | output=results\READY_FOR_AI_karlikoviy_sepen1.jpg
+2026-05-02 19:30:42,063 | INFO | Rasm yuklandi | hash=8686280061f6ddf8 | path=askarida.jpg
+2026-05-02 19:30:42,063 | INFO | Workflow chaqirilmoqda | hash=8686280061f6ddf8
+2026-05-02 19:30:42,372 | INFO | Workflow javobi olindi | hash=8686280061f6ddf8 | keys=['color_mapping', 'total_count', 'predictions', 'class_counts', 'image_dimensions', 'workflow_metadata']
+2026-05-02 19:30:42,372 | INFO | Aniqlandi | total=1 | classes=1 | hash=8686280061f6ddf8
+2026-05-02 19:30:42,373 | INFO | Metadata | raw_a=1 | raw_b=1 | after_filters=1 | hash=8686280061f6ddf8
+2026-05-02 19:30:42,430 | INFO | Yakunlandi | hash=8686280061f6ddf8 | output=results\READY_FOR_AI_askarida.jpg
