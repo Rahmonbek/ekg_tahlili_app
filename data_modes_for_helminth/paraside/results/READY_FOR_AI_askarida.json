@@ -1,0 +1,59 @@
+{
+  "image_hash": "8686280061f6ddf8",
+  "timestamp": "2026-05-02T19:07:35.376241",
+  "source_image": "askarida.jpg",
+  "output_image": "results\\READY_FOR_AI_askarida.jpg",
+  "total_count": 1,
+  "class_counts": {
+    "Fasciola": 1
+  },
+  "predictions": [
+    {
+      "class_name": "Fasciola",
+      "confidence": 0.8819860219955444,
+      "x": 667.5,
+      "y": 380.0,
+      "width": 199.0,
+      "height": 208.0,
+      "x1": 568.0,
+      "y1": 276.0,
+      "x2": 767.0,
+      "y2": 484.0
+    }
+  ],
+  "color_mapping": {
+    "Ascaris lumbricoides": "#E6194B",
+    "Balantidium coli": "#3CB44B",
+    "Blastocystis": "#FFE119",
+    "Cryptosporidium": "#4363D8",
+    "Entamoeba Coli": "#F58231",
+    "Entamoeba histolytica cyst": "#911EB4",
+    "Enterobius vermicularis": "#46F0F0",
+    "Fasciola": "#F032E6",
+    "Giardia": "#BCF60C",
+    "Hookworm egg": "#FABEBE",
+    "Hymenolepis diminuta": "#008080",
+    "Hymenolepis nana": "#E6BEFF",
+    "Iodamoeba butschlii": "#9A6324",
+    "Paragonimus spp": "#FFFAC8",
+    "Strongyloides stercoralis": "#800000",
+    "Taenia spp- egg": "#AAFFC3",
+    "Toxocara": "#808000",
+    "Trichuris trichiura": "#000075"
+  },
+  "image_dimensions": {
+    "width": 1280,
+    "height": 591
+  },
+  "workflow_metadata": {
+    "model_a_raw_count": 1,
+    "model_b_raw_count": 1,
+    "after_class_filter_a": 1,
+    "after_class_filter_b": 1,
+    "after_merge_count": 1,
+    "after_filters_count": 1,
+    "filtered_out_a": 0,
+    "filtered_out_b": 0,
+    "workflow_version": "2.2"
+  }
+}
