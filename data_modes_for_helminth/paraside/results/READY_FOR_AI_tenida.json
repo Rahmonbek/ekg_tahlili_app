@@ -1,0 +1,84 @@
+{
+  "image_hash": "08ab64d3b612a767",
+  "timestamp": "2026-05-02T19:13:55.124572",
+  "source_image": "tenida.jpg",
+  "output_image": "results\\READY_FOR_AI_tenida.jpg",
+  "total_count": 3,
+  "class_counts": {
+    "Taenia spp- egg": 2,
+    "Entamoeba Coli": 1
+  },
+  "predictions": [
+    {
+      "class_name": "Taenia spp- egg",
+      "confidence": 0.9514850378036499,
+      "x": 257.0,
+      "y": 846.0,
+      "width": 66.0,
+      "height": 76.0,
+      "x1": 224.0,
+      "y1": 808.0,
+      "x2": 290.0,
+      "y2": 884.0
+    },
+    {
+      "class_name": "Taenia spp- egg",
+      "confidence": 0.9374306201934814,
+      "x": 210.0,
+      "y": 951.5,
+      "width": 78.0,
+      "height": 75.0,
+      "x1": 171.0,
+      "y1": 914.0,
+      "x2": 249.0,
+      "y2": 989.0
+    },
+    {
+      "class_name": "Entamoeba Coli",
+      "confidence": 0.5016403198242188,
+      "x": 462.0,
+      "y": 1084.5,
+      "width": 82.0,
+      "height": 83.0,
+      "x1": 421.0,
+      "y1": 1043.0,
+      "x2": 503.0,
+      "y2": 1126.0
+    }
+  ],
+  "color_mapping": {
+    "Ascaris lumbricoides": "#E6194B",
+    "Balantidium coli": "#3CB44B",
+    "Blastocystis": "#FFE119",
+    "Cryptosporidium": "#4363D8",
+    "Entamoeba Coli": "#F58231",
+    "Entamoeba histolytica cyst": "#911EB4",
+    "Enterobius vermicularis": "#46F0F0",
+    "Fasciola": "#F032E6",
+    "Giardia": "#BCF60C",
+    "Hookworm egg": "#FABEBE",
+    "Hymenolepis diminuta": "#008080",
+    "Hymenolepis nana": "#E6BEFF",
+    "Iodamoeba butschlii": "#9A6324",
+    "Paragonimus spp": "#FFFAC8",
+    "Strongyloides stercoralis": "#800000",
+    "Taenia spp- egg": "#AAFFC3",
+    "Toxocara": "#808000",
+    "Trichuris trichiura": "#000075"
+  },
+  "image_dimensions": {
+    "width": 576,
+    "height": 1280
+  },
+  "workflow_metadata": {
+    "model_a_raw_count": 2,
+    "model_b_raw_count": 3,
+    "after_class_filter_a": 2,
+    "after_class_filter_b": 3,
+    "after_merge_count": 3,
+    "after_filters_count": 3,
+    "filtered_out_a": 0,
+    "filtered_out_b": 0,
+    "workflow_version": "2.2"
+  }
+}

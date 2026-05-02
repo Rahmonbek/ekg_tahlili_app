@@ -1,0 +1,108 @@
+{
+  "image_hash": "aa64f24b14a01149",
+  "timestamp": "2026-05-02T19:13:24.526866",
+  "source_image": "lyamla.jpg",
+  "output_image": "results\\READY_FOR_AI_lyamla.jpg",
+  "total_count": 5,
+  "class_counts": {
+    "Hookworm egg": 1,
+    "Giardia": 4
+  },
+  "predictions": [
+    {
+      "class_name": "Hookworm egg",
+      "confidence": 0.8620272874832153,
+      "x": 250.0,
+      "y": 160.0,
+      "width": 46.0,
+      "height": 30.0,
+      "x1": 227.0,
+      "y1": 145.0,
+      "x2": 273.0,
+      "y2": 175.0
+    },
+    {
+      "class_name": "Giardia",
+      "confidence": 0.7120866775512695,
+      "x": 292.0,
+      "y": 129.5,
+      "width": 28.0,
+      "height": 39.0,
+      "x1": 278.0,
+      "y1": 110.0,
+      "x2": 306.0,
+      "y2": 149.0
+    },
+    {
+      "class_name": "Giardia",
+      "confidence": 0.682526707649231,
+      "x": 235.5,
+      "y": 132.0,
+      "width": 31.0,
+      "height": 32.0,
+      "x1": 220.0,
+      "y1": 116.0,
+      "x2": 251.0,
+      "y2": 148.0
+    },
+    {
+      "class_name": "Giardia",
+      "confidence": 0.568556547164917,
+      "x": 258.5,
+      "y": 219.5,
+      "width": 29.0,
+      "height": 37.0,
+      "x1": 244.0,
+      "y1": 201.0,
+      "x2": 273.0,
+      "y2": 238.0
+    },
+    {
+      "class_name": "Giardia",
+      "confidence": 0.4819914400577545,
+      "x": 52.5,
+      "y": 126.5,
+      "width": 31.0,
+      "height": 35.0,
+      "x1": 37.0,
+      "y1": 109.0,
+      "x2": 68.0,
+      "y2": 144.0
+    }
+  ],
+  "color_mapping": {
+    "Ascaris lumbricoides": "#E6194B",
+    "Balantidium coli": "#3CB44B",
+    "Blastocystis": "#FFE119",
+    "Cryptosporidium": "#4363D8",
+    "Entamoeba Coli": "#F58231",
+    "Entamoeba histolytica cyst": "#911EB4",
+    "Enterobius vermicularis": "#46F0F0",
+    "Fasciola": "#F032E6",
+    "Giardia": "#BCF60C",
+    "Hookworm egg": "#FABEBE",
+    "Hymenolepis diminuta": "#008080",
+    "Hymenolepis nana": "#E6BEFF",
+    "Iodamoeba butschlii": "#9A6324",
+    "Paragonimus spp": "#FFFAC8",
+    "Strongyloides stercoralis": "#800000",
+    "Taenia spp- egg": "#AAFFC3",
+    "Toxocara": "#808000",
+    "Trichuris trichiura": "#000075"
+  },
+  "image_dimensions": {
+    "width": 492,
+    "height": 366
+  },
+  "workflow_metadata": {
+    "model_a_raw_count": 1,
+    "model_b_raw_count": 4,
+    "after_class_filter_a": 1,
+    "after_class_filter_b": 4,
+    "after_merge_count": 5,
+    "after_filters_count": 5,
+    "filtered_out_a": 0,
+    "filtered_out_b": 0,
+    "workflow_version": "2.2"
+  }
+}

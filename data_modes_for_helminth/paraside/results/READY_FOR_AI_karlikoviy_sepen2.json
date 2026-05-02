@@ -1,8 +1,8 @@
 {
-  "image_hash": "8686280061f6ddf8",
-  "timestamp": "2026-05-02T19:12:19.103890",
-  "source_image": "askarida.jpg",
-  "output_image": "results\\READY_FOR_AI_askarida.jpg",
+  "image_hash": "029abe319e3d4be1",
+  "timestamp": "2026-05-02T19:13:02.539348",
+  "source_image": "karlikoviy_sepen2.jpg",
+  "output_image": "results\\READY_FOR_AI_karlikoviy_sepen2.jpg",
   "total_count": 1,
   "class_counts": {
     "Ascaris lumbricoides": 1
@@ -10,15 +10,15 @@
   "predictions": [
     {
       "class_name": "Ascaris lumbricoides",
-      "confidence": 0.8814140558242798,
-      "x": 665.0,
-      "y": 380.0,
-      "width": 182.0,
-      "height": 194.0,
-      "x1": 574.0,
-      "y1": 283.0,
-      "x2": 756.0,
-      "y2": 477.0
+      "confidence": 0.9668047428131104,
+      "x": 262.5,
+      "y": 526.5,
+      "width": 139.0,
+      "height": 129.0,
+      "x1": 193.0,
+      "y1": 462.0,
+      "x2": 332.0,
+      "y2": 591.0
     }
   ],
   "color_mapping": {
@@ -42,8 +42,8 @@
     "Trichuris trichiura": "#000075"
   },
   "image_dimensions": {
-    "width": 1280,
-    "height": 591
+    "width": 576,
+    "height": 1280
   },
   "workflow_metadata": {
     "model_a_raw_count": 1,

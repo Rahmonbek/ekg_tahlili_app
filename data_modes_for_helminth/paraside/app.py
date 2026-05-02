@@ -586,7 +586,7 @@ class NmedPrecisionSystem:
 
 if __name__ == "__main__":
     # Fayl yo'lini argumentdan olish
-    image_file = sys.argv[1] if len(sys.argv) > 1 else "askarida.jpg"
+    image_file = sys.argv[1] if len(sys.argv) > 1 else "karlikoviy_sepen1.jpg"
     
     print("\n🔬 NMED Precision System v2.2 ishga tushirilmoqda...\n")
     

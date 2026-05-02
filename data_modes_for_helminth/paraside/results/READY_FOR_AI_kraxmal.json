@@ -1,24 +1,24 @@
 {
-  "image_hash": "8686280061f6ddf8",
-  "timestamp": "2026-05-02T19:12:19.103890",
-  "source_image": "askarida.jpg",
-  "output_image": "results\\READY_FOR_AI_askarida.jpg",
+  "image_hash": "baa3b8cda43b671a",
+  "timestamp": "2026-05-02T19:13:11.625405",
+  "source_image": "kraxmal.jpg",
+  "output_image": "results\\READY_FOR_AI_kraxmal.jpg",
   "total_count": 1,
   "class_counts": {
-    "Ascaris lumbricoides": 1
+    "Entamoeba Coli": 1
   },
   "predictions": [
     {
-      "class_name": "Ascaris lumbricoides",
-      "confidence": 0.8814140558242798,
-      "x": 665.0,
-      "y": 380.0,
-      "width": 182.0,
-      "height": 194.0,
-      "x1": 574.0,
-      "y1": 283.0,
-      "x2": 756.0,
-      "y2": 477.0
+      "class_name": "Entamoeba Coli",
+      "confidence": 0.44418707489967346,
+      "x": 301.0,
+      "y": 372.5,
+      "width": 40.0,
+      "height": 51.0,
+      "x1": 281.0,
+      "y1": 347.0,
+      "x2": 321.0,
+      "y2": 398.0
     }
   ],
   "color_mapping": {
@@ -43,14 +43,14 @@
   },
   "image_dimensions": {
     "width": 1280,
-    "height": 591
+    "height": 960
   },
   "workflow_metadata": {
-    "model_a_raw_count": 1,
-    "model_b_raw_count": 1,
-    "after_class_filter_a": 1,
-    "after_class_filter_b": 1,
-    "after_merge_count": 1,
+    "model_a_raw_count": 0,
+    "model_b_raw_count": 2,
+    "after_class_filter_a": 0,
+    "after_class_filter_b": 2,
+    "after_merge_count": 2,
     "after_filters_count": 1,
     "filtered_out_a": 0,
     "filtered_out_b": 0,
