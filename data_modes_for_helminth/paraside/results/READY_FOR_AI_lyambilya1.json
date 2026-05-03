@@ -1,24 +1,24 @@
 {
-  "image_hash": "8686280061f6ddf8",
-  "timestamp": "2026-05-03T17:46:29.214716",
-  "source_image": "askarida.jpg",
-  "output_image": "results\\READY_FOR_AI_askarida.jpg",
+  "image_hash": "a48bf67e438a4654",
+  "timestamp": "2026-05-03T17:47:19.046533",
+  "source_image": "lyambilya1.jpg",
+  "output_image": "results\\READY_FOR_AI_lyambilya1.jpg",
   "total_count": 1,
   "class_counts": {
-    "Ascaris lumbricoides": 1
+    "Fasciola hepatica": 1
   },
   "predictions": [
     {
-      "class_name": "Ascaris lumbricoides",
-      "confidence": 0.7681506276130676,
-      "x": 666.5,
-      "y": 380.5,
-      "width": 193.0,
-      "height": 197.0,
-      "x1": 570.0,
-      "y1": 282.0,
-      "x2": 763.0,
-      "y2": 479.0
+      "class_name": "Fasciola hepatica",
+      "confidence": 0.5479742288589478,
+      "x": 298.5,
+      "y": 612.5,
+      "width": 81.0,
+      "height": 77.0,
+      "x1": 258.0,
+      "y1": 574.0,
+      "x2": 339.0,
+      "y2": 651.0
     }
   ],
   "color_mapping": {
@@ -32,8 +32,8 @@
     "Trichuris trichiura": "#F032E6"
   },
   "image_dimensions": {
-    "width": 1280,
-    "height": 591
+    "width": 576,
+    "height": 1280
   },
   "workflow_metadata": {
     "raw_count": 1,

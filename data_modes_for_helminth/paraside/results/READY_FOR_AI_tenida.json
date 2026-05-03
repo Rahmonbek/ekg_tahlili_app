@@ -1,0 +1,60 @@
+{
+  "image_hash": "08ab64d3b612a767",
+  "timestamp": "2026-05-03T17:48:02.603594",
+  "source_image": "tenida.jpg",
+  "output_image": "results\\READY_FOR_AI_tenida.jpg",
+  "total_count": 2,
+  "class_counts": {
+    "Fasciola hepatica": 2
+  },
+  "predictions": [
+    {
+      "class_name": "Fasciola hepatica",
+      "confidence": 0.5806925296783447,
+      "x": 257.0,
+      "y": 847.0,
+      "width": 68.0,
+      "height": 72.0,
+      "x1": 223.0,
+      "y1": 811.0,
+      "x2": 291.0,
+      "y2": 883.0
+    },
+    {
+      "class_name": "Fasciola hepatica",
+      "confidence": 0.49605831503868103,
+      "x": 459.5,
+      "y": 1082.0,
+      "width": 81.0,
+      "height": 78.0,
+      "x1": 419.0,
+      "y1": 1043.0,
+      "x2": 500.0,
+      "y2": 1121.0
+    }
+  ],
+  "color_mapping": {
+    "Ascaris lumbricoides": "#E6194B",
+    "Enterobius vermicularis": "#3CB44B",
+    "Fasciola hepatica": "#FFE119",
+    "Giardia lamblia": "#4363D8",
+    "Hookworm egg": "#F58231",
+    "Hymenolepis nana": "#911EB4",
+    "Taenia spp- egg": "#46F0F0",
+    "Trichuris trichiura": "#F032E6"
+  },
+  "image_dimensions": {
+    "width": 576,
+    "height": 1280
+  },
+  "workflow_metadata": {
+    "raw_count": 2,
+    "after_class_filter_count": 2,
+    "after_confidence_count": 2,
+    "final_count": 2,
+    "filtered_out_negative_classes": 0,
+    "filtered_out_low_confidence": 0,
+    "filtered_out_size": 0,
+    "workflow_version": "3.0"
+  }
+}
