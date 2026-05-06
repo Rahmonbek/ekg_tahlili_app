@@ -147,3 +147,63 @@
 2026-05-03 17:48:02,562 | INFO | Aniqlandi | total=2 | classes=1 | hash=08ab64d3b612a767
 2026-05-03 17:48:02,562 | INFO | Metadata | raw_a=0 | raw_b=0 | after_filters=0 | hash=08ab64d3b612a767
 2026-05-03 17:48:02,605 | INFO | Yakunlandi | hash=08ab64d3b612a767 | output=results\READY_FOR_AI_tenida.jpg
+2026-05-03 18:16:56,558 | INFO | Rasm yuklandi | hash=08ab64d3b612a767 | path=tenida.jpg
+2026-05-03 18:16:56,558 | INFO | Workflow chaqirilmoqda | hash=08ab64d3b612a767
+2026-05-03 18:16:57,837 | INFO | Workflow javobi olindi | hash=08ab64d3b612a767 | keys=['color_mapping', 'total_count', 'predictions', 'class_counts', 'image_dimensions', 'workflow_metadata']
+2026-05-03 18:16:57,837 | INFO | Aniqlandi | total=2 | classes=1 | hash=08ab64d3b612a767
+2026-05-03 18:16:57,837 | INFO | Metadata | raw_a=0 | raw_b=0 | after_filters=0 | hash=08ab64d3b612a767
+2026-05-03 18:16:57,873 | INFO | Yakunlandi | hash=08ab64d3b612a767 | output=results\READY_FOR_AI_tenida.jpg
+2026-05-03 18:18:32,382 | INFO | Rasm yuklandi | hash=08ab64d3b612a767 | path=tenida.jpg
+2026-05-03 18:18:32,383 | INFO | Workflow chaqirilmoqda | hash=08ab64d3b612a767
+2026-05-03 18:18:32,846 | INFO | Workflow javobi olindi | hash=08ab64d3b612a767 | keys=['color_mapping', 'total_count', 'predictions', 'class_counts', 'image_dimensions', 'workflow_metadata']
+2026-05-03 18:18:32,847 | INFO | Aniqlandi | total=2 | classes=1 | hash=08ab64d3b612a767
+2026-05-03 18:18:32,847 | INFO | Metadata | raw_a=0 | raw_b=0 | after_filters=0 | hash=08ab64d3b612a767
+2026-05-03 18:18:32,883 | INFO | Yakunlandi | hash=08ab64d3b612a767 | output=results\READY_FOR_AI_tenida.jpg
+2026-05-03 18:19:20,060 | INFO | Rasm yuklandi | hash=2b0eaa97388375db | path=karlikoviy_sepen.jpg
+2026-05-03 18:19:20,061 | INFO | Workflow chaqirilmoqda | hash=2b0eaa97388375db
+2026-05-03 18:19:20,459 | INFO | Workflow javobi olindi | hash=2b0eaa97388375db | keys=['color_mapping', 'total_count', 'predictions', 'class_counts', 'image_dimensions', 'workflow_metadata']
+2026-05-03 18:19:20,459 | INFO | Aniqlandi | total=1 | classes=1 | hash=2b0eaa97388375db
+2026-05-03 18:19:20,459 | INFO | Metadata | raw_a=0 | raw_b=0 | after_filters=0 | hash=2b0eaa97388375db
+2026-05-03 18:19:20,494 | INFO | Yakunlandi | hash=2b0eaa97388375db | output=results\READY_FOR_AI_karlikoviy_sepen.jpg
+2026-05-03 18:19:32,953 | INFO | Rasm yuklandi | hash=bbe4881444a7c6a8 | path=karlikoviy_sepen1.jpg
+2026-05-03 18:19:32,953 | INFO | Workflow chaqirilmoqda | hash=bbe4881444a7c6a8
+2026-05-03 18:19:33,419 | INFO | Workflow javobi olindi | hash=bbe4881444a7c6a8 | keys=['color_mapping', 'total_count', 'predictions', 'class_counts', 'image_dimensions', 'workflow_metadata']
+2026-05-03 18:19:33,420 | INFO | Aniqlandi | total=1 | classes=1 | hash=bbe4881444a7c6a8
+2026-05-03 18:19:33,420 | INFO | Metadata | raw_a=0 | raw_b=0 | after_filters=0 | hash=bbe4881444a7c6a8
+2026-05-03 18:19:33,463 | INFO | Yakunlandi | hash=bbe4881444a7c6a8 | output=results\READY_FOR_AI_karlikoviy_sepen1.jpg
+2026-05-03 18:19:45,912 | INFO | Rasm yuklandi | hash=029abe319e3d4be1 | path=karlikoviy_sepen2.jpg
+2026-05-03 18:19:45,913 | INFO | Workflow chaqirilmoqda | hash=029abe319e3d4be1
+2026-05-03 18:19:46,305 | INFO | Workflow javobi olindi | hash=029abe319e3d4be1 | keys=['color_mapping', 'total_count', 'predictions', 'class_counts', 'image_dimensions', 'workflow_metadata']
+2026-05-03 18:19:46,305 | INFO | Aniqlandi | total=1 | classes=1 | hash=029abe319e3d4be1
+2026-05-03 18:19:46,306 | INFO | Metadata | raw_a=0 | raw_b=0 | after_filters=0 | hash=029abe319e3d4be1
+2026-05-03 18:19:46,342 | INFO | Yakunlandi | hash=029abe319e3d4be1 | output=results\READY_FOR_AI_karlikoviy_sepen2.jpg
+2026-05-03 18:20:01,531 | INFO | Rasm yuklandi | hash=baa3b8cda43b671a | path=kraxmal.jpg
+2026-05-03 18:20:01,532 | INFO | Workflow chaqirilmoqda | hash=baa3b8cda43b671a
+2026-05-03 18:20:02,154 | INFO | Workflow javobi olindi | hash=baa3b8cda43b671a | keys=['color_mapping', 'total_count', 'predictions', 'class_counts', 'image_dimensions', 'workflow_metadata']
+2026-05-03 18:20:02,154 | INFO | Aniqlandi | total=1 | classes=1 | hash=baa3b8cda43b671a
+2026-05-03 18:20:02,154 | INFO | Metadata | raw_a=0 | raw_b=0 | after_filters=0 | hash=baa3b8cda43b671a
+2026-05-03 18:20:02,200 | INFO | Yakunlandi | hash=baa3b8cda43b671a | output=results\READY_FOR_AI_kraxmal.jpg
+2026-05-03 18:20:22,442 | INFO | Rasm yuklandi | hash=a48bf67e438a4654 | path=lyambilya1.jpg
+2026-05-03 18:20:22,443 | INFO | Workflow chaqirilmoqda | hash=a48bf67e438a4654
+2026-05-03 18:20:22,846 | INFO | Workflow javobi olindi | hash=a48bf67e438a4654 | keys=['color_mapping', 'total_count', 'predictions', 'class_counts', 'image_dimensions', 'workflow_metadata']
+2026-05-03 18:20:22,846 | INFO | Aniqlandi | total=1 | classes=1 | hash=a48bf67e438a4654
+2026-05-03 18:20:22,846 | INFO | Metadata | raw_a=0 | raw_b=0 | after_filters=0 | hash=a48bf67e438a4654
+2026-05-03 18:20:22,883 | INFO | Yakunlandi | hash=a48bf67e438a4654 | output=results\READY_FOR_AI_lyambilya1.jpg
+2026-05-03 18:20:40,069 | INFO | Rasm yuklandi | hash=aa64f24b14a01149 | path=lyamla.jpg
+2026-05-03 18:20:40,069 | INFO | Workflow chaqirilmoqda | hash=aa64f24b14a01149
+2026-05-03 18:20:40,284 | INFO | Workflow javobi olindi | hash=aa64f24b14a01149 | keys=['color_mapping', 'total_count', 'predictions', 'class_counts', 'image_dimensions', 'workflow_metadata']
+2026-05-03 18:20:40,284 | INFO | Aniqlandi | total=8 | classes=1 | hash=aa64f24b14a01149
+2026-05-03 18:20:40,284 | INFO | Metadata | raw_a=0 | raw_b=0 | after_filters=0 | hash=aa64f24b14a01149
+2026-05-03 18:20:40,317 | INFO | Yakunlandi | hash=aa64f24b14a01149 | output=results\READY_FOR_AI_lyamla.jpg
+2026-05-03 18:20:55,154 | INFO | Rasm yuklandi | hash=3c52fb7fa0fdad63 | path=sitsa_lyambla.jpg
+2026-05-03 18:20:55,154 | INFO | Workflow chaqirilmoqda | hash=3c52fb7fa0fdad63
+2026-05-03 18:20:55,518 | INFO | Workflow javobi olindi | hash=3c52fb7fa0fdad63 | keys=['color_mapping', 'total_count', 'predictions', 'class_counts', 'image_dimensions', 'workflow_metadata']
+2026-05-03 18:20:55,518 | INFO | Aniqlandi | total=1 | classes=1 | hash=3c52fb7fa0fdad63
+2026-05-03 18:20:55,518 | INFO | Metadata | raw_a=0 | raw_b=0 | after_filters=0 | hash=3c52fb7fa0fdad63
+2026-05-03 18:20:55,555 | INFO | Yakunlandi | hash=3c52fb7fa0fdad63 | output=results\READY_FOR_AI_sitsa_lyambla.jpg
+2026-05-03 18:21:10,464 | INFO | Rasm yuklandi | hash=08ab64d3b612a767 | path=tenida.jpg
+2026-05-03 18:21:10,465 | INFO | Workflow chaqirilmoqda | hash=08ab64d3b612a767
+2026-05-03 18:21:10,835 | INFO | Workflow javobi olindi | hash=08ab64d3b612a767 | keys=['color_mapping', 'total_count', 'predictions', 'class_counts', 'image_dimensions', 'workflow_metadata']
+2026-05-03 18:21:10,836 | INFO | Aniqlandi | total=2 | classes=1 | hash=08ab64d3b612a767
+2026-05-03 18:21:10,836 | INFO | Metadata | raw_a=0 | raw_b=0 | after_filters=0 | hash=08ab64d3b612a767
+2026-05-03 18:21:10,873 | INFO | Yakunlandi | hash=08ab64d3b612a767 | output=results\READY_FOR_AI_tenida.jpg
