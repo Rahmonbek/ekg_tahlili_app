@@ -24,23 +24,23 @@ export default function App() {
   const [first_load, setfirst_load] = useState(false)
   const navigate = useNavigate()
 
-  // Boshlang'ich yuklanish va user_id o'zgarganda
+  // Boshlang'ich yuklanish: faqat user yuklanmagan bo'lsa fetch qilish
   useEffect(() => {
     const token = getTokenAccess()
     if (token != null) {
-      if (user == null || !open_admin_modal) {
+      if (user == null) {
         getUserData()
       }
     } else {
       navigate("/")
       setfirst_load(true)
     }
-  }, [user_id, open_admin_modal])
+  }, [user_id])
 
-  // AdminModal yopilgandan keyin klinika setup ni tekshirish
+  // AdminModal yopilgandan keyin: user ma'lumotlarini yangilash va klinika setupni tekshirish
   useEffect(() => {
     if (!open_admin_modal && user != null) {
-      checkClinicSetup(user)
+      getUserData(true)
     }
   }, [open_admin_modal])
 
@@ -68,7 +68,7 @@ export default function App() {
     }
   }
 
-  const getUserData = async () => {
+  const getUserData = async (isRefresh = false) => {
     try {
       const res = await get_user_data()
       setuser(res.data)
@@ -89,9 +89,11 @@ export default function App() {
         fetchUnreadCounts()
       }
     } catch (err) {
-      // Token yo'q yoki muddati o'tgan — login ga yo'naltir
-      navigate("/")
-      setfirst_load(true)
+      // Faqat boshlang'ich yuklashda token muammosi bo'lsa — loginга yo'naltir
+      if (!isRefresh) {
+        navigate("/")
+        setfirst_load(true)
+      }
     }
   }
 

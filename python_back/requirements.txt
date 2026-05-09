@@ -1,6 +1,7 @@
 # Web Framework va Server
 fastapi
-uvicorn
+uvicorn[standard]
+gunicorn
 python-multipart
 pydantic
 

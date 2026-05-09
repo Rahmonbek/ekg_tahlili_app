@@ -1454,6 +1454,19 @@ td {
   margin-bottom: 8px;
 }
 
+/* ─── Message va Notification — har doim yuqorida ─── */
+.ant-message {
+  z-index: 100000 !important;
+}
+
+.ant-notification {
+  z-index: 100000 !important;
+}
+
+.ant-message-notice-wrapper {
+  z-index: 100000 !important;
+}
+
 .quick_actions_grid {
   display: flex;
   flex-wrap: wrap;

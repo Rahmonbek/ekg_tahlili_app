@@ -1,0 +1,34 @@
+# =============================================================
+# .NET Backend — systemd service
+# Joylashishi: /etc/systemd/system/nmed-backend.service
+# Ishga tushirish:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable nmed-backend
+#   sudo systemctl start nmed-backend
+# =============================================================
+
+[Unit]
+Description=NMED EKG Analyzer — .NET Backend
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/nmed/backend
+
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+
+ExecStart=/usr/bin/dotnet /opt/nmed/backend/EkgAnalyzerApi.dll
+Restart=always
+RestartSec=10
+KillSignal=SIGINT
+
+# Loglar
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nmed-backend
+
+[Install]
+WantedBy=multi-user.target

@@ -11,15 +11,18 @@ public class AuthService
     private readonly MedDataDB _context;
     private readonly IEmailService _emailService;
     private readonly TokenService _tokenService;
+    private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         MedDataDB context,
         IEmailService emailService,
-        TokenService tokenService)
+        TokenService tokenService,
+        ILogger<AuthService> logger)
     {
         _context = context;
         _emailService = emailService;
         _tokenService = tokenService;
+        _logger = logger;
     }
 
     // ========================= HELPERS =========================
@@ -53,22 +56,28 @@ public class AuthService
     {
         var code = GenerateCode();
 
-        var verification = new VerificationCode
+        _context.VerificationCodes.Add(new VerificationCode
         {
             UserId = user.Id,
             Email = user.Email,
             Code = code,
             ExpiresAt = DateTime.UtcNow.AddMinutes(10),
             IsUsed = false
-        };
-
-        _context.VerificationCodes.Add(verification);
+        });
         await _context.SaveChangesAsync();
 
-        await _emailService.SendVerificationCodeAsync(
-            user.Email,
-            code
-        );
+        // Email background da yuboriladi — API ni bloklamamaslik uchun
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _emailService.SendVerificationCodeAsync(user.Email, code);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Email yuborishda xato: {Email}", user.Email);
+            }
+        });
     }
 
     // ========================= REGISTER =========================

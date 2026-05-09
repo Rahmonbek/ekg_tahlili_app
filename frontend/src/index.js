@@ -6,12 +6,16 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import { CookiesProvider } from 'react-cookie';
 import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
+import { ConfigProvider } from 'antd';
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <GoogleReCaptchaProvider reCaptchaKey="6LdQWZksAAAAAFzZmPqqS8QQBgI8CraS_9m2H66T">
   <CookiesProvider>
   <BrowserRouter>
-    <App />
+    <ConfigProvider theme={{ token: { zIndexPopupBase: 10000 } }}>
+      <App />
+    </ConfigProvider>
   </BrowserRouter>
   </CookiesProvider>
   </GoogleReCaptchaProvider>

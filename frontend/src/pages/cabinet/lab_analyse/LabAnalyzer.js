@@ -1,6 +1,7 @@
-import { Button, Checkbox, Col, Form, Row, Select, Tooltip, Upload } from 'antd';
+import { Alert, Button, Checkbox, Col, Form, Row, Select, Tooltip, Upload } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 import React, { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { IoAlertCircleSharp } from 'react-icons/io5';
 import { MoonLoader } from 'react-spinners';
@@ -43,7 +44,7 @@ export default function LabAnalyzer() {
     const { regions, districts, fetchDistricts } = useRegionDistrict();
     const {
         doctorDatas, positionDatas, selectedDoctors,
-        onChangeDoctors, filterByPosition, resetDoctorSelection,
+        onChangeDoctors, filterByPosition, resetDoctorSelection, doctorsLoaded,
     } = useDoctorPositions();
     const { state, dispatch, resetAll } = useAnalyzerState();
 
@@ -197,6 +198,16 @@ export default function LabAnalyzer() {
     // ─── RENDER ───
     return (
         <div>
+            {doctorsLoaded && doctorDatas.length === 0 && (
+                <Alert
+                    type="warning"
+                    showIcon
+                    message={t('no_doctors_alert_title')}
+                    description={t('no_doctors_alert_desc')}
+                    action={<Link to="/doctor" className="ant-btn ant-btn-default ant-btn-sm">{t('go_to_staff')}</Link>}
+                    style={{ marginBottom: 16 }}
+                />
+            )}
             {/* ═══════ Bemor Qidirish ═══════ */}
             <div className="main_card">
                 <h1>

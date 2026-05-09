@@ -1,23 +1,20 @@
-import axios from "axios"
 import axiosInstance from "./Api";
 import Cookies from "js-cookie";
-// export const api="https://api.nmed.uz/api"
-// export const apiEcg="https://analyse.nmed.uz"
-// export const imgApi="https://api.nmed.uz"
 
-export const api="http://localhost:5000/api"
-export const apiEcg="http://127.0.0.1:8000"
-export const imgApi="http://localhost:5000"
+export const api = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+export const imgApi = process.env.REACT_APP_IMG_URL || "http://localhost:5000";
+// Python API — faqat ichki (server tomonida .NET proxy orqali)
+// export const apiEcg = process.env.REACT_APP_ECG_URL || "http://127.0.0.1:8000";
+export const apiEcg = "https://analyse.nmed.uz";
 
-
-export const getTokenAccess=()=>{
-    var token=Cookies.get("NMED_token")
-    return(token)
+export const getTokenAccess = () => {
+    var token = Cookies.get("NMED_token")
+    return (token)
 }
 
-export const deleteTokenAccess=()=>{
+export const deleteTokenAccess = () => {
     Cookies.remove("NMED_token")
-   }
+}
 
 export const httpPostRequest = async (url, data) => {
     return await axiosInstance.post(url, data);

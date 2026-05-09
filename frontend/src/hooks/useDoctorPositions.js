@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { get_doctor_by_clinic_id, get_params_for_add_staff } from '../host/requests/DoctorRequest';
+import { get_doctor_by_clinic_id } from '../host/requests/DoctorRequest';
 import { useStore } from '../store/Store';
 
 /**
@@ -10,28 +10,40 @@ import { useStore } from '../store/Store';
  *           onChangeDoctors, filterByPosition, resetDoctorSelection }
  */
 export function useDoctorPositions() {
-    const { doctors, setdoctors, positions, setpositions, setroles, user } = useStore();
+    const { doctors, setdoctors, user } = useStore();
     const [doctorDatas, setDoctorDatas] = useState([]);
     const [positionDatas, setPositionDatas] = useState([]);
     const [selectedDoctors, setSelectedDoctors] = useState([]);
+    const [doctorsLoaded, setDoctorsLoaded] = useState(doctors.length > 0);
+
+    // Primitive ID — user object reference o'zgarganda qayta fetch bo'lmasin
+    const clinicId = user?.clinic?.id;
+
     const fetchDoctors = useCallback(async () => {
+        if (!clinicId) return;
         try {
-            const res = await get_doctor_by_clinic_id({ id: user.clinic.id });
+            const res = await get_doctor_by_clinic_id({ id: clinicId });
             setDoctorDatas(res.data.doctor);
             setdoctors(res.data.doctor);
         } catch (err) {
             // Shifokorlarni yuklashda xatolik
+        } finally {
+            setDoctorsLoaded(true);
         }
-    }, [user, setdoctors]);
+    }, [clinicId, setdoctors]);
+
     useEffect(() => {
-        if (doctors.length === 0 && user != null) {
+        if (!clinicId) return;
+        if (doctors.length === 0) {
             fetchDoctors();
         } else {
             setDoctorDatas(doctors);
+            setDoctorsLoaded(true);
         }
-    }, [user, doctors, fetchDoctors]);
-
-
+    // clinicId — stable primitive. user object reference va doctors
+    // o'zgarishi ortiqcha fetch trigger bo'lmasligi uchun deps dan chiqarildi.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [clinicId]);
 
     const onChangeDoctors = useCallback((val) => {
         setSelectedDoctors((prev) => {
@@ -68,5 +80,6 @@ export function useDoctorPositions() {
         onChangeDoctors,
         filterByPosition,
         resetDoctorSelection,
+        doctorsLoaded,
     };
 }

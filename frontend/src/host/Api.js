@@ -2,10 +2,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { handleApiError } from "../tools/notify";
 
-// export const api = "https://api.nmed.uz/api";
-
-export const api = "http://localhost:5000/api";
-
+export const api = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
 const axiosInstance = axios.create({
     baseURL: api,

@@ -24,6 +24,7 @@ runs/
 /runs
 # Maxfiy fayllar (secrets)
 /backend/EkgAnalyzerApi/appsettings.Development.json
+/backend/EkgAnalyzerApi/appsettings.Production.json
 /python_back/.env
 /python_back/venv
 /python_back/__pycache__
@@ -41,4 +42,17 @@ runs/
 # Build artifacts
 /backend/EkgAnalyzerApi/bin/
 /backend/EkgAnalyzerApi/publish/
+**/*.pubxml.user
 node_modules/
+/frontend/build/
+
+# Frontend — local env overrides (secrets bo'lishi mumkin)
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Python
+**/__pycache__/
+**/*.pyc
+**/*.pyo

@@ -12,12 +12,6 @@ export function useRegionDistrict() {
     const { regions, setregions } = useStore();
     const [districts, setDistricts] = useState([]);
 
-    useEffect(() => {
-        if (regions.length === 0) {
-            fetchRegions();
-        }
-    }, []);
-
     const fetchRegions = useCallback(async () => {
         try {
             const res = await get_region_data();
@@ -28,6 +22,12 @@ export function useRegionDistrict() {
             // Region yuklashda xatolik — sessiya davom etishi mumkin
         }
     }, [setregions]);
+
+    useEffect(() => {
+        if (regions.length === 0) {
+            fetchRegions();
+        }
+    }, [fetchRegions]);
 
     const fetchDistricts = useCallback(async (regionId) => {
         try {

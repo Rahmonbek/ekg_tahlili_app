@@ -105,6 +105,9 @@
   "alert_lab": "Laboratoriya tahlil natijalarini yuklashda aynan shu bemorga tegishli ekanligiga ishonch hosil qiling. PDF yoki rasm ko'rinishidagi faylni yuklang.",
   "alert_holter": "Holter tahlili natijalarini (PDF) yuklashda ehtiyot bo'ling. Fayl aynan shu bemorga tegishli bo'lishi shart.",
   "alert_smad": "SMAD tahlili natijalarini (PDF) yuklashda ehtiyot bo'ling. Fayl aynan shu bemorga tegishli bo'lishi shart.",
+  "no_doctors_alert_title": "Tizimda shifokor mavjud emas",
+  "no_doctors_alert_desc": "Tahlil yuklash uchun avval xodimlarni tizimga kiriting. Aksincha, davolovchi shifokorni tanlash imkoni bo'lmaydi.",
+  "go_to_staff": "Xodimlarni boshqarish",
   "alert_parasitology": "Parazitologik tahlil uchun mikroskop ostidagi rasmni yuklang. Rasm sifati yuqori va aniq bo'lishi natija aniqligiga ta'sir qiladi.",
   "select_ecg_file": "EKG fayl tanlang",
   "access_file_types": "Fayl turlari",
@@ -320,5 +323,6 @@
   "addres": "Manzil",
   "clinic_info": "Shifoxona ma'lumotlari",
   "phones": "Telefon raqamlar",
-  "select_parasitology_file": "Mikroskopiya rasmini tanlang"
+  "select_parasitology_file": "Mikroskopiya rasmini tanlang",
+  "enter_addres": "Mahalla, Ko'cha, Uy raqami"
 }

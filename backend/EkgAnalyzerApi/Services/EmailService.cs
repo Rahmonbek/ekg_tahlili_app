@@ -1,5 +1,7 @@
 using MailKit.Net.Smtp;
 using MimeKit;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 public interface IEmailService
 {
@@ -8,37 +10,40 @@ public interface IEmailService
 
 public class EmailService : IEmailService
 {
+    private readonly IConfiguration _config;
+    private readonly ILogger<EmailService> _logger;
+
+    public EmailService(IConfiguration config, ILogger<EmailService> logger)
+    {
+        _config = config;
+        _logger = logger;
+    }
+
     public async Task SendVerificationCodeAsync(string to, string code)
     {
-        var message = new MimeMessage();
+        var host     = _config["Smtp:Host"]     ?? "smtp.gmail.com";
+        var port     = int.Parse(_config["Smtp:Port"] ?? "587");
+        var username = _config["Smtp:Username"] ?? "";
+        var password = _config["Smtp:Password"] ?? "";
+        var fromName = _config["Smtp:FromName"] ?? "NMED";
 
-        message.From.Add(new MailboxAddress("NMED", "softwaredeveloperrahmon@gmail.com"));
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress(fromName, username));
         message.To.Add(MailboxAddress.Parse(to));
         message.Subject = "Email tasdiqlash kodi";
-
-        var bodyBuilder = new BodyBuilder
+        message.Body = new BodyBuilder
         {
             HtmlBody = GetHtmlTemplate(code),
             TextBody = $"Tasdiqlash kodi: {code}"
-        };
+        }.ToMessageBody();
 
-        message.Body = bodyBuilder.ToMessageBody();
-
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         using var client = new SmtpClient();
 
-        await client.ConnectAsync(
-            "smtp.gmail.com",
-            587,
-            MailKit.Security.SecureSocketOptions.StartTls
-        );
-
-        await client.AuthenticateAsync(
-            "softwaredeveloperrahmon@gmail.com",
-            "ndhw qtxw dkaf canx" // App Password
-        );
-
-        await client.SendAsync(message);
-        await client.DisconnectAsync(true);
+        await client.ConnectAsync(host, port, MailKit.Security.SecureSocketOptions.StartTls, cts.Token);
+        await client.AuthenticateAsync(username, password, cts.Token);
+        await client.SendAsync(message, cts.Token);
+        await client.DisconnectAsync(true, cts.Token);
     }
 
     private string GetHtmlTemplate(string code)
@@ -80,15 +85,15 @@ public class EmailService : IEmailService
               </div>
 
               <p style='font-size:13px;color:#777;'>
-                Kod 5 daqiqa davomida amal qiladi.<br/>
-                Agar siz bu so‘rovni yubormagan bo‘lsangiz, xatni e’tiborsiz qoldiring.
+                Kod 10 daqiqa davomida amal qiladi.<br/>
+                Agar siz bu so'rovni yubormagan bo'lsangiz, xatni e'tiborsiz qoldiring.
               </p>
             </td>
           </tr>
 
           <tr>
             <td style='padding:16px;text-align:center;background:#f9fafb;border-top:1px solid #eee;font-size:12px;color:#999;'>
-              © {DateTime.Now.Year} NMED. Barcha huquqlar himoyalangan.
+              &copy; {DateTime.Now.Year} NMED. Barcha huquqlar himoyalangan.
             </td>
           </tr>
         </table>

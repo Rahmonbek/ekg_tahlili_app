@@ -81,7 +81,6 @@ export default function Doctors() {
     const getDoctors=async()=>{
           try{
              var res=await get_doctors_of_clinic({page:page})
-             console.log(res)
              setdoctors(res.data.data)
              settotal(res.data.totalCount)
              setloading(false)

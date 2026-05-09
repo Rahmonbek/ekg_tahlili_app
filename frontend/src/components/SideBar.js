@@ -7,6 +7,15 @@ import { useStore } from '../store/Store'
 import { Badge, Tooltip } from 'antd'
 import { FaLock } from 'react-icons/fa'
 
+const ANALYZER_ROUTES = {
+    'analyse-ecg':           'ecg-analyses',
+    'analyse-holter':        'holter-analyses',
+    'analyse-smad':          'smad-analyses',
+    'analyse-lab':           'lab-analyses',
+    'diagnoses-create':      'patient-diagnoses',
+    'parasitology-analyzer': 'parasitology-analyses',
+};
+
 export default function SideBar() {
     const {t}=useTranslation()
     const location=useLocation()
@@ -34,24 +43,31 @@ export default function SideBar() {
         return () => window.removeEventListener('resize', handleResize);
     }, [initMenu]);
 
-    const checkIsActive = (item, index) => {
-        const path = location.pathname;
-        const isRoot = path.replace(/\//g, '') === '' || path === '/cabinet';
+    // Mobil: route o'zgarganda menyu yopilsin (click bilan aralashmaslik uchun)
+    useEffect(() => {
+        if (window.innerWidth <= 1024) {
+            setopen_menu(false);
+        }
+    }, [location.pathname, setopen_menu]);
 
-        // '/' yoki '/cabinet' da turganimizda default ochiladigan menyuni aniqlash
-        if (isRoot) {
-            if (user && (user.roleId === 2 || user.roleId === 3)) {
-                if (item.tools === 'doctor') return true;
-            } else {
-                if (item.tools === 'ecg-analyses') return true;
-            }
+    const checkIsActive = (item) => {
+        const path = location.pathname;
+
+        // Root va dashboard sahifalar
+        if (path === '/' || path === '/cabinet' || path === '/dashboard') {
+            // Admin/Direktor uchun Dashboard ko'rsatiladi — hech qanday item highlighted bo'lmasin
+            if (user && (user.roleId === 2 || user.roleId === 3)) return false;
+            // Boshqa rollar uchun ecg-analyses highlighted
+            return item.tools === 'ecg-analyses';
         }
 
-        // Subpagelar va tools bilan solishtirish
+        // Bevosita path match: ro'yxat va view sahifalar (/ecg-analyses, /ecg-analyses/view/123)
         if (item.tools && path.includes(item.tools)) return true;
-        
-        // Maxsus ECG analiz sahifasi uchun tag-sahifa (subpage) tekshiruvi
-        if (item.tools === 'ecg-analyses' && path.includes('analyse-ecg')) return true;
+
+        // Tahlil yaratish sahifalarini mos ro'yxat sahifasiga ulash
+        for (const [segment, tools] of Object.entries(ANALYZER_ROUTES)) {
+            if (path.includes(segment) && item.tools === tools) return true;
+        }
 
         return false;
     };
@@ -78,12 +94,7 @@ export default function SideBar() {
                 >
                 <Link
                     to={item.path}
-                    className={`sidebar_menu_item ${checkIsActive(item, index) ? "active_sidebar_item" : ""} ${isLocked ? "locked_sidebar_item" : ""}`}
-                    onClick={() => {
-                        if (window.innerWidth <= 1024) {
-                            setopen_menu(false);
-                        }
-                    }}
+                    className={`sidebar_menu_item ${checkIsActive(item) ? "active_sidebar_item" : ""} ${isLocked ? "locked_sidebar_item" : ""}`}
                 >
                     <div className='sidebar_icon'>
                         {item.icon}

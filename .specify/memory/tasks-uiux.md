@@ -101,3 +101,20 @@
 - [x] T097 [P1] `response_format=json_object`, `temperature=0.1`, `max_tokens=2000` OpenAI parametrlari
 - [x] T098 [P1] `rasm_sifati` tekshiruvi: `== "past"` → `in ["past", "yomon"]`
 - [x] T099 [P2] Bonus logging: JSON parse xatosi, bo'sh `lotin_nomi`, `ishonch_darajasi == 0`
+
+---
+
+## Phase 20: Tahlil sahifalarida "shifokor yo'q" ogohlantiruvi
+
+**Maqsad**: Admin yangi ro'yxatdan o'tganda tizimda hech qanday shifokor bo'lmaydi. Tahlil yuklash formalarida davolovchi shifokor tanlash majburiy bo'lgani uchun admin nima qilish kerakligini bilmay qoladi. EKG, Lab, Holter, SMAD tahlil sahifalarida shifokorlar ro'yxati bo'sh bo'lganda foydalanuvchiga aniq ogohlantirish ko'rsatish.
+
+**Yechim**: `useDoctorPositions` hook ma'lumot yuklangandan keyin `doctorDatas.length === 0` bo'lsa Ant Design `Alert` (type="warning") chiqarish — "Xodimlarni boshqarish" tugmasi bilan `/doctor` sahifasiga yo'naltirish.
+
+- [x] T100 [P1] `useDoctorPositions.js`: `doctorsLoaded` state qo'shildi — API javob kelgandan keyin `true` bo'ladi, sahifa render paytida yolg'on ogohlantirish ko'rsatmaslik uchun
+- [x] T101 [P1] `EcgAnalyzer.js`: `Alert` + `useNavigate` import qo'shildi, `doctorsLoaded && doctorDatas.length === 0` holda ogohlantirish chiqariladi
+- [x] T102 [P1] `LabAnalyzer.js`: bir xil o'zgarish
+- [x] T103 [P1] `HolterAnalyzer.js`: bir xil o'zgarish
+- [x] T104 [P1] `SmadAnalyzer.js`: bir xil o'zgarish
+- [x] T105 [P1] `Uz.json` / `Ru.json` / `En.json`: `no_doctors_alert_title`, `no_doctors_alert_desc`, `go_to_staff` kalitlari qo'shildi
+
+**Eslatma**: Parazitologiya sahifasiga qo'shilmadi (sidebar ham, alert ham) — modul hali to'liq tayyor emas.

@@ -100,15 +100,15 @@ export default function Dashboard() {
             color: '#ef4444',
             path: '/patient-diagnoses',
         },
-        {
-            icon: <FaMicroscope />,
-            title: t('parasitology_analyse') || 'Parazitologiya',
-            value: val(today.parasitology),
-            allTimeValue: loading ? null : allTime.parasitology,
-            subValue: 0,
-            color: '#8b5cf6',
-            path: '/parasitology-analyses',
-        },
+        // {
+        //     icon: <FaMicroscope />,
+        //     title: t('parasitology_analyse') || 'Parazitologiya',
+        //     value: val(today.parasitology),
+        //     allTimeValue: loading ? null : allTime.parasitology,
+        //     subValue: 0,
+        //     color: '#8b5cf6',
+        //     path: '/parasitology-analyses',
+        // },
     ];
 
     const quickActions = [
@@ -117,7 +117,7 @@ export default function Dashboard() {
         { label: t('new_smad_analyse') || 'Yangi SMAD', path: '/analyse-smad', icon: <FaChartLine /> },
         { label: t('new_lab_analyse') || 'Yangi Lab', path: '/analyse-lab', icon: <FaFlask /> },
         { label: t('new_diagnose') || 'Yangi Tashxis', path: '/diagnoses-create', icon: <MdOutlineMedicalInformation /> },
-        { label: t('new_parasitology_analyse') || 'Yangi Parazitologiya', path: '/parasitology-analyzer', icon: <FaMicroscope /> },
+        // { label: t('new_parasitology_analyse') || 'Yangi Parazitologiya', path: '/parasitology-analyzer', icon: <FaMicroscope /> },
     ];
 
     return (

@@ -26,7 +26,12 @@
       "Bash(kill %1)",
       "Bash(taskkill /F /PID 24340)",
       "Bash(sc query *)",
-      "Bash(net start *)"
+      "Bash(net start *)",
+      "Bash(tasklist)",
+      "Bash(findstr -i \"EkgAnalyzerApi\")",
+      "Bash(taskkill /PID 27236 /F)",
+      "Bash(powershell -Command \"Stop-Process -Id 27236 -Force\")",
+      "Bash(yarn build *)"
     ],
     "deny": [
       "Bash(rm -rf /)",

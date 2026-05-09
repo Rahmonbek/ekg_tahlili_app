@@ -1,0 +1,42 @@
+# =============================================================
+# Python Backend — systemd service
+# Joylashishi: /etc/systemd/system/nmed-python.service
+# Ishga tushirish:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable nmed-python
+#   sudo systemctl start nmed-python
+# =============================================================
+
+[Unit]
+Description=NMED EKG Analyzer — Python FastAPI Backend
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/nmed/python
+
+# Secrets fayldan o'qiladi (git'ga kirmaydi)
+EnvironmentFile=/etc/nmed/python.env
+
+ExecStart=/opt/nmed/python-venv/bin/gunicorn main:app \
+    --workers 2 \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --bind 127.0.0.1:8000 \
+    --timeout 300 \
+    --keepalive 5 \
+    --log-level warning \
+    --access-logfile /var/log/nmed/python-access.log \
+    --error-logfile /var/log/nmed/python-error.log
+
+Restart=always
+RestartSec=10
+KillSignal=SIGINT
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nmed-python
+
+[Install]
+WantedBy=multi-user.target
