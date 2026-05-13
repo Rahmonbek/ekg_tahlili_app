@@ -19,6 +19,7 @@ import DoctorSelectSection from '../../../components/shared/DoctorSelectSection'
 
 // ─── Services & Utils ───
 import { analyzeLabFile } from '../../../host/LabService';
+import { useBackgroundAnalysis } from '../../../hooks/useBackgroundAnalysis';
 import { get_lab_analyses_by_patcient_id } from '../../../host/requests/LabAnalyseRequest';
 import { get_lab_categories_data } from '../../../host/requests/LabCategories';
 import { useStore } from '../../../store/Store';
@@ -38,7 +39,8 @@ export default function LabAnalyzer() {
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [analysisDateValue, setAnalysisDateValue] = useState(getTodayDateInputValue());
 
-    const { lab_categories, setlab_categories, user, setloader } = useStore();
+    const { lab_categories, setlab_categories, user } = useStore();
+    const { runInBackground } = useBackgroundAnalysis();
 
     // ─── Custom Hooks ───
     const { regions, districts, fetchDistricts } = useRegionDistrict();
@@ -120,53 +122,30 @@ export default function LabAnalyzer() {
     }, [patcient, getOldAnalyses, dispatch]);
 
     // ─── Submit ───
-    const handleSubmit = useCallback(async () => {
+    const handleSubmit = useCallback(() => {
         if (state.files.length === 0) return alert(t('select_file_error'));
-        warningAlert(t('please_wait_lab'));
 
-        setloader(true);
-        dispatch({ type: 'SUBMIT_START' });
-
-        try {
-            const formData = new FormData();
-            state.files.forEach((f) => formData.append('file', f));
-            selectedCategories.forEach((f) => formData.append('lab_category_id', f.id));
-            selectedDoctors.forEach((f) => formData.append('doctor_id', f.id));
-            formData.append('gender', patcient.gender ? 'erkak' : 'ayol');
-            formData.append('patcient_id', patcient.id);
-            formData.append('created_doctor_id', user.doctor.id);
-            formData.append('clinic_id', user.clinic.id);
-            formData.append('lang', state.lang);
-            formData.append('age', calculateAge(patcient.birthDate));
-            if (state.analysis_date) {
-                formData.append('analysis_date', state.analysis_date);
-            }
-
-            const res = await analyzeLabFile(formData);
-            let parsedResult;
-            try {
-                parsedResult = res.ai_response.raw
-                    ? typeof res.ai_response.raw === 'string'
-                        ? JSON.parse(res.ai_response.raw)
-                        : res.ai_response.raw
-                    : typeof res.ai_response === 'string'
-                        ? JSON.parse(res.ai_response)
-                        : res.ai_response;
-            } catch {
-                parsedResult = res.ai_response;
-            }
-
-            dispatch({
-                type: 'SUBMIT_SUCCESS',
-                result: parsedResult,
-                image: res.analyse_file_path,
-            });
-        } catch (err) {
-            dispatch({ type: 'SUBMIT_ERROR', error: err.message });
-        } finally {
-            setloader(false);
+        const formData = new FormData();
+        state.files.forEach((f) => formData.append('file', f));
+        selectedCategories.forEach((f) => formData.append('lab_category_id', f.id));
+        selectedDoctors.forEach((f) => formData.append('doctor_id', f.id));
+        formData.append('gender', patcient.gender ? 'erkak' : 'ayol');
+        formData.append('patcient_id', patcient.id);
+        formData.append('created_doctor_id', user.doctor.id);
+        formData.append('clinic_id', user.clinic.id);
+        formData.append('lang', state.lang);
+        formData.append('age', calculateAge(patcient.birthDate));
+        if (state.analysis_date) {
+            formData.append('analysis_date', state.analysis_date);
         }
-    }, [state, patcient, user, selectedCategories, selectedDoctors, setloader, dispatch, t]);
+
+        runInBackground({
+            label: 'Laboratoriya tahlil',
+            listPath: '/lab-analyses',
+            analyzePromise: analyzeLabFile(formData),
+        });
+        retryAnalyse();
+    }, [state, patcient, user, selectedCategories, selectedDoctors, runInBackground, t, retryAnalyse]);
 
     // ─── Retry / Reset ───
     const retryAnalyse = useCallback(() => {

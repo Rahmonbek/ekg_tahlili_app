@@ -77,4 +77,15 @@ export const useStore = create((set) => ({
     // null = tekshirilmagan, false = to'ldirilmagan, true = to'ldirilgan
     clinic_setup_modal: false,
     setclinic_setup_modal: (v) => set({ clinic_setup_modal: v }),
+
+    // ─── Fon rejimidagi tahlillar ──────────────────────────────────────────
+    // item: { key, label, listPath, status: 'loading'|'done'|'error', errorMsg? }
+    pendingAnalyses: [],
+    addPendingAnalysis: (item) => set((s) => ({ pendingAnalyses: [...s.pendingAnalyses, item] })),
+    updatePendingAnalysis: (key, updates) => set((s) => ({
+        pendingAnalyses: s.pendingAnalyses.map((a) => a.key === key ? { ...a, ...updates } : a),
+    })),
+    removePendingAnalysis: (key) => set((s) => ({
+        pendingAnalyses: s.pendingAnalyses.filter((a) => a.key !== key),
+    })),
 }))

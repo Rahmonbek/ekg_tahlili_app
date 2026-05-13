@@ -20,6 +20,7 @@ import DoctorSelectSection from '../../../components/shared/DoctorSelectSection'
 
 // ─── Services & Utils ───
 import { analyzeSmadFile } from '../../../host/smadService';
+import { useBackgroundAnalysis } from '../../../hooks/useBackgroundAnalysis';
 import { get_smad_analyses_by_patcient_id } from '../../../host/requests/SmadAnalyseRequest';
 import { useStore } from '../../../store/Store';
 import { calculateAge } from '../../../tools/formatters';
@@ -38,7 +39,8 @@ export default function SmadAnalyzer() {
     const [selectedMainDoctor, setSelectedMainDoctor] = useState(null);
     const [analysisDateValue, setAnalysisDateValue] = useState(getTodayDateInputValue());
 
-    const { user, setloader, doctors } = useStore();
+    const { user, doctors } = useStore();
+    const { runInBackground } = useBackgroundAnalysis();
 
     // ─── Custom Hooks ───
     const { regions, districts, fetchDistricts } = useRegionDistrict();
@@ -95,53 +97,30 @@ export default function SmadAnalyzer() {
     }, [patcient, getOldAnalyses, dispatch]);
 
     // ─── Submit ───
-    const handleSubmit = useCallback(async () => {
+    const handleSubmit = useCallback(() => {
         if (state.files.length === 0) return alert(t('select_file_error'));
-        warningAlert(t('please_wait_lab'));
 
-        setloader(true);
-        dispatch({ type: 'SUBMIT_START' });
-
-        try {
-            const formData = new FormData();
-            state.files.forEach((f) => formData.append('file', f));
-            formData.append('gender', patcient.gender ? 'erkak' : 'ayol');
-            formData.append('patcient_id', patcient.id);
-            formData.append('created_doctor_id', user.doctor.id);
-            selectedDoctors.forEach((f) => formData.append('doctor_id', f.id));
-            formData.append('main_doctor_id', selectedMainDoctor);
-            formData.append('clinic_id', user.clinic.id);
-            formData.append('lang', state.lang);
-            formData.append('age', calculateAge(patcient.birthDate));
-            if (state.analysis_date) {
-                formData.append('analysis_date', state.analysis_date);
-            }
-
-            const res = await analyzeSmadFile(formData);
-            let parsedResult;
-            try {
-                parsedResult = res.ai_response.raw
-                    ? typeof res.ai_response.raw === 'string'
-                        ? JSON.parse(res.ai_response.raw)
-                        : res.ai_response.raw
-                    : typeof res.ai_response === 'string'
-                        ? JSON.parse(res.ai_response)
-                        : res.ai_response;
-            } catch {
-                parsedResult = res.ai_response;
-            }
-
-            dispatch({
-                type: 'SUBMIT_SUCCESS',
-                result: parsedResult,
-                image: res.analyse_file_path,
-            });
-        } catch (err) {
-            dispatch({ type: 'SUBMIT_ERROR', error: err.message });
-        } finally {
-            setloader(false);
+        const formData = new FormData();
+        state.files.forEach((f) => formData.append('file', f));
+        formData.append('gender', patcient.gender ? 'erkak' : 'ayol');
+        formData.append('patcient_id', patcient.id);
+        formData.append('created_doctor_id', user.doctor.id);
+        selectedDoctors.forEach((f) => formData.append('doctor_id', f.id));
+        formData.append('main_doctor_id', selectedMainDoctor);
+        formData.append('clinic_id', user.clinic.id);
+        formData.append('lang', state.lang);
+        formData.append('age', calculateAge(patcient.birthDate));
+        if (state.analysis_date) {
+            formData.append('analysis_date', state.analysis_date);
         }
-    }, [state, patcient, user, selectedDoctors, selectedMainDoctor, setloader, dispatch, t]);
+
+        runInBackground({
+            label: 'SMAD tahlil',
+            listPath: '/smad-analyses',
+            analyzePromise: analyzeSmadFile(formData),
+        });
+        retryAnalyse();
+    }, [state, patcient, user, selectedDoctors, selectedMainDoctor, runInBackground, t, retryAnalyse]);
 
     // ─── Retry / Reset ───
     const retryAnalyse = useCallback(() => {

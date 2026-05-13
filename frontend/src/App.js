@@ -11,6 +11,7 @@ import { get_user_data } from './host/requests/UserRequest';
 import Loader from './components/Loader';
 import { get_unviewed_counts } from './host/requests/DashboardRequest'
 import ClinicSetupModal from './components/ClinicSetupModal'
+import AnalysisProgressFloat from './components/AnalysisProgressFloat'
 
 export default function App() {
   const {
@@ -121,6 +122,8 @@ export default function App() {
       )}
       {/* Klinika ma'lumotlari setup modali (2-qadam onboarding) */}
       <ClinicSetupModal />
+      {/* Fon rejimidagi tahlillar float paneli */}
+      {user_id != null && <AnalysisProgressFloat />}
     </>
   )
 }

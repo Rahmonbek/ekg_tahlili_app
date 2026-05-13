@@ -19,6 +19,7 @@ import DoctorSelectSection from '../../../components/shared/DoctorSelectSection'
 
 // ─── Services & Utils ───
 import { analyzeEkgFile, analyzeEkgFileSave } from '../../../host/EkgService';
+import { useBackgroundAnalysis } from '../../../hooks/useBackgroundAnalysis';
 import { get_ecg_analyses_by_patcient_id } from '../../../host/requests/ECGAnalyseRequest';
 import { useStore } from '../../../store/Store';
 import { calculateAge } from '../../../tools/formatters';
@@ -38,7 +39,8 @@ export default function EcgAnalyzer() {
     const [checkAI, setCheckAI] = useState(false);
     const [analysisDateValue, setAnalysisDateValue] = useState(getTodayDateInputValue());
 
-    const { complaints, user, setloader } = useStore();
+    const { complaints, user } = useStore();
+    const { runInBackground } = useBackgroundAnalysis();
 
     // ─── Custom Hooks ───
     const { regions, districts, fetchDistricts } = useRegionDistrict();
@@ -103,50 +105,36 @@ export default function EcgAnalyzer() {
 
     const handleSubmit = useCallback(async () => {
         if (state.files.length === 0) return dangerAlert(t('select_file_error'));
-        warningAlert(checkAI ? t('please_wait') : t('please_wait_save'));
 
-        setloader(true);
-        dispatch({ type: 'SUBMIT_START' });
+        const formData = new FormData();
+        state.files.forEach((f) => formData.append('file', f));
+        selectedComplaints.forEach((f) => formData.append('complaint', f.nameUz));
+        selectedComplaints.forEach((f) => formData.append('complaint_id', f.id));
+        selectedDoctors.forEach((f) => formData.append('doctor_id', f.id));
+        formData.append('gender', patcient.gender ? 'erkak' : 'ayol');
+        formData.append('patcient_id', patcient.id);
+        formData.append('created_doctor_id', user.doctor.id);
+        formData.append('clinic_id', user.clinic.id);
+        formData.append('lang', state.lang);
+        formData.append('age', calculateAge(patcient.birthDate));
+        if (state.analysis_date) {
+            formData.append('analysis_date', state.analysis_date);
+        }
 
-        try {
-            const formData = new FormData();
-            state.files.forEach((f) => formData.append('file', f));
-            selectedComplaints.forEach((f) => formData.append('complaint', f.nameUz));
-            selectedComplaints.forEach((f) => formData.append('complaint_id', f.id));
-            selectedDoctors.forEach((f) => formData.append('doctor_id', f.id));
-            formData.append('gender', patcient.gender ? 'erkak' : 'ayol');
-            formData.append('patcient_id', patcient.id);
-            formData.append('created_doctor_id', user.doctor.id);
-            formData.append('clinic_id', user.clinic.id);
-            formData.append('lang', state.lang);
-            formData.append('age', calculateAge(patcient.birthDate));
-            if (state.analysis_date) {
-                formData.append('analysis_date', state.analysis_date);
-            }
-
-            let res;
-            if (checkAI) {
-                res = await analyzeEkgFile(formData);
-                let parsedResult;
-                try {
-                    parsedResult = res.ai_response.raw
-                        ? typeof res.ai_response.raw === 'string'
-                            ? JSON.parse(res.ai_response.raw)
-                            : res.ai_response.raw
-                        : typeof res.ai_response === 'string'
-                            ? JSON.parse(res.ai_response)
-                            : res.ai_response;
-                } catch {
-                    parsedResult = res.ai_response;
-                }
-                dispatch({
-                    type: 'SUBMIT_SUCCESS',
-                    result: parsedResult,
-                    image: res.ecg_png_base64,
-                    imageShort: res.ecg_png_base64_short,
-                });
-            } else {
-                res = await analyzeEkgFileSave(formData);
+        if (checkAI) {
+            // ─── AI rejimi: fon da ishlaydi, forma darhol tozalanadi ───
+            runInBackground({
+                label: 'EKG AI tahlil',
+                listPath: '/ecg-analyses',
+                analyzePromise: analyzeEkgFile(formData),
+            });
+            retryAnalyse();
+        } else {
+            // ─── Saqlash rejimi: tez, shu sahifada ───
+            warningAlert(t('please_wait_save'));
+            dispatch({ type: 'SUBMIT_START' });
+            try {
+                const res = await analyzeEkgFileSave(formData);
                 dispatch({
                     type: 'SUBMIT_SUCCESS',
                     image: res.ecg_png_base64,
@@ -154,13 +142,11 @@ export default function EcgAnalyzer() {
                 });
                 successAlert(t('analyse_saved'));
                 retryAnalyse();
+            } catch (err) {
+                dispatch({ type: 'SUBMIT_ERROR', error: err.message });
             }
-        } catch (err) {
-            dispatch({ type: 'SUBMIT_ERROR', error: err.message });
-        } finally {
-            setloader(false);
         }
-    }, [state, patcient, user, selectedComplaints, selectedDoctors, setloader, dispatch, t, checkAI]);
+    }, [state, patcient, user, selectedComplaints, selectedDoctors, runInBackground, dispatch, t, checkAI, retryAnalyse]);
 
     // ─── Retry / Reset ───
     const retryAnalyse = useCallback(() => {

@@ -16,6 +16,7 @@ import PatientInfoForm from '../../../components/shared/PatientInfoForm';
 import DoctorSelectSection from '../../../components/shared/DoctorSelectSection';
 
 import { analyzeParasitologyFile, getParasitologyByPatientId } from '../../../host/parasitologyService';
+import { useBackgroundAnalysis } from '../../../hooks/useBackgroundAnalysis';
 import { useStore } from '../../../store/Store';
 import { warningAlert, dangerAlert } from '../../../tools/Alerts';
 
@@ -30,7 +31,8 @@ export default function ParasitologyAnalyzer() {
     const [gender, setGender] = React.useState(true);
     const [analysisDateValue, setAnalysisDateValue] = React.useState(getTodayDateInputValue());
 
-    const { user, setloader } = useStore();
+    const { user } = useStore();
+    const { runInBackground } = useBackgroundAnalysis();
 
     const { regions, districts, fetchDistricts } = useRegionDistrict();
     const {
@@ -93,47 +95,25 @@ export default function ParasitologyAnalyzer() {
             return;
         }
 
-        warningAlert(t('please_wait'));
-        setloader(true);
-        dispatch({ type: 'SUBMIT_START' });
-
-        try {
-            const formData = new FormData();
-            formData.append('file', state.files[0]);
-            selectedDoctors.forEach((d) => formData.append('DoctorIds', d.id));
-            formData.append('PatcientId', patcient.id);
-            formData.append('CreatedDoctorId', user.doctor.id);
-            formData.append('ClinicId', user.clinic.id);
-            formData.append('Magnification', values.magnification);
-            formData.append('Lang', state.lang);
-            if (state.analysis_date) {
-                formData.append('AnalysisDate', state.analysis_date);
-            }
-
-            const res = await analyzeParasitologyFile(formData);
-
-            let parsedResult = null;
-            if (res.aiResponse) {
-                try {
-                    parsedResult = typeof res.aiResponse === 'string'
-                        ? JSON.parse(res.aiResponse)
-                        : res.aiResponse;
-                } catch {
-                    parsedResult = res.aiResponse;
-                }
-            }
-
-            dispatch({
-                type: 'SUBMIT_SUCCESS',
-                result: parsedResult,
-                image: res.filePath,
-            });
-        } catch (err) {
-            dispatch({ type: 'SUBMIT_ERROR', error: err.message });
-        } finally {
-            setloader(false);
+        const formData = new FormData();
+        formData.append('file', state.files[0]);
+        selectedDoctors.forEach((d) => formData.append('DoctorIds', d.id));
+        formData.append('PatcientId', patcient.id);
+        formData.append('CreatedDoctorId', user.doctor.id);
+        formData.append('ClinicId', user.clinic.id);
+        formData.append('Magnification', values.magnification);
+        formData.append('Lang', state.lang);
+        if (state.analysis_date) {
+            formData.append('AnalysisDate', state.analysis_date);
         }
-    }, [state, patcient, user, selectedDoctors, setloader, dispatch, form2, t]);
+
+        runInBackground({
+            label: 'Parazitologiya tahlil',
+            listPath: '/parasitology-analyses',
+            analyzePromise: analyzeParasitologyFile(formData),
+        });
+        retryAnalyse();
+    }, [state, patcient, user, selectedDoctors, runInBackground, form2, t, retryAnalyse]);
 
     const retryAnalyse = useCallback(() => {
         resetPatient();
