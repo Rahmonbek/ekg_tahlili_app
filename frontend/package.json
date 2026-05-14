@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@livekit/components-react": "^2.9.21",
+    "@livekit/components-styles": "^1.2.0",
+    "@microsoft/signalr": "^10.0.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
@@ -14,6 +17,7 @@
     "fs": "^0.0.1-security",
     "i18next": "^25.7.1",
     "js-cookie": "^3.0.5",
+    "livekit-client": "^2.19.0",
     "openai": "^6.15.0",
     "react": "18",
     "react-chartjs-2": "^5.3.0",

@@ -155,13 +155,13 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("clinic_name");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_active");
-
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -497,10 +497,6 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("analyse_file_link");
 
-                    b.Property<string>("DocumentNumber")
-                        .HasColumnType("text")
-                        .HasColumnName("document_number");
-
                     b.Property<DateTime?>("AnalysisDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("analysis_date");
@@ -516,6 +512,10 @@ namespace EkgAnalyzerApi.Migrations
                     b.Property<int>("CreatedDoctorId")
                         .HasColumnType("integer")
                         .HasColumnName("created_doctor_id");
+
+                    b.Property<string>("DocumentNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("document_number");
 
                     b.Property<string>("GeneratedFileLink")
                         .HasColumnType("text")
@@ -603,10 +603,6 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("analyse_file_link");
 
-                    b.Property<string>("DocumentNumber")
-                        .HasColumnType("text")
-                        .HasColumnName("document_number");
-
                     b.Property<DateTime?>("AnalysisDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("analysis_date");
@@ -622,6 +618,10 @@ namespace EkgAnalyzerApi.Migrations
                     b.Property<int>("CreatedDoctorId")
                         .HasColumnType("integer")
                         .HasColumnName("created_doctor_id");
+
+                    b.Property<string>("DocumentNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("document_number");
 
                     b.Property<int>("MainDoctorId")
                         .HasColumnType("integer")
@@ -741,10 +741,6 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("analyse_file_link");
 
-                    b.Property<string>("DocumentNumber")
-                        .HasColumnType("text")
-                        .HasColumnName("document_number");
-
                     b.Property<DateTime?>("AnalysisDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("analysis_date");
@@ -760,6 +756,10 @@ namespace EkgAnalyzerApi.Migrations
                     b.Property<int>("CreatedDoctorId")
                         .HasColumnType("integer")
                         .HasColumnName("created_doctor_id");
+
+                    b.Property<string>("DocumentNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("document_number");
 
                     b.Property<int>("PatcientId")
                         .HasColumnType("integer")
@@ -1143,10 +1143,6 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("ai_response");
 
-                    b.Property<string>("DocumentNumber")
-                        .HasColumnType("text")
-                        .HasColumnName("document_number");
-
                     b.Property<DateTime?>("AnalysisDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("analysis_date");
@@ -1167,6 +1163,10 @@ namespace EkgAnalyzerApi.Migrations
                     b.Property<int>("CreatedDoctorId")
                         .HasColumnType("integer")
                         .HasColumnName("created_doctor_id");
+
+                    b.Property<string>("DocumentNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("document_number");
 
                     b.Property<int?>("EggCountPerField")
                         .HasColumnType("integer")
@@ -1522,10 +1522,6 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("analyse_file_link");
 
-                    b.Property<string>("DocumentNumber")
-                        .HasColumnType("text")
-                        .HasColumnName("document_number");
-
                     b.Property<DateTime?>("AnalysisDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("analysis_date");
@@ -1541,6 +1537,10 @@ namespace EkgAnalyzerApi.Migrations
                     b.Property<int>("CreatedDoctorId")
                         .HasColumnType("integer")
                         .HasColumnName("created_doctor_id");
+
+                    b.Property<string>("DocumentNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("document_number");
 
                     b.Property<int>("MainDoctorId")
                         .HasColumnType("integer")
@@ -1671,6 +1671,54 @@ namespace EkgAnalyzerApi.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("varification_codes");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.VideoCallSession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClinicId")
+                        .HasColumnType("integer")
+                        .HasColumnName("clinic_id");
+
+                    b.Property<DateTime?>("EndedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ended_at");
+
+                    b.Property<int>("InitiatorId")
+                        .HasColumnType("integer")
+                        .HasColumnName("initiator_id");
+
+                    b.Property<int>("RecipientId")
+                        .HasColumnType("integer")
+                        .HasColumnName("recipient_id");
+
+                    b.Property<string>("RoomName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("room_name");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InitiatorId");
+
+                    b.HasIndex("RecipientId");
+
+                    b.ToTable("video_call_sessions");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.AnalysisDiagnosis", b =>
@@ -2111,6 +2159,25 @@ namespace EkgAnalyzerApi.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.VideoCallSession", b =>
+                {
+                    b.HasOne("EkgAnalyzerApi.Models.User", "Initiator")
+                        .WithMany()
+                        .HasForeignKey("InitiatorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EkgAnalyzerApi.Models.User", "Recipient")
+                        .WithMany()
+                        .HasForeignKey("RecipientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Initiator");
+
+                    b.Navigation("Recipient");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.Clinic", b =>

@@ -47,6 +47,7 @@ namespace EkgAnalyzerApi.Data
         public DbSet<ParasitologyAnalysisDoctors> ParasitologyAnalysisDoctors { get; set; }
         public DbSet<ParasitologyResults> ParasitologyResults { get; set; }
         public DbSet<AnalysisDiagnosis> AnalysisDiagnoses { get; set; }
+        public DbSet<VideoCallSession> VideoCallSessions { get; set; }
 
         public override int SaveChanges()
         {

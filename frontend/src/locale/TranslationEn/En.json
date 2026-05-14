@@ -310,5 +310,18 @@
   "login_or_password_incorrect": "Incorrect login or password",
   "please_verify_email": "Please verify your email. A verification code was sent",
   "account_temporarily_locked": "Account temporarily locked. Please try again later",
-  "something_went_wrong_try_again": "Something went wrong. Please try again"
+  "something_went_wrong_try_again": "Something went wrong. Please try again",
+  "video_conference": "Video Conference",
+  "incoming_call": "Incoming Call",
+  "accept_call": "Accept",
+  "reject_call": "Reject",
+  "call_doctor": "Call",
+  "doctors_online": "Online Doctors",
+  "call_ended": "Call Ended",
+  "call_rejected": "Call Rejected",
+  "waiting_for_call": "Waiting for admin to call...",
+  "you_are_online": "You are online — ready to receive calls",
+  "doctor_offline": "Doctor offline",
+  "no_doctors_available": "No doctors available yet",
+  "call_error": "Call error occurred"
 }

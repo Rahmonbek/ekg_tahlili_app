@@ -324,5 +324,18 @@
   "clinic_info": "Shifoxona ma'lumotlari",
   "phones": "Telefon raqamlar",
   "select_parasitology_file": "Mikroskopiya rasmini tanlang",
-  "enter_addres": "Mahalla, Ko'cha, Uy raqami"
+  "enter_addres": "Mahalla, Ko'cha, Uy raqami",
+  "video_conference": "Video Konferensiya",
+  "incoming_call": "Kiruvchi qo'ng'iroq",
+  "accept_call": "Qabul qilish",
+  "reject_call": "Rad etish",
+  "call_doctor": "Qo'ng'iroq",
+  "doctors_online": "Online shifokorlar",
+  "call_ended": "Qo'ng'iroq tugadi",
+  "call_rejected": "Qo'ng'iroq rad etildi",
+  "waiting_for_call": "Admin qo'ng'iroq qilishini kuting...",
+  "you_are_online": "Siz online — qo'ng'iroqni qabul qilishingiz mumkin",
+  "doctor_offline": "Shifokor offline",
+  "no_doctors_available": "Hozircha shifokorlar mavjud emas",
+  "call_error": "Qo'ng'iroqda xatolik yuz berdi"
 }

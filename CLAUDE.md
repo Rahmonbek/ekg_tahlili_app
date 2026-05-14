@@ -19,6 +19,7 @@ Tahlil modullari: **EKG, Laboratoriya, Holter, SMAD, Parazitologiya**
 - **Spec** (user stories, API shartnomasi): [.specify/memory/spec.md](.specify/memory/spec.md)
 - **Tasks — Parazitologiya**: [.specify/memory/tasks-parasitology.md](.specify/memory/tasks-parasitology.md)
 - **Tasks — UI/UX**: [.specify/memory/tasks-uiux.md](.specify/memory/tasks-uiux.md)
+- **Tasks — Video Konferensiya**: [.specify/memory/tasks-videocall.md](.specify/memory/tasks-videocall.md)
 
 ---
 

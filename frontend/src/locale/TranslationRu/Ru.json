@@ -312,5 +312,18 @@
   "login_or_password_incorrect": "Неверный логин или пароль",
   "please_verify_email": "Подтвердите email. Код подтверждения был отправлен",
   "account_temporarily_locked": "Аккаунт временно заблокирован. Попробуйте позже",
-  "something_went_wrong_try_again": "Произошла ошибка. Попробуйте ещё раз"
+  "something_went_wrong_try_again": "Произошла ошибка. Попробуйте ещё раз",
+  "video_conference": "Видеоконференция",
+  "incoming_call": "Входящий звонок",
+  "accept_call": "Принять",
+  "reject_call": "Отклонить",
+  "call_doctor": "Позвонить",
+  "doctors_online": "Онлайн врачи",
+  "call_ended": "Звонок завершён",
+  "call_rejected": "Звонок отклонён",
+  "waiting_for_call": "Ожидайте звонка от администратора...",
+  "you_are_online": "Вы онлайн — можете принимать звонки",
+  "doctor_offline": "Врач не в сети",
+  "no_doctors_available": "Пока нет доступных врачей",
+  "call_error": "Ошибка звонка"
 }

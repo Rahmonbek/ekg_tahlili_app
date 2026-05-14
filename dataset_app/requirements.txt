@@ -1,5 +1,0 @@
-ultralytics>=8.2.0
-opencv-python
-pillow
-pyyaml
-numpy

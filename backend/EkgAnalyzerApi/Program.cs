@@ -1,5 +1,6 @@
 using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.Services;
+using EkgAnalyzerApi.Hubs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -33,6 +34,8 @@ builder.Services.AddScoped<ParasitologyAnalyseService>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<PdfReportService>();     // PDF hisobot generatsiyasi
 builder.Services.AddSingleton<EncryptionService>(); // AES-256 shifrlash
+builder.Services.AddSingleton<IVideoCallConnectionService, VideoCallConnectionService>();
+builder.Services.AddSignalR();
 
 // Python API proxy uchun HttpClient
 builder.Services.AddHttpClient("PythonApi", client =>
@@ -65,6 +68,18 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
+    };
+    // SignalR WebSocket ulanishlari token ni query string dan o'qiydi
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                context.Token = accessToken;
+            return Task.CompletedTask;
+        }
     };
 });
 builder.Services.AddRateLimiter(options => {
@@ -141,4 +156,5 @@ app.UseStaticFiles();
 app.UseAuthorization();
 app.UseAuditLogging(); // TT 4.1.6 — audit log middleware
 app.MapControllers();
+app.MapHub<VideoCallHub>("/hubs/videocall");
 app.Run();

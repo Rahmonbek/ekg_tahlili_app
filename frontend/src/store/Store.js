@@ -80,6 +80,14 @@ export const useStore = create((set) => ({
 
     // ─── Fon rejimidagi tahlillar ──────────────────────────────────────────
     // item: { key, label, listPath, status: 'loading'|'done'|'error', errorMsg? }
+    // ─── Video qo'ng'iroq holati ──────────────────────────────────────────────
+    videoCall: {
+        incomingCall: null,   // { roomName, initiatorName, initiatorId, sessionId }
+        activeRoom: null,     // { roomName, token, liveKitUrl }
+        isCalling: false,
+    },
+    setVideoCall: (patch) => set((s) => ({ videoCall: { ...s.videoCall, ...patch } })),
+
     pendingAnalyses: [],
     addPendingAnalysis: (item) => set((s) => ({ pendingAnalyses: [...s.pendingAnalyses, item] })),
     updatePendingAnalysis: (key, updates) => set((s) => ({

@@ -31,6 +31,7 @@ import LabAnalyseView from './lab_analyse/LabAnalyseView'
 import DiagnoseView from './diagnoses/DiagnoseView'
 import Dashboard from './Dashboard'
 import ClinicActivationGate from '../../components/ClinicActivationGate'
+import VideoConference from './video_conference/VideoConference'
 
 // ─── Rol asosida himoya ──────────────────────────────────────────────────────
 const ProtectedRoute = ({ allowedRoles, userRole, children }) => {
@@ -228,6 +229,13 @@ export default function Main() {
                             <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
                                 <Patcients />
                             </ClinicGatedRoute>
+                        } />
+
+                        {/* ── Video Konferensiya — Admin/Direktor/Shifokor ── */}
+                        <Route path="/video-conference" element={
+                            <ProtectedRoute allowedRoles={[2, 3, 4]} userRole={user.roleId}>
+                                <VideoConference />
+                            </ProtectedRoute>
                         } />
 
                         {/* 404 */}

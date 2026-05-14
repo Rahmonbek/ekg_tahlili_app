@@ -12,6 +12,8 @@ import Loader from './components/Loader';
 import { get_unviewed_counts } from './host/requests/DashboardRequest'
 import ClinicSetupModal from './components/ClinicSetupModal'
 import AnalysisProgressFloat from './components/AnalysisProgressFloat'
+import useVideoSignalR from './hooks/useVideoSignalR'
+import IncomingCallModal from './components/video/IncomingCallModal'
 
 export default function App() {
   const {
@@ -21,6 +23,10 @@ export default function App() {
     setecg_unread, setholter_unread, setsmad_unread, setlab_unread, setdiagnoses_unread,
     setclinic_setup_modal
   } = useStore()
+
+  // SignalR video qo'ng'iroq — faqat Admin/Direktor/Shifokor uchun ulanadi
+  const videoEnabled = !!user_id && [2, 3, 4].includes(user?.roleId)
+  useVideoSignalR(videoEnabled)
 
   const [first_load, setfirst_load] = useState(false)
   const navigate = useNavigate()
@@ -124,6 +130,8 @@ export default function App() {
       <ClinicSetupModal />
       {/* Fon rejimidagi tahlillar float paneli */}
       {user_id != null && <AnalysisProgressFloat />}
+      {/* Kiruvchi video qo'ng'iroq modali */}
+      <IncomingCallModal />
     </>
   )
 }

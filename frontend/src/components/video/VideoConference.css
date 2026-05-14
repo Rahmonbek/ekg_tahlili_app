@@ -1,0 +1,395 @@
+/* ================================================================
+   NMED Video Conference — Telegram uslubi + Responsive
+   ================================================================ */
+
+/* ── Wrapper: ekranni to'liq egallaydi ── */
+.nmed-livekit-wrapper {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    background: #0d1929;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ================================================================
+   TELEGRAM LAYOUT
+   ================================================================ */
+
+/* Asosiy root konteyner */
+.nmed-tg-root {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #111;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Katta remote video ── */
+.nmed-tg-main {
+    position: absolute;
+    inset: 0;
+    background: #0d0d0d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nmed-tg-main-video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    background: #000;
+}
+
+/* Remote ishtirokchi pastki-chap nomi */
+.nmed-tg-participant-name {
+    position: absolute;
+    bottom: 112px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 20px;
+    pointer-events: none;
+    letter-spacing: 0.2px;
+}
+
+/* ── Kutish holati (remote ulanmagan) ── */
+.nmed-tg-waiting {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(160deg, #1a2942 0%, #0d1929 100%);
+    text-align: center;
+    padding: 24px;
+}
+
+/* Ulanmoqda animatsiya nuqtalari */
+.nmed-tg-connecting-dots {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.nmed-tg-connecting-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    animation: nmed-dot-pulse 1.4s infinite ease-in-out;
+}
+
+.nmed-tg-connecting-dots span:nth-child(1) { animation-delay: 0s; }
+.nmed-tg-connecting-dots span:nth-child(2) { animation-delay: 0.2s; }
+.nmed-tg-connecting-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes nmed-dot-pulse {
+    0%, 80%, 100% { opacity: 0.3; transform: scale(0.85); }
+    40%            { opacity: 1;   transform: scale(1.1); }
+}
+
+/* ── PiP — o'z videosi (pastki o'ng) ── */
+.nmed-tg-pip {
+    position: absolute;
+    bottom: 108px;
+    right: 16px;
+    width: 110px;
+    height: 160px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    z-index: 20;
+    cursor: pointer;
+    transition: transform 0.15s;
+    background: #1a1a1a;
+}
+
+.nmed-tg-pip:hover {
+    transform: scale(1.04);
+}
+
+.nmed-tg-pip-video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+/* Kamera o'chirilganda PiP overlay */
+.nmed-tg-pip-nocam {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+/* ================================================================
+   BOSHQARUV TUGMALARI — Video ustida overlay (past-markaz)
+   ================================================================ */
+
+.nmed-tg-controls {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    z-index: 30;
+    /* Telegram uslubida shaffof blur panel */
+    background: rgba(15, 15, 20, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 36px;
+    padding: 14px 24px 12px;
+}
+
+/* Asosiy tugma */
+.nmed-tg-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.12);
+    border: none;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 0;
+    transition: background 0.15s, transform 0.1s;
+    outline: none;
+    position: relative;
+    flex-shrink: 0;
+    justify-content: center;
+}
+
+.nmed-tg-btn:hover {
+    background: rgba(255, 255, 255, 0.22);
+    transform: scale(1.06);
+}
+
+.nmed-tg-btn:active {
+    transform: scale(0.94);
+}
+
+/* O'chirilgan holat */
+.nmed-tg-btn.nmed-tg-btn-off {
+    background: rgba(255, 255, 255, 0.08);
+    opacity: 0.7;
+}
+
+/* Tugma osti yozuvi */
+.nmed-tg-btn-label {
+    position: absolute;
+    bottom: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.65);
+    white-space: nowrap;
+    font-weight: 400;
+    letter-spacing: 0.2px;
+}
+
+/* Tugatish tugmasi — qizil, kattaroq */
+.nmed-tg-btn.nmed-tg-btn-end {
+    background: #ff3b30;
+    width: 64px;
+    height: 64px;
+    box-shadow: 0 4px 20px rgba(255, 59, 48, 0.5);
+    margin: 0 4px;
+}
+
+.nmed-tg-btn.nmed-tg-btn-end:hover {
+    background: #ff2d20;
+    box-shadow: 0 6px 24px rgba(255, 59, 48, 0.65);
+}
+
+.nmed-tg-btn.nmed-tg-btn-end .nmed-tg-btn-label {
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 500;
+}
+
+/* ================================================================
+   Kiruvchi qo'ng'iroq modali
+   ================================================================ */
+
+.nmed-incoming-modal .ant-modal-content {
+    border-radius: 20px !important;
+    overflow: hidden;
+    padding: 0 !important;
+}
+
+/* ================================================================
+   Shifokorlar kartalar grid
+   ================================================================ */
+
+.nmed-doctors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.nmed-doctor-card {
+    border-radius: 14px !important;
+    transition: box-shadow 0.2s, transform 0.15s !important;
+}
+
+.nmed-doctor-card.online:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(26, 41, 66, 0.15) !important;
+}
+
+/* ================================================================
+   Kutish animatsiyasi (shifokor sahifasi)
+   ================================================================ */
+
+@keyframes nmed-pulse {
+    0%   { box-shadow: 0 0 0 0   rgba(26, 41, 66, 0.35); }
+    70%  { box-shadow: 0 0 0 18px rgba(26, 41, 66, 0); }
+    100% { box-shadow: 0 0 0 0   rgba(26, 41, 66, 0); }
+}
+
+.nmed-pulse {
+    animation: nmed-pulse 2s ease-out infinite;
+}
+
+/* ================================================================
+   PLANSHET (768px — 1023px)
+   ================================================================ */
+@media (max-width: 1023px) {
+    .nmed-doctors-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .nmed-tg-pip {
+        width: 96px;
+        height: 140px;
+        bottom: 104px;
+        right: 12px;
+    }
+
+    .nmed-tg-controls {
+        padding: 12px 20px 10px;
+        gap: 10px;
+        bottom: 24px;
+    }
+
+    .nmed-tg-btn {
+        width: 52px;
+        height: 52px;
+    }
+
+    .nmed-tg-btn.nmed-tg-btn-end {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+/* ================================================================
+   TELEFON (max 767px)
+   ================================================================ */
+@media (max-width: 767px) {
+    /* Doctors grid */
+    .nmed-doctors-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .nmed-vc-page {
+        padding: 16px 0 !important;
+    }
+
+    /* PiP — telefonda kichikroq */
+    .nmed-tg-pip {
+        width: 80px;
+        height: 120px;
+        bottom: 96px;
+        right: 10px;
+        border-radius: 10px;
+    }
+
+    /* Boshqaruv tugmalari — kichikroq */
+    .nmed-tg-controls {
+        padding: 10px 16px 8px;
+        gap: 8px;
+        bottom: 20px;
+        border-radius: 28px;
+    }
+
+    .nmed-tg-btn {
+        width: 48px;
+        height: 48px;
+    }
+
+    .nmed-tg-btn.nmed-tg-btn-end {
+        width: 56px;
+        height: 56px;
+    }
+
+    .nmed-tg-btn-label {
+        font-size: 10px;
+        bottom: -20px;
+    }
+
+    /* Participant nomi */
+    .nmed-tg-participant-name {
+        bottom: 100px;
+        left: 12px;
+        font-size: 12px;
+    }
+
+    /* Kiruvchi modal */
+    .nmed-incoming-modal {
+        max-width: calc(100vw - 32px) !important;
+    }
+
+    .nmed-doctor-waiting {
+        padding: 48px 16px !important;
+    }
+}
+
+/* ================================================================
+   KICHIK TELEFON (max 400px)
+   ================================================================ */
+@media (max-width: 400px) {
+    .nmed-doctors-grid {
+        gap: 12px;
+    }
+
+    .nmed-tg-pip {
+        width: 70px;
+        height: 105px;
+    }
+
+    .nmed-tg-controls {
+        gap: 6px;
+        padding: 10px 12px 8px;
+    }
+
+    .nmed-tg-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    .nmed-tg-btn.nmed-tg-btn-end {
+        width: 52px;
+        height: 52px;
+    }
+}

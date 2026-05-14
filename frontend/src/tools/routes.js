@@ -5,6 +5,7 @@ import { MdOutlineMedicalInformation } from "react-icons/md";
 import { GiTestTubes } from "react-icons/gi";
 import { RiPulseLine } from 'react-icons/ri';
 import { GiMicroscope } from 'react-icons/gi';
+import { VideoCameraOutlined } from '@ant-design/icons';
 export const routers = [
     {
         path: '/doctor',
@@ -86,6 +87,15 @@ export const routers = [
     //     role_id:[2, 3],
     //     requires_active: false
     // },
+    {
+        path: '/video-conference',
+        icon: <VideoCameraOutlined />,
+        title: "video_conference",
+        tools: "video-conference",
+        role_id: [2, 3, 4],
+        unread_key: null,
+        requires_active: false
+    },
     {
         path: '/settings',
         icon: <IoMdSettings />,
