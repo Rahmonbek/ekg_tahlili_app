@@ -13,6 +13,7 @@ import { get_unviewed_counts } from './host/requests/DashboardRequest'
 import ClinicSetupModal from './components/ClinicSetupModal'
 import AnalysisProgressFloat from './components/AnalysisProgressFloat'
 import useVideoSignalR from './hooks/useVideoSignalR'
+import useConsultationSignalR from './hooks/useConsultationSignalR'
 import IncomingCallModal from './components/video/IncomingCallModal'
 
 export default function App() {
@@ -27,6 +28,9 @@ export default function App() {
   // SignalR video qo'ng'iroq — faqat Admin/Direktor/Shifokor uchun ulanadi
   const videoEnabled = !!user_id && [2, 3, 4].includes(user?.roleId)
   useVideoSignalR(videoEnabled)
+
+  // SignalR konsultatsiya bildirishnomalari — faqat Admin/Direktor/Shifokor uchun
+  useConsultationSignalR(videoEnabled)
 
   const [first_load, setfirst_load] = useState(false)
   const navigate = useNavigate()

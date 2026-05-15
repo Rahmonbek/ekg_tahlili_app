@@ -5,7 +5,7 @@ import { MdOutlineMedicalInformation } from "react-icons/md";
 import { GiTestTubes } from "react-icons/gi";
 import { RiPulseLine } from 'react-icons/ri';
 import { GiMicroscope } from 'react-icons/gi';
-import { VideoCameraOutlined } from '@ant-design/icons';
+import { VideoCameraOutlined, TeamOutlined, MedicineBoxOutlined, InboxOutlined, CalendarOutlined } from '@ant-design/icons';
 export const routers = [
     {
         path: '/doctor',
@@ -96,6 +96,47 @@ export const routers = [
         unread_key: null,
         requires_active: false
     },
+
+    // ── Online Konsultatsiya — Admin/Direktor ──────────────────────────────────
+    {
+        path: '/consultants',
+        icon: <TeamOutlined />,
+        title: "consultants",
+        tools: "consultants",
+        role_id: [2, 3],
+        unread_key: null,
+        requires_active: false
+    },
+    {
+        path: '/consultations',
+        icon: <MedicineBoxOutlined />,
+        title: "consultation",
+        tools: "consultations",
+        role_id: [2, 3],
+        unread_key: 'consultation_admin_pending',
+        requires_active: false
+    },
+
+    // ── Online Konsultatsiya — Doctor ──────────────────────────────────────────
+    {
+        path: '/incoming-consultations',
+        icon: <InboxOutlined />,
+        title: "incoming_consultations",
+        tools: "incoming-consultations",
+        role_id: [4],
+        unread_key: 'consultation_doctor_pending',
+        requires_active: false
+    },
+    {
+        path: '/my-schedule',
+        icon: <CalendarOutlined />,
+        title: "my_schedule",
+        tools: "my-schedule",
+        role_id: [4],
+        unread_key: null,
+        requires_active: false
+    },
+
     {
         path: '/settings',
         icon: <IoMdSettings />,

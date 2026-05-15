@@ -19,7 +19,7 @@ const ANALYZER_ROUTES = {
 export default function SideBar() {
     const {t}=useTranslation()
     const location=useLocation()
-    const {open_menu, user, ecg_unread, holter_unread, smad_unread, lab_unread, diagnoses_unread, initMenu, setopen_menu}=useStore()
+    const {open_menu, user, ecg_unread, holter_unread, smad_unread, lab_unread, diagnoses_unread, consultationBadge, initMenu, setopen_menu}=useStore()
 
     const unreadMap = {
         ecg_unread,
@@ -27,6 +27,8 @@ export default function SideBar() {
         smad_unread,
         lab_unread,
         diagnoses_unread,
+        consultation_admin_pending: consultationBadge?.adminPendingCount ?? 0,
+        consultation_doctor_pending: consultationBadge?.doctorPendingCount ?? 0,
     }
 
     // Klinika faollik holati (Main.js dagi mantiq bilan bir xil)
@@ -82,7 +84,12 @@ export default function SideBar() {
         <div className='sidebar_menu'>
             {routers.map((item, index)=>{
                 const isDoctor = user && (user.roleId === 4 || user.roleId === 5)
-                const unreadCount = isDoctor && item.unread_key ? (unreadMap[item.unread_key] || 0) : 0
+                // Konsultatsiya badge'lari barcha rollarda ko'rsatiladi
+                const isConsultationKey = item.unread_key === 'consultation_admin_pending'
+                    || item.unread_key === 'consultation_doctor_pending'
+                const unreadCount = (isDoctor || isConsultationKey) && item.unread_key
+                    ? (unreadMap[item.unread_key] || 0)
+                    : 0
                 // Klinika faollashtilmagan va route faol klinika talab qilsa — qulf belgisi
                 const isLocked = item.requires_active && !clinicIsActive
                 return (user==null || item.role_id.length===0 || item.role_id.indexOf(user.roleId)!==-1) ? (

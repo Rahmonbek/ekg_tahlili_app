@@ -35,6 +35,9 @@ builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<PdfReportService>();     // PDF hisobot generatsiyasi
 builder.Services.AddSingleton<EncryptionService>(); // AES-256 shifrlash
 builder.Services.AddSingleton<IVideoCallConnectionService, VideoCallConnectionService>();
+builder.Services.AddScoped<IOnlineConsultationService, OnlineConsultationService>();
+builder.Services.AddSingleton<IConsultationConnectionService, ConsultationConnectionService>();
+builder.Services.AddHostedService<ConsultationExpiryService>();
 builder.Services.AddSignalR();
 
 // Python API proxy uchun HttpClient
@@ -157,4 +160,5 @@ app.UseAuthorization();
 app.UseAuditLogging(); // TT 4.1.6 — audit log middleware
 app.MapControllers();
 app.MapHub<VideoCallHub>("/hubs/videocall");
+app.MapHub<EkgAnalyzerApi.Hubs.ConsultationHub>("/hubs/consultation");
 app.Run();

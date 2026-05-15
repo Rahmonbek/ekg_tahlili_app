@@ -30,6 +30,15 @@ namespace EkgAnalyzerApi.Models
         [Column("phone")]
         public string? Phone { get; set; }
 
+        [Column("average_rating")]
+        public decimal AverageRating { get; set; } = 0;
+
+        [Column("total_ratings")]
+        public int TotalRatings { get; set; } = 0;
+
+        [Column("experience_years")]
+        public int? ExperienceYears { get; set; }
+
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 

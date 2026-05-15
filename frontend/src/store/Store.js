@@ -88,6 +88,15 @@ export const useStore = create((set) => ({
     },
     setVideoCall: (patch) => set((s) => ({ videoCall: { ...s.videoCall, ...patch } })),
 
+    // ─── Online Konsultatsiya badge ────────────────────────────────────────────
+    consultationBadge: {
+        adminPendingCount: 0,   // Admin sidebar badge (pending konsultatsiyalar)
+        doctorPendingCount: 0,  // Doctor sidebar badge (pending so'rovlar)
+    },
+    setConsultationBadge: (patch) => set((s) => ({
+        consultationBadge: { ...s.consultationBadge, ...patch }
+    })),
+
     pendingAnalyses: [],
     addPendingAnalysis: (item) => set((s) => ({ pendingAnalyses: [...s.pendingAnalyses, item] })),
     updatePendingAnalysis: (key, updates) => set((s) => ({

@@ -59,5 +59,19 @@ type: project
 - Frontend: `set_clinic_active(clinicId, isActive)` request funksiyasi
 **Status:** BAJARILDI
 
+## TASK 7 🔄 — Online Konsultatsiya Moduli
+**Spec fayl:** `.specify/memory/tasks-online-consultation.md`
+**Maqsad:** Boshqa klinikadagi doktorni konsultant sifatida biriktirish, video qo'ng'iroq, xulosa yozish.
+**Asosiy qismlar:**
+- Phase 1: 5 jadval + Doctor maydonlari (OC001–OC008)
+- Phase 2: ConsultationHub SignalR (OC009–OC010)
+- Phase 3–5: DTOs, Service, Controller (OC011–OC017)
+- Phase 6–12: Frontend (OC018–OC034)
+- Phase 13: Nginx (OC035)
+**Jami vazifalar:** 35 task (OC001–OC035)
+**Boshlangan sana:** 2026-05-15
+**Status:** SPEC YOZILDI, BAJARILMAGAN
+
 ## How to apply
 Har vazifa bajarilganda `Status: BAJARILDI` deb belgilash.
+Yangi spec `.specify/memory/tasks-online-consultation.md` faylida to'liq.

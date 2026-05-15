@@ -49,6 +49,13 @@ namespace EkgAnalyzerApi.Data
         public DbSet<AnalysisDiagnosis> AnalysisDiagnoses { get; set; }
         public DbSet<VideoCallSession> VideoCallSessions { get; set; }
 
+        // Online Konsultatsiya
+        public DbSet<ClinicConsultant> ClinicConsultants { get; set; }
+        public DbSet<Consultation> Consultations { get; set; }
+        public DbSet<ConsultationAnalysis> ConsultationAnalyses { get; set; }
+        public DbSet<ConsultationConclusion> ConsultationConclusions { get; set; }
+        public DbSet<ConsultantRating> ConsultantRatings { get; set; }
+
         public override int SaveChanges()
         {
             ApplyTimestamps();
@@ -114,6 +121,49 @@ namespace EkgAnalyzerApi.Data
             // AnalysisDiagnosis — composite index
             modelBuilder.Entity<AnalysisDiagnosis>()
                 .HasIndex(d => new { d.AnalysisType, d.AnalysisId });
+
+            // ClinicConsultants — bitta klinika bitta doctorni bir marta biriktira oladi
+            modelBuilder.Entity<ClinicConsultant>()
+                .HasIndex(c => new { c.ClinicId, c.ConsultantDoctorId })
+                .IsUnique();
+
+            // ConsultationConclusions — bitta konsultatsiyaga bitta xulosa
+            modelBuilder.Entity<ConsultationConclusion>()
+                .HasIndex(c => c.ConsultationId)
+                .IsUnique();
+
+            // ConsultantRatings — bitta konsultatsiyaga bitta baho
+            modelBuilder.Entity<ConsultantRating>()
+                .HasIndex(c => c.ConsultationId)
+                .IsUnique();
+
+            // Consultation → Patient (PatientId FK, Patcients jadvalida)
+            modelBuilder.Entity<Consultation>()
+                .HasOne(c => c.Patient)
+                .WithMany()
+                .HasForeignKey(c => c.PatientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Consultation → RequestedByAdmin (Users jadvalida)
+            modelBuilder.Entity<Consultation>()
+                .HasOne(c => c.RequestedByAdmin)
+                .WithMany()
+                .HasForeignKey(c => c.RequestedByAdminId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Consultation → ConsultantDoctor (Doctors jadvalida)
+            modelBuilder.Entity<Consultation>()
+                .HasOne(c => c.ConsultantDoctor)
+                .WithMany()
+                .HasForeignKey(c => c.ConsultantDoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ClinicConsultant → ConsultantDoctor
+            modelBuilder.Entity<ClinicConsultant>()
+                .HasOne(c => c.ConsultantDoctor)
+                .WithMany()
+                .HasForeignKey(c => c.ConsultantDoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 

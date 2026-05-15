@@ -32,6 +32,12 @@ import DiagnoseView from './diagnoses/DiagnoseView'
 import Dashboard from './Dashboard'
 import ClinicActivationGate from '../../components/ClinicActivationGate'
 import VideoConference from './video_conference/VideoConference'
+import MyConsultantsPage from './consultation/MyConsultantsPage'
+import ConsultationListPage from './consultation/ConsultationListPage'
+import ConsultationDetailPage from './consultation/ConsultationDetailPage'
+import IncomingConsultationsPage from './consultation/IncomingConsultationsPage'
+import MySchedulePage from './consultation/MySchedulePage'
+import ConsultationWorkPage from './consultation/ConsultationWorkPage'
 
 // ─── Rol asosida himoya ──────────────────────────────────────────────────────
 const ProtectedRoute = ({ allowedRoles, userRole, children }) => {
@@ -235,6 +241,40 @@ export default function Main() {
                         <Route path="/video-conference" element={
                             <ProtectedRoute allowedRoles={[2, 3, 4]} userRole={user.roleId}>
                                 <VideoConference />
+                            </ProtectedRoute>
+                        } />
+
+                        {/* ── Online Konsultatsiya — Admin/Direktor ── */}
+                        <Route path="/consultants" element={
+                            <ProtectedRoute allowedRoles={[2, 3]} userRole={user.roleId}>
+                                <MyConsultantsPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/consultations" element={
+                            <ProtectedRoute allowedRoles={[2, 3]} userRole={user.roleId}>
+                                <ConsultationListPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/consultations/:id" element={
+                            <ProtectedRoute allowedRoles={[2, 3, 4]} userRole={user.roleId}>
+                                <ConsultationDetailPage />
+                            </ProtectedRoute>
+                        } />
+
+                        {/* ── Online Konsultatsiya — Shifokor ── */}
+                        <Route path="/incoming-consultations" element={
+                            <ProtectedRoute allowedRoles={[4]} userRole={user.roleId}>
+                                <IncomingConsultationsPage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/my-schedule" element={
+                            <ProtectedRoute allowedRoles={[4]} userRole={user.roleId}>
+                                <MySchedulePage />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/consultations/:id/work" element={
+                            <ProtectedRoute allowedRoles={[4]} userRole={user.roleId}>
+                                <ConsultationWorkPage />
                             </ProtectedRoute>
                         } />
 
