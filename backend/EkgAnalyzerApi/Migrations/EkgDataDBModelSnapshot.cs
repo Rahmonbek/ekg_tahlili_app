@@ -185,21 +185,21 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("clinic_id");
 
-                    b.Property<int>("ConsultantDoctorId")
-                        .HasColumnType("integer")
-                        .HasColumnName("consultant_doctor_id");
+                    b.Property<decimal>("CurrentPrice")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("current_price");
 
-                    b.Property<DateTime?>("LastConsultationAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_consultation_at");
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("integer")
+                        .HasColumnName("doctor_id");
+
+                    b.Property<int?>("InvitationId")
+                        .HasColumnType("integer")
+                        .HasColumnName("invitation_id");
 
                     b.Property<DateTime>("LinkedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("linked_at");
-
-                    b.Property<int>("LinkedByConsultationId")
-                        .HasColumnType("integer")
-                        .HasColumnName("linked_by_consultation_id");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -212,9 +212,11 @@ namespace EkgAnalyzerApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ConsultantDoctorId");
+                    b.HasIndex("DoctorId");
 
-                    b.HasIndex("ClinicId", "ConsultantDoctorId")
+                    b.HasIndex("InvitationId");
+
+                    b.HasIndex("ClinicId", "DoctorId")
                         .IsUnique();
 
                     b.ToTable("clinic_consultants");
@@ -346,7 +348,7 @@ namespace EkgAnalyzerApi.Migrations
                     b.ToTable("complaints");
                 });
 
-            modelBuilder.Entity("EkgAnalyzerApi.Models.ConsultantRating", b =>
+            modelBuilder.Entity("EkgAnalyzerApi.Models.ConsultantInvitation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -359,36 +361,81 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("clinic_id");
 
-                    b.Property<string>("Comment")
-                        .HasColumnType("text")
-                        .HasColumnName("comment");
-
-                    b.Property<int>("ConsultantDoctorId")
+                    b.Property<int>("DoctorId")
                         .HasColumnType("integer")
-                        .HasColumnName("consultant_doctor_id");
+                        .HasColumnName("doctor_id");
 
-                    b.Property<int>("ConsultationId")
-                        .HasColumnType("integer")
-                        .HasColumnName("consultation_id");
-
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("InvitedAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                        .HasColumnName("invited_at");
 
-                    b.Property<int>("Score")
-                        .HasColumnType("integer")
-                        .HasColumnName("score");
+                    b.Property<string>("Note")
+                        .HasColumnType("text")
+                        .HasColumnName("note");
+
+                    b.Property<decimal>("PricePerSession")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("price_per_session");
+
+                    b.Property<DateTime?>("RespondedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("responded_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ClinicId");
+                    b.HasIndex("DoctorId");
 
-                    b.HasIndex("ConsultantDoctorId");
-
-                    b.HasIndex("ConsultationId")
+                    b.HasIndex("ClinicId", "DoctorId")
                         .IsUnique();
 
-                    b.ToTable("consultant_ratings");
+                    b.ToTable("consultant_invitations");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.ConsultantPriceHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_at");
+
+                    b.Property<int>("ChangedByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("changed_by_user_id");
+
+                    b.Property<int>("ClinicConsultantId")
+                        .HasColumnType("integer")
+                        .HasColumnName("clinic_consultant_id");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_from");
+
+                    b.Property<decimal>("NewPrice")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("new_price");
+
+                    b.Property<decimal>("OldPrice")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("old_price");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangedByUserId");
+
+                    b.HasIndex("ClinicConsultantId");
+
+                    b.ToTable("consultant_price_history");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.Consultation", b =>
@@ -400,7 +447,7 @@ namespace EkgAnalyzerApi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("ClinicConsultantId")
+                    b.Property<int>("ClinicConsultantId")
                         .HasColumnType("integer")
                         .HasColumnName("clinic_consultant_id");
 
@@ -408,45 +455,37 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("clinic_id");
 
-                    b.Property<DateTime?>("ConcludedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("concluded_at");
-
-                    b.Property<int>("ConsultantDoctorId")
-                        .HasColumnType("integer")
-                        .HasColumnName("consultant_doctor_id");
+                    b.Property<DateOnly>("ConsultationDate")
+                        .HasColumnType("date")
+                        .HasColumnName("consultation_date");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<bool>("IsFirstRequest")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_first_request");
+                    b.Property<int>("CreatedByAdminId")
+                        .HasColumnType("integer")
+                        .HasColumnName("created_by_admin_id");
+
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("integer")
+                        .HasColumnName("doctor_id");
 
                     b.Property<string>("LiveKitRoomName")
                         .HasColumnType("text")
                         .HasColumnName("livekit_room_name");
 
-                    b.Property<string>("Note")
-                        .HasColumnType("text")
-                        .HasColumnName("note");
-
                     b.Property<int>("PatientId")
                         .HasColumnType("integer")
                         .HasColumnName("patient_id");
 
+                    b.Property<decimal>("PriceAtCreation")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("price_at_creation");
+
                     b.Property<string>("RejectionReason")
                         .HasColumnType("text")
                         .HasColumnName("rejection_reason");
-
-                    b.Property<int>("RequestedByAdminId")
-                        .HasColumnType("integer")
-                        .HasColumnName("requested_by_admin_id");
-
-                    b.Property<DateTime?>("ScheduledAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("scheduled_at");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -463,11 +502,11 @@ namespace EkgAnalyzerApi.Migrations
 
                     b.HasIndex("ClinicId");
 
-                    b.HasIndex("ConsultantDoctorId");
+                    b.HasIndex("CreatedByAdminId");
+
+                    b.HasIndex("DoctorId");
 
                     b.HasIndex("PatientId");
-
-                    b.HasIndex("RequestedByAdminId");
 
                     b.ToTable("consultations");
                 });
@@ -527,22 +566,19 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("diagnosis");
 
-                    b.Property<string>("FollowUpNote")
-                        .HasColumnType("text")
-                        .HasColumnName("follow_up_note");
-
-                    b.Property<bool>("FollowUpRequired")
-                        .HasColumnType("boolean")
-                        .HasColumnName("follow_up_required");
-
-                    b.Property<string>("Medications")
-                        .HasColumnType("text")
-                        .HasColumnName("medications");
-
-                    b.Property<string>("Recommendations")
+                    b.Property<string>("PatientCondition")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("recommendations");
+                        .HasColumnName("patient_condition");
+
+                    b.Property<string>("Treatment")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("treatment");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -2006,15 +2042,22 @@ namespace EkgAnalyzerApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EkgAnalyzerApi.Models.Doctor", "ConsultantDoctor")
+                    b.HasOne("EkgAnalyzerApi.Models.Doctor", "Doctor")
                         .WithMany()
-                        .HasForeignKey("ConsultantDoctorId")
+                        .HasForeignKey("DoctorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("EkgAnalyzerApi.Models.ConsultantInvitation", "Invitation")
+                        .WithMany()
+                        .HasForeignKey("InvitationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Clinic");
 
-                    b.Navigation("ConsultantDoctor");
+                    b.Navigation("Doctor");
+
+                    b.Navigation("Invitation");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.ClinicDetail", b =>
@@ -2041,38 +2084,51 @@ namespace EkgAnalyzerApi.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("EkgAnalyzerApi.Models.ConsultantRating", b =>
+            modelBuilder.Entity("EkgAnalyzerApi.Models.ConsultantInvitation", b =>
                 {
                     b.HasOne("EkgAnalyzerApi.Models.Clinic", "Clinic")
                         .WithMany()
                         .HasForeignKey("ClinicId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("EkgAnalyzerApi.Models.Doctor", "ConsultantDoctor")
+                    b.HasOne("EkgAnalyzerApi.Models.Doctor", "Doctor")
                         .WithMany()
-                        .HasForeignKey("ConsultantDoctorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EkgAnalyzerApi.Models.Consultation", "Consultation")
-                        .WithMany()
-                        .HasForeignKey("ConsultationId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Clinic");
 
-                    b.Navigation("ConsultantDoctor");
+                    b.Navigation("Doctor");
+                });
 
-                    b.Navigation("Consultation");
+            modelBuilder.Entity("EkgAnalyzerApi.Models.ConsultantPriceHistory", b =>
+                {
+                    b.HasOne("EkgAnalyzerApi.Models.User", "ChangedByUser")
+                        .WithMany()
+                        .HasForeignKey("ChangedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EkgAnalyzerApi.Models.ClinicConsultant", "ClinicConsultant")
+                        .WithMany()
+                        .HasForeignKey("ClinicConsultantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ChangedByUser");
+
+                    b.Navigation("ClinicConsultant");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.Consultation", b =>
                 {
                     b.HasOne("EkgAnalyzerApi.Models.ClinicConsultant", "ClinicConsultant")
                         .WithMany()
-                        .HasForeignKey("ClinicConsultantId");
+                        .HasForeignKey("ClinicConsultantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("EkgAnalyzerApi.Models.Clinic", "Clinic")
                         .WithMany()
@@ -2080,9 +2136,15 @@ namespace EkgAnalyzerApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EkgAnalyzerApi.Models.Doctor", "ConsultantDoctor")
+                    b.HasOne("EkgAnalyzerApi.Models.User", "CreatedByAdmin")
                         .WithMany()
-                        .HasForeignKey("ConsultantDoctorId")
+                        .HasForeignKey("CreatedByAdminId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EkgAnalyzerApi.Models.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -2092,21 +2154,15 @@ namespace EkgAnalyzerApi.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("EkgAnalyzerApi.Models.User", "RequestedByAdmin")
-                        .WithMany()
-                        .HasForeignKey("RequestedByAdminId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("Clinic");
 
                     b.Navigation("ClinicConsultant");
 
-                    b.Navigation("ConsultantDoctor");
+                    b.Navigation("CreatedByAdmin");
+
+                    b.Navigation("Doctor");
 
                     b.Navigation("Patient");
-
-                    b.Navigation("RequestedByAdmin");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.ConsultationAnalysis", b =>

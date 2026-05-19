@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Modal, Steps, Select, Checkbox, Input, Button,
-    Space, Tag, Typography, notification, Spin, List, Avatar
+    Space, Tag, Typography, notification, Spin, List, Avatar, Alert
 } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
@@ -11,11 +11,17 @@ import { get_ecg_analyses_by_patcient_id } from '../../../host/requests/ECGAnaly
 import { get_lab_analyses_by_patcient_id } from '../../../host/requests/LabAnalyseRequest';
 import { get_holter_analyses_by_patcient_id } from '../../../host/requests/HolterAnalyseRequest';
 import { get_smad_analyses_by_patcient_id } from '../../../host/requests/SmadAnalyseRequest';
+import { get_parasitology_analyses_by_patient_id } from '../../../host/requests/ParasitologyRequest';
 import dayjs from 'dayjs';
+import './Consultation.css';
 
 const { Text } = Typography;
 const { TextArea } = Input;
 const { Step } = Steps;
+
+const TYPE_COLOR = {
+    EKG: 'blue', Lab: 'green', Holter: 'purple', SMAD: 'orange', Parasit: 'cyan',
+};
 
 export default function CreateConsultationModal({ open, onClose, doctor, onSuccess }) {
     const { t } = useTranslation();
@@ -30,11 +36,11 @@ export default function CreateConsultationModal({ open, onClose, doctor, onSucce
     const [note, setNote]             = useState('');
     const [submitting, setSubmitting] = useState(false);
 
-    // Bemorlar ro'yxatini yuklash
     useEffect(() => {
         if (!open) return;
         setStep(0);
         setSelectedPatient(null);
+        setAnalyses([]);
         setSelectedAna([]);
         setNote('');
         loadPatients();
@@ -44,14 +50,16 @@ export default function CreateConsultationModal({ open, onClose, doctor, onSucce
         setPatLoading(true);
         try {
             const res = await get_patcients_of_clinic({ page: 1 });
-            setPatients(res.data?.items || res.data || []);
-        } catch { }
-        finally { setPatLoading(false); }
+            // Backend returns PatcientListDTO { data: [...], TotalCount, TotalPages }
+            const list = res.data?.data ?? res.data?.items ?? res.data;
+            setPatients(Array.isArray(list) ? list : []);
+        } catch {
+            setPatients([]);
+        } finally { setPatLoading(false); }
     };
 
-    // Tanlangan bemor uchun tahlillarni yuklash
     useEffect(() => {
-        if (!selectedPatient) { setAnalyses([]); return; }
+        if (!selectedPatient) { setAnalyses([]); setSelectedAna([]); return; }
         loadAnalyses(selectedPatient.id);
     }, [selectedPatient]);
 
@@ -59,22 +67,25 @@ export default function CreateConsultationModal({ open, onClose, doctor, onSucce
         setAnaLoading(true);
         try {
             const param = { id: patientId, page: 1 };
-            const [ecg, lab, holter, smad] = await Promise.allSettled([
+            const [ecg, lab, holter, smad, parasit] = await Promise.allSettled([
                 get_ecg_analyses_by_patcient_id(param),
                 get_lab_analyses_by_patcient_id(param),
                 get_holter_analyses_by_patcient_id(param),
                 get_smad_analyses_by_patcient_id(param),
+                get_parasitology_analyses_by_patient_id({ id: patientId, page: 1 }),
             ]);
             const items = [];
             const add = (res, type) => {
-                const data = res.status === 'fulfilled'
-                    ? (res.value.data?.items || res.value.data || []) : [];
-                data.forEach(a => items.push({ ...a, _type: type }));
+                const raw = res.status === 'fulfilled' ? res.value.data : null;
+                const data = raw?.items ?? raw?.data ?? raw;
+                if (Array.isArray(data)) data.forEach(a => items.push({ ...a, _type: type }));
             };
             add(ecg, 'EKG'); add(lab, 'Lab'); add(holter, 'Holter'); add(smad, 'SMAD');
+            add(parasit, 'Parasit');
             setAnalyses(items);
-        } catch { }
-        finally { setAnaLoading(false); }
+        } catch {
+            setAnalyses([]);
+        } finally { setAnaLoading(false); }
     };
 
     const handleSubmit = async () => {
@@ -86,8 +97,8 @@ export default function CreateConsultationModal({ open, onClose, doctor, onSucce
                 patientId: selectedPatient.id,
                 note: note || null,
                 analyses: selectedAna.map(key => {
-                    const [type, id] = key.split('_');
-                    return { analysisType: type, analysisId: parseInt(id) };
+                    const [type, ...rest] = key.split('_');
+                    return { analysisType: type, analysisId: parseInt(rest.join('_')) };
                 }),
             });
             notification.success({ message: t('send_request'), description: t('consultation') });
@@ -111,37 +122,49 @@ export default function CreateConsultationModal({ open, onClose, doctor, onSucce
 
     return (
         <Modal
+            className="consultation-modal"
             open={open}
             onCancel={onClose}
             title={`${t('send_request')}${doctor ? ` — ${doctor.fullName}` : ''}`}
             footer={null}
             width={600}
             destroyOnClose
+            className="consultation-steps-modal"
         >
             <Steps current={step} size="small" style={{ marginBottom: 24 }}>
                 {steps.map((s, i) => <Step key={i} title={s.title} />)}
             </Steps>
 
-            {/* Qadam 1: Bemor tanlash */}
+            {/* Qadam 0: Bemor tanlash */}
             {step === 0 && (
                 <div>
                     <Text strong style={{ display: 'block', marginBottom: 8 }}>{t('select_patient')}</Text>
-                    <Select
-                        style={{ width: '100%' }}
-                        showSearch
-                        loading={patLoading}
-                        options={patientOptions}
-                        placeholder={t('select_patient')}
-                        filterOption={(input, opt) =>
-                            (opt?.label || '').toLowerCase().includes(input.toLowerCase())}
-                        value={selectedPatient?.id ?? null}
-                        onChange={(val) => {
-                            const p = patients.find(p => p.id === val);
-                            setSelectedPatient(p || null);
-                        }}
-                    />
+                    {!patLoading && patients.length === 0 ? (
+                        <Alert
+                            type="warning"
+                            message="Tizimda bemorlar topilmadi"
+                            description="So'rov yuborish uchun avval bemor qo'shing."
+                            showIcon
+                            style={{ marginBottom: 12 }}
+                        />
+                    ) : (
+                        <Select
+                            style={{ width: '100%' }}
+                            showSearch
+                            loading={patLoading}
+                            options={patientOptions}
+                            placeholder={t('select_patient')}
+                            filterOption={(input, opt) =>
+                                (opt?.label || '').toLowerCase().includes(input.toLowerCase())}
+                            value={selectedPatient?.id ?? null}
+                            onChange={(val) => {
+                                const p = patients.find(p => p.id === val);
+                                setSelectedPatient(p || null);
+                            }}
+                        />
+                    )}
                     {selectedPatient && (
-                        <div style={{ marginTop: 12, padding: '8px 12px', background: '#f5f5f5', borderRadius: 6 }}>
+                        <div className="consultation-selected-patient">
                             <Avatar icon={<UserOutlined />} size="small" style={{ marginRight: 8 }} />
                             <Text>{selectedPatient.firstName} {selectedPatient.lastName}</Text>
                         </div>
@@ -158,14 +181,20 @@ export default function CreateConsultationModal({ open, onClose, doctor, onSucce
                 </div>
             )}
 
-            {/* Qadam 2: Tahlillar tanlash */}
+            {/* Qadam 1: Tahlillar tanlash */}
             {step === 1 && (
                 <div>
                     <Text strong style={{ display: 'block', marginBottom: 8 }}>{t('select_analyses')}</Text>
                     {anaLoading ? (
                         <div style={{ textAlign: 'center', padding: 24 }}><Spin /></div>
                     ) : analyses.length === 0 ? (
-                        <Text type="secondary">Tahlillar topilmadi</Text>
+                        <Alert
+                            type="info"
+                            message="Bu bemor uchun tahlillar topilmadi"
+                            description="Tahlil tanlanmasa ham so'rov yuborish mumkin — keyingi bosqichga o'ting."
+                            showIcon
+                            style={{ marginBottom: 8 }}
+                        />
                     ) : (
                         <Checkbox.Group
                             value={selectedAna}
@@ -178,7 +207,7 @@ export default function CreateConsultationModal({ open, onClose, doctor, onSucce
                                 renderItem={a => (
                                     <List.Item key={`${a._type}_${a.id}`} style={{ padding: '4px 0' }}>
                                         <Checkbox value={`${a._type}_${a.id}`}>
-                                            <Tag color="blue">{a._type}</Tag>
+                                            <Tag color={TYPE_COLOR[a._type] || 'default'}>{a._type}</Tag>
                                             <Text style={{ marginLeft: 4 }}>
                                                 {a.createdAt ? dayjs(a.createdAt).format('DD.MM.YYYY') : ''}
                                             </Text>
@@ -195,7 +224,7 @@ export default function CreateConsultationModal({ open, onClose, doctor, onSucce
                 </div>
             )}
 
-            {/* Qadam 3: Izoh va yuborish */}
+            {/* Qadam 2: Izoh va yuborish */}
             {step === 2 && (
                 <div>
                     <Text strong style={{ display: 'block', marginBottom: 4 }}>{t('consultant_doctor')}:</Text>
@@ -209,8 +238,11 @@ export default function CreateConsultationModal({ open, onClose, doctor, onSucce
                     <Text strong style={{ display: 'block', marginBottom: 4 }}>{t('select_analyses')}:</Text>
                     <div style={{ marginBottom: 12 }}>
                         {selectedAna.length === 0
-                            ? <Text type="secondary">—</Text>
-                            : selectedAna.map(k => <Tag key={k}>{k.split('_')[0]}</Tag>)
+                            ? <Text type="secondary">— (tahlilsiz)</Text>
+                            : selectedAna.map(k => {
+                                const type = k.split('_')[0];
+                                return <Tag key={k} color={TYPE_COLOR[type] || 'default'}>{type}</Tag>;
+                            })
                         }
                     </div>
 

@@ -52,7 +52,7 @@ namespace EkgAnalyzerApi.Services
             var threshold = DateTime.UtcNow - _expiryThreshold;
 
             var expired = await db.Consultations
-                .Where(c => c.Status == "pending" && c.CreatedAt < threshold)
+                .Where(c => c.Status == "created" && c.CreatedAt < threshold)
                 .ToListAsync(cancellationToken);
 
             if (!expired.Any()) return;
@@ -61,8 +61,9 @@ namespace EkgAnalyzerApi.Services
 
             foreach (var c in expired)
             {
-                c.Status    = "expired";
-                c.UpdatedAt = DateTime.UtcNow;
+                c.Status          = "rejected";
+                c.RejectionReason = "48 soat ichida shifokor tomonidan qabul qilinmadi";
+                c.UpdatedAt       = DateTime.UtcNow;
             }
 
             await db.SaveChangesAsync(cancellationToken);

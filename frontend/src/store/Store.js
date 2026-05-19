@@ -90,8 +90,10 @@ export const useStore = create((set) => ({
 
     // ─── Online Konsultatsiya badge ────────────────────────────────────────────
     consultationBadge: {
-        adminPendingCount: 0,   // Admin sidebar badge (pending konsultatsiyalar)
-        doctorPendingCount: 0,  // Doctor sidebar badge (pending so'rovlar)
+        adminPendingCount: 0,               // Admin sidebar badge (created konsultatsiyalar)
+        doctorPendingInvitationsCount: 0,   // Doctor clinics badge (pending takliflar)
+        doctorCreatedCount: 0,              // Doctor consultations badge (created konsultatsiyalar)
+        doctorPendingCount: 0,              // Backward compatibility
     },
     setConsultationBadge: (patch) => set((s) => ({
         consultationBadge: { ...s.consultationBadge, ...patch }

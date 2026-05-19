@@ -38,7 +38,10 @@
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d['version']\\)\")",
       "Bash(node -e \"const p = require\\('d:/git/ekg_tahlili_app/frontend/node_modules/@livekit/components-react/package.json'\\); console.log\\(p.version\\)\")",
       "Bash(node -e \"const p = require\\('d:/git/ekg_tahlili_app/frontend/node_modules/livekit-client/package.json'\\); console.log\\(p.version\\)\")",
-      "Bash(node -e \"const m = require\\('d:/git/ekg_tahlili_app/frontend/node_modules/@livekit/components-react'\\); console.log\\(Object.keys\\(m\\).filter\\(k => k.includes\\('rack'\\) || k.includes\\('ocal'\\) || k.includes\\('Room'\\)\\).join\\('\\\\n'\\)\\)\")"
+      "Bash(node -e \"const m = require\\('d:/git/ekg_tahlili_app/frontend/node_modules/@livekit/components-react'\\); console.log\\(Object.keys\\(m\\).filter\\(k => k.includes\\('rack'\\) || k.includes\\('ocal'\\) || k.includes\\('Room'\\)\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(PGPASSWORD=123123 psql -h localhost -U postgres -d med_helper_data -c \"SELECT \\\\\"MigrationId\\\\\" FROM \\\\\"__EFMigrationsHistory\\\\\" WHERE \\\\\"MigrationId\\\\\" LIKE '%20260516%';\")",
+      "Bash(PGPASSWORD=123123 psql -h localhost -U postgres -d med_helper_data -c \"\\\\d consultations\")",
+      "Bash(npm run *)"
     ],
     "deny": [
       "Bash(rm -rf /)",

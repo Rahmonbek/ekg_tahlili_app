@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     Card, Descriptions, Tag, Button, Rate, Input, Typography,
-    Spin, Space, Popconfirm, notification, Divider, Row, Col, List
+    Spin, Space, Popconfirm, notification, Divider, List
 } from 'antd';
 import { ArrowLeftOutlined, VideoCameraOutlined, StarOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +13,9 @@ import {
     getConsultationLiveKitToken
 } from '../../../host/requests/ConsultationRequest';
 import { useStore } from '../../../store/Store';
+import { initiateConsultationCall } from '../../../hooks/videoSignalRService';
 import dayjs from 'dayjs';
+import './Consultation.css';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -21,6 +23,18 @@ const { TextArea } = Input;
 const STATUS_COLORS = {
     pending: 'gold', accepted: 'blue', scheduled: 'purple',
     concluded: 'green', rejected: 'red', expired: 'default', cancelled: 'default',
+};
+
+const ANALYSIS_ROUTES = {
+    EKG:    '/ecg-analyses/view',
+    Lab:    '/lab-analyses/view',
+    Holter: '/holter-analyses/view',
+    SMAD:   '/smad-analyses/view',
+    Parasit: '/parasitology-analyses/view',
+};
+
+const TYPE_COLOR = {
+    EKG: 'blue', Lab: 'green', Holter: 'purple', SMAD: 'orange', Parasit: 'cyan',
 };
 
 export default function ConsultationDetailPage() {
@@ -78,6 +92,8 @@ export default function ConsultationDetailPage() {
             const res = await getConsultationLiveKitToken(id);
             const { token, liveKitUrl, roomName } = res.data;
             setVideoCall({ activeRoom: { token, liveKitUrl, roomName } });
+            initiateConsultationCall(parseInt(id), roomName);
+            navigate('/video-conference');
         } catch (e) {
             notification.error({ message: e?.response?.data?.message || t('start_video_call') + ' xatolik' });
         } finally { setTokenLoading(false); }
@@ -87,15 +103,14 @@ export default function ConsultationDetailPage() {
     if (!data) return null;
 
     const canCancel  = isAdmin && (data.status === 'pending' || data.status === 'accepted');
-    // Video faqat "scheduled" holatda — LiveKitRoomName faqat schedule qilinganda yaratiladi
-    const canVideo   = data.status === 'scheduled' && !!data.liveKitRoomName;
+    const canVideo   = (data.status === 'accepted' || data.status === 'scheduled') && isAdmin && !data.isLinkRequest;
     const canRate    = isAdmin && data.status === 'concluded' && !data.hasRating;
     const concludedAt72h = data.concludedAt
         ? dayjs(data.concludedAt).add(72, 'hour').isAfter(dayjs()) : false;
     const showRating = canRate && concludedAt72h;
 
     return (
-        <div style={{ padding: '0 8px', maxWidth: 900 }}>
+        <div className="consultation-page" style={{ maxWidth: 980 }}>
             <Button
                 icon={<ArrowLeftOutlined />}
                 onClick={() => navigate('/consultations')}
@@ -104,11 +119,18 @@ export default function ConsultationDetailPage() {
                 {t('back')}
             </Button>
 
-            <Title level={4}>{t('consultation_detail')}</Title>
-
-            {/* Holat */}
-            <Card size="small" style={{ marginBottom: 12 }}>
-                <Space wrap>
+            <section className="consultation-shell">
+                <div className="consultation-header">
+                    <div>
+                        <Title level={4} className="consultation-title">{t('consultation_detail')}</Title>
+                        <Text className="consultation-subtitle">
+                            Bemor, konsultant, tahlillar va keyingi amallar bitta sahifada.
+                        </Text>
+                    </div>
+                </div>
+                <div className="consultation-body">
+                    <div className="consultation-status-strip">
+                        <Space wrap>
                     <Tag color={STATUS_COLORS[data.status] || 'default'} style={{ fontSize: 13, padding: '2px 12px' }}>
                         {t(`cons_status_${data.status}`) || data.status}
                     </Tag>
@@ -116,12 +138,14 @@ export default function ConsultationDetailPage() {
                     {data.isFirstRequest && (
                         <Tag color="cyan">{t('first_request_badge')}</Tag>
                     )}
-                </Space>
-            </Card>
+                        </Space>
+                    </div>
+                </div>
+            </section>
 
-            <Row gutter={[12, 12]}>
+            <div className="consultation-detail-grid">
                 {/* Bemor */}
-                <Col xs={24} md={12}>
+                <div>
                     <Card title={t('patient_info')} size="small">
                         <Descriptions column={1} size="small">
                             <Descriptions.Item label={t('patient_fullname')}>{data.patientName}</Descriptions.Item>
@@ -133,10 +157,10 @@ export default function ConsultationDetailPage() {
                             )}
                         </Descriptions>
                     </Card>
-                </Col>
+                </div>
 
                 {/* Konsultant */}
-                <Col xs={24} md={12}>
+                <div>
                     <Card title={t('consultant_doctor')} size="small">
                         <Descriptions column={1} size="small">
                             <Descriptions.Item label={t('patient_fullname')}>{data.consultantName}</Descriptions.Item>
@@ -150,8 +174,8 @@ export default function ConsultationDetailPage() {
                             </Descriptions.Item>
                         </Descriptions>
                     </Card>
-                </Col>
-            </Row>
+                </div>
+            </div>
 
             {/* Admin izohi */}
             {data.note && (
@@ -175,12 +199,32 @@ export default function ConsultationDetailPage() {
                     <List
                         size="small"
                         dataSource={data.analyses}
-                        renderItem={item => (
-                            <List.Item>
-                                <Tag>{item.analysisType}</Tag>
-                                <Text type="secondary">{dayjs(item.sharedAt).format('DD.MM.YYYY')}</Text>
-                            </List.Item>
-                        )}
+                        renderItem={item => {
+                            const route = ANALYSIS_ROUTES[item.analysisType];
+                            return (
+                                <List.Item
+                                    actions={route ? [
+                                        <Button
+                                            key="view"
+                                            size="small"
+                                            type="link"
+                                            onClick={() => navigate(`${route}/${item.analysisId}`)}
+                                        >
+                                            {t('view') || "Ko'rish"}
+                                        </Button>
+                                    ] : []}
+                                >
+                                    <Space>
+                                        <Tag color={TYPE_COLOR[item.analysisType] || 'default'}>
+                                            {item.analysisType}
+                                        </Tag>
+                                        <Text type="secondary" style={{ fontSize: 12 }}>
+                                            {dayjs(item.sharedAt).format('DD.MM.YYYY')}
+                                        </Text>
+                                    </Space>
+                                </List.Item>
+                            );
+                        }}
                     />
                 </Card>
             )}
@@ -188,12 +232,6 @@ export default function ConsultationDetailPage() {
             {/* Video bo'lim */}
             {canVideo && (
                 <Card size="small" style={{ marginTop: 12 }}>
-                    {data.scheduledAt && (
-                        <div style={{ marginBottom: 8 }}>
-                            <Text strong>{t('schedule_video')}: </Text>
-                            <Text>{dayjs(data.scheduledAt).format('DD.MM.YYYY HH:mm')}</Text>
-                        </div>
-                    )}
                     <Button
                         type="primary"
                         icon={<VideoCameraOutlined />}

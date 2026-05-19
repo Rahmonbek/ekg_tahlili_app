@@ -11,11 +11,16 @@ public class UserController : ControllerBase
 {
     private readonly UserService _userService;
     private readonly MedDataDB _context;
+    private readonly IConsultationConnectionService _consultationConnections;
 
-    public UserController(UserService userService, MedDataDB context)
+    public UserController(
+        UserService userService,
+        MedDataDB context,
+        IConsultationConnectionService consultationConnections)
     {
         _userService = userService;
         _context = context;
+        _consultationConnections = consultationConnections;
     }
 
 
@@ -79,6 +84,21 @@ public class UserController : ControllerBase
             clinicComplete,
             clinicIsActive = clinic?.IsActive ?? false,
             roleId = user.RoleId
+        });
+    }
+
+    [HttpGet("{userId:int}/online-status")]
+    [Authorize]
+    public IActionResult GetOnlineStatus(int userId)
+    {
+        var roleClaim = User.Claims.FirstOrDefault(c => c.Type == "roleId")?.Value;
+        if (!int.TryParse(roleClaim, out var roleId) || (roleId != 2 && roleId != 3 && roleId != 4))
+            return Forbid();
+
+        return Ok(new
+        {
+            userId,
+            isOnline = _consultationConnections.IsOnline(userId)
         });
     }
 }

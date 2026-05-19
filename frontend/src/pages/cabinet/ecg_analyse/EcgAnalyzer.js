@@ -103,6 +103,19 @@ export default function EcgAnalyzer() {
         return false;
     }, [patcient, getOldECGAnalyses, dispatch]);
 
+    // ─── Retry / Reset ───
+    const retryAnalyse = useCallback(() => {
+        resetPatient();
+        resetDoctorSelection();
+        setSelectedComplaints([]);
+        setCheckAI(false);
+        setAnalysisDateValue(getTodayDateInputValue());
+        resetAll();
+        form.resetFields();
+        form1.resetFields();
+        form2.resetFields();
+    }, [resetPatient, resetDoctorSelection, resetAll, form, form1, form2]);
+
     const handleSubmit = useCallback(async () => {
         if (state.files.length === 0) return dangerAlert(t('select_file_error'));
 
@@ -147,19 +160,6 @@ export default function EcgAnalyzer() {
             }
         }
     }, [state, patcient, user, selectedComplaints, selectedDoctors, runInBackground, dispatch, t, checkAI, retryAnalyse]);
-
-    // ─── Retry / Reset ───
-    const retryAnalyse = useCallback(() => {
-        resetPatient();
-        resetDoctorSelection();
-        setSelectedComplaints([]);
-        setCheckAI(false);
-        setAnalysisDateValue(getTodayDateInputValue());
-        resetAll();
-        form.resetFields();
-        form1.resetFields();
-        form2.resetFields();
-    }, [resetPatient, resetDoctorSelection, resetAll, form, form1, form2]);
 
     const resetData = useCallback(() => {
         resetPatient();

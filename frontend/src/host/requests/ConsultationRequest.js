@@ -2,54 +2,76 @@ import { httpGetRequest, httpPostRequest, httpPutRequest } from "../Host";
 
 // ─── ADMIN ─────────────────────────────────────────────────────────────────
 
-export const getDoctorsCatalog = (params) =>
-    httpGetRequest("/online-consultation/doctors-catalog", params);
+export const searchDoctors = (params) =>
+    httpGetRequest("/consultation/search-doctors", params);
+
+export const getConsultationClinicOptions = (params) =>
+    httpGetRequest("/consultation/clinic-options", params);
+
+export const inviteDoctor = (data) =>
+    httpPostRequest("/consultation/invite", data);
 
 export const getMyConsultants = () =>
-    httpGetRequest("/online-consultation/my-consultants");
+    httpGetRequest("/consultation/my-consultants");
 
-export const getConsultantHistory = (clinicConsultantId) =>
-    httpGetRequest(`/online-consultation/my-consultants/${clinicConsultantId}/history`);
+export const getSentInvitations = () =>
+    httpGetRequest("/consultation/my-sent-invitations");
 
-export const createConsultation = (data) =>
-    httpPostRequest("/online-consultation/create", data);
+export const getConsultationBadgeCounts = () =>
+    httpGetRequest("/consultation/badge-counts");
+
+export const updateConsultantPrice = (id, data) =>
+    httpPutRequest(`/consultation/consultants/${id}/update-price`, data);
+
+export const getConsultantHistory = (id, params) =>
+    httpGetRequest(`/consultation/consultants/${id}/history`, params);
+
+export const createConsultations = (data) =>
+    httpPostRequest("/consultation/create", data);
+
+export const findConsultationPatient = (params) =>
+    httpGetRequest("/consultation/patient-lookup", params);
 
 export const getConsultationList = (params) =>
-    httpGetRequest("/online-consultation/list", params);
+    httpGetRequest("/consultation/list", params);
 
-export const getConsultationById = (id) =>
-    httpGetRequest(`/online-consultation/${id}`);
+export const getConsultationDetailAdmin = (id) =>
+    httpGetRequest(`/consultation/${id}/detail`);
 
-export const cancelConsultation = (id) =>
-    httpPutRequest(`/online-consultation/${id}/cancel`);
-
-export const rateConsultation = (id, data) =>
-    httpPostRequest(`/online-consultation/${id}/rate`, data);
+export const getConsultationTokenAdmin = (id) =>
+    httpGetRequest(`/consultation/${id}/livekit-token`);
 
 // ─── DOCTOR ────────────────────────────────────────────────────────────────
 
-export const getIncomingConsultations = (params) =>
-    httpGetRequest("/online-consultation/incoming", params);
+export const getMyInvitations = () =>
+    httpGetRequest("/consultation/invitations");
 
-export const getMyLinkedClinics = () =>
-    httpGetRequest("/online-consultation/my-linked-clinics");
+export const acceptInvitation = (id) =>
+    httpPutRequest(`/consultation/invitations/${id}/accept`);
+
+export const rejectInvitation = (id) =>
+    httpPutRequest(`/consultation/invitations/${id}/reject`);
+
+export const getMyClinics = () =>
+    httpGetRequest("/consultation/my-clinics");
+
+export const getClinicHistory = (id, params) =>
+    httpGetRequest(`/consultation/my-clinics/${id}/history`, params);
+
+export const getMyConsultations = (params) =>
+    httpGetRequest("/consultation/my-consultations", params);
 
 export const acceptConsultation = (id) =>
-    httpPutRequest(`/online-consultation/${id}/accept`);
+    httpPutRequest(`/consultation/${id}/accept`);
 
 export const rejectConsultation = (id, data) =>
-    httpPutRequest(`/online-consultation/${id}/reject`, data);
+    httpPutRequest(`/consultation/${id}/reject`, data);
 
-export const scheduleConsultation = (id, data) =>
-    httpPutRequest(`/online-consultation/${id}/schedule`, data);
+export const getConsultationDetailDoctor = (id) =>
+    httpGetRequest(`/consultation/${id}/doctor-detail`);
 
 export const concludeConsultation = (id, data) =>
-    httpPostRequest(`/online-consultation/${id}/conclude`, data);
+    httpPostRequest(`/consultation/${id}/conclude`, data);
 
-export const getConsultationAnalyses = (id) =>
-    httpGetRequest(`/online-consultation/${id}/analyses`);
-
-// ─── VIDEO ─────────────────────────────────────────────────────────────────
-
-export const getConsultationLiveKitToken = (id) =>
-    httpGetRequest(`/online-consultation/${id}/livekit-token`);
+export const getConsultationTokenDoctor = (id) =>
+    httpGetRequest(`/consultation/${id}/livekit-token-doctor`);

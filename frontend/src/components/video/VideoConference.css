@@ -13,6 +13,15 @@
     overflow: hidden;
 }
 
+.nmed-livekit-wrapper.is-embedded {
+    position: relative;
+    inset: auto;
+    z-index: auto;
+    height: min(52vh, 460px);
+    min-height: 320px;
+    border-radius: 8px;
+}
+
 /* ================================================================
    TELEGRAM LAYOUT
    ================================================================ */

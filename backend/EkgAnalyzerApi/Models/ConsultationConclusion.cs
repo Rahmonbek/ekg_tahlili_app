@@ -15,22 +15,20 @@ namespace EkgAnalyzerApi.Models
         [ForeignKey(nameof(ConsultationId))]
         public Consultation? Consultation { get; set; }
 
+        /// <summary>"good" | "moderate" | "bad"</summary>
+        [Column("patient_condition")]
+        public string PatientCondition { get; set; } = default!;
+
         [Column("diagnosis")]
         public string Diagnosis { get; set; } = default!;
 
-        [Column("recommendations")]
-        public string Recommendations { get; set; } = default!;
-
-        [Column("medications")]
-        public string? Medications { get; set; }
-
-        [Column("follow_up_required")]
-        public bool FollowUpRequired { get; set; } = false;
-
-        [Column("follow_up_note")]
-        public string? FollowUpNote { get; set; }
+        [Column("treatment")]
+        public string Treatment { get; set; } = default!;
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 }

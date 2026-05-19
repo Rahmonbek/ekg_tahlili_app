@@ -87,8 +87,14 @@ public class VideoCallController : ControllerBase
 
         if (currentUser?.ClinicId == null) return Ok(new List<DoctorOnlineStatusDto>());
 
+        var linkedConsultantUserIds = await _db.ClinicConsultants.AsNoTracking()
+            .Where(cc => cc.ClinicId == currentUser.ClinicId && cc.Status == "active")
+            .Select(cc => cc.Doctor!.UserId)
+            .ToListAsync();
+
         var doctors = await _db.Users.AsNoTracking()
-            .Where(u => u.ClinicId == currentUser.ClinicId && u.RoleId == 4 && u.Status)
+            .Where(u => u.RoleId == 4 && u.Status &&
+                       (u.ClinicId == currentUser.ClinicId || linkedConsultantUserIds.Contains(u.Id)))
             .Include(u => u.Doctor)
                 .ThenInclude(d => d!.DoctorPositions!)
                     .ThenInclude(dp => dp.Position)
@@ -108,7 +114,10 @@ public class VideoCallController : ControllerBase
                 DoctorId = u.Doctor?.Id ?? 0,
                 FullName = fullName,
                 Position = pos,
-                IsOnline = _connections.IsOnline(u.Id)
+                IsOnline = _connections.IsOnline(u.Id),
+                IsBusy = _db.VideoCallSessions.Any(s =>
+                    (s.Status == "pending" || s.Status == "active") &&
+                    (s.InitiatorId == u.Id || s.RecipientId == u.Id))
             };
         }).ToList();
 

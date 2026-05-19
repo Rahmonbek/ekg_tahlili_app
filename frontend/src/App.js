@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom'
 import { get_user_data } from './host/requests/UserRequest';
 import Loader from './components/Loader';
 import { get_unviewed_counts } from './host/requests/DashboardRequest'
+import { getConsultationBadgeCounts } from './host/requests/ConsultationRequest'
 import ClinicSetupModal from './components/ClinicSetupModal'
 import AnalysisProgressFloat from './components/AnalysisProgressFloat'
 import useVideoSignalR from './hooks/useVideoSignalR'
@@ -22,7 +23,7 @@ export default function App() {
     open_admin_modal, setopen_admin_modal,
     loader,
     setecg_unread, setholter_unread, setsmad_unread, setlab_unread, setdiagnoses_unread,
-    setclinic_setup_modal
+    setclinic_setup_modal, setConsultationBadge
   } = useStore()
 
   // SignalR video qo'ng'iroq — faqat Admin/Direktor/Shifokor uchun ulanadi
@@ -99,6 +100,10 @@ export default function App() {
       if (res.data.roleId === 4 || res.data.roleId === 5) {
         fetchUnreadCounts()
       }
+
+      if ([2, 3, 4].includes(res.data.roleId)) {
+        fetchConsultationBadgeCounts()
+      }
     } catch (err) {
       // Faqat boshlang'ich yuklashda token muammosi bo'lsa — loginга yo'naltir
       if (!isRefresh) {
@@ -117,6 +122,15 @@ export default function App() {
       setsmad_unread(data.smad || 0);
       setlab_unread(data.lab || 0);
       setdiagnoses_unread(data.diagnoses || 0);
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const fetchConsultationBadgeCounts = async () => {
+    try {
+      const res = await getConsultationBadgeCounts();
+      setConsultationBadge(res.data || {});
     } catch (err) {
       console.log(err)
     }

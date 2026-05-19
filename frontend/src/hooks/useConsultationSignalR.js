@@ -3,6 +3,7 @@ import * as signalR from '@microsoft/signalr';
 import { notification } from 'antd';
 import { useStore } from '../store/Store';
 import { getTokenAccess } from '../host/Host';
+import { getConsultationBadgeCounts } from '../host/requests/ConsultationRequest';
 
 const _apiBase = (process.env.REACT_APP_API_URL || 'http://localhost:5000/api')
     .replace(/\/api\/?$/, '');
@@ -23,6 +24,72 @@ export default function useConsultationSignalR(enabled) {
             .configureLogging(signalR.LogLevel.Warning)
             .build();
 
+        const patchBadge = (patcher) => {
+            const current = useStore.getState().consultationBadge || {};
+            setConsultationBadge(patcher(current));
+        };
+
+        const refreshBadge = () => {
+            getConsultationBadgeCounts()
+                .then((res) => setConsultationBadge(res.data || {}))
+                .catch(() => {});
+        };
+
+        connection.on('NewInvitation', (payload) => {
+            notification.info({
+                message: 'Yangi konsultant taklifi',
+                description: payload?.clinicName
+                    ? `${payload.clinicName} sizni konsultant sifatida taklif qildi`
+                    : 'Klinikadan yangi taklif keldi',
+                duration: 6,
+            });
+            patchBadge((current) => ({
+                doctorPendingInvitationsCount: (current.doctorPendingInvitationsCount ?? 0) + 1,
+                doctorPendingCount: (current.doctorPendingCount ?? 0) + 1,
+            }));
+            refreshBadge();
+            window.dispatchEvent(new CustomEvent('consultation-invitation-received', { detail: payload }));
+        });
+
+        connection.on('NewConsultation', (payload) => {
+            notification.info({
+                message: 'Yangi konsultatsiya',
+                description: payload?.clinicName
+                    ? `${payload.clinicName} konsultatsiya yubordi`
+                    : 'Yangi konsultatsiya keldi',
+                duration: 6,
+            });
+            patchBadge((current) => ({
+                doctorCreatedCount: (current.doctorCreatedCount ?? 0) + 1,
+                doctorPendingCount: (current.doctorPendingCount ?? 0) + 1,
+            }));
+            refreshBadge();
+            window.dispatchEvent(new CustomEvent('consultation-request-received', { detail: payload }));
+        });
+
+        connection.on('ConsultationReviewing', (payload) => {
+            notification.success({
+                message: 'Konsultatsiya ko\'rib chiqilmoqda',
+                description: 'Shifokor konsultatsiyani qabul qildi',
+                duration: 5,
+            });
+            patchBadge((current) => ({
+                adminPendingCount: Math.max((current.adminPendingCount ?? 0) - 1, 0),
+            }));
+            refreshBadge();
+            window.dispatchEvent(new CustomEvent('consultation-status-changed', { detail: payload }));
+        });
+
+        connection.on('ConsultationCompleted', (payload) => {
+            notification.success({
+                message: 'Konsultatsiya yakunlandi',
+                description: 'Shifokor xulosani saqladi',
+                duration: 5,
+            });
+            refreshBadge();
+            window.dispatchEvent(new CustomEvent('consultation-status-changed', { detail: payload }));
+        });
+
         // Doctor: yangi konsultatsiya so'rovi keldi
         connection.on('NewConsultationRequest', (payload) => {
             notification.info({
@@ -33,8 +100,11 @@ export default function useConsultationSignalR(enabled) {
                 duration: 6,
             });
             // Zustand getState() orqali joriy qiymatni olamiz (stale closure muammosidan qochish)
-            const current = useStore.getState().consultationBadge;
-            setConsultationBadge({ doctorPendingCount: (current?.doctorPendingCount ?? 0) + 1 });
+            patchBadge((current) => ({
+                doctorCreatedCount: (current.doctorCreatedCount ?? 0) + 1,
+                doctorPendingCount: (current.doctorPendingCount ?? 0) + 1,
+            }));
+            refreshBadge();
             // Sahifa refresh uchun custom event
             window.dispatchEvent(new CustomEvent('consultation-request-received', { detail: payload }));
         });
@@ -46,6 +116,7 @@ export default function useConsultationSignalR(enabled) {
                 description: payload?.doctorName ? `Dr. ${payload.doctorName} qabul qildi` : '',
                 duration: 5,
             });
+            refreshBadge();
             window.dispatchEvent(new CustomEvent('consultation-status-changed', { detail: payload }));
         });
 
@@ -56,6 +127,7 @@ export default function useConsultationSignalR(enabled) {
                 description: payload?.reason ? `Sabab: ${payload.reason}` : '',
                 duration: 6,
             });
+            refreshBadge();
             window.dispatchEvent(new CustomEvent('consultation-status-changed', { detail: payload }));
         });
 

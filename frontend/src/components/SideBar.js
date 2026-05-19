@@ -28,6 +28,8 @@ export default function SideBar() {
         lab_unread,
         diagnoses_unread,
         consultation_admin_pending: consultationBadge?.adminPendingCount ?? 0,
+        consultation_doctor_invitations: consultationBadge?.doctorPendingInvitationsCount ?? 0,
+        consultation_doctor_created: consultationBadge?.doctorCreatedCount ?? consultationBadge?.doctorPendingCount ?? 0,
         consultation_doctor_pending: consultationBadge?.doctorPendingCount ?? 0,
     }
 
@@ -86,6 +88,8 @@ export default function SideBar() {
                 const isDoctor = user && (user.roleId === 4 || user.roleId === 5)
                 // Konsultatsiya badge'lari barcha rollarda ko'rsatiladi
                 const isConsultationKey = item.unread_key === 'consultation_admin_pending'
+                    || item.unread_key === 'consultation_doctor_invitations'
+                    || item.unread_key === 'consultation_doctor_created'
                     || item.unread_key === 'consultation_doctor_pending'
                 const unreadCount = (isDoctor || isConsultationKey) && item.unread_key
                     ? (unreadMap[item.unread_key] || 0)

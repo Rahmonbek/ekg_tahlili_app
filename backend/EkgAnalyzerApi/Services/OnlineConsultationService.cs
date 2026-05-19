@@ -11,22 +11,32 @@ namespace EkgAnalyzerApi.Services
 {
     public interface IOnlineConsultationService
     {
-        Task<List<DoctorCatalogItemDto>> GetDoctorsCatalogAsync(int adminClinicId, int requestingUserId, string? specialization, string? search);
+        // Admin
+        Task<List<DoctorSearchResultDto>> SearchDoctorsAsync(SearchDoctorsQuery q, int adminClinicId);
+        Task<ConsultationPatientLookupDto> FindPatientAsync(string passportSeries, DateOnly birthDate);
+        Task<(bool success, string? error)> InviteDoctorAsync(InviteDoctorDto dto, int adminUserId, int clinicId);
         Task<List<MyConsultantDto>> GetMyConsultantsAsync(int clinicId);
-        Task<List<ConsultantHistoryItemDto>> GetConsultantHistoryAsync(int clinicConsultantId, int clinicId);
-        Task<(bool success, string? error, int consultationId)> CreateConsultationAsync(CreateConsultationDto dto, int adminUserId, int clinicId);
-        Task<List<ConsultationListItemDto>> GetConsultationListAsync(int clinicId, string? status, int? consultantDoctorId, int? patientId);
-        Task<ConsultationDetailDto?> GetConsultationByIdAsync(int id, int userId, int roleId);
-        Task<(bool success, string? error)> CancelConsultationAsync(int id, int clinicId);
-        Task<(bool success, string? error)> RateConsultationAsync(int id, RateConsultationDto dto, int clinicId);
-        Task<List<IncomingConsultationDto>> GetIncomingConsultationsAsync(int doctorId, string? status);
-        Task<List<LinkedClinicDto>> GetMyLinkedClinicsAsync(int doctorId);
-        Task<(bool success, string? error)> AcceptConsultationAsync(int id, int doctorId, int doctorUserId);
-        Task<(bool success, string? error)> RejectConsultationAsync(int id, RejectConsultationDto dto, int doctorId);
-        Task<(bool success, string? error)> ScheduleConsultationAsync(int id, ScheduleConsultationDto dto, int doctorId);
+        Task<List<SentInvitationDto>> GetMySentInvitationsAsync(int clinicId);
+        Task<ConsultationBadgeCountsDto> GetBadgeCountsAsync(int roleId, int clinicId, int doctorId);
+        Task<(bool success, string? error)> UpdateConsultantPriceAsync(int ccId, UpdatePriceDto dto, int adminUserId, int clinicId);
+        Task<ConsultantHistoryDto> GetConsultantHistoryAsync(int ccId, int clinicId, string? patientName, DateOnly? from, DateOnly? to);
+        Task<(bool success, string? error, int count)> CreateConsultationsAsync(CreateConsultationDto dto, int adminUserId, int clinicId);
+        Task<List<ConsultationListItemDto>> GetConsultationListAsync(int clinicId, string? status, int? doctorId, string? patientName, DateOnly? from, DateOnly? to);
+        Task<ConsultationDetailAdminDto?> GetConsultationDetailAdminAsync(int id, int clinicId);
+        Task<(bool success, string? error, ConsultationTokenDto? token)> GetAdminLiveKitTokenAsync(int id, int userId, int clinicId);
+
+        // Doctor
+        Task<List<InvitationDto>> GetMyInvitationsAsync(int doctorId);
+        Task<(bool success, string? error)> AcceptInvitationAsync(int id, int doctorId);
+        Task<(bool success, string? error)> RejectInvitationAsync(int id, int doctorId);
+        Task<List<MyClinicDto>> GetMyClinicsAsync(int doctorId);
+        Task<ConsultantHistoryDto> GetDoctorClinicHistoryAsync(int ccId, int doctorId, string? patientName, DateOnly? from, DateOnly? to);
+        Task<List<DoctorConsultationItemDto>> GetMyConsultationsAsync(int doctorId, string? status);
+        Task<(bool success, string? error)> AcceptConsultationAsync(int id, int doctorId);
+        Task<(bool success, string? error)> RejectConsultationAsync(int id, string reason, int doctorId);
+        Task<ConsultationDetailDoctorDto?> GetConsultationDetailDoctorAsync(int id, int doctorId);
         Task<(bool success, string? error)> ConcludeConsultationAsync(int id, ConcludeConsultationDto dto, int doctorId);
-        Task<List<FullAnalysisItemDto>> GetConsultationAnalysesAsync(int id, int doctorId);
-        Task<(bool success, string? error, ConsultationTokenResponseDto? token)> GetLiveKitTokenAsync(int id, int userId, int roleId);
+        Task<(bool success, string? error, ConsultationTokenDto? token)> GetDoctorLiveKitTokenAsync(int id, int userId, int doctorId);
     }
 
     public class OnlineConsultationService : IOnlineConsultationService
@@ -35,6 +45,7 @@ namespace EkgAnalyzerApi.Services
         private readonly IHubContext<ConsultationHub> _hub;
         private readonly IConsultationConnectionService _connections;
         private readonly IConfiguration _config;
+        private readonly EncryptionService _encryption;
         private readonly ILogger<OnlineConsultationService> _logger;
 
         public OnlineConsultationService(
@@ -42,129 +53,244 @@ namespace EkgAnalyzerApi.Services
             IHubContext<ConsultationHub> hub,
             IConsultationConnectionService connections,
             IConfiguration config,
+            EncryptionService encryption,
             ILogger<OnlineConsultationService> logger)
         {
             _db = db;
             _hub = hub;
             _connections = connections;
             _config = config;
+            _encryption = encryption;
             _logger = logger;
         }
 
-        // ─── CATALOG ──────────────────────────────────────────────────────────
+        // ─── SEARCH DOCTORS (Admin) ───────────────────────────────────────────
 
-        public async Task<List<DoctorCatalogItemDto>> GetDoctorsCatalogAsync(
-            int adminClinicId, int requestingUserId, string? specialization, string? search)
+        public async Task<List<DoctorSearchResultDto>> SearchDoctorsAsync(SearchDoctorsQuery q, int adminClinicId)
         {
             try
             {
-                var query = _db.Doctors
+                var hasFilter = !string.IsNullOrWhiteSpace(q.PassportSeries)
+                    || !string.IsNullOrWhiteSpace(q.Phone)
+                    || q.RegionId.HasValue
+                    || q.DistrictId.HasValue
+                    || q.ClinicId.HasValue;
+
+                if (!hasFilter) return new List<DoctorSearchResultDto>();
+
+                // Allaqachon accepted yoki pending invitation bor doctorlar
+                var excludedDoctorIds = await _db.ConsultantInvitations.AsNoTracking()
+                    .Where(i => i.ClinicId == adminClinicId &&
+                               (i.Status == "accepted" || i.Status == "pending"))
+                    .Select(i => i.DoctorId)
+                    .ToListAsync();
+
+                var doctorQuery = _db.Doctors
                     .AsNoTracking()
                     .Include(d => d.User)
+                        .ThenInclude(u => u!.Clinic)
+                            .ThenInclude(c => c!.ClinicDetail)
+                                .ThenInclude(cd => cd!.District)
+                                    .ThenInclude(di => di!.Region)
                     .Include(d => d.DoctorPositions!)
                         .ThenInclude(dp => dp.Position)
-                    .Where(d => d.User != null && d.UserId != requestingUserId);
+                    .Where(d => d.User != null && d.User.RoleId == 4
+                                && !excludedDoctorIds.Contains(d.Id));
 
-                if (!string.IsNullOrWhiteSpace(search))
+                if (!string.IsNullOrWhiteSpace(q.Phone))
                 {
-                    var s = search.Trim().ToLower();
-                    query = query.Where(d =>
-                        (d.FirstName != null && d.FirstName.ToLower().Contains(s)) ||
-                        (d.LastName  != null && d.LastName.ToLower().Contains(s))  ||
-                        (d.SureName  != null && d.SureName.ToLower().Contains(s)));
+                    var phone = q.Phone.Trim();
+                    doctorQuery = doctorQuery.Where(d => d.Phone != null && d.Phone.Contains(phone));
                 }
 
-                var doctors = await query.ToListAsync();
+                if (q.ClinicId.HasValue)
+                    doctorQuery = doctorQuery.Where(d => d.User!.ClinicId == q.ClinicId.Value);
 
-                // Shu klinikaning biriktirilgan konsultantlari
-                var linkedMap = await _db.ClinicConsultants
-                    .AsNoTracking()
-                    .Where(cc => cc.ClinicId == adminClinicId)
-                    .ToDictionaryAsync(cc => cc.ConsultantDoctorId);
+                if (q.DistrictId.HasValue)
+                    doctorQuery = doctorQuery.Where(d =>
+                        d.User!.Clinic != null &&
+                        d.User.Clinic.ClinicDetail != null &&
+                        d.User.Clinic.ClinicDetail.DistrictId == q.DistrictId.Value);
 
-                // Klinika nomlari
-                var clinicIds = doctors
-                    .Where(d => d.User?.ClinicId != null)
-                    .Select(d => d.User!.ClinicId!.Value)
-                    .Distinct()
-                    .ToList();
+                if (q.RegionId.HasValue)
+                    doctorQuery = doctorQuery.Where(d =>
+                        d.User!.Clinic != null &&
+                        d.User.Clinic.ClinicDetail != null &&
+                        d.User.Clinic.ClinicDetail.District != null &&
+                        d.User.Clinic.ClinicDetail.District.RegionId == q.RegionId.Value);
 
-                var clinics = await _db.Clinics
-                    .AsNoTracking()
-                    .Where(c => clinicIds.Contains(c.Id))
-                    .ToDictionaryAsync(c => c.Id, c => c.ClinicName ?? "");
+                var doctors = await doctorQuery.ToListAsync();
 
-                var result = new List<DoctorCatalogItemDto>();
-                foreach (var d in doctors)
+                // Passport seriyasi bo'yicha qidiruv — doctor.Phone orqali (passport mavjud emas)
+                if (!string.IsNullOrWhiteSpace(q.PassportSeries))
                 {
-                    var spec = d.DoctorPositions?.FirstOrDefault()?.Position?.NameUz
-                            ?? d.DoctorPositions?.FirstOrDefault()?.Position?.NameRu;
+                    var ps = q.PassportSeries.Trim().ToUpper();
+                    doctors = doctors.Where(d =>
+                        (d.FirstName != null && d.FirstName.ToUpper().Contains(ps)) ||
+                        (d.LastName  != null && d.LastName.ToUpper().Contains(ps)) ||
+                        (d.SureName  != null && d.SureName.ToUpper().Contains(ps))
+                    ).ToList();
+                }
 
-                    if (!string.IsNullOrWhiteSpace(specialization) &&
-                        (spec == null || !spec.ToLower().Contains(specialization.ToLower())))
-                        continue;
-
-                    int doctorClinicId = d.User?.ClinicId ?? 0;
-                    var isLinked = linkedMap.ContainsKey(d.Id);
-                    var totalConsultations = isLinked ? linkedMap[d.Id].TotalConsultations : 0;
-
-                    result.Add(new DoctorCatalogItemDto
+                return doctors.Select(d =>
+                {
+                    var position = d.DoctorPositions?.FirstOrDefault()?.Position?.NameUz
+                               ?? d.DoctorPositions?.FirstOrDefault()?.Position?.NameRu;
+                    var detail = d.User?.Clinic?.ClinicDetail;
+                    return new DoctorSearchResultDto
                     {
-                        Id              = d.Id,
-                        UserId          = d.UserId,
-                        FullName        = $"{d.FirstName} {d.LastName}".Trim(),
-                        Specialization  = spec,
-                        ExperienceYears = d.ExperienceYears,
-                        ClinicName      = clinics.TryGetValue(doctorClinicId, out var cn) ? cn : "",
-                        AverageRating   = d.AverageRating,
-                        IsLinked        = isLinked,
-                        TotalConsultations = totalConsultations
-                    });
-                }
-                return result;
+                        DoctorId    = d.Id,
+                        FullName    = $"{d.FirstName} {d.LastName}".Trim(),
+                        Position    = position,
+                        Phone       = d.Phone,
+                        ClinicName  = d.User?.Clinic?.ClinicName ?? "",
+                        RegionName   = detail?.District?.Region?.NameUz ?? detail?.District?.Region?.NameRu,
+                        DistrictName = detail?.District?.NameUz ?? detail?.District?.NameRu
+                    };
+                }).ToList();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "GetDoctorsCatalogAsync xatolik: adminClinicId={ClinicId}", adminClinicId);
-                return new List<DoctorCatalogItemDto>();
+                _logger.LogError(ex, "SearchDoctorsAsync xatolik: clinicId={ClinicId}", adminClinicId);
+                return new List<DoctorSearchResultDto>();
             }
         }
 
-        // ─── MY CONSULTANTS ────────────────────────────────────────────────────
+        public async Task<ConsultationPatientLookupDto> FindPatientAsync(string passportSeries, DateOnly birthDate)
+        {
+            var normalizedPassport = NormalizePassport(passportSeries);
+            if (string.IsNullOrWhiteSpace(normalizedPassport))
+                return new ConsultationPatientLookupDto { Found = false };
+
+            var candidates = await _db.Patcients
+                .AsNoTracking()
+                .Where(p => p.BirthDate == birthDate)
+                .ToListAsync();
+
+            foreach (var patient in candidates)
+            {
+                string? decryptedPassport = null;
+                try
+                {
+                    decryptedPassport = _encryption.Decrypt(patient.Passport);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Patient passport decrypt xatolik: patientId={PatientId}", patient.Id);
+                    continue;
+                }
+
+                if (NormalizePassport(decryptedPassport) != normalizedPassport) continue;
+
+                return new ConsultationPatientLookupDto
+                {
+                    Found = true,
+                    PatientId = patient.Id,
+                    PassportSeries = decryptedPassport,
+                    FullName = $"{patient.FirstName} {patient.LastName} {patient.SureName}".Trim(),
+                    BirthDate = patient.BirthDate,
+                    Gender = patient.Gender,
+                    Phone = patient.Phone,
+                    Address = patient.Address
+                };
+            }
+
+            return new ConsultationPatientLookupDto
+            {
+                Found = false,
+                PassportSeries = passportSeries,
+                BirthDate = birthDate
+            };
+        }
+
+        // ─── INVITE DOCTOR (Admin) ────────────────────────────────────────────
+
+        public async Task<(bool success, string? error)> InviteDoctorAsync(
+            InviteDoctorDto dto, int adminUserId, int clinicId)
+        {
+            try
+            {
+                if (dto.PricePerSession < 0)
+                    return (false, "Narx manfiy bo'lishi mumkin emas");
+
+                var existing = await _db.ConsultantInvitations.AsNoTracking()
+                    .AnyAsync(i => i.ClinicId == clinicId && i.DoctorId == dto.DoctorId);
+
+                if (existing)
+                    return (false, "Bu shifokorga allaqachon taklif yuborilgan");
+
+                var doctor = await _db.Doctors.AsNoTracking()
+                    .Include(d => d.User)
+                    .FirstOrDefaultAsync(d => d.Id == dto.DoctorId);
+
+                if (doctor == null) return (false, "Shifokor topilmadi");
+
+                var invitation = new ConsultantInvitation
+                {
+                    ClinicId       = clinicId,
+                    DoctorId       = dto.DoctorId,
+                    PricePerSession = dto.PricePerSession,
+                    Status         = "pending",
+                    InvitedAt      = DateTime.UtcNow
+                };
+                _db.ConsultantInvitations.Add(invitation);
+                await _db.SaveChangesAsync();
+
+                if (doctor.UserId > 0)
+                {
+                    var conns = _connections.GetConnectionIds(doctor.UserId).ToList();
+                    if (conns.Any())
+                    {
+                        var clinic = await _db.Clinics.AsNoTracking()
+                            .FirstOrDefaultAsync(c => c.Id == clinicId);
+                        await _hub.Clients.Clients(conns).SendAsync("NewInvitation", new
+                        {
+                            invitationId   = invitation.Id,
+                            clinicName     = clinic?.ClinicName ?? "",
+                            pricePerSession = dto.PricePerSession
+                        });
+                    }
+                }
+
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "InviteDoctorAsync xatolik: clinicId={ClinicId}", clinicId);
+                return (false, "Server xatoligi yuz berdi");
+            }
+        }
+
+        // ─── MY CONSULTANTS (Admin) ───────────────────────────────────────────
 
         public async Task<List<MyConsultantDto>> GetMyConsultantsAsync(int clinicId)
         {
             try
             {
-                var list = await _db.ClinicConsultants
+                return await _db.ClinicConsultants
                     .AsNoTracking()
                     .Where(cc => cc.ClinicId == clinicId && cc.Status == "active")
-                    .Include(cc => cc.ConsultantDoctor)
-                        .ThenInclude(d => d!.User)
-                            .ThenInclude(u => u!.Clinic)
-                    .Include(cc => cc.ConsultantDoctor)
+                    .Include(cc => cc.Doctor)
                         .ThenInclude(d => d!.DoctorPositions!)
                             .ThenInclude(dp => dp.Position)
-                    .ToListAsync();
-
-                return list.Select(cc =>
-                {
-                    var d = cc.ConsultantDoctor;
-                    var spec = d?.DoctorPositions?.FirstOrDefault()?.Position?.NameUz
-                            ?? d?.DoctorPositions?.FirstOrDefault()?.Position?.NameRu;
-                    return new MyConsultantDto
+                    .OrderByDescending(cc => cc.LinkedAt)
+                    .Select(cc => new MyConsultantDto
                     {
                         ClinicConsultantId = cc.Id,
-                        DoctorId           = cc.ConsultantDoctorId,
-                        FullName           = d != null ? $"{d.FirstName} {d.LastName}".Trim() : "",
-                        Specialization     = spec,
-                        ClinicName         = d?.User?.Clinic?.ClinicName ?? "",
-                        AverageRating      = d?.AverageRating ?? 0,
+                        DoctorId           = cc.DoctorId,
+                        FullName           = cc.Doctor != null
+                            ? $"{cc.Doctor.FirstName} {cc.Doctor.LastName}".Trim() : "",
+                        Position           = cc.Doctor != null && cc.Doctor.DoctorPositions != null
+                            ? cc.Doctor.DoctorPositions
+                                .Select(dp => dp.Position != null ? dp.Position.NameUz ?? dp.Position.NameRu : null)
+                                .FirstOrDefault()
+                            : null,
+                        Phone              = cc.Doctor != null ? cc.Doctor.Phone : null,
+                        CurrentPrice       = cc.CurrentPrice,
                         TotalConsultations = cc.TotalConsultations,
-                        LastConsultationAt = cc.LastConsultationAt,
-                        Status             = cc.Status
-                    };
-                }).ToList();
+                        LinkedAt           = cc.LinkedAt
+                    })
+                    .ToListAsync();
             }
             catch (Exception ex)
             {
@@ -173,126 +299,307 @@ namespace EkgAnalyzerApi.Services
             }
         }
 
-        // ─── CONSULTANT HISTORY ────────────────────────────────────────────────
-
-        public async Task<List<ConsultantHistoryItemDto>> GetConsultantHistoryAsync(
-            int clinicConsultantId, int clinicId)
+        public async Task<List<SentInvitationDto>> GetMySentInvitationsAsync(int clinicId)
         {
             try
             {
-                return await _db.Consultations
+                return await _db.ConsultantInvitations
                     .AsNoTracking()
-                    .Where(c => c.ClinicConsultantId == clinicConsultantId && c.ClinicId == clinicId)
-                    .Include(c => c.Patient)
-                    .Include(c => c.Conclusion)
-                    .OrderByDescending(c => c.CreatedAt)
-                    .Select(c => new ConsultantHistoryItemDto
+                    .Where(i => i.ClinicId == clinicId)
+                    .Include(i => i.Doctor)
+                        .ThenInclude(d => d!.User)
+                            .ThenInclude(u => u!.Clinic)
+                    .Include(i => i.Doctor)
+                        .ThenInclude(d => d!.DoctorPositions!)
+                            .ThenInclude(dp => dp.Position)
+                    .OrderByDescending(i => i.InvitedAt)
+                    .Select(i => new SentInvitationDto
                     {
-                        ConsultationId = c.Id,
-                        PatientName    = c.Patient != null
-                            ? $"{c.Patient.FirstName} {c.Patient.LastName}".Trim()
+                        Id = i.Id,
+                        DoctorId = i.DoctorId,
+                        DoctorFullName = i.Doctor != null
+                            ? $"{i.Doctor.FirstName} {i.Doctor.LastName}".Trim()
                             : "",
-                        Status         = c.Status,
-                        CreatedAt      = c.CreatedAt,
-                        HasConclusion  = c.Conclusion != null
+                        DoctorPosition = i.Doctor != null && i.Doctor.DoctorPositions != null
+                            ? i.Doctor.DoctorPositions
+                                .Select(dp => dp.Position != null ? dp.Position.NameUz ?? dp.Position.NameRu : null)
+                                .FirstOrDefault()
+                            : null,
+                        DoctorPhone = i.Doctor != null ? i.Doctor.Phone : null,
+                        DoctorClinicName = i.Doctor != null && i.Doctor.User != null && i.Doctor.User.Clinic != null
+                            ? i.Doctor.User.Clinic.ClinicName ?? ""
+                            : "",
+                        PricePerSession = i.PricePerSession,
+                        InvitedAt = i.InvitedAt,
+                        RespondedAt = i.RespondedAt,
+                        Status = i.Status
                     })
                     .ToListAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "GetConsultantHistoryAsync xatolik: ccId={Id}", clinicConsultantId);
-                return new List<ConsultantHistoryItemDto>();
+                _logger.LogError(ex, "GetMySentInvitationsAsync xatolik: clinicId={ClinicId}", clinicId);
+                return new List<SentInvitationDto>();
             }
         }
 
-        // ─── CREATE ────────────────────────────────────────────────────────────
+        public async Task<ConsultationBadgeCountsDto> GetBadgeCountsAsync(int roleId, int clinicId, int doctorId)
+        {
+            try
+            {
+                var dto = new ConsultationBadgeCountsDto();
 
-        public async Task<(bool success, string? error, int consultationId)> CreateConsultationAsync(
+                if ((roleId == 2 || roleId == 3) && clinicId > 0)
+                {
+                    dto.AdminPendingCount = await _db.Consultations.AsNoTracking()
+                        .CountAsync(c => c.ClinicId == clinicId && c.Status == "created");
+                }
+
+                if (roleId == 4 && doctorId > 0)
+                {
+                    dto.DoctorPendingInvitationsCount = await _db.ConsultantInvitations.AsNoTracking()
+                        .CountAsync(i => i.DoctorId == doctorId && i.Status == "pending");
+                    dto.DoctorCreatedCount = await _db.Consultations.AsNoTracking()
+                        .CountAsync(c => c.DoctorId == doctorId && c.Status == "created");
+                    dto.DoctorPendingCount = dto.DoctorPendingInvitationsCount + dto.DoctorCreatedCount;
+                }
+
+                return dto;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetBadgeCountsAsync xatolik: roleId={RoleId}, clinicId={ClinicId}, doctorId={DoctorId}", roleId, clinicId, doctorId);
+                return new ConsultationBadgeCountsDto();
+            }
+        }
+
+        // ─── UPDATE PRICE (Admin) ─────────────────────────────────────────────
+
+        public async Task<(bool success, string? error)> UpdateConsultantPriceAsync(
+            int ccId, UpdatePriceDto dto, int adminUserId, int clinicId)
+        {
+            try
+            {
+                if (dto.NewPrice < 0)
+                    return (false, "Narx manfiy bo'lishi mumkin emas");
+
+                if (dto.EffectiveFrom < DateOnly.FromDateTime(DateTime.Today))
+                    return (false, "Sana o'tgan bo'lishi mumkin emas");
+
+                var cc = await _db.ClinicConsultants
+                    .FirstOrDefaultAsync(c => c.Id == ccId && c.ClinicId == clinicId);
+
+                if (cc == null) return (false, "Konsultant topilmadi");
+
+                var history = new ConsultantPriceHistory
+                {
+                    ClinicConsultantId = ccId,
+                    OldPrice           = cc.CurrentPrice,
+                    NewPrice           = dto.NewPrice,
+                    EffectiveFrom      = dto.EffectiveFrom,
+                    ChangedAt          = DateTime.UtcNow,
+                    ChangedByUserId    = adminUserId
+                };
+                _db.ConsultantPriceHistories.Add(history);
+
+                cc.CurrentPrice = dto.NewPrice;
+                await _db.SaveChangesAsync();
+
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "UpdateConsultantPriceAsync xatolik: ccId={Id}", ccId);
+                return (false, "Server xatoligi yuz berdi");
+            }
+        }
+
+        // ─── CONSULTANT HISTORY (Admin) ───────────────────────────────────────
+
+        public async Task<ConsultantHistoryDto> GetConsultantHistoryAsync(
+            int ccId, int clinicId, string? patientName, DateOnly? from, DateOnly? to)
+        {
+            try
+            {
+                var query = _db.Consultations
+                    .AsNoTracking()
+                    .Where(c => c.ClinicConsultantId == ccId && c.ClinicId == clinicId)
+                    .Include(c => c.Patient)
+                    .Include(c => c.Conclusion)
+                    .AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(patientName))
+                {
+                    var n = patientName.Trim().ToLower();
+                    query = query.Where(c =>
+                        c.Patient != null &&
+                        ((c.Patient.FirstName != null && c.Patient.FirstName.ToLower().Contains(n)) ||
+                         (c.Patient.LastName  != null && c.Patient.LastName.ToLower().Contains(n)) ||
+                         (c.Patient.SureName  != null && c.Patient.SureName.ToLower().Contains(n))));
+                }
+
+                if (from.HasValue)  query = query.Where(c => c.ConsultationDate >= from.Value);
+                if (to.HasValue)    query = query.Where(c => c.ConsultationDate <= to.Value);
+
+                var items = await query.OrderByDescending(c => c.ConsultationDate).ToListAsync();
+
+                var rows = items.Select(c => new ConsultantHistoryItemDto
+                {
+                    Id              = c.Id,
+                    PatientFullName = c.Patient != null
+                        ? $"{c.Patient.FirstName} {c.Patient.LastName}".Trim() : "",
+                    ConsultationDate = c.ConsultationDate,
+                    PriceAtCreation  = c.PriceAtCreation,
+                    Status           = c.Status,
+                    HasConclusion    = c.Conclusion != null
+                }).ToList();
+
+                return new ConsultantHistoryDto
+                {
+                    Consultations = rows,
+                    TotalAmount   = rows.Sum(r => r.PriceAtCreation)
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetConsultantHistoryAsync xatolik: ccId={Id}", ccId);
+                return new ConsultantHistoryDto();
+            }
+        }
+
+        // ─── CREATE CONSULTATIONS (Admin) ─────────────────────────────────────
+
+        public async Task<(bool success, string? error, int count)> CreateConsultationsAsync(
             CreateConsultationDto dto, int adminUserId, int clinicId)
         {
             try
             {
-                // O'z so'roviga konsultant bo'lib bo'lmaydi
-                var consultantUser = await _db.Doctors.AsNoTracking()
-                    .Where(d => d.Id == dto.ConsultantDoctorId)
-                    .Select(d => d.UserId)
-                    .FirstOrDefaultAsync();
+                if (dto.DoctorIds == null || dto.DoctorIds.Length == 0)
+                    return (false, "Kamida 1 ta shifokor tanlash kerak", 0);
 
-                if (consultantUser == adminUserId)
-                    return (false, "O'z so'rovingizga konsultant bo'lib bo'lmaydi", 0);
+                if (dto.ConsultationDate < DateOnly.FromDateTime(DateTime.Today))
+                    return (false, "Sana o'tgan bo'lishi mumkin emas", 0);
 
-                // Biriktirilgan mi?
-                var existing = await _db.ClinicConsultants
-                    .Where(cc => cc.ClinicId == clinicId && cc.ConsultantDoctorId == dto.ConsultantDoctorId)
-                    .FirstOrDefaultAsync();
+                if (dto.ConsultationDate > DateOnly.FromDateTime(DateTime.Today.AddDays(30)))
+                    return (false, "Sana bugundan 30 kundan ko'p bo'lishi mumkin emas", 0);
 
-                bool isFirst = existing == null;
-
-                var consultation = new Consultation
+                // Bemor topish yoki yaratish
+                int patientId;
+                if (dto.PatientId.HasValue && dto.PatientId.Value > 0)
                 {
-                    ClinicId             = clinicId,
-                    ConsultantDoctorId   = dto.ConsultantDoctorId,
-                    ClinicConsultantId   = existing?.Id,
-                    RequestedByAdminId   = adminUserId,
-                    PatientId            = dto.PatientId,
-                    IsFirstRequest       = isFirst,
-                    Note                 = dto.Note,
-                    Status               = "pending",
-                    CreatedAt            = DateTime.UtcNow,
-                    UpdatedAt            = DateTime.UtcNow
-                };
-
-                _db.Consultations.Add(consultation);
-                await _db.SaveChangesAsync();
-
-                // Tahlillarni saqlash
-                if (dto.Analyses?.Count > 0)
+                    var patExists = await _db.Patcients.AnyAsync(p => p.Id == dto.PatientId.Value);
+                    if (!patExists) return (false, "Bemor topilmadi", 0);
+                    patientId = dto.PatientId.Value;
+                }
+                else if (dto.NewPatient != null)
                 {
-                    var analyses = dto.Analyses.Select(a => new ConsultationAnalysis
+                    var encryptedPassport = _encryption.Encrypt(dto.NewPatient.PassportSeries);
+                    var nameParts = dto.NewPatient.FullName.Trim().Split(' ', 3);
+                    var newPatient = new Patcient
                     {
-                        ConsultationId = consultation.Id,
-                        AnalysisType   = a.AnalysisType,
-                        AnalysisId     = a.AnalysisId,
-                        SharedAt       = DateTime.UtcNow
-                    }).ToList();
-                    _db.ConsultationAnalyses.AddRange(analyses);
+                        Passport  = encryptedPassport,
+                        FirstName = nameParts.Length > 0 ? nameParts[0] : dto.NewPatient.FullName,
+                        LastName  = nameParts.Length > 1 ? nameParts[1] : "",
+                        SureName  = nameParts.Length > 2 ? nameParts[2] : "",
+                        BirthDate = dto.NewPatient.BirthDate,
+                        Gender    = dto.NewPatient.Gender,
+                        Phone     = dto.NewPatient.Phone ?? "",
+                        Address   = dto.NewPatient.Address,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    _db.Patcients.Add(newPatient);
                     await _db.SaveChangesAsync();
+                    patientId = newPatient.Id;
                 }
-
-                // SignalR: doctorga bildirishnoma
-                var clinic = await _db.Clinics.AsNoTracking()
-                    .FirstOrDefaultAsync(c => c.Id == clinicId);
-
-                var patient = await _db.Patcients.AsNoTracking()
-                    .FirstOrDefaultAsync(p => p.Id == dto.PatientId);
-
-                var doctorConn = _connections.GetConnectionId(consultantUser);
-                if (doctorConn != null)
+                else
                 {
-                    await _hub.Clients.Client(doctorConn).SendAsync("NewConsultationRequest", new
-                    {
-                        consultationId = consultation.Id,
-                        clinicName     = clinic?.ClinicName ?? "",
-                        patientName    = patient != null
-                            ? $"{patient.FirstName} {patient.LastName}".Trim() : "",
-                        note           = dto.Note,
-                        isFirstRequest = isFirst
-                    });
+                    return (false, "Bemor ma'lumotlari kiritilmagan", 0);
                 }
 
-                return (true, null, consultation.Id);
+                int createdCount = 0;
+                foreach (var doctorId in dto.DoctorIds.Distinct())
+                {
+                    var cc = await _db.ClinicConsultants
+                        .FirstOrDefaultAsync(c => c.ClinicId == clinicId &&
+                                                  c.DoctorId == doctorId &&
+                                                  c.Status == "active");
+
+                    if (cc == null) continue;
+
+                    // Narx logikasi: ConsultantPriceHistory dan topish
+                    var price = await GetPriceForDateAsync(cc.Id, dto.ConsultationDate)
+                                ?? cc.CurrentPrice;
+
+                    var consultation = new Consultation
+                    {
+                        ClinicId          = clinicId,
+                        ClinicConsultantId = cc.Id,
+                        DoctorId          = doctorId,
+                        PatientId         = patientId,
+                        CreatedByAdminId  = adminUserId,
+                        ConsultationDate  = dto.ConsultationDate,
+                        PriceAtCreation   = price,
+                        Status            = "created",
+                        CreatedAt         = DateTime.UtcNow,
+                        UpdatedAt         = DateTime.UtcNow
+                    };
+                    _db.Consultations.Add(consultation);
+                    await _db.SaveChangesAsync();
+
+                    cc.TotalConsultations++;
+                    await _db.SaveChangesAsync();
+
+                    // Shifokorga bildirishnoma
+                    var doctor = await _db.Doctors.AsNoTracking()
+                        .Where(d => d.Id == doctorId)
+                        .Select(d => new { d.UserId, d.FirstName, d.LastName })
+                        .FirstOrDefaultAsync();
+
+                    if (doctor != null)
+                    {
+                        var conns = _connections.GetConnectionIds(doctor.UserId).ToList();
+                        if (conns.Any())
+                        {
+                            var clinic = await _db.Clinics.AsNoTracking()
+                                .FirstOrDefaultAsync(c => c.Id == clinicId);
+                            await _hub.Clients.Clients(conns).SendAsync("NewConsultation", new
+                            {
+                                consultationId   = consultation.Id,
+                                clinicName       = clinic?.ClinicName ?? "",
+                                consultationDate = dto.ConsultationDate
+                            });
+                        }
+                    }
+
+                    createdCount++;
+                }
+
+                return createdCount > 0
+                    ? (true, null, createdCount)
+                    : (false, "Faol konsultant topilmadi", 0);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "CreateConsultationAsync xatolik: adminUserId={UserId}", adminUserId);
+                _logger.LogError(ex, "CreateConsultationsAsync xatolik: adminId={Id}", adminUserId);
                 return (false, "Server xatoligi yuz berdi", 0);
             }
         }
 
-        // ─── LIST ──────────────────────────────────────────────────────────────
+        private async Task<decimal?> GetPriceForDateAsync(int ccId, DateOnly consultationDate)
+        {
+            return await _db.ConsultantPriceHistories
+                .AsNoTracking()
+                .Where(p => p.ClinicConsultantId == ccId && p.EffectiveFrom <= consultationDate)
+                .OrderByDescending(p => p.EffectiveFrom)
+                .Select(p => (decimal?)p.NewPrice)
+                .FirstOrDefaultAsync();
+        }
+
+        // ─── CONSULTATION LIST (Admin) ────────────────────────────────────────
 
         public async Task<List<ConsultationListItemDto>> GetConsultationListAsync(
-            int clinicId, string? status, int? consultantDoctorId, int? patientId)
+            int clinicId, string? status, int? doctorId, string? patientName, DateOnly? from, DateOnly? to)
         {
             try
             {
@@ -300,32 +607,42 @@ namespace EkgAnalyzerApi.Services
                     .AsNoTracking()
                     .Where(c => c.ClinicId == clinicId)
                     .Include(c => c.Patient)
-                    .Include(c => c.ConsultantDoctor)
+                    .Include(c => c.Doctor)
                     .Include(c => c.Conclusion)
                     .AsQueryable();
 
                 if (!string.IsNullOrWhiteSpace(status))
                     query = query.Where(c => c.Status == status);
 
-                if (consultantDoctorId.HasValue)
-                    query = query.Where(c => c.ConsultantDoctorId == consultantDoctorId.Value);
+                if (doctorId.HasValue)
+                    query = query.Where(c => c.DoctorId == doctorId.Value);
 
-                if (patientId.HasValue)
-                    query = query.Where(c => c.PatientId == patientId.Value);
+                if (!string.IsNullOrWhiteSpace(patientName))
+                {
+                    var n = patientName.Trim().ToLower();
+                    query = query.Where(c =>
+                        c.Patient != null &&
+                        ((c.Patient.FirstName != null && c.Patient.FirstName.ToLower().Contains(n)) ||
+                         (c.Patient.LastName  != null && c.Patient.LastName.ToLower().Contains(n))));
+                }
+
+                if (from.HasValue) query = query.Where(c => c.ConsultationDate >= from.Value);
+                if (to.HasValue)   query = query.Where(c => c.ConsultationDate <= to.Value);
 
                 return await query
                     .OrderByDescending(c => c.CreatedAt)
                     .Select(c => new ConsultationListItemDto
                     {
-                        Id            = c.Id,
-                        PatientName   = c.Patient != null
+                        Id              = c.Id,
+                        PatientFullName = c.Patient != null
                             ? $"{c.Patient.FirstName} {c.Patient.LastName}".Trim() : "",
-                        ConsultantName = c.ConsultantDoctor != null
-                            ? $"{c.ConsultantDoctor.FirstName} {c.ConsultantDoctor.LastName}".Trim() : "",
-                        Status        = c.Status,
-                        CreatedAt     = c.CreatedAt,
-                        ScheduledAt   = c.ScheduledAt,
-                        HasConclusion = c.Conclusion != null
+                        DoctorFullName  = c.Doctor != null
+                            ? $"{c.Doctor.FirstName} {c.Doctor.LastName}".Trim() : "",
+                        PriceAtCreation  = c.PriceAtCreation,
+                        ConsultationDate = c.ConsultationDate,
+                        CreatedAt        = c.CreatedAt,
+                        Status           = c.Status,
+                        HasConclusion    = c.Conclusion != null
                     })
                     .ToListAsync();
             }
@@ -336,374 +653,385 @@ namespace EkgAnalyzerApi.Services
             }
         }
 
-        // ─── DETAIL ────────────────────────────────────────────────────────────
+        // ─── CONSULTATION DETAIL (Admin) ──────────────────────────────────────
 
-        public async Task<ConsultationDetailDto?> GetConsultationByIdAsync(int id, int userId, int roleId)
+        public async Task<ConsultationDetailAdminDto?> GetConsultationDetailAdminAsync(int id, int clinicId)
         {
             try
             {
                 var c = await _db.Consultations
                     .AsNoTracking()
-                    .Where(x => x.Id == id)
+                    .Where(x => x.Id == id && x.ClinicId == clinicId)
                     .Include(x => x.Patient)
-                    .Include(x => x.ConsultantDoctor)
+                    .Include(x => x.Doctor)
                         .ThenInclude(d => d!.User)
                             .ThenInclude(u => u!.Clinic)
-                    .Include(x => x.ConsultantDoctor)
+                    .Include(x => x.Doctor)
                         .ThenInclude(d => d!.DoctorPositions!)
                             .ThenInclude(dp => dp.Position)
-                    .Include(x => x.Analyses)
                     .Include(x => x.Conclusion)
                     .FirstOrDefaultAsync();
 
                 if (c == null) return null;
 
-                // Kirish tekshiruvi
-                if (roleId == 2 || roleId == 3)
+                // Bemorning barcha tahlillari
+                var analyses = await GetPatientAnalysesAsync(c.PatientId);
+
+                // Passport decrypt qilish (admin uchun ko'rsatiladi)
+                string? decryptedPassport = null;
+                if (c.Patient?.Passport != null)
                 {
-                    // Admin: faqat o'z klinikasi
-                    var adminClinicId = await _db.Users.AsNoTracking()
-                        .Where(u => u.Id == userId)
-                        .Select(u => u.ClinicId)
-                        .FirstOrDefaultAsync();
-                    if (adminClinicId != c.ClinicId) return null;
-                }
-                else if (roleId == 4)
-                {
-                    // Doctor: faqat o'ziga yuborilgan
-                    var doctorId = await _db.Doctors.AsNoTracking()
-                        .Where(d => d.UserId == userId)
-                        .Select(d => d.Id)
-                        .FirstOrDefaultAsync();
-                    if (doctorId != c.ConsultantDoctorId) return null;
+                    try { decryptedPassport = _encryption.Decrypt(c.Patient.Passport); }
+                    catch { decryptedPassport = null; }
                 }
 
-                var d = c.ConsultantDoctor;
-                var spec = d?.DoctorPositions?.FirstOrDefault()?.Position?.NameUz
-                        ?? d?.DoctorPositions?.FirstOrDefault()?.Position?.NameRu;
+                var d = c.Doctor;
+                var position = d?.DoctorPositions?.FirstOrDefault()?.Position?.NameUz
+                            ?? d?.DoctorPositions?.FirstOrDefault()?.Position?.NameRu;
 
-                int? age = null;
-                if (c.Patient?.BirthDate != default)
-                {
-                    var today = DateOnly.FromDateTime(DateTime.Today);
-                    age = today.Year - c.Patient.BirthDate.Year;
-                    if (c.Patient.BirthDate > today.AddYears(-age.Value)) age--;
-                }
-
-                var hasRating = await _db.ConsultantRatings
-                    .AnyAsync(r => r.ConsultationId == id);
-
-                return new ConsultationDetailDto
+                return new ConsultationDetailAdminDto
                 {
                     Id               = c.Id,
+                    ConsultationDate = c.ConsultationDate,
+                    PriceAtCreation  = c.PriceAtCreation,
                     Status           = c.Status,
-                    IsFirstRequest   = c.IsFirstRequest,
-                    Note             = c.Note,
-                    RejectionReason  = c.RejectionReason,
-                    ScheduledAt      = c.ScheduledAt,
-                    LiveKitRoomName  = c.LiveKitRoomName,
-                    ConcludedAt      = c.ConcludedAt,
                     CreatedAt        = c.CreatedAt,
+                    RejectionReason  = c.RejectionReason,
+                    LiveKitRoomName  = c.LiveKitRoomName,
 
                     PatientId        = c.PatientId,
-                    PatientName      = c.Patient != null
+                    PatientFullName  = c.Patient != null
                         ? $"{c.Patient.FirstName} {c.Patient.LastName}".Trim() : "",
-                    PatientAge       = age,
-                    PatientGender    = c.Patient?.Gender,
+                    BirthDate        = c.Patient?.BirthDate,
+                    Gender           = c.Patient?.Gender,
+                    Phone            = c.Patient?.Phone,
+                    Address          = c.Patient?.Address,
+                    PassportSeries   = decryptedPassport,
 
-                    ConsultantDoctorId   = c.ConsultantDoctorId,
-                    ConsultantName       = d != null ? $"{d.FirstName} {d.LastName}".Trim() : "",
-                    ConsultantSpecialization = spec,
-                    ConsultantClinicName = d?.User?.Clinic?.ClinicName ?? "",
-                    ConsultantRating     = d?.AverageRating ?? 0,
-
-                    Analyses = c.Analyses?.Select(a => new SharedAnalysisDto
-                    {
-                        Id           = a.Id,
-                        AnalysisType = a.AnalysisType,
-                        AnalysisId   = a.AnalysisId,
-                        SharedAt     = a.SharedAt
-                    }).ToList() ?? new List<SharedAnalysisDto>(),
+                    DoctorId         = c.DoctorId,
+                    DoctorUserId     = d?.UserId,
+                    DoctorIsOnline   = d?.UserId > 0 && _connections.IsOnline(d.UserId),
+                    DoctorFullName   = d != null ? $"{d.FirstName} {d.LastName}".Trim() : "",
+                    DoctorPosition   = position,
+                    DoctorPhone      = d?.Phone,
+                    DoctorClinicName = d?.User?.Clinic?.ClinicName ?? "",
 
                     Conclusion = c.Conclusion == null ? null : new ConsultationConclusionDto
                     {
+                        PatientCondition = c.Conclusion.PatientCondition,
                         Diagnosis        = c.Conclusion.Diagnosis,
-                        Recommendations  = c.Conclusion.Recommendations,
-                        Medications      = c.Conclusion.Medications,
-                        FollowUpRequired = c.Conclusion.FollowUpRequired,
-                        FollowUpNote     = c.Conclusion.FollowUpNote,
-                        CreatedAt        = c.Conclusion.CreatedAt
+                        Treatment        = c.Conclusion.Treatment,
+                        CreatedAt        = c.Conclusion.CreatedAt,
+                        UpdatedAt        = c.Conclusion.UpdatedAt
                     },
 
-                    HasRating = hasRating
+                    Analyses = analyses
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "GetConsultationByIdAsync xatolik: id={Id}", id);
+                _logger.LogError(ex, "GetConsultationDetailAdminAsync xatolik: id={Id}", id);
                 return null;
             }
         }
 
-        // ─── CANCEL ────────────────────────────────────────────────────────────
+        // ─── ADMIN LIVEKIT TOKEN ──────────────────────────────────────────────
 
-        public async Task<(bool success, string? error)> CancelConsultationAsync(int id, int clinicId)
+        public async Task<(bool success, string? error, ConsultationTokenDto? token)> GetAdminLiveKitTokenAsync(
+            int id, int userId, int clinicId)
         {
             try
             {
-                var c = await _db.Consultations
-                    .Where(x => x.Id == id && x.ClinicId == clinicId)
-                    .Include(x => x.ConsultantDoctor)
-                    .FirstOrDefaultAsync();
+                var c = await _db.Consultations.AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == id && x.ClinicId == clinicId);
 
-                if (c == null) return (false, "Konsultatsiya topilmadi");
-                if (c.Status != "pending" && c.Status != "accepted")
-                    return (false, "Faqat 'pending' yoki 'accepted' holatdagi konsultatsiyani bekor qilish mumkin");
+                if (c == null) return (false, "Konsultatsiya topilmadi", null);
 
-                c.Status    = "cancelled";
-                c.UpdatedAt = DateTime.UtcNow;
-                await _db.SaveChangesAsync();
+                var roomName = string.IsNullOrEmpty(c.LiveKitRoomName)
+                    ? $"consultation-{c.Id}" : c.LiveKitRoomName;
 
-                // Doctor ga bildirishnoma
-                if (c.ConsultantDoctor != null)
+                if (c.LiveKitRoomName == null)
                 {
-                    var conn = _connections.GetConnectionId(c.ConsultantDoctor.UserId);
-                    if (conn != null)
-                        await _hub.Clients.Client(conn).SendAsync("ConsultationCancelled", new { consultationId = id });
-                }
-
-                return (true, null);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "CancelConsultationAsync xatolik: id={Id}", id);
-                return (false, "Server xatoligi yuz berdi");
-            }
-        }
-
-        // ─── RATE ──────────────────────────────────────────────────────────────
-
-        public async Task<(bool success, string? error)> RateConsultationAsync(
-            int id, RateConsultationDto dto, int clinicId)
-        {
-            try
-            {
-                if (dto.Score < 1 || dto.Score > 5)
-                    return (false, "Baho 1 dan 5 gacha bo'lishi kerak");
-
-                var c = await _db.Consultations
-                    .Where(x => x.Id == id && x.ClinicId == clinicId)
-                    .FirstOrDefaultAsync();
-
-                if (c == null) return (false, "Konsultatsiya topilmadi");
-                if (c.Status != "concluded")
-                    return (false, "Faqat yakunlangan konsultatsiyani baholash mumkin");
-
-                if (c.ConcludedAt.HasValue && DateTime.UtcNow > c.ConcludedAt.Value.AddHours(72))
-                    return (false, "Baho berish muddati o'tdi (72 soat)");
-
-                var alreadyRated = await _db.ConsultantRatings
-                    .AnyAsync(r => r.ConsultationId == id);
-                if (alreadyRated)
-                    return (false, "Bu konsultatsiya allaqachon baholangan");
-
-                var rating = new ConsultantRating
-                {
-                    ConsultantDoctorId = c.ConsultantDoctorId,
-                    ConsultationId     = id,
-                    ClinicId           = clinicId,
-                    Score              = dto.Score,
-                    Comment            = dto.Comment,
-                    CreatedAt          = DateTime.UtcNow
-                };
-                _db.ConsultantRatings.Add(rating);
-                await _db.SaveChangesAsync();
-
-                // Doctor.AverageRating va TotalRatings qayta hisoblash
-                var stats = await _db.ConsultantRatings
-                    .Where(r => r.ConsultantDoctorId == c.ConsultantDoctorId)
-                    .GroupBy(r => r.ConsultantDoctorId)
-                    .Select(g => new { Avg = g.Average(r => (double)r.Score), Count = g.Count() })
-                    .FirstOrDefaultAsync();
-
-                if (stats != null)
-                {
-                    var doctor = await _db.Doctors.FirstOrDefaultAsync(d => d.Id == c.ConsultantDoctorId);
-                    if (doctor != null)
+                    var cons = await _db.Consultations.FirstOrDefaultAsync(x => x.Id == id);
+                    if (cons != null)
                     {
-                        doctor.AverageRating = (decimal)Math.Round(stats.Avg, 2);
-                        doctor.TotalRatings  = stats.Count;
+                        cons.LiveKitRoomName = roomName;
                         await _db.SaveChangesAsync();
                     }
                 }
 
-                return (true, null);
+                var token = BuildLiveKitToken(userId, roomName, $"admin-{userId}");
+                return (true, null, new ConsultationTokenDto
+                {
+                    Token      = token,
+                    LiveKitUrl = _config["LiveKit:Url"] ?? "",
+                    RoomName   = roomName
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "RateConsultationAsync xatolik: id={Id}", id);
-                return (false, "Server xatoligi yuz berdi");
+                _logger.LogError(ex, "GetAdminLiveKitTokenAsync xatolik: id={Id}", id);
+                return (false, "Server xatoligi yuz berdi", null);
             }
         }
 
-        // ─── INCOMING (DOCTOR) ────────────────────────────────────────────────
+        // ─── INVITATIONS (Doctor) ─────────────────────────────────────────────
 
-        public async Task<List<IncomingConsultationDto>> GetIncomingConsultationsAsync(
-            int doctorId, string? status)
+        public async Task<List<InvitationDto>> GetMyInvitationsAsync(int doctorId)
         {
             try
             {
-                var query = _db.Consultations
+                return await _db.ConsultantInvitations
                     .AsNoTracking()
-                    .Where(c => c.ConsultantDoctorId == doctorId)
-                    .Include(c => c.Clinic)
-                    .Include(c => c.Patient)
-                    .Include(c => c.Analyses)
-                    .AsQueryable();
-
-                if (!string.IsNullOrWhiteSpace(status))
-                {
-                    var statuses = status.Split(',').Select(s => s.Trim()).ToList();
-                    query = query.Where(c => statuses.Contains(c.Status));
-                }
-
-                var list = await query
-                    .OrderByDescending(c => c.CreatedAt)
-                    .ToListAsync();
-
-                return list.Select(c =>
-                {
-                    int? age = null;
-                    if (c.Patient?.BirthDate != default)
+                    .Where(i => i.DoctorId == doctorId)
+                    .Include(i => i.Clinic)
+                    .OrderByDescending(i => i.InvitedAt)
+                    .Select(i => new InvitationDto
                     {
-                        var today = DateOnly.FromDateTime(DateTime.Today);
-                        age = today.Year - c.Patient.BirthDate.Year;
-                        if (c.Patient.BirthDate > today.AddYears(-age.Value)) age--;
-                    }
-
-                    var summary = c.Analyses?
-                        .GroupBy(a => a.AnalysisType)
-                        .Select(g => new SharedAnalysisTypeCountDto
-                        {
-                            AnalysisType = g.Key,
-                            Count        = g.Count()
-                        }).ToList() ?? new List<SharedAnalysisTypeCountDto>();
-
-                    return new IncomingConsultationDto
-                    {
-                        Id             = c.Id,
-                        ClinicName     = c.Clinic?.ClinicName ?? "",
-                        PatientName    = c.Patient != null
-                            ? $"{c.Patient.FirstName} {c.Patient.LastName}".Trim() : "",
-                        PatientAge     = age,
-                        PatientGender  = c.Patient?.Gender,
-                        Note           = c.Note,
-                        IsFirstRequest = c.IsFirstRequest,
-                        Status         = c.Status,
-                        CreatedAt      = c.CreatedAt,
-                        ScheduledAt    = c.ScheduledAt,
-                        AnalysisSummary = summary
-                    };
-                }).ToList();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "GetIncomingConsultationsAsync xatolik: doctorId={DoctorId}", doctorId);
-                return new List<IncomingConsultationDto>();
-            }
-        }
-
-        // ─── MY LINKED CLINICS ────────────────────────────────────────────────
-
-        public async Task<List<LinkedClinicDto>> GetMyLinkedClinicsAsync(int doctorId)
-        {
-            try
-            {
-                return await _db.ClinicConsultants
-                    .AsNoTracking()
-                    .Where(cc => cc.ConsultantDoctorId == doctorId && cc.Status == "active")
-                    .Include(cc => cc.Clinic)
-                    .Select(cc => new LinkedClinicDto
-                    {
-                        ClinicConsultantId = cc.Id,
-                        ClinicId           = cc.ClinicId,
-                        ClinicName         = cc.Clinic != null ? cc.Clinic.ClinicName ?? "" : "",
-                        TotalConsultations = cc.TotalConsultations,
-                        LastConsultationAt = cc.LastConsultationAt,
-                        Status             = cc.Status
+                        Id             = i.Id,
+                        ClinicName     = i.Clinic != null ? i.Clinic.ClinicName ?? "" : "",
+                        PricePerSession = i.PricePerSession,
+                        InvitedAt      = i.InvitedAt,
+                        Status         = i.Status
                     })
                     .ToListAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "GetMyLinkedClinicsAsync xatolik: doctorId={DoctorId}", doctorId);
-                return new List<LinkedClinicDto>();
+                _logger.LogError(ex, "GetMyInvitationsAsync xatolik: doctorId={DoctorId}", doctorId);
+                return new List<InvitationDto>();
             }
         }
 
-        // ─── ACCEPT ────────────────────────────────────────────────────────────
+        // ─── ACCEPT INVITATION (Doctor) ───────────────────────────────────────
 
-        public async Task<(bool success, string? error)> AcceptConsultationAsync(
-            int id, int doctorId, int doctorUserId)
+        public async Task<(bool success, string? error)> AcceptInvitationAsync(int id, int doctorId)
+        {
+            try
+            {
+                var invitation = await _db.ConsultantInvitations
+                    .FirstOrDefaultAsync(i => i.Id == id && i.DoctorId == doctorId);
+
+                if (invitation == null) return (false, "Taklif topilmadi");
+                if (invitation.Status != "pending") return (false, "Taklif allaqachon ko'rib chiqilgan");
+
+                // UNIQUE constraint: (ClinicId, DoctorId) tekshirish
+                var existingLink = await _db.ClinicConsultants
+                    .FirstOrDefaultAsync(cc => cc.ClinicId == invitation.ClinicId && cc.DoctorId == doctorId);
+
+                if (existingLink != null)
+                {
+                    existingLink.Status      = "active";
+                    existingLink.CurrentPrice = invitation.PricePerSession;
+                    existingLink.LinkedAt    = DateTime.UtcNow;
+                    existingLink.InvitationId = invitation.Id;
+                }
+                else
+                {
+                    _db.ClinicConsultants.Add(new ClinicConsultant
+                    {
+                        ClinicId      = invitation.ClinicId,
+                        DoctorId      = doctorId,
+                        InvitationId  = invitation.Id,
+                        LinkedAt      = DateTime.UtcNow,
+                        Status        = "active",
+                        CurrentPrice  = invitation.PricePerSession
+                    });
+                }
+
+                invitation.Status      = "accepted";
+                invitation.RespondedAt = DateTime.UtcNow;
+                await _db.SaveChangesAsync();
+
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "AcceptInvitationAsync xatolik: id={Id}", id);
+                return (false, "Server xatoligi yuz berdi");
+            }
+        }
+
+        // ─── REJECT INVITATION (Doctor) ───────────────────────────────────────
+
+        public async Task<(bool success, string? error)> RejectInvitationAsync(int id, int doctorId)
+        {
+            try
+            {
+                var invitation = await _db.ConsultantInvitations
+                    .FirstOrDefaultAsync(i => i.Id == id && i.DoctorId == doctorId);
+
+                if (invitation == null) return (false, "Taklif topilmadi");
+                if (invitation.Status != "pending") return (false, "Taklif allaqachon ko'rib chiqilgan");
+
+                invitation.Status      = "rejected";
+                invitation.RespondedAt = DateTime.UtcNow;
+                await _db.SaveChangesAsync();
+
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "RejectInvitationAsync xatolik: id={Id}", id);
+                return (false, "Server xatoligi yuz berdi");
+            }
+        }
+
+        // ─── MY CLINICS (Doctor) ──────────────────────────────────────────────
+
+        public async Task<List<MyClinicDto>> GetMyClinicsAsync(int doctorId)
+        {
+            try
+            {
+                return await _db.ClinicConsultants
+                    .AsNoTracking()
+                    .Where(cc => cc.DoctorId == doctorId && cc.Status == "active")
+                    .Include(cc => cc.Clinic)
+                    .OrderByDescending(cc => cc.LinkedAt)
+                    .Select(cc => new MyClinicDto
+                    {
+                        ClinicConsultantId = cc.Id,
+                        ClinicName         = cc.Clinic != null ? cc.Clinic.ClinicName ?? "" : "",
+                        LinkedAt           = cc.LinkedAt,
+                        TotalConsultations = cc.TotalConsultations,
+                        CurrentPrice       = cc.CurrentPrice
+                    })
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetMyClinicsAsync xatolik: doctorId={DoctorId}", doctorId);
+                return new List<MyClinicDto>();
+            }
+        }
+
+        // ─── DOCTOR CLINIC HISTORY ────────────────────────────────────────────
+
+        public async Task<ConsultantHistoryDto> GetDoctorClinicHistoryAsync(
+            int ccId, int doctorId, string? patientName, DateOnly? from, DateOnly? to)
+        {
+            try
+            {
+                // Shifokor bu clinicConsultant da haqiqatan DoctorId ekanligini tekshirish
+                var ccExists = await _db.ClinicConsultants.AsNoTracking()
+                    .AnyAsync(cc => cc.Id == ccId && cc.DoctorId == doctorId);
+
+                if (!ccExists) return new ConsultantHistoryDto();
+
+                var query = _db.Consultations
+                    .AsNoTracking()
+                    .Where(c => c.ClinicConsultantId == ccId)
+                    .Include(c => c.Patient)
+                    .Include(c => c.Conclusion)
+                    .AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(patientName))
+                {
+                    var n = patientName.Trim().ToLower();
+                    query = query.Where(c =>
+                        c.Patient != null &&
+                        ((c.Patient.FirstName != null && c.Patient.FirstName.ToLower().Contains(n)) ||
+                         (c.Patient.LastName  != null && c.Patient.LastName.ToLower().Contains(n))));
+                }
+
+                if (from.HasValue) query = query.Where(c => c.ConsultationDate >= from.Value);
+                if (to.HasValue)   query = query.Where(c => c.ConsultationDate <= to.Value);
+
+                var items = await query.OrderByDescending(c => c.ConsultationDate).ToListAsync();
+
+                var rows = items.Select(c => new ConsultantHistoryItemDto
+                {
+                    Id               = c.Id,
+                    PatientFullName  = c.Patient != null
+                        ? $"{c.Patient.FirstName} {c.Patient.LastName}".Trim() : "",
+                    ConsultationDate = c.ConsultationDate,
+                    PriceAtCreation  = c.PriceAtCreation,
+                    Status           = c.Status,
+                    HasConclusion    = c.Conclusion != null
+                }).ToList();
+
+                return new ConsultantHistoryDto
+                {
+                    Consultations = rows,
+                    TotalAmount   = rows.Sum(r => r.PriceAtCreation)
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetDoctorClinicHistoryAsync xatolik: ccId={Id}", ccId);
+                return new ConsultantHistoryDto();
+            }
+        }
+
+        // ─── MY CONSULTATIONS (Doctor) ────────────────────────────────────────
+
+        public async Task<List<DoctorConsultationItemDto>> GetMyConsultationsAsync(int doctorId, string? status)
+        {
+            try
+            {
+                var query = _db.Consultations
+                    .AsNoTracking()
+                    .Where(c => c.DoctorId == doctorId)
+                    .Include(c => c.Patient)
+                    .Include(c => c.Clinic)
+                    .Include(c => c.Conclusion)
+                    .AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(status))
+                    query = query.Where(c => c.Status == status);
+
+                var items = await query.ToListAsync();
+
+                // Tartiblash: "created" birinchi, keyin created_at desc
+                return items
+                    .OrderByDescending(c => c.Status == "created" ? 1 : 0)
+                    .ThenByDescending(c => c.CreatedAt)
+                    .Select(c => new DoctorConsultationItemDto
+                    {
+                        Id               = c.Id,
+                        PatientFullName  = c.Patient != null
+                            ? $"{c.Patient.FirstName} {c.Patient.LastName}".Trim() : "",
+                        ClinicName       = c.Clinic?.ClinicName ?? "",
+                        PriceAtCreation  = c.PriceAtCreation,
+                        ConsultationDate = c.ConsultationDate,
+                        CreatedAt        = c.CreatedAt,
+                        Status           = c.Status,
+                        HasConclusion    = c.Conclusion != null
+                    })
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetMyConsultationsAsync xatolik: doctorId={DoctorId}", doctorId);
+                return new List<DoctorConsultationItemDto>();
+            }
+        }
+
+        // ─── ACCEPT CONSULTATION (Doctor) ─────────────────────────────────────
+
+        public async Task<(bool success, string? error)> AcceptConsultationAsync(int id, int doctorId)
         {
             try
             {
                 var c = await _db.Consultations
-                    .Where(x => x.Id == id && x.ConsultantDoctorId == doctorId)
+                    .Where(x => x.Id == id && x.DoctorId == doctorId)
                     .FirstOrDefaultAsync();
 
                 if (c == null) return (false, "Konsultatsiya topilmadi yoki ruxsat yo'q");
-                if (c.Status != "pending") return (false, "Faqat 'pending' holatdagi konsultatsiyani qabul qilish mumkin");
+                if (c.Status != "created")
+                    return (false, "Faqat 'created' holatdagi konsultatsiyani qabul qilish mumkin");
 
-                if (c.IsFirstRequest)
-                {
-                    // Yangi biriktiruv
-                    var link = new ClinicConsultant
-                    {
-                        ClinicId               = c.ClinicId,
-                        ConsultantDoctorId     = doctorId,
-                        LinkedAt               = DateTime.UtcNow,
-                        LinkedByConsultationId = id,
-                        Status                 = "active",
-                        TotalConsultations     = 1,
-                        LastConsultationAt     = DateTime.UtcNow
-                    };
-                    _db.ClinicConsultants.Add(link);
-                    await _db.SaveChangesAsync();
-
-                    c.ClinicConsultantId = link.Id;
-                }
-                else if (c.ClinicConsultantId.HasValue)
-                {
-                    // Mavjud biriktuv yangilash
-                    var link = await _db.ClinicConsultants
-                        .FirstOrDefaultAsync(cc => cc.Id == c.ClinicConsultantId.Value);
-                    if (link != null)
-                    {
-                        link.TotalConsultations++;
-                        link.LastConsultationAt = DateTime.UtcNow;
-                    }
-                }
-
-                c.Status    = "accepted";
+                c.Status    = "reviewing";
                 c.UpdatedAt = DateTime.UtcNow;
                 await _db.SaveChangesAsync();
 
                 // Adminga bildirishnoma
                 var adminConns = _connections.GetAdminConnectionsForClinic(c.ClinicId).ToList();
                 if (adminConns.Any())
-                {
-                    var doctorName = await _db.Doctors.AsNoTracking()
-                        .Where(d => d.Id == doctorId)
-                        .Select(d => $"{d.FirstName} {d.LastName}")
-                        .FirstOrDefaultAsync() ?? "";
-
-                    await _hub.Clients.Clients(adminConns).SendAsync("ConsultationAccepted", new
+                    await _hub.Clients.Clients(adminConns).SendAsync("ConsultationReviewing", new
                     {
-                        consultationId = id,
-                        doctorName     = doctorName.Trim()
+                        consultationId = id
                     });
-                }
 
                 return (true, null);
             }
@@ -714,24 +1042,24 @@ namespace EkgAnalyzerApi.Services
             }
         }
 
-        // ─── REJECT ────────────────────────────────────────────────────────────
+        // ─── REJECT CONSULTATION (Doctor) ─────────────────────────────────────
 
         public async Task<(bool success, string? error)> RejectConsultationAsync(
-            int id, RejectConsultationDto dto, int doctorId)
+            int id, string reason, int doctorId)
         {
             try
             {
                 var c = await _db.Consultations
-                    .Where(x => x.Id == id && x.ConsultantDoctorId == doctorId)
+                    .Where(x => x.Id == id && x.DoctorId == doctorId)
                     .FirstOrDefaultAsync();
 
                 if (c == null) return (false, "Konsultatsiya topilmadi yoki ruxsat yo'q");
-                if (c.Status != "pending") return (false, "Faqat 'pending' holatdagi konsultatsiyani rad etish mumkin");
+                if (c.Status != "created" && c.Status != "reviewing")
+                    return (false, "Bu holatdagi konsultatsiyani rad etib bo'lmaydi");
 
                 c.Status          = "rejected";
-                c.RejectionReason = dto.RejectionReason;
+                c.RejectionReason = reason;
                 c.UpdatedAt       = DateTime.UtcNow;
-                // IsFirstRequest=true bo'lsa ClinicConsultants ga HECH NARSA YOZILMAYDI
                 await _db.SaveChangesAsync();
 
                 // Adminga bildirishnoma
@@ -740,7 +1068,7 @@ namespace EkgAnalyzerApi.Services
                     await _hub.Clients.Clients(adminConns).SendAsync("ConsultationRejected", new
                     {
                         consultationId = id,
-                        reason         = dto.RejectionReason
+                        reason
                     });
 
                 return (true, null);
@@ -752,45 +1080,77 @@ namespace EkgAnalyzerApi.Services
             }
         }
 
-        // ─── SCHEDULE ──────────────────────────────────────────────────────────
+        // ─── DETAIL (Doctor) ──────────────────────────────────────────────────
 
-        public async Task<(bool success, string? error)> ScheduleConsultationAsync(
-            int id, ScheduleConsultationDto dto, int doctorId)
+        public async Task<ConsultationDetailDoctorDto?> GetConsultationDetailDoctorAsync(int id, int doctorId)
         {
             try
             {
                 var c = await _db.Consultations
-                    .Where(x => x.Id == id && x.ConsultantDoctorId == doctorId)
+                    .AsNoTracking()
+                    .Where(x => x.Id == id && x.DoctorId == doctorId)
+                    .Include(x => x.Patient)
+                    .Include(x => x.Clinic)
+                    .Include(x => x.Conclusion)
                     .FirstOrDefaultAsync();
 
-                if (c == null) return (false, "Konsultatsiya topilmadi yoki ruxsat yo'q");
-                if (c.Status != "accepted") return (false, "Faqat 'accepted' holatdagi konsultatsiyaga vaqt belgilash mumkin");
+                if (c == null) return null;
 
-                c.ScheduledAt      = dto.ScheduledAt.ToUniversalTime();
-                c.LiveKitRoomName  = $"consultation-{id}";
-                c.Status           = "scheduled";
-                c.UpdatedAt        = DateTime.UtcNow;
-                await _db.SaveChangesAsync();
+                // Admin ma'lumotlari
+                var admin = await _db.Users.AsNoTracking()
+                    .Include(u => u.Doctor)
+                    .FirstOrDefaultAsync(u => u.Id == c.CreatedByAdminId);
 
-                // Adminga bildirishnoma
-                var adminConns = _connections.GetAdminConnectionsForClinic(c.ClinicId).ToList();
-                if (adminConns.Any())
-                    await _hub.Clients.Clients(adminConns).SendAsync("ConsultationScheduled", new
+                var adminDoctor = admin?.Doctor;
+                var adminFullName = adminDoctor != null
+                    ? $"{adminDoctor.FirstName} {adminDoctor.LastName}".Trim()
+                    : admin?.Username ?? "";
+
+                // Bemorning tahlillari (shifokor klinikaga tegishli — clinic consultantId orqali)
+                var analyses = await GetPatientAnalysesAsync(c.PatientId);
+
+                return new ConsultationDetailDoctorDto
+                {
+                    Id               = c.Id,
+                    ConsultationDate = c.ConsultationDate,
+                    PriceAtCreation  = c.PriceAtCreation,
+                    Status           = c.Status,
+                    RejectionReason  = c.RejectionReason,
+                    LiveKitRoomName  = c.LiveKitRoomName,
+
+                    PatientFullName  = c.Patient != null
+                        ? $"{c.Patient.FirstName} {c.Patient.LastName}".Trim() : "",
+                    BirthDate        = c.Patient?.BirthDate,
+                    Gender           = c.Patient?.Gender,
+                    Phone            = c.Patient?.Phone,
+                    Address          = c.Patient?.Address,
+
+                    AdminFullName    = adminFullName,
+                    AdminUserId      = admin?.Id,
+                    AdminIsOnline    = admin != null && _connections.IsOnline(admin.Id),
+                    AdminPhone       = adminDoctor?.Phone,
+                    ClinicName       = c.Clinic?.ClinicName ?? "",
+
+                    Conclusion = c.Conclusion == null ? null : new ConsultationConclusionDto
                     {
-                        consultationId = id,
-                        scheduledAt    = c.ScheduledAt
-                    });
+                        PatientCondition = c.Conclusion.PatientCondition,
+                        Diagnosis        = c.Conclusion.Diagnosis,
+                        Treatment        = c.Conclusion.Treatment,
+                        CreatedAt        = c.Conclusion.CreatedAt,
+                        UpdatedAt        = c.Conclusion.UpdatedAt
+                    },
 
-                return (true, null);
+                    Analyses = analyses
+                };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "ScheduleConsultationAsync xatolik: id={Id}", id);
-                return (false, "Server xatoligi yuz berdi");
+                _logger.LogError(ex, "GetConsultationDetailDoctorAsync xatolik: id={Id}", id);
+                return null;
             }
         }
 
-        // ─── CONCLUDE ──────────────────────────────────────────────────────────
+        // ─── CONCLUDE (Doctor) ────────────────────────────────────────────────
 
         public async Task<(bool success, string? error)> ConcludeConsultationAsync(
             int id, ConcludeConsultationDto dto, int doctorId)
@@ -798,37 +1158,50 @@ namespace EkgAnalyzerApi.Services
             try
             {
                 var c = await _db.Consultations
-                    .Where(x => x.Id == id && x.ConsultantDoctorId == doctorId)
+                    .Where(x => x.Id == id && x.DoctorId == doctorId)
                     .FirstOrDefaultAsync();
 
                 if (c == null) return (false, "Konsultatsiya topilmadi yoki ruxsat yo'q");
-                if (c.Status != "accepted" && c.Status != "scheduled")
-                    return (false, "Faqat 'accepted' yoki 'scheduled' holatdagi konsultatsiyani yakunlash mumkin");
 
-                var conclusion = new ConsultationConclusion
+                var existing = await _db.ConsultationConclusions
+                    .FirstOrDefaultAsync(cc => cc.ConsultationId == id);
+
+                if (existing != null)
                 {
-                    ConsultationId   = id,
-                    Diagnosis        = dto.Diagnosis,
-                    Recommendations  = dto.Recommendations,
-                    Medications      = dto.Medications,
-                    FollowUpRequired = dto.FollowUpRequired,
-                    FollowUpNote     = dto.FollowUpNote,
-                    CreatedAt        = DateTime.UtcNow
-                };
-                _db.ConsultationConclusions.Add(conclusion);
+                    existing.PatientCondition = dto.PatientCondition;
+                    existing.Diagnosis        = dto.Diagnosis;
+                    existing.Treatment        = dto.Treatment;
+                    existing.UpdatedAt        = DateTime.UtcNow;
+                }
+                else
+                {
+                    _db.ConsultationConclusions.Add(new ConsultationConclusion
+                    {
+                        ConsultationId   = id,
+                        PatientCondition = dto.PatientCondition,
+                        Diagnosis        = dto.Diagnosis,
+                        Treatment        = dto.Treatment,
+                        CreatedAt        = DateTime.UtcNow,
+                        UpdatedAt        = DateTime.UtcNow
+                    });
 
-                c.Status      = "concluded";
-                c.ConcludedAt = DateTime.UtcNow;
-                c.UpdatedAt   = DateTime.UtcNow;
+                    // Birinchi marta yozilganda → completed
+                    c.Status    = "completed";
+                    c.UpdatedAt = DateTime.UtcNow;
+                }
+
                 await _db.SaveChangesAsync();
 
-                // Adminga bildirishnoma
-                var adminConns = _connections.GetAdminConnectionsForClinic(c.ClinicId).ToList();
-                if (adminConns.Any())
-                    await _hub.Clients.Clients(adminConns).SendAsync("ConsultationConcluded", new
-                    {
-                        consultationId = id
-                    });
+                // Adminga bildirishnoma (faqat birinchi marta)
+                if (existing == null)
+                {
+                    var adminConns = _connections.GetAdminConnectionsForClinic(c.ClinicId).ToList();
+                    if (adminConns.Any())
+                        await _hub.Clients.Clients(adminConns).SendAsync("ConsultationCompleted", new
+                        {
+                            consultationId = id
+                        });
+                }
 
                 return (true, null);
             }
@@ -839,196 +1212,97 @@ namespace EkgAnalyzerApi.Services
             }
         }
 
-        // ─── ANALYSES (Doctor) ─────────────────────────────────────────────────
+        // ─── DOCTOR LIVEKIT TOKEN ──────────────────────────────────────────────
 
-        public async Task<List<FullAnalysisItemDto>> GetConsultationAnalysesAsync(
-            int id, int doctorId)
-        {
-            try
-            {
-                // Faqat o'ziga yuborilgan konsultatsiya
-                var consultation = await _db.Consultations.AsNoTracking()
-                    .Where(c => c.Id == id && c.ConsultantDoctorId == doctorId)
-                    .FirstOrDefaultAsync();
-
-                if (consultation == null) return new List<FullAnalysisItemDto>();
-
-                var sharedAnalyses = await _db.ConsultationAnalyses.AsNoTracking()
-                    .Where(a => a.ConsultationId == id)
-                    .ToListAsync();
-
-                var result = new List<FullAnalysisItemDto>();
-
-                foreach (var a in sharedAnalyses)
-                {
-                    string? aiSummary = null;
-                    DateTime? createdAt = null;
-
-                    switch (a.AnalysisType)
-                    {
-                        case "EKG":
-                        {
-                            var item = await _db.ECGAnalyse.AsNoTracking()
-                                .Where(e => e.Id == a.AnalysisId)
-                                .Select(e => new { e.AIAnswerData, e.CreatedAt })
-                                .FirstOrDefaultAsync();
-                            aiSummary = ExtractAiSummary(item?.AIAnswerData);
-                            createdAt = item?.CreatedAt;
-                            break;
-                        }
-                        case "SMAD":
-                        {
-                            var item = await _db.SmadAnalyses.AsNoTracking()
-                                .Where(e => e.Id == a.AnalysisId)
-                                .Select(e => new { e.AIAnswerData, e.CreatedAt })
-                                .FirstOrDefaultAsync();
-                            aiSummary = ExtractAiSummary(item?.AIAnswerData);
-                            createdAt = item?.CreatedAt;
-                            break;
-                        }
-                        case "Holter":
-                        {
-                            var item = await _db.HolterAnalyses.AsNoTracking()
-                                .Where(e => e.Id == a.AnalysisId)
-                                .Select(e => new { e.AIAnswerData, e.CreatedAt })
-                                .FirstOrDefaultAsync();
-                            aiSummary = ExtractAiSummary(item?.AIAnswerData);
-                            createdAt = item?.CreatedAt;
-                            break;
-                        }
-                        case "Lab":
-                        {
-                            var item = await _db.LabAnalyse.AsNoTracking()
-                                .Where(e => e.Id == a.AnalysisId)
-                                .Select(e => new { e.AIAnswerData, e.CreatedAt })
-                                .FirstOrDefaultAsync();
-                            aiSummary = ExtractAiSummary(item?.AIAnswerData);
-                            createdAt = item?.CreatedAt;
-                            break;
-                        }
-                        case "Parasit":
-                        {
-                            var item = await _db.ParasitologyAnalyses.AsNoTracking()
-                                .Where(e => e.Id == a.AnalysisId)
-                                .Select(e => new { e.AiResponse, e.CreatedAt })
-                                .FirstOrDefaultAsync();
-                            aiSummary = item?.AiResponse?.Length > 200
-                                ? item.AiResponse.Substring(0, 200) + "..." : item?.AiResponse;
-                            createdAt = item?.CreatedAt;
-                            break;
-                        }
-                    }
-
-                    result.Add(new FullAnalysisItemDto
-                    {
-                        AnalysisType = a.AnalysisType,
-                        AnalysisId   = a.AnalysisId,
-                        CreatedAt    = createdAt,
-                        AiSummary    = aiSummary
-                    });
-                }
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "GetConsultationAnalysesAsync xatolik: id={Id}", id);
-                return new List<FullAnalysisItemDto>();
-            }
-        }
-
-        // ─── LIVEKIT TOKEN ────────────────────────────────────────────────────
-
-        public async Task<(bool success, string? error, ConsultationTokenResponseDto? token)>
-            GetLiveKitTokenAsync(int id, int userId, int roleId)
+        public async Task<(bool success, string? error, ConsultationTokenDto? token)> GetDoctorLiveKitTokenAsync(
+            int id, int userId, int doctorId)
         {
             try
             {
                 var c = await _db.Consultations.AsNoTracking()
-                    .Where(x => x.Id == id)
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync(x => x.Id == id && x.DoctorId == doctorId);
 
                 if (c == null) return (false, "Konsultatsiya topilmadi", null);
-                if (string.IsNullOrEmpty(c.LiveKitRoomName))
-                    return (false, "Video vaqti hali belgilanmagan", null);
 
-                // Kirish tekshiruvi
-                if (roleId == 2 || roleId == 3)
+                var roomName = string.IsNullOrEmpty(c.LiveKitRoomName)
+                    ? $"consultation-{c.Id}" : c.LiveKitRoomName;
+
+                if (c.LiveKitRoomName == null)
                 {
-                    var adminClinicId = await _db.Users.AsNoTracking()
-                        .Where(u => u.Id == userId).Select(u => u.ClinicId).FirstOrDefaultAsync();
-                    if (adminClinicId != c.ClinicId)
-                        return (false, "Ruxsat yo'q", null);
-                }
-                else if (roleId == 4)
-                {
-                    var doctorId = await _db.Doctors.AsNoTracking()
-                        .Where(d => d.UserId == userId).Select(d => d.Id).FirstOrDefaultAsync();
-                    if (doctorId != c.ConsultantDoctorId)
-                        return (false, "Ruxsat yo'q", null);
-                }
-                else
-                {
-                    return (false, "Ruxsat yo'q", null);
+                    var cons = await _db.Consultations.FirstOrDefaultAsync(x => x.Id == id);
+                    if (cons != null)
+                    {
+                        cons.LiveKitRoomName = roomName;
+                        await _db.SaveChangesAsync();
+                    }
                 }
 
-                var participantName = roleId == 4 ? $"doctor-{userId}" : $"admin-{userId}";
-                var apiKey    = _config["LiveKit:ApiKey"]    ?? "";
-                var apiSecret = _config["LiveKit:ApiSecret"] ?? "";
-                var url       = _config["LiveKit:Url"]       ?? "";
-
-                var token = GenerateLiveKitToken(apiKey, apiSecret, $"user_{userId}",
-                    c.LiveKitRoomName, participantName);
-
-                return (true, null, new ConsultationTokenResponseDto
+                var token = BuildLiveKitToken(userId, roomName, $"doctor-{userId}");
+                return (true, null, new ConsultationTokenDto
                 {
                     Token      = token,
-                    LiveKitUrl = url,
-                    RoomName   = c.LiveKitRoomName
+                    LiveKitUrl = _config["LiveKit:Url"] ?? "",
+                    RoomName   = roomName
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "GetLiveKitTokenAsync xatolik: id={Id}", id);
+                _logger.LogError(ex, "GetDoctorLiveKitTokenAsync xatolik: id={Id}", id);
                 return (false, "Server xatoligi yuz berdi", null);
             }
         }
 
         // ─── HELPERS ──────────────────────────────────────────────────────────
 
-        private static string? ExtractAiSummary(string? aiAnswerData)
+        private async Task<List<PatientAnalysisItemDto>> GetPatientAnalysesAsync(int patientId)
         {
-            if (string.IsNullOrEmpty(aiAnswerData)) return null;
-            try
-            {
-                // AIAnswerData JSON formatidan final_summary → automatic_analysis → AI_recommendations
-                using var doc = System.Text.Json.JsonDocument.Parse(aiAnswerData);
-                var root = doc.RootElement;
-                string? text = null;
+            var result = new List<PatientAnalysisItemDto>();
 
-                if (root.TryGetProperty("final_summary", out var fs)
-                    && fs.ValueKind == System.Text.Json.JsonValueKind.String)
-                    text = fs.GetString();
-                else if (root.TryGetProperty("automatic_analysis", out var aa)
-                    && aa.ValueKind == System.Text.Json.JsonValueKind.String)
-                    text = aa.GetString();
-                else if (root.TryGetProperty("AI_recommendations", out var ar)
-                    && ar.ValueKind == System.Text.Json.JsonValueKind.String)
-                    text = ar.GetString();
+            var ecg = await _db.ECGAnalyse.AsNoTracking()
+                .Where(e => e.PatcientId == patientId)
+                .Select(e => new { e.Id, e.CreatedAt, HasAi = e.AIAnswerData != null })
+                .ToListAsync();
+            result.AddRange(ecg.Select(e => new PatientAnalysisItemDto
+                { Type = "EKG", Id = e.Id, Date = e.CreatedAt, HasAiResult = e.HasAi }));
 
-                if (string.IsNullOrWhiteSpace(text)) return null;
-                const int maxLen = 350;
-                return text.Length > maxLen ? text[..maxLen] + "..." : text;
-            }
-            catch
-            {
-                // JSON parse xatoligi — raw string qisqacha
-                const int maxLen = 200;
-                return aiAnswerData.Length > maxLen ? aiAnswerData[..maxLen] + "..." : aiAnswerData;
-            }
+            var smad = await _db.SmadAnalyses.AsNoTracking()
+                .Where(e => e.PatcientId == patientId)
+                .Select(e => new { e.Id, e.CreatedAt, HasAi = e.AIAnswerData != null })
+                .ToListAsync();
+            result.AddRange(smad.Select(e => new PatientAnalysisItemDto
+                { Type = "SMAD", Id = e.Id, Date = e.CreatedAt, HasAiResult = e.HasAi }));
+
+            var holter = await _db.HolterAnalyses.AsNoTracking()
+                .Where(e => e.PatcientId == patientId)
+                .Select(e => new { e.Id, e.CreatedAt, HasAi = e.AIAnswerData != null })
+                .ToListAsync();
+            result.AddRange(holter.Select(e => new PatientAnalysisItemDto
+                { Type = "Holter", Id = e.Id, Date = e.CreatedAt, HasAiResult = e.HasAi }));
+
+            var lab = await _db.LabAnalyse.AsNoTracking()
+                .Where(e => e.PatcientId == patientId)
+                .Select(e => new { e.Id, e.CreatedAt, HasAi = e.AIAnswerData != null })
+                .ToListAsync();
+            result.AddRange(lab.Select(e => new PatientAnalysisItemDto
+                { Type = "Lab", Id = e.Id, Date = e.CreatedAt, HasAiResult = e.HasAi }));
+
+            var parasit = await _db.ParasitologyAnalyses.AsNoTracking()
+                .Where(e => e.PatcientId == patientId)
+                .Select(e => new { e.Id, e.CreatedAt, HasAi = e.AiResponse != null })
+                .ToListAsync();
+            result.AddRange(parasit.Select(e => new PatientAnalysisItemDto
+                { Type = "Parasit", Id = e.Id, Date = e.CreatedAt, HasAiResult = e.HasAi }));
+
+            return result.OrderByDescending(r => r.Date).ToList();
         }
 
-        // VideoCallController.cs dagi GenerateLiveKitToken pattern
+        private string BuildLiveKitToken(int userId, string roomName, string displayName)
+        {
+            var apiKey    = _config["LiveKit:ApiKey"]    ?? "";
+            var apiSecret = _config["LiveKit:ApiSecret"] ?? "";
+            return GenerateLiveKitToken(apiKey, apiSecret, $"user_{userId}", roomName, displayName);
+        }
+
         private static string GenerateLiveKitToken(
             string apiKey, string apiSecret, string identity, string roomName, string displayName)
         {
@@ -1059,5 +1333,8 @@ namespace EkgAnalyzerApi.Services
 
         private static string Base64UrlEncode(byte[] bytes) =>
             Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+
+        private static string NormalizePassport(string? passport) =>
+            (passport ?? "").Replace(" ", "").Trim().ToUpperInvariant();
     }
 }

@@ -73,6 +73,73 @@ namespace EkgAnalyzerApi.Hubs
             await base.OnDisconnectedAsync(exception);
         }
 
+        // Admin yoki Doctor → Konsultatsiya qo'ng'irog'ini boshlash
+        public async Task InitiateConsultationCall(int consultationId, string roomName)
+        {
+            var callerId   = GetUserId();
+            var callerRole = GetRoleId();
+            if (callerId == 0) return;
+
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<MedDataDB>();
+
+            var consultation = await db.Consultations.AsNoTracking()
+                .Include(c => c.Doctor)
+                .FirstOrDefaultAsync(c => c.Id == consultationId);
+
+            if (consultation == null)
+            {
+                await Clients.Caller.SendAsync("CallError", new { message = "Konsultatsiya topilmadi" });
+                return;
+            }
+
+            // Qabul qiluvchi tomonni aniqlash
+            int recipientUserId = callerRole == 4
+                ? consultation.CreatedByAdminId
+                : (consultation.Doctor?.UserId ?? 0);
+
+            if (recipientUserId == 0)
+            {
+                await Clients.Caller.SendAsync("CallError", new { message = "Qarshi tomon topilmadi" });
+                return;
+            }
+
+            var recipientConns = _connections.GetConnectionIds(recipientUserId).ToList();
+            if (!recipientConns.Any())
+            {
+                await Clients.Caller.SendAsync("CallError", new { message = "Qarshi tomon hozir offline" });
+                return;
+            }
+
+            var caller = await db.Users.AsNoTracking()
+                .Include(u => u.Doctor)
+                .FirstOrDefaultAsync(u => u.Id == callerId);
+
+            var callerName = caller?.Doctor != null
+                ? $"{caller.Doctor.FirstName} {caller.Doctor.LastName}".Trim()
+                : caller?.Username ?? "Admin";
+
+            var session = new VideoCallSession
+            {
+                RoomName    = roomName,
+                InitiatorId = callerId,
+                RecipientId = recipientUserId,
+                ClinicId    = consultation.ClinicId,
+                Status      = "pending"
+            };
+            db.VideoCallSessions.Add(session);
+            await db.SaveChangesAsync();
+
+            await Clients.Clients(recipientConns).SendAsync("IncomingCall", new
+            {
+                roomName,
+                initiatorName = callerName,
+                initiatorId   = callerId,
+                sessionId     = session.Id,
+                consultationId
+            });
+        }
+
         // Admin/Direktor → Shifokorga qo'ng'iroq boshlash
         public async Task InitiateCall(int recipientUserId, string roomName)
         {
@@ -85,8 +152,8 @@ namespace EkgAnalyzerApi.Hubs
                 return;
             }
 
-            var recipientConn = _connections.GetConnectionId(recipientUserId);
-            if (recipientConn == null)
+            var recipientConns = _connections.GetConnectionIds(recipientUserId).ToList();
+            if (!recipientConns.Any())
             {
                 await Clients.Caller.SendAsync("CallError", new { message = "Shifokor offline" });
                 return;
@@ -114,7 +181,7 @@ namespace EkgAnalyzerApi.Hubs
             db.VideoCallSessions.Add(session);
             await db.SaveChangesAsync();
 
-            await Clients.Client(recipientConn).SendAsync("IncomingCall", new
+            await Clients.Clients(recipientConns).SendAsync("IncomingCall", new
             {
                 roomName,
                 initiatorName = callerName,
@@ -148,9 +215,9 @@ namespace EkgAnalyzerApi.Hubs
                 ? $"{recipient.Doctor.FirstName} {recipient.Doctor.LastName}".Trim()
                 : recipient?.Username ?? "Shifokor";
 
-            var initiatorConn = _connections.GetConnectionId(session.InitiatorId);
-            if (initiatorConn != null)
-                await Clients.Client(initiatorConn).SendAsync("CallAccepted", new { roomName, recipientName });
+            var initiatorConns = _connections.GetConnectionIds(session.InitiatorId).ToList();
+            if (initiatorConns.Any())
+                await Clients.Clients(initiatorConns).SendAsync("CallAccepted", new { roomName, recipientName });
         }
 
         // Har ikki tomon → qo'ng'iroqni tugatish yoki rad etish
@@ -173,11 +240,11 @@ namespace EkgAnalyzerApi.Hubs
             await db.SaveChangesAsync();
 
             var otherUserId = session.InitiatorId == userId ? session.RecipientId : session.InitiatorId;
-            var otherConn = _connections.GetConnectionId(otherUserId);
+            var otherConns = _connections.GetConnectionIds(otherUserId).ToList();
 
             string eventName = isRejection ? "CallRejected" : "CallEnded";
-            if (otherConn != null)
-                await Clients.Client(otherConn).SendAsync(eventName, new { roomName });
+            if (otherConns.Any())
+                await Clients.Clients(otherConns).SendAsync(eventName, new { roomName });
 
             await Clients.Caller.SendAsync(eventName, new { roomName });
         }

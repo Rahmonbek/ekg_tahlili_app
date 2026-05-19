@@ -6,7 +6,7 @@ namespace EkgAnalyzerApi.Services
     {
         void Register(int userId, int clinicId, int roleId, string connectionId);
         void Remove(string connectionId);
-        string? GetConnectionId(int userId);
+        IEnumerable<string> GetConnectionIds(int userId);
         (int userId, int clinicId, int roleId)? GetUserInfo(string connectionId);
         IEnumerable<string> GetAdminConnectionsForClinic(int clinicId);
         bool IsOnline(int userId);
@@ -17,26 +17,30 @@ namespace EkgAnalyzerApi.Services
         // connectionId → (userId, clinicId, roleId)
         private readonly ConcurrentDictionary<string, (int userId, int clinicId, int roleId)> _connToUser = new();
         // userId → connectionId (son connection saqlanadi, yangi boshqasini almashtiradi)
-        private readonly ConcurrentDictionary<int, string> _userToConn = new();
+        private readonly ConcurrentDictionary<int, ConcurrentDictionary<string, byte>> _userToConns = new();
 
         public void Register(int userId, int clinicId, int roleId, string connectionId)
         {
-            // Avvalgi connection bo'lsa olib tashla
-            if (_userToConn.TryGetValue(userId, out var oldConn))
-                _connToUser.TryRemove(oldConn, out _);
-
             _connToUser[connectionId] = (userId, clinicId, roleId);
-            _userToConn[userId] = connectionId;
+            var connections = _userToConns.GetOrAdd(userId, _ => new ConcurrentDictionary<string, byte>());
+            connections[connectionId] = 0;
         }
 
         public void Remove(string connectionId)
         {
-            if (_connToUser.TryRemove(connectionId, out var info))
-                _userToConn.TryRemove(info.userId, out _);
+            if (_connToUser.TryRemove(connectionId, out var info) &&
+                _userToConns.TryGetValue(info.userId, out var connections))
+            {
+                connections.TryRemove(connectionId, out _);
+                if (connections.IsEmpty)
+                    _userToConns.TryRemove(info.userId, out _);
+            }
         }
 
-        public string? GetConnectionId(int userId) =>
-            _userToConn.TryGetValue(userId, out var conn) ? conn : null;
+        public IEnumerable<string> GetConnectionIds(int userId) =>
+            _userToConns.TryGetValue(userId, out var connections)
+                ? connections.Keys
+                : Enumerable.Empty<string>();
 
         public (int userId, int clinicId, int roleId)? GetUserInfo(string connectionId) =>
             _connToUser.TryGetValue(connectionId, out var info) ? info : null;
@@ -46,6 +50,6 @@ namespace EkgAnalyzerApi.Services
                 .Where(kv => kv.Value.clinicId == clinicId && (kv.Value.roleId == 2 || kv.Value.roleId == 3))
                 .Select(kv => kv.Key);
 
-        public bool IsOnline(int userId) => _userToConn.ContainsKey(userId);
+        public bool IsOnline(int userId) => _userToConns.ContainsKey(userId);
     }
 }

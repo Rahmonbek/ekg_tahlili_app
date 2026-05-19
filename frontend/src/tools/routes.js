@@ -5,7 +5,7 @@ import { MdOutlineMedicalInformation } from "react-icons/md";
 import { GiTestTubes } from "react-icons/gi";
 import { RiPulseLine } from 'react-icons/ri';
 import { GiMicroscope } from 'react-icons/gi';
-import { VideoCameraOutlined, TeamOutlined, MedicineBoxOutlined, InboxOutlined, CalendarOutlined } from '@ant-design/icons';
+import { VideoCameraOutlined, TeamOutlined, MedicineBoxOutlined } from '@ant-design/icons';
 export const routers = [
     {
         path: '/doctor',
@@ -119,21 +119,21 @@ export const routers = [
 
     // ── Online Konsultatsiya — Doctor ──────────────────────────────────────────
     {
-        path: '/incoming-consultations',
-        icon: <InboxOutlined />,
-        title: "incoming_consultations",
-        tools: "incoming-consultations",
+        path: '/doctor/clinics',
+        icon: <TeamOutlined />,
+        title: "my_clinics",
+        tools: "doctor/clinics",
         role_id: [4],
-        unread_key: 'consultation_doctor_pending',
+        unread_key: 'consultation_doctor_invitations',
         requires_active: false
     },
     {
-        path: '/my-schedule',
-        icon: <CalendarOutlined />,
-        title: "my_schedule",
-        tools: "my-schedule",
+        path: '/doctor/consultations',
+        icon: <MedicineBoxOutlined />,
+        title: "consultation",
+        tools: "doctor/consultations",
         role_id: [4],
-        unread_key: null,
+        unread_key: 'consultation_doctor_created',
         requires_active: false
     },
 

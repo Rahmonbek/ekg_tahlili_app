@@ -11,3 +11,6 @@ export const get_parasitology_analyses_by_nurse = (params) =>
 
 export const get_parasitology_analyse_by_id = (id) =>
     axiosInstance.get(`/parasitology-analyses/${id}`);
+
+export const get_parasitology_analyses_by_patient_id = (params) =>
+    axiosInstance.get('/parasitology-analyses/get-by-patient-id', { params });

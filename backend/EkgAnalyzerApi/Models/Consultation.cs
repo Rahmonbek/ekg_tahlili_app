@@ -15,47 +15,41 @@ namespace EkgAnalyzerApi.Models
         [ForeignKey(nameof(ClinicId))]
         public Clinic? Clinic { get; set; }
 
-        [Column("consultant_doctor_id")]
-        public int ConsultantDoctorId { get; set; }
-        [ForeignKey(nameof(ConsultantDoctorId))]
-        public Doctor? ConsultantDoctor { get; set; }
-
         [Column("clinic_consultant_id")]
-        public int? ClinicConsultantId { get; set; }
+        public int ClinicConsultantId { get; set; }
         [ForeignKey(nameof(ClinicConsultantId))]
         public ClinicConsultant? ClinicConsultant { get; set; }
 
-        [Column("requested_by_admin_id")]
-        public int RequestedByAdminId { get; set; }
-        [ForeignKey(nameof(RequestedByAdminId))]
-        public User? RequestedByAdmin { get; set; }
+        [Column("doctor_id")]
+        public int DoctorId { get; set; }
+        [ForeignKey(nameof(DoctorId))]
+        public Doctor? Doctor { get; set; }
 
         [Column("patient_id")]
         public int PatientId { get; set; }
         [ForeignKey(nameof(PatientId))]
         public Patcient? Patient { get; set; }
 
-        [Column("is_first_request")]
-        public bool IsFirstRequest { get; set; } = false;
+        [Column("created_by_admin_id")]
+        public int CreatedByAdminId { get; set; }
+        [ForeignKey(nameof(CreatedByAdminId))]
+        public User? CreatedByAdmin { get; set; }
 
-        [Column("note")]
-        public string? Note { get; set; }
+        [Column("consultation_date")]
+        public DateOnly ConsultationDate { get; set; }
 
-        /// <summary>"pending"|"accepted"|"rejected"|"scheduled"|"concluded"|"cancelled"|"expired"</summary>
+        [Column("price_at_creation", TypeName = "decimal(18,2)")]
+        public decimal PriceAtCreation { get; set; }
+
+        /// <summary>"created" | "reviewing" | "rejected" | "completed"</summary>
         [Column("status")]
-        public string Status { get; set; } = "pending";
+        public string Status { get; set; } = "created";
 
         [Column("rejection_reason")]
         public string? RejectionReason { get; set; }
 
-        [Column("scheduled_at")]
-        public DateTime? ScheduledAt { get; set; }
-
         [Column("livekit_room_name")]
         public string? LiveKitRoomName { get; set; }
-
-        [Column("concluded_at")]
-        public DateTime? ConcludedAt { get; set; }
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -63,7 +57,7 @@ namespace EkgAnalyzerApi.Models
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        public ICollection<ConsultationAnalysis>? Analyses { get; set; } = new List<ConsultationAnalysis>();
         public ConsultationConclusion? Conclusion { get; set; }
+        public ICollection<ConsultationAnalysis>? Analyses { get; set; } = new List<ConsultationAnalysis>();
     }
 }

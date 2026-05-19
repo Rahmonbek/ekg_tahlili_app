@@ -13,6 +13,8 @@ import { Avatar, Typography } from 'antd';
 import {
     AudioOutlined,
     AudioMutedOutlined,
+    DesktopOutlined,
+    SwapOutlined,
     VideoCameraOutlined,
     PhoneOutlined,
     UserOutlined,
@@ -46,6 +48,9 @@ function TelegramLayout({ roomName, onLeave }) {
     // Mikrofon / kamera holati
     const [micOn, setMicOn] = useState(true);
     const [camOn, setCamOn] = useState(true);
+    const [screenOn, setScreenOn] = useState(false);
+    const [cameraDevices, setCameraDevices] = useState([]);
+    const [cameraIndex, setCameraIndex] = useState(0);
 
     const toggleMic = useCallback(async () => {
         const next = !micOn;
@@ -58,6 +63,28 @@ function TelegramLayout({ roomName, onLeave }) {
         await localParticipant?.setCameraEnabled(next);
         setCamOn(next);
     }, [camOn, localParticipant]);
+
+    const toggleScreen = useCallback(async () => {
+        const next = !screenOn;
+        await localParticipant?.setScreenShareEnabled(next);
+        setScreenOn(next);
+    }, [screenOn, localParticipant]);
+
+    const switchCamera = useCallback(async () => {
+        if (!navigator?.mediaDevices?.enumerateDevices) return;
+
+        const devices = cameraDevices.length > 0
+            ? cameraDevices
+            : (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+
+        setCameraDevices(devices);
+        if (devices.length <= 1) return;
+
+        const nextIndex = (cameraIndex + 1) % devices.length;
+        setCameraIndex(nextIndex);
+        await localParticipant?.setCameraEnabled(true, { deviceId: devices[nextIndex].deviceId });
+        setCamOn(true);
+    }, [cameraDevices, cameraIndex, localParticipant]);
 
     const handleLeave = useCallback(async () => {
         try { await room.disconnect(); } catch { }
@@ -155,13 +182,29 @@ function TelegramLayout({ roomName, onLeave }) {
                         : <MdOutlineVideocamOff size={22} />
                     }
                 </button>
+
+                <button
+                    className={`nmed-tg-btn${screenOn ? ' nmed-tg-btn-off' : ''}`}
+                    onClick={toggleScreen}
+                    title={screenOn ? 'Ekran namoyishini to\'xtatish' : 'Ekranni namoyish qilish'}
+                >
+                    <DesktopOutlined style={{ fontSize: 22 }} />
+                </button>
+
+                <button
+                    className="nmed-tg-btn"
+                    onClick={switchCamera}
+                    title="Kamerani almashtirish"
+                >
+                    <SwapOutlined style={{ fontSize: 22 }} />
+                </button>
             </div>
         </div>
     );
 }
 
 // ── Asosiy export ─────────────────────────────────────────────────────────────
-export default function LiveKitRoomView() {
+export default function LiveKitRoomView({ embedded = false }) {
     const { videoCall, setVideoCall } = useStore();
     const { activeRoom } = videoCall;
 
@@ -176,7 +219,7 @@ export default function LiveKitRoomView() {
     if (!activeRoom) return null;
 
     return (
-        <div className="nmed-livekit-wrapper">
+        <div className={`nmed-livekit-wrapper${embedded ? ' is-embedded' : ''}`}>
             <LiveKitRoom
                 token={activeRoom.token}
                 serverUrl={activeRoom.liveKitUrl}

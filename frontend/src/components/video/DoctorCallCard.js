@@ -14,7 +14,7 @@ export default function DoctorCallCard({ doctor }) {
     const [calling, setCalling] = useState(false);
 
     const handleCall = async () => {
-        if (!doctor.isOnline || calling || videoCall.isCalling || videoCall.activeRoom) return;
+        if (!doctor.isOnline || doctor.isBusy || calling || videoCall.isCalling || videoCall.activeRoom) return;
 
         const roomName = `nmed-room-${user.id}-${doctor.userId}-${Date.now()}`;
         const myName = user?.doctor
@@ -39,6 +39,7 @@ export default function DoctorCallCard({ doctor }) {
     };
 
     const isOnline = doctor.isOnline;
+    const isBusy = doctor.isBusy;
 
     return (
         <Card
@@ -94,22 +95,22 @@ export default function DoctorCallCard({ doctor }) {
                     </Text>
                     <Text style={{
                         fontSize: 11,
-                        color: isOnline ? '#52c41a' : '#bfbfbf',
+                        color: isBusy ? '#fa8c16' : (isOnline ? '#52c41a' : '#bfbfbf'),
                         fontWeight: 500,
                         letterSpacing: 0.2,
                     }}>
-                        {isOnline ? 'Online' : 'Offline'}
+                        {isBusy ? 'Band' : (isOnline ? 'Online' : 'Offline')}
                     </Text>
                 </div>
 
                 {/* Qo'ng'iroq tugmasi */}
-                <Tooltip title={!isOnline ? t('doctor_offline') : t('call_doctor')}>
+                <Tooltip title={!isOnline ? t('doctor_offline') : isBusy ? 'Shifokor band' : t('call_doctor')}>
                     <Button
                         type="primary"
                         shape="circle"
                         size="large"
                         icon={<PhoneOutlined />}
-                        disabled={!isOnline || calling || !!videoCall.activeRoom}
+                        disabled={!isOnline || isBusy || calling || !!videoCall.activeRoom}
                         loading={calling}
                         onClick={handleCall}
                         style={{

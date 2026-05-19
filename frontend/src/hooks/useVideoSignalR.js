@@ -67,6 +67,10 @@ export default function useVideoSignalR(enabled) {
                 if (!connectionRef.current) return;
                 await connectionRef.current.invoke('InitiateCall', recipientUserId, roomName);
             },
+            initiateConsultationCall: async (consultationId, roomName) => {
+                if (!connectionRef.current) return;
+                await connectionRef.current.invoke('InitiateConsultationCall', consultationId, roomName);
+            },
             acceptCall: async (roomName) => {
                 if (!connectionRef.current) return;
                 await connectionRef.current.invoke('AcceptCall', roomName);
@@ -90,7 +94,7 @@ export default function useVideoSignalR(enabled) {
         return () => {
             connection.stop();
             connectionRef.current = null;
-            setHubMethods({ initiateCall: null, acceptCall: null, endCall: null });
+            setHubMethods({ initiateCall: null, initiateConsultationCall: null, acceptCall: null, endCall: null });
         };
     }, [enabled]);
 }

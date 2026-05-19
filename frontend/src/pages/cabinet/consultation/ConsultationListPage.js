@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Tag, Button, Select, DatePicker, Row, Col, Typography } from 'antd';
+import { Table, Tag, Button, Select, DatePicker, Typography } from 'antd';
 import { EyeOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getConsultationList } from '../../../host/requests/ConsultationRequest';
 import { useStore } from '../../../store/Store';
 import dayjs from 'dayjs';
+import './Consultation.css';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
 const STATUS_COLORS = {
@@ -123,13 +124,47 @@ export default function ConsultationListPage() {
         { value: 'expired',   label: t('cons_status_expired') },
     ];
 
+    const pendingCount = data.filter(item => item.status === 'pending').length;
+    const activeCount = data.filter(item => item.status === 'accepted' || item.status === 'scheduled').length;
+    const concludedCount = data.filter(item => item.status === 'concluded').length;
+
     return (
-        <div style={{ padding: '0 8px' }}>
-            <Title level={4} style={{ marginBottom: consultantDoctorId ? 8 : 16 }}>
-                {t('consultation')}
-            </Title>
-            {consultantDoctorId && (
-                <div style={{ marginBottom: 12 }}>
+        <div className="consultation-page">
+            <section className="consultation-shell">
+                <div className="consultation-header">
+                    <div>
+                        <Title level={4} className="consultation-title">{t('consultation')}</Title>
+                        <Text className="consultation-subtitle">
+                            Yuborilgan so'rovlar, faol jarayonlar va yakunlangan konsultatsiyalar bir joyda.
+                        </Text>
+                    </div>
+                </div>
+                <div className="consultation-body">
+                    <div className="consultation-summary-grid">
+                        <div className="consultation-summary-card">
+                            <div className="consultation-summary-label">Jami</div>
+                            <div className="consultation-summary-value">{data.length}</div>
+                        </div>
+                        <div className="consultation-summary-card">
+                            <div className="consultation-summary-label">Javob kutilmoqda</div>
+                            <div className="consultation-summary-value">{pendingCount}</div>
+                        </div>
+                        <div className="consultation-summary-card">
+                            <div className="consultation-summary-label">Faol</div>
+                            <div className="consultation-summary-value">{activeCount}</div>
+                        </div>
+                        <div className="consultation-summary-card">
+                            <div className="consultation-summary-label">Yakunlangan</div>
+                            <div className="consultation-summary-value">{concludedCount}</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section className="consultation-shell">
+                <div className="consultation-body">
+                    {consultantDoctorId && (
+                        <div style={{ marginBottom: 12 }}>
                     <Tag
                         color="blue"
                         closable
@@ -137,32 +172,26 @@ export default function ConsultationListPage() {
                     >
                         {t('consultant_doctor')} #{consultantDoctorId}
                     </Tag>
-                </div>
-            )}
-
-            <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
-                <Col xs={24} sm={8} md={6}>
-                    <Select
-                        style={{ width: '100%' }}
-                        placeholder={t('filter_by_status')}
-                        options={statusOptions}
-                        value={statusFilter}
-                        onChange={(v) => setStatusFilter(v)}
-                        allowClear
-                    />
-                </Col>
-                <Col xs={24} sm={12} md={10}>
-                    <RangePicker
-                        style={{ width: '100%' }}
-                        onChange={(v) => setDateRange(v)}
-                    />
-                </Col>
-                <Col xs={24} sm={4}>
-                    <Button onClick={fetchList}>{t('refresh') || 'Yangilash'}</Button>
-                </Col>
-            </Row>
-
-            <Table
+                        </div>
+                    )}
+                    <div className="consultation-toolbar">
+                        <div className="consultation-filters">
+                            <Select
+                                style={{ width: 220 }}
+                                placeholder={t('filter_by_status')}
+                                options={statusOptions}
+                                value={statusFilter}
+                                onChange={(v) => setStatusFilter(v)}
+                                allowClear
+                            />
+                            <RangePicker
+                                style={{ width: 280 }}
+                                onChange={(v) => setDateRange(v)}
+                            />
+                            <Button onClick={fetchList}>{t('refresh') || 'Yangilash'}</Button>
+                        </div>
+                    </div>
+                    <Table
                 rowKey="id"
                 columns={columns}
                 dataSource={data}
@@ -170,7 +199,9 @@ export default function ConsultationListPage() {
                 pagination={{ pageSize: 15, showSizeChanger: false }}
                 locale={{ emptyText: t('no_consultations') }}
                 scroll={{ x: 600 }}
-            />
+                    />
+                </div>
+            </section>
         </div>
     );
 }

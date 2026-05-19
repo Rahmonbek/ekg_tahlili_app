@@ -8,28 +8,86 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 [ApiController]
-[Route("api/online-consultation")]
+[Route("api/consultation")]
 [Authorize]
-public class OnlineConsultationController : ControllerBase
+public class ConsultationController : ControllerBase
 {
     private readonly IOnlineConsultationService _service;
     private readonly MedDataDB _db;
 
-    public OnlineConsultationController(
-        IOnlineConsultationService service,
-        MedDataDB db)
+    public ConsultationController(IOnlineConsultationService service, MedDataDB db)
     {
         _service = service;
         _db = db;
     }
 
-    // ─── ADMIN ENDPOINTLARI ────────────────────────────────────────────────
+    // ─── ADMIN: SHIFOKOR QIDIRISH ─────────────────────────────────────────────
 
-    /// <summary>Doktorlar katalogi — boshqa klinikalar ham, o'z klinikasi ham</summary>
-    [HttpGet("doctors-catalog")]
-    public async Task<IActionResult> GetDoctorsCatalog(
-        [FromQuery] string? specialization,
-        [FromQuery] string? search)
+    [HttpGet("search-doctors")]
+    public async Task<IActionResult> SearchDoctors([FromQuery] SearchDoctorsQuery q)
+    {
+        var userId = GetUserId();
+        var roleId = GetRoleId();
+        if (userId == 0) return Unauthorized(new { message = "Token invalid" });
+        if (roleId != 2 && roleId != 3) return Forbid();
+
+        var hasFilter = !string.IsNullOrWhiteSpace(q.PassportSeries)
+            || !string.IsNullOrWhiteSpace(q.Phone)
+            || q.RegionId.HasValue
+            || q.DistrictId.HasValue
+            || q.ClinicId.HasValue;
+
+        if (!hasFilter)
+            return BadRequest(new { message = "Kamida 1 ta filter kiritish shart" });
+
+        var clinicId = await GetUserClinicIdAsync(userId);
+        var result = await _service.SearchDoctorsAsync(q, clinicId);
+        return Ok(result);
+    }
+
+    // ─── ADMIN: TAKLIF YUBORISH ───────────────────────────────────────────────
+
+    [HttpGet("clinic-options")]
+    public async Task<IActionResult> GetClinicOptions([FromQuery] int? regionId, [FromQuery] int? districtId)
+    {
+        var userId = GetUserId();
+        var roleId = GetRoleId();
+        if (userId == 0) return Unauthorized(new { message = "Token invalid" });
+        if (roleId != 2 && roleId != 3) return Forbid();
+
+        var query = _db.Clinics
+            .AsNoTracking()
+            .Include(c => c.ClinicDetail)
+                .ThenInclude(cd => cd!.District)
+            .AsQueryable();
+
+        if (districtId.HasValue)
+        {
+            query = query.Where(c => c.ClinicDetail != null && c.ClinicDetail.DistrictId == districtId.Value);
+        }
+        else if (regionId.HasValue)
+        {
+            query = query.Where(c =>
+                c.ClinicDetail != null &&
+                c.ClinicDetail.District != null &&
+                c.ClinicDetail.District.RegionId == regionId.Value);
+        }
+
+        var result = await query
+            .OrderBy(c => c.ClinicName)
+            .Select(c => new
+            {
+                id = c.Id,
+                clinicName = c.ClinicName
+            })
+            .ToListAsync();
+
+        return Ok(result);
+    }
+
+    [HttpPost("invite")]
+    [EnableRateLimiting("general")]
+    public async Task<IActionResult> InviteDoctor([FromBody] InviteDoctorDto dto)
     {
         var userId = GetUserId();
         var roleId = GetRoleId();
@@ -37,11 +95,13 @@ public class OnlineConsultationController : ControllerBase
         if (roleId != 2 && roleId != 3) return Forbid();
 
         var clinicId = await GetUserClinicIdAsync(userId);
-        var result = await _service.GetDoctorsCatalogAsync(clinicId, userId, specialization, search);
-        return Ok(result);
+        var (success, error) = await _service.InviteDoctorAsync(dto, userId, clinicId);
+        if (!success) return BadRequest(new { message = error });
+        return Ok(new { message = "Taklif yuborildi" });
     }
 
-    /// <summary>Shu klinikaning biriktirilgan konsultantlari</summary>
+    // ─── ADMIN: MENING KONSULTANTLARIM ───────────────────────────────────────
+
     [HttpGet("my-consultants")]
     public async Task<IActionResult> GetMyConsultants()
     {
@@ -55,9 +115,8 @@ public class OnlineConsultationController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>Bitta konsultant bilan bo'lgan konsultatsiyalar tarixi</summary>
-    [HttpGet("my-consultants/{clinicConsultantId}/history")]
-    public async Task<IActionResult> GetConsultantHistory(int clinicConsultantId)
+    [HttpGet("my-sent-invitations")]
+    public async Task<IActionResult> GetMySentInvitations()
     {
         var userId = GetUserId();
         var roleId = GetRoleId();
@@ -65,11 +124,48 @@ public class OnlineConsultationController : ControllerBase
         if (roleId != 2 && roleId != 3) return Forbid();
 
         var clinicId = await GetUserClinicIdAsync(userId);
-        var result = await _service.GetConsultantHistoryAsync(clinicConsultantId, clinicId);
+        var result = await _service.GetMySentInvitationsAsync(clinicId);
         return Ok(result);
     }
 
-    /// <summary>Yangi konsultatsiya yaratish</summary>
+    // ─── ADMIN: NARX O'ZGARTIRISH ─────────────────────────────────────────────
+
+    [HttpPut("consultants/{clinicConsultantId}/update-price")]
+    public async Task<IActionResult> UpdateConsultantPrice(
+        int clinicConsultantId, [FromBody] UpdatePriceDto dto)
+    {
+        var userId = GetUserId();
+        var roleId = GetRoleId();
+        if (userId == 0) return Unauthorized(new { message = "Token invalid" });
+        if (roleId != 2 && roleId != 3) return Forbid();
+
+        var clinicId = await GetUserClinicIdAsync(userId);
+        var (success, error) = await _service.UpdateConsultantPriceAsync(clinicConsultantId, dto, userId, clinicId);
+        if (!success) return BadRequest(new { message = error });
+        return Ok(new { message = "Narx yangilandi" });
+    }
+
+    // ─── ADMIN: KONSULTANT TARIXI ─────────────────────────────────────────────
+
+    [HttpGet("consultants/{clinicConsultantId}/history")]
+    public async Task<IActionResult> GetConsultantHistory(
+        int clinicConsultantId,
+        [FromQuery] string? patientName,
+        [FromQuery] DateOnly? dateFrom,
+        [FromQuery] DateOnly? dateTo)
+    {
+        var userId = GetUserId();
+        var roleId = GetRoleId();
+        if (userId == 0) return Unauthorized(new { message = "Token invalid" });
+        if (roleId != 2 && roleId != 3) return Forbid();
+
+        var clinicId = await GetUserClinicIdAsync(userId);
+        var result = await _service.GetConsultantHistoryAsync(clinicConsultantId, clinicId, patientName, dateFrom, dateTo);
+        return Ok(result);
+    }
+
+    // ─── ADMIN: KONSULTATSIYA YARATISH ────────────────────────────────────────
+
     [HttpPost("create")]
     [EnableRateLimiting("general")]
     public async Task<IActionResult> CreateConsultation([FromBody] CreateConsultationDto dto)
@@ -80,18 +176,35 @@ public class OnlineConsultationController : ControllerBase
         if (roleId != 2 && roleId != 3) return Forbid();
 
         var clinicId = await GetUserClinicIdAsync(userId);
-        var (success, error, consultationId) = await _service.CreateConsultationAsync(dto, userId, clinicId);
-
+        var (success, error, count) = await _service.CreateConsultationsAsync(dto, userId, clinicId);
         if (!success) return BadRequest(new { message = error });
-        return Ok(new { message = "Konsultatsiya so'rovi yuborildi", consultationId });
+        return Ok(new { message = $"{count} ta konsultatsiya yaratildi", count });
     }
 
-    /// <summary>Klinikaning konsultatsiyalar ro'yxati</summary>
+    // ─── ADMIN: KONSULTATSIYALAR RO'YXATI ─────────────────────────────────────
+
+    [HttpGet("patient-lookup")]
+    public async Task<IActionResult> FindPatient([FromQuery] string passportSeries, [FromQuery] DateOnly birthDate)
+    {
+        var userId = GetUserId();
+        var roleId = GetRoleId();
+        if (userId == 0) return Unauthorized(new { message = "Token invalid" });
+        if (roleId != 2 && roleId != 3) return Forbid();
+
+        if (string.IsNullOrWhiteSpace(passportSeries))
+            return BadRequest(new { message = "Passport seriyasi kiritilishi shart" });
+
+        var result = await _service.FindPatientAsync(passportSeries, birthDate);
+        return Ok(result);
+    }
+
     [HttpGet("list")]
     public async Task<IActionResult> GetConsultationList(
         [FromQuery] string? status,
-        [FromQuery] int? consultantDoctorId,
-        [FromQuery] int? patientId)
+        [FromQuery] int? doctorId,
+        [FromQuery] string? patientName,
+        [FromQuery] DateOnly? dateFrom,
+        [FromQuery] DateOnly? dateTo)
     {
         var userId = GetUserId();
         var roleId = GetRoleId();
@@ -99,27 +212,31 @@ public class OnlineConsultationController : ControllerBase
         if (roleId != 2 && roleId != 3) return Forbid();
 
         var clinicId = await GetUserClinicIdAsync(userId);
-        var result = await _service.GetConsultationListAsync(clinicId, status, consultantDoctorId, patientId);
+        var result = await _service.GetConsultationListAsync(clinicId, status, doctorId, patientName, dateFrom, dateTo);
         return Ok(result);
     }
 
-    /// <summary>Konsultatsiya to'liq ma'lumoti</summary>
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetConsultationById(int id)
+    // ─── ADMIN: KONSULTATSIYA BATAFSIL ───────────────────────────────────────
+
+    [HttpGet("{id}/detail")]
+    public async Task<IActionResult> GetConsultationDetail(int id)
     {
         var userId = GetUserId();
         var roleId = GetRoleId();
         if (userId == 0) return Unauthorized(new { message = "Token invalid" });
-        if (roleId != 2 && roleId != 3 && roleId != 4) return Forbid();
+        if (roleId != 2 && roleId != 3) return Forbid();
 
-        var result = await _service.GetConsultationByIdAsync(id, userId, roleId);
-        if (result == null) return NotFound(new { message = "Konsultatsiya topilmadi yoki ruxsat yo'q" });
+        var clinicId = await GetUserClinicIdAsync(userId);
+        var result = await _service.GetConsultationDetailAdminAsync(id, clinicId);
+        if (result == null) return NotFound(new { message = "Konsultatsiya topilmadi" });
         return Ok(result);
     }
 
-    /// <summary>Konsultatsiyani bekor qilish (Admin)</summary>
-    [HttpPut("{id}/cancel")]
-    public async Task<IActionResult> CancelConsultation(int id)
+    // ─── ADMIN: LIVEKIT TOKEN ─────────────────────────────────────────────────
+
+    [HttpGet("{id}/livekit-token")]
+    [EnableRateLimiting("general")]
+    public async Task<IActionResult> GetAdminLiveKitToken(int id)
     {
         var userId = GetUserId();
         var roleId = GetRoleId();
@@ -127,31 +244,15 @@ public class OnlineConsultationController : ControllerBase
         if (roleId != 2 && roleId != 3) return Forbid();
 
         var clinicId = await GetUserClinicIdAsync(userId);
-        var (success, error) = await _service.CancelConsultationAsync(id, clinicId);
+        var (success, error, token) = await _service.GetAdminLiveKitTokenAsync(id, userId, clinicId);
         if (!success) return BadRequest(new { message = error });
-        return Ok(new { message = "Konsultatsiya bekor qilindi" });
+        return Ok(token);
     }
 
-    /// <summary>Konsultantga baho berish (Admin)</summary>
-    [HttpPost("{id}/rate")]
-    public async Task<IActionResult> RateConsultation(int id, [FromBody] RateConsultationDto dto)
-    {
-        var userId = GetUserId();
-        var roleId = GetRoleId();
-        if (userId == 0) return Unauthorized(new { message = "Token invalid" });
-        if (roleId != 2 && roleId != 3) return Forbid();
+    // ─── SHIFOKOR: TAKLIFLAR ──────────────────────────────────────────────────
 
-        var clinicId = await GetUserClinicIdAsync(userId);
-        var (success, error) = await _service.RateConsultationAsync(id, dto, clinicId);
-        if (!success) return BadRequest(new { message = error });
-        return Ok(new { message = "Baho saqlandi" });
-    }
-
-    // ─── DOCTOR ENDPOINTLARI ───────────────────────────────────────────────
-
-    /// <summary>Menga kelgan konsultatsiya so'rovlari</summary>
-    [HttpGet("incoming")]
-    public async Task<IActionResult> GetIncomingConsultations([FromQuery] string? status)
+    [HttpGet("invitations")]
+    public async Task<IActionResult> GetMyInvitations()
     {
         var userId = GetUserId();
         var roleId = GetRoleId();
@@ -159,15 +260,16 @@ public class OnlineConsultationController : ControllerBase
         if (roleId != 4) return Forbid();
 
         var doctorId = await GetDoctorIdAsync(userId);
-        if (doctorId == 0) return NotFound(new { message = "Doctor topilmadi" });
+        if (doctorId == 0) return NotFound(new { message = "Shifokor topilmadi" });
 
-        var result = await _service.GetIncomingConsultationsAsync(doctorId, status);
+        var result = await _service.GetMyInvitationsAsync(doctorId);
         return Ok(result);
     }
 
-    /// <summary>Men biriktirilgan klinikalar</summary>
-    [HttpGet("my-linked-clinics")]
-    public async Task<IActionResult> GetMyLinkedClinics()
+    // ─── SHIFOKOR: TAKLIFNI QABUL QILISH ─────────────────────────────────────
+
+    [HttpPut("invitations/{id}/accept")]
+    public async Task<IActionResult> AcceptInvitation(int id)
     {
         var userId = GetUserId();
         var roleId = GetRoleId();
@@ -175,13 +277,84 @@ public class OnlineConsultationController : ControllerBase
         if (roleId != 4) return Forbid();
 
         var doctorId = await GetDoctorIdAsync(userId);
-        if (doctorId == 0) return NotFound(new { message = "Doctor topilmadi" });
+        var (success, error) = await _service.AcceptInvitationAsync(id, doctorId);
+        if (!success) return BadRequest(new { message = error });
+        return Ok(new { message = "Taklif qabul qilindi" });
+    }
 
-        var result = await _service.GetMyLinkedClinicsAsync(doctorId);
+    // ─── SHIFOKOR: TAKLIFNI RAD ETISH ────────────────────────────────────────
+
+    [HttpPut("invitations/{id}/reject")]
+    public async Task<IActionResult> RejectInvitation(int id)
+    {
+        var userId = GetUserId();
+        var roleId = GetRoleId();
+        if (userId == 0) return Unauthorized(new { message = "Token invalid" });
+        if (roleId != 4) return Forbid();
+
+        var doctorId = await GetDoctorIdAsync(userId);
+        var (success, error) = await _service.RejectInvitationAsync(id, doctorId);
+        if (!success) return BadRequest(new { message = error });
+        return Ok(new { message = "Taklif rad etildi" });
+    }
+
+    // ─── SHIFOKOR: MENING KLINIKALARIM ───────────────────────────────────────
+
+    [HttpGet("my-clinics")]
+    public async Task<IActionResult> GetMyClinics()
+    {
+        var userId = GetUserId();
+        var roleId = GetRoleId();
+        if (userId == 0) return Unauthorized(new { message = "Token invalid" });
+        if (roleId != 4) return Forbid();
+
+        var doctorId = await GetDoctorIdAsync(userId);
+        if (doctorId == 0) return NotFound(new { message = "Shifokor topilmadi" });
+
+        var result = await _service.GetMyClinicsAsync(doctorId);
         return Ok(result);
     }
 
-    /// <summary>Konsultatsiya so'rovini qabul qilish (Doctor)</summary>
+    // ─── SHIFOKOR: KLINIKA TARIXI ─────────────────────────────────────────────
+
+    [HttpGet("my-clinics/{clinicConsultantId}/history")]
+    public async Task<IActionResult> GetDoctorClinicHistory(
+        int clinicConsultantId,
+        [FromQuery] string? patientName,
+        [FromQuery] DateOnly? dateFrom,
+        [FromQuery] DateOnly? dateTo)
+    {
+        var userId = GetUserId();
+        var roleId = GetRoleId();
+        if (userId == 0) return Unauthorized(new { message = "Token invalid" });
+        if (roleId != 4) return Forbid();
+
+        var doctorId = await GetDoctorIdAsync(userId);
+        if (doctorId == 0) return NotFound(new { message = "Shifokor topilmadi" });
+
+        var result = await _service.GetDoctorClinicHistoryAsync(clinicConsultantId, doctorId, patientName, dateFrom, dateTo);
+        return Ok(result);
+    }
+
+    // ─── SHIFOKOR: MENING KONSULTATSIYALARIM ──────────────────────────────────
+
+    [HttpGet("my-consultations")]
+    public async Task<IActionResult> GetMyConsultations([FromQuery] string? status)
+    {
+        var userId = GetUserId();
+        var roleId = GetRoleId();
+        if (userId == 0) return Unauthorized(new { message = "Token invalid" });
+        if (roleId != 4) return Forbid();
+
+        var doctorId = await GetDoctorIdAsync(userId);
+        if (doctorId == 0) return NotFound(new { message = "Shifokor topilmadi" });
+
+        var result = await _service.GetMyConsultationsAsync(doctorId, status);
+        return Ok(result);
+    }
+
+    // ─── SHIFOKOR: KONSULTATSIYANI QABUL QILISH ───────────────────────────────
+
     [HttpPut("{id}/accept")]
     public async Task<IActionResult> AcceptConsultation(int id)
     {
@@ -191,14 +364,15 @@ public class OnlineConsultationController : ControllerBase
         if (roleId != 4) return Forbid();
 
         var doctorId = await GetDoctorIdAsync(userId);
-        if (doctorId == 0) return NotFound(new { message = "Doctor topilmadi" });
+        if (doctorId == 0) return NotFound(new { message = "Shifokor topilmadi" });
 
-        var (success, error) = await _service.AcceptConsultationAsync(id, doctorId, userId);
+        var (success, error) = await _service.AcceptConsultationAsync(id, doctorId);
         if (!success) return BadRequest(new { message = error });
         return Ok(new { message = "Konsultatsiya qabul qilindi" });
     }
 
-    /// <summary>Konsultatsiya so'rovini rad etish (Doctor)</summary>
+    // ─── SHIFOKOR: KONSULTATSIYANI RAD ETISH ──────────────────────────────────
+
     [HttpPut("{id}/reject")]
     public async Task<IActionResult> RejectConsultation(int id, [FromBody] RejectConsultationDto dto)
     {
@@ -208,16 +382,17 @@ public class OnlineConsultationController : ControllerBase
         if (roleId != 4) return Forbid();
 
         var doctorId = await GetDoctorIdAsync(userId);
-        if (doctorId == 0) return NotFound(new { message = "Doctor topilmadi" });
+        if (doctorId == 0) return NotFound(new { message = "Shifokor topilmadi" });
 
-        var (success, error) = await _service.RejectConsultationAsync(id, dto, doctorId);
+        var (success, error) = await _service.RejectConsultationAsync(id, dto.RejectionReason, doctorId);
         if (!success) return BadRequest(new { message = error });
         return Ok(new { message = "Konsultatsiya rad etildi" });
     }
 
-    /// <summary>Video vaqtini belgilash (Doctor)</summary>
-    [HttpPut("{id}/schedule")]
-    public async Task<IActionResult> ScheduleConsultation(int id, [FromBody] ScheduleConsultationDto dto)
+    // ─── SHIFOKOR: KONSULTATSIYA BATAFSIL ────────────────────────────────────
+
+    [HttpGet("{id}/doctor-detail")]
+    public async Task<IActionResult> GetDoctorConsultationDetail(int id)
     {
         var userId = GetUserId();
         var roleId = GetRoleId();
@@ -225,14 +400,15 @@ public class OnlineConsultationController : ControllerBase
         if (roleId != 4) return Forbid();
 
         var doctorId = await GetDoctorIdAsync(userId);
-        if (doctorId == 0) return NotFound(new { message = "Doctor topilmadi" });
+        if (doctorId == 0) return NotFound(new { message = "Shifokor topilmadi" });
 
-        var (success, error) = await _service.ScheduleConsultationAsync(id, dto, doctorId);
-        if (!success) return BadRequest(new { message = error });
-        return Ok(new { message = "Vaqt belgilandi" });
+        var result = await _service.GetConsultationDetailDoctorAsync(id, doctorId);
+        if (result == null) return NotFound(new { message = "Konsultatsiya topilmadi" });
+        return Ok(result);
     }
 
-    /// <summary>Xulosa yozish (Doctor)</summary>
+    // ─── SHIFOKOR: XULOSA YOZISH ─────────────────────────────────────────────
+
     [HttpPost("{id}/conclude")]
     public async Task<IActionResult> ConcludeConsultation(int id, [FromBody] ConcludeConsultationDto dto)
     {
@@ -242,16 +418,18 @@ public class OnlineConsultationController : ControllerBase
         if (roleId != 4) return Forbid();
 
         var doctorId = await GetDoctorIdAsync(userId);
-        if (doctorId == 0) return NotFound(new { message = "Doctor topilmadi" });
+        if (doctorId == 0) return NotFound(new { message = "Shifokor topilmadi" });
 
         var (success, error) = await _service.ConcludeConsultationAsync(id, dto, doctorId);
         if (!success) return BadRequest(new { message = error });
         return Ok(new { message = "Xulosa saqlandi" });
     }
 
-    /// <summary>Ulashilgan tahlillar (Doctor)</summary>
-    [HttpGet("{id}/analyses")]
-    public async Task<IActionResult> GetConsultationAnalyses(int id)
+    // ─── SHIFOKOR: LIVEKIT TOKEN ──────────────────────────────────────────────
+
+    [HttpGet("{id}/livekit-token-doctor")]
+    [EnableRateLimiting("general")]
+    public async Task<IActionResult> GetDoctorLiveKitToken(int id)
     {
         var userId = GetUserId();
         var roleId = GetRoleId();
@@ -259,30 +437,28 @@ public class OnlineConsultationController : ControllerBase
         if (roleId != 4) return Forbid();
 
         var doctorId = await GetDoctorIdAsync(userId);
-        if (doctorId == 0) return NotFound(new { message = "Doctor topilmadi" });
+        if (doctorId == 0) return NotFound(new { message = "Shifokor topilmadi" });
 
-        var result = await _service.GetConsultationAnalysesAsync(id, doctorId);
-        return Ok(result);
+        var (success, error, token) = await _service.GetDoctorLiveKitTokenAsync(id, userId, doctorId);
+        if (!success) return BadRequest(new { message = error });
+        return Ok(token);
     }
 
-    // ─── VIDEO TOKEN ───────────────────────────────────────────────────────
-
-    /// <summary>LiveKit token olish (Admin ham, Doctor ham)</summary>
-    [HttpGet("{id}/livekit-token")]
-    [EnableRateLimiting("general")]
-    public async Task<IActionResult> GetLiveKitToken(int id)
+    [HttpGet("badge-counts")]
+    public async Task<IActionResult> GetBadgeCounts()
     {
         var userId = GetUserId();
         var roleId = GetRoleId();
         if (userId == 0) return Unauthorized(new { message = "Token invalid" });
         if (roleId != 2 && roleId != 3 && roleId != 4) return Forbid();
 
-        var (success, error, token) = await _service.GetLiveKitTokenAsync(id, userId, roleId);
-        if (!success) return BadRequest(new { message = error });
-        return Ok(token);
+        var clinicId = roleId == 2 || roleId == 3 ? await GetUserClinicIdAsync(userId) : 0;
+        var doctorId = roleId == 4 ? await GetDoctorIdAsync(userId) : 0;
+        var result = await _service.GetBadgeCountsAsync(roleId, clinicId, doctorId);
+        return Ok(result);
     }
 
-    // ─── PRIVATE HELPERS ──────────────────────────────────────────────────
+    // ─── PRIVATE HELPERS ──────────────────────────────────────────────────────
 
     private int GetUserId()
     {

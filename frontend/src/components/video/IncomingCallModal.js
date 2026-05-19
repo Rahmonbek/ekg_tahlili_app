@@ -32,10 +32,18 @@ export default function IncomingCallModal() {
 
             setVideoCall({
                 incomingCall: null,
-                activeRoom: { roomName: incomingCall.roomName, token, liveKitUrl },
+                activeRoom: {
+                    roomName: incomingCall.roomName,
+                    token,
+                    liveKitUrl,
+                    consultationId: incomingCall.consultationId ?? null,
+                },
             });
 
-            navigate('/video-conference');
+            const isDoctor = user?.roleId === 4;
+            navigate(incomingCall.consultationId && isDoctor
+                ? `/consultations/${incomingCall.consultationId}/work`
+                : '/video-conference');
         } catch {
             setAccepting(false);
         }
