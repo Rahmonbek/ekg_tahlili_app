@@ -17,6 +17,8 @@ namespace EkgAnalyzerApi.Services
         Task<(bool success, string? error)> InviteDoctorAsync(InviteDoctorDto dto, int adminUserId, int clinicId);
         Task<List<MyConsultantDto>> GetMyConsultantsAsync(int clinicId);
         Task<List<SentInvitationDto>> GetMySentInvitationsAsync(int clinicId);
+        Task<List<ConsultantPriceHistoryDto>> GetConsultantPriceHistoryAsync(int ccId, int clinicId);
+        Task<(bool success, string? error)> DeleteInvitationAsync(int invitationId, int clinicId);
         Task<ConsultationBadgeCountsDto> GetBadgeCountsAsync(int roleId, int clinicId, int doctorId);
         Task<(bool success, string? error)> UpdateConsultantPriceAsync(int ccId, UpdatePriceDto dto, int adminUserId, int clinicId);
         Task<ConsultantHistoryDto> GetConsultantHistoryAsync(int ccId, int clinicId, string? patientName, DateOnly? from, DateOnly? to);
@@ -30,6 +32,7 @@ namespace EkgAnalyzerApi.Services
         Task<(bool success, string? error)> AcceptInvitationAsync(int id, int doctorId);
         Task<(bool success, string? error)> RejectInvitationAsync(int id, int doctorId);
         Task<List<MyClinicDto>> GetMyClinicsAsync(int doctorId);
+        Task<List<ConsultantPriceHistoryDto>> GetDoctorPriceHistoryAsync(int ccId, int doctorId);
         Task<ConsultantHistoryDto> GetDoctorClinicHistoryAsync(int ccId, int doctorId, string? patientName, DateOnly? from, DateOnly? to);
         Task<List<DoctorConsultationItemDto>> GetMyConsultationsAsync(int doctorId, string? status);
         Task<(bool success, string? error)> AcceptConsultationAsync(int id, int doctorId);
@@ -70,20 +73,22 @@ namespace EkgAnalyzerApi.Services
         {
             try
             {
-                var hasFilter = !string.IsNullOrWhiteSpace(q.PassportSeries)
-                    || !string.IsNullOrWhiteSpace(q.Phone)
-                    || q.RegionId.HasValue
-                    || q.DistrictId.HasValue
-                    || q.ClinicId.HasValue;
-
-                if (!hasFilter) return new List<DoctorSearchResultDto>();
-
                 // Allaqachon accepted yoki pending invitation bor doctorlar
-                var excludedDoctorIds = await _db.ConsultantInvitations.AsNoTracking()
+                var excludedInvitationDoctorIds = await _db.ConsultantInvitations.AsNoTracking()
                     .Where(i => i.ClinicId == adminClinicId &&
                                (i.Status == "accepted" || i.Status == "pending"))
                     .Select(i => i.DoctorId)
                     .ToListAsync();
+
+                var linkedDoctorIds = await _db.ClinicConsultants.AsNoTracking()
+                    .Where(c => c.ClinicId == adminClinicId)
+                    .Select(c => c.DoctorId)
+                    .ToListAsync();
+
+                var excludedDoctorIds = excludedInvitationDoctorIds
+                    .Concat(linkedDoctorIds)
+                    .Distinct()
+                    .ToList();
 
                 var doctorQuery = _db.Doctors
                     .AsNoTracking()
@@ -99,7 +104,7 @@ namespace EkgAnalyzerApi.Services
 
                 if (!string.IsNullOrWhiteSpace(q.Phone))
                 {
-                    var phone = q.Phone.Trim();
+                    var phone = NormalizePhone(q.Phone);
                     doctorQuery = doctorQuery.Where(d => d.Phone != null && d.Phone.Contains(phone));
                 }
 
@@ -213,10 +218,10 @@ namespace EkgAnalyzerApi.Services
                 if (dto.PricePerSession < 0)
                     return (false, "Narx manfiy bo'lishi mumkin emas");
 
-                var existing = await _db.ConsultantInvitations.AsNoTracking()
-                    .AnyAsync(i => i.ClinicId == clinicId && i.DoctorId == dto.DoctorId);
+                var existing = await _db.ConsultantInvitations
+                    .FirstOrDefaultAsync(i => i.ClinicId == clinicId && i.DoctorId == dto.DoctorId);
 
-                if (existing)
+                if (existing != null && (existing.Status == "pending" || existing.Status == "accepted"))
                     return (false, "Bu shifokorga allaqachon taklif yuborilgan");
 
                 var doctor = await _db.Doctors.AsNoTracking()
@@ -225,15 +230,28 @@ namespace EkgAnalyzerApi.Services
 
                 if (doctor == null) return (false, "Shifokor topilmadi");
 
-                var invitation = new ConsultantInvitation
+                ConsultantInvitation invitation;
+                if (existing != null && existing.Status == "rejected")
                 {
-                    ClinicId       = clinicId,
-                    DoctorId       = dto.DoctorId,
-                    PricePerSession = dto.PricePerSession,
-                    Status         = "pending",
-                    InvitedAt      = DateTime.UtcNow
-                };
-                _db.ConsultantInvitations.Add(invitation);
+                    existing.PricePerSession = dto.PricePerSession;
+                    existing.Status = "pending";
+                    existing.InvitedAt = DateTime.UtcNow;
+                    existing.RespondedAt = null;
+                    existing.Note = null;
+                    invitation = existing;
+                }
+                else
+                {
+                    invitation = new ConsultantInvitation
+                    {
+                        ClinicId       = clinicId,
+                        DoctorId       = dto.DoctorId,
+                        PricePerSession = dto.PricePerSession,
+                        Status         = "pending",
+                        InvitedAt      = DateTime.UtcNow
+                    };
+                    _db.ConsultantInvitations.Add(invitation);
+                }
                 await _db.SaveChangesAsync();
 
                 if (doctor.UserId > 0)
@@ -267,7 +285,7 @@ namespace EkgAnalyzerApi.Services
         {
             try
             {
-                return await _db.ClinicConsultants
+                var consultants = await _db.ClinicConsultants
                     .AsNoTracking()
                     .Where(cc => cc.ClinicId == clinicId && cc.Status == "active")
                     .Include(cc => cc.Doctor)
@@ -291,6 +309,17 @@ namespace EkgAnalyzerApi.Services
                         LinkedAt           = cc.LinkedAt
                     })
                     .ToListAsync();
+
+                var today = DateOnly.FromDateTime(DateTime.Today);
+                foreach (var consultant in consultants)
+                {
+                    consultant.CurrentPrice = await GetEffectivePriceForDateAsync(
+                        consultant.ClinicConsultantId,
+                        consultant.CurrentPrice,
+                        today);
+                }
+
+                return consultants;
             }
             catch (Exception ex)
             {
@@ -340,6 +369,90 @@ namespace EkgAnalyzerApi.Services
             {
                 _logger.LogError(ex, "GetMySentInvitationsAsync xatolik: clinicId={ClinicId}", clinicId);
                 return new List<SentInvitationDto>();
+            }
+        }
+
+        public async Task<List<ConsultantPriceHistoryDto>> GetConsultantPriceHistoryAsync(int ccId, int clinicId)
+        {
+            try
+            {
+                var consultant = await _db.ClinicConsultants.AsNoTracking()
+                    .Where(c => c.Id == ccId && c.ClinicId == clinicId)
+                    .Select(c => new { c.Id, c.CurrentPrice, c.LinkedAt })
+                    .FirstOrDefaultAsync();
+                if (consultant == null) return new List<ConsultantPriceHistoryDto>();
+
+                var today = DateOnly.FromDateTime(DateTime.Today);
+                var activeId = await _db.ConsultantPriceHistories.AsNoTracking()
+                    .Where(p => p.ClinicConsultantId == ccId && p.EffectiveFrom <= today)
+                    .OrderByDescending(p => p.EffectiveFrom)
+                    .ThenByDescending(p => p.ChangedAt)
+                    .Select(p => (int?)p.Id)
+                    .FirstOrDefaultAsync();
+
+                var history = await _db.ConsultantPriceHistories
+                    .AsNoTracking()
+                    .Where(p => p.ClinicConsultantId == ccId)
+                    .Include(p => p.ChangedByUser)
+                        .ThenInclude(u => u!.Doctor)
+                    .OrderByDescending(p => p.EffectiveFrom)
+                    .ThenByDescending(p => p.ChangedAt)
+                    .Select(p => new ConsultantPriceHistoryDto
+                    {
+                        Id = p.Id,
+                        OldPrice = p.OldPrice,
+                        NewPrice = p.NewPrice,
+                        EffectiveFrom = p.EffectiveFrom,
+                        ChangedAt = p.ChangedAt,
+                        ChangedByFullName = p.ChangedByUser != null && p.ChangedByUser.Doctor != null
+                            ? (p.ChangedByUser.Doctor.FirstName + " " + p.ChangedByUser.Doctor.LastName).Trim()
+                            : null,
+                        IsActiveToday = activeId.HasValue && p.Id == activeId.Value
+                    })
+                    .ToListAsync();
+
+                if (history.Count == 0)
+                {
+                    history.Add(new ConsultantPriceHistoryDto
+                    {
+                        Id = 0,
+                        OldPrice = consultant.CurrentPrice,
+                        NewPrice = consultant.CurrentPrice,
+                        EffectiveFrom = DateOnly.FromDateTime(consultant.LinkedAt.Date),
+                        ChangedAt = consultant.LinkedAt,
+                        ChangedByFullName = null,
+                        IsActiveToday = true
+                    });
+                }
+
+                return history;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetConsultantPriceHistoryAsync xatolik: ccId={Id}", ccId);
+                return new List<ConsultantPriceHistoryDto>();
+            }
+        }
+
+        public async Task<(bool success, string? error)> DeleteInvitationAsync(int invitationId, int clinicId)
+        {
+            try
+            {
+                var invitation = await _db.ConsultantInvitations
+                    .FirstOrDefaultAsync(i => i.Id == invitationId && i.ClinicId == clinicId);
+
+                if (invitation == null) return (false, "Taklif topilmadi");
+                if (invitation.Status == "accepted")
+                    return (false, "Qabul qilingan taklifni o'chirib bo'lmaydi");
+
+                _db.ConsultantInvitations.Remove(invitation);
+                await _db.SaveChangesAsync();
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "DeleteInvitationAsync xatolik: invitationId={Id}", invitationId);
+                return (false, "Server xatoligi yuz berdi");
             }
         }
 
@@ -402,7 +515,10 @@ namespace EkgAnalyzerApi.Services
                 };
                 _db.ConsultantPriceHistories.Add(history);
 
-                cc.CurrentPrice = dto.NewPrice;
+                if (dto.EffectiveFrom <= DateOnly.FromDateTime(DateTime.Today))
+                {
+                    cc.CurrentPrice = dto.NewPrice;
+                }
                 await _db.SaveChangesAsync();
 
                 return (true, null);
@@ -528,8 +644,7 @@ namespace EkgAnalyzerApi.Services
                     if (cc == null) continue;
 
                     // Narx logikasi: ConsultantPriceHistory dan topish
-                    var price = await GetPriceForDateAsync(cc.Id, dto.ConsultationDate)
-                                ?? cc.CurrentPrice;
+                    var price = await GetEffectivePriceForDateAsync(cc.Id, cc.CurrentPrice, dto.ConsultationDate);
 
                     var consultation = new Consultation
                     {
@@ -594,6 +709,22 @@ namespace EkgAnalyzerApi.Services
                 .OrderByDescending(p => p.EffectiveFrom)
                 .Select(p => (decimal?)p.NewPrice)
                 .FirstOrDefaultAsync();
+        }
+
+        private async Task<decimal> GetEffectivePriceForDateAsync(int ccId, decimal fallbackPrice, DateOnly date)
+        {
+            var activePrice = await GetPriceForDateAsync(ccId, date);
+            if (activePrice.HasValue) return activePrice.Value;
+
+            var nextScheduled = await _db.ConsultantPriceHistories
+                .AsNoTracking()
+                .Where(p => p.ClinicConsultantId == ccId && p.EffectiveFrom > date)
+                .OrderBy(p => p.EffectiveFrom)
+                .ThenBy(p => p.ChangedAt)
+                .Select(p => (decimal?)p.OldPrice)
+                .FirstOrDefaultAsync();
+
+            return nextScheduled ?? fallbackPrice;
         }
 
         // ─── CONSULTATION LIST (Admin) ────────────────────────────────────────
@@ -819,16 +950,20 @@ namespace EkgAnalyzerApi.Services
                 var existingLink = await _db.ClinicConsultants
                     .FirstOrDefaultAsync(cc => cc.ClinicId == invitation.ClinicId && cc.DoctorId == doctorId);
 
+                ClinicConsultant link;
+                var oldPrice = existingLink?.CurrentPrice ?? invitation.PricePerSession;
+
                 if (existingLink != null)
                 {
                     existingLink.Status      = "active";
                     existingLink.CurrentPrice = invitation.PricePerSession;
                     existingLink.LinkedAt    = DateTime.UtcNow;
                     existingLink.InvitationId = invitation.Id;
+                    link = existingLink;
                 }
                 else
                 {
-                    _db.ClinicConsultants.Add(new ClinicConsultant
+                    link = new ClinicConsultant
                     {
                         ClinicId      = invitation.ClinicId,
                         DoctorId      = doctorId,
@@ -836,11 +971,27 @@ namespace EkgAnalyzerApi.Services
                         LinkedAt      = DateTime.UtcNow,
                         Status        = "active",
                         CurrentPrice  = invitation.PricePerSession
-                    });
+                    };
+                    _db.ClinicConsultants.Add(link);
                 }
 
                 invitation.Status      = "accepted";
                 invitation.RespondedAt = DateTime.UtcNow;
+                await _db.SaveChangesAsync();
+
+                var doctorUserId = await _db.Doctors.AsNoTracking()
+                    .Where(d => d.Id == doctorId)
+                    .Select(d => d.UserId)
+                    .FirstOrDefaultAsync();
+
+                _db.ConsultantPriceHistories.Add(new ConsultantPriceHistory
+                {
+                    ClinicConsultantId = link.Id,
+                    OldPrice           = oldPrice,
+                    NewPrice           = invitation.PricePerSession,
+                    EffectiveFrom      = DateOnly.FromDateTime(DateTime.Today),
+                    ChangedByUserId    = doctorUserId
+                });
                 await _db.SaveChangesAsync();
 
                 return (true, null);
@@ -883,7 +1034,7 @@ namespace EkgAnalyzerApi.Services
         {
             try
             {
-                return await _db.ClinicConsultants
+                var clinics = await _db.ClinicConsultants
                     .AsNoTracking()
                     .Where(cc => cc.DoctorId == doctorId && cc.Status == "active")
                     .Include(cc => cc.Clinic)
@@ -897,11 +1048,41 @@ namespace EkgAnalyzerApi.Services
                         CurrentPrice       = cc.CurrentPrice
                     })
                     .ToListAsync();
+
+                var today = DateOnly.FromDateTime(DateTime.Today);
+                foreach (var clinic in clinics)
+                {
+                    clinic.CurrentPrice = await GetEffectivePriceForDateAsync(
+                        clinic.ClinicConsultantId,
+                        clinic.CurrentPrice,
+                        today);
+                }
+
+                return clinics;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "GetMyClinicsAsync xatolik: doctorId={DoctorId}", doctorId);
                 return new List<MyClinicDto>();
+            }
+        }
+
+        public async Task<List<ConsultantPriceHistoryDto>> GetDoctorPriceHistoryAsync(int ccId, int doctorId)
+        {
+            try
+            {
+                var clinicId = await _db.ClinicConsultants.AsNoTracking()
+                    .Where(cc => cc.Id == ccId && cc.DoctorId == doctorId)
+                    .Select(cc => (int?)cc.ClinicId)
+                    .FirstOrDefaultAsync();
+
+                if (!clinicId.HasValue) return new List<ConsultantPriceHistoryDto>();
+                return await GetConsultantPriceHistoryAsync(ccId, clinicId.Value);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetDoctorPriceHistoryAsync xatolik: ccId={Id}, doctorId={DoctorId}", ccId, doctorId);
+                return new List<ConsultantPriceHistoryDto>();
             }
         }
 
@@ -1260,38 +1441,118 @@ namespace EkgAnalyzerApi.Services
 
             var ecg = await _db.ECGAnalyse.AsNoTracking()
                 .Where(e => e.PatcientId == patientId)
-                .Select(e => new { e.Id, e.CreatedAt, HasAi = e.AIAnswerData != null })
+                .Select(e => new
+                {
+                    e.Id,
+                    e.CreatedAt,
+                    HasAi = e.AIAnswerData != null,
+                    ClinicName = e.Clinic != null ? e.Clinic.ClinicName : null,
+                    CreatedByFullName = e.CreatedDoctor != null
+                        ? ((e.CreatedDoctor.LastName ?? "") + " " + (e.CreatedDoctor.FirstName ?? "")).Trim()
+                        : null
+                })
                 .ToListAsync();
             result.AddRange(ecg.Select(e => new PatientAnalysisItemDto
-                { Type = "EKG", Id = e.Id, Date = e.CreatedAt, HasAiResult = e.HasAi }));
+            {
+                Type = "EKG",
+                Id = e.Id,
+                Date = e.CreatedAt,
+                HasAiResult = e.HasAi,
+                ClinicName = e.ClinicName,
+                CreatedByFullName = e.CreatedByFullName
+            }));
 
             var smad = await _db.SmadAnalyses.AsNoTracking()
                 .Where(e => e.PatcientId == patientId)
-                .Select(e => new { e.Id, e.CreatedAt, HasAi = e.AIAnswerData != null })
+                .Select(e => new
+                {
+                    e.Id,
+                    e.CreatedAt,
+                    HasAi = e.AIAnswerData != null,
+                    ClinicName = e.Clinic != null ? e.Clinic.ClinicName : null,
+                    CreatedByFullName = e.CreatedDoctor != null
+                        ? ((e.CreatedDoctor.LastName ?? "") + " " + (e.CreatedDoctor.FirstName ?? "")).Trim()
+                        : null
+                })
                 .ToListAsync();
             result.AddRange(smad.Select(e => new PatientAnalysisItemDto
-                { Type = "SMAD", Id = e.Id, Date = e.CreatedAt, HasAiResult = e.HasAi }));
+            {
+                Type = "SMAD",
+                Id = e.Id,
+                Date = e.CreatedAt,
+                HasAiResult = e.HasAi,
+                ClinicName = e.ClinicName,
+                CreatedByFullName = e.CreatedByFullName
+            }));
 
             var holter = await _db.HolterAnalyses.AsNoTracking()
                 .Where(e => e.PatcientId == patientId)
-                .Select(e => new { e.Id, e.CreatedAt, HasAi = e.AIAnswerData != null })
+                .Select(e => new
+                {
+                    e.Id,
+                    e.CreatedAt,
+                    HasAi = e.AIAnswerData != null,
+                    ClinicName = e.Clinic != null ? e.Clinic.ClinicName : null,
+                    CreatedByFullName = e.CreatedDoctor != null
+                        ? ((e.CreatedDoctor.LastName ?? "") + " " + (e.CreatedDoctor.FirstName ?? "")).Trim()
+                        : null
+                })
                 .ToListAsync();
             result.AddRange(holter.Select(e => new PatientAnalysisItemDto
-                { Type = "Holter", Id = e.Id, Date = e.CreatedAt, HasAiResult = e.HasAi }));
+            {
+                Type = "Holter",
+                Id = e.Id,
+                Date = e.CreatedAt,
+                HasAiResult = e.HasAi,
+                ClinicName = e.ClinicName,
+                CreatedByFullName = e.CreatedByFullName
+            }));
 
             var lab = await _db.LabAnalyse.AsNoTracking()
                 .Where(e => e.PatcientId == patientId)
-                .Select(e => new { e.Id, e.CreatedAt, HasAi = e.AIAnswerData != null })
+                .Select(e => new
+                {
+                    e.Id,
+                    e.CreatedAt,
+                    HasAi = e.AIAnswerData != null,
+                    ClinicName = e.Clinic != null ? e.Clinic.ClinicName : null,
+                    CreatedByFullName = e.CreatedDoctor != null
+                        ? ((e.CreatedDoctor.LastName ?? "") + " " + (e.CreatedDoctor.FirstName ?? "")).Trim()
+                        : null
+                })
                 .ToListAsync();
             result.AddRange(lab.Select(e => new PatientAnalysisItemDto
-                { Type = "Lab", Id = e.Id, Date = e.CreatedAt, HasAiResult = e.HasAi }));
+            {
+                Type = "Lab",
+                Id = e.Id,
+                Date = e.CreatedAt,
+                HasAiResult = e.HasAi,
+                ClinicName = e.ClinicName,
+                CreatedByFullName = e.CreatedByFullName
+            }));
 
             var parasit = await _db.ParasitologyAnalyses.AsNoTracking()
                 .Where(e => e.PatcientId == patientId)
-                .Select(e => new { e.Id, e.CreatedAt, HasAi = e.AiResponse != null })
+                .Select(e => new
+                {
+                    e.Id,
+                    e.CreatedAt,
+                    HasAi = e.AiResponse != null,
+                    ClinicName = e.Clinic != null ? e.Clinic.ClinicName : null,
+                    CreatedByFullName = e.CreatedDoctor != null
+                        ? ((e.CreatedDoctor.LastName ?? "") + " " + (e.CreatedDoctor.FirstName ?? "")).Trim()
+                        : null
+                })
                 .ToListAsync();
             result.AddRange(parasit.Select(e => new PatientAnalysisItemDto
-                { Type = "Parasit", Id = e.Id, Date = e.CreatedAt, HasAiResult = e.HasAi }));
+            {
+                Type = "Parasit",
+                Id = e.Id,
+                Date = e.CreatedAt,
+                HasAiResult = e.HasAi,
+                ClinicName = e.ClinicName,
+                CreatedByFullName = e.CreatedByFullName
+            }));
 
             return result.OrderByDescending(r => r.Date).ToList();
         }
@@ -1336,5 +1597,8 @@ namespace EkgAnalyzerApi.Services
 
         private static string NormalizePassport(string? passport) =>
             (passport ?? "").Replace(" ", "").Trim().ToUpperInvariant();
+
+        private static string NormalizePhone(string? phone) =>
+            new string((phone ?? "").Where(char.IsDigit).ToArray());
     }
 }

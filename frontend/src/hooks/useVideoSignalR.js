@@ -28,20 +28,29 @@ export default function useVideoSignalR(enabled) {
             .build();
 
         connection.on('IncomingCall', (payload) => {
-            setVideoCall({ incomingCall: payload });
+            setVideoCall({ incomingCall: payload, isCalling: false });
         });
 
         connection.on('CallAccepted', (payload) => {
             setVideoCall({ isCalling: false });
         });
 
-        connection.on('CallRejected', () => {
-            setVideoCall({ isCalling: false });
+        connection.on('CallRejected', (payload) => {
+            const current = useStore.getState().videoCall;
+            const shouldClear = !payload?.roomName
+                || current.activeRoom?.roomName === payload.roomName
+                || current.incomingCall?.roomName === payload.roomName;
+            setVideoCall(shouldClear
+                ? { activeRoom: null, incomingCall: null, isCalling: false }
+                : { isCalling: false });
             notification.warning({ message: "Qo'ng'iroq rad etildi", duration: 4 });
         });
 
-        connection.on('CallEnded', () => {
-            setVideoCall({ activeRoom: null, incomingCall: null, isCalling: false });
+        connection.on('CallEnded', (payload) => {
+            const current = useStore.getState().videoCall;
+            if (!payload?.roomName || current.activeRoom?.roomName === payload.roomName || current.incomingCall?.roomName === payload.roomName) {
+                setVideoCall({ activeRoom: null, incomingCall: null, isCalling: false });
+            }
         });
 
         connection.on('DoctorOnline', (payload) => {

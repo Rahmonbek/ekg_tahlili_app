@@ -160,10 +160,10 @@ function HeroSection() {
           <Link className="nmed-gradient-btn nmed-large-btn" to="/login">Tizimga kirish <FiArrowRight /></Link>
           <button className="nmed-video-btn" type="button"><FiPlay /> Video ko‘rish</button>
         </motion.div>
-        <motion.div className="nmed-scroll-cue" animate={{ y: [0, 10, 0] }} transition={{ duration: 1.8, repeat: Infinity }}>
+        {/* <motion.div className="nmed-scroll-cue" animate={{ y: [0, 10, 0] }} transition={{ duration: 1.8, repeat: Infinity }}>
           <FiChevronDown />
           <span>Pastga suring</span>
-        </motion.div>
+        </motion.div> */}
       </motion.div>
 
       <motion.div

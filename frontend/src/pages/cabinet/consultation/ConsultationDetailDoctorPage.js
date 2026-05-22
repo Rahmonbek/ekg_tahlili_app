@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     Button, Tag, message, Typography, Descriptions, Divider, Spin,
-    Form, Select, Input, Space, Drawer
+    Form, Select, Input, Space
 } from 'antd';
 import { ArrowLeftOutlined, EyeOutlined, VideoCameraOutlined, SaveOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -13,8 +13,10 @@ import {
     getConsultationTokenDoctor,
     getConsultationBadgeCounts
 } from '../../../host/requests/ConsultationRequest';
+import { initiateConsultationCall } from '../../../hooks/videoSignalRService';
 import LiveKitRoomView from '../../../components/video/LiveKitRoom';
 import { useStore } from '../../../store/Store';
+import ConsultationAnalysisInlineView, { normalizeAnalysisType } from './ConsultationAnalysisInlineView';
 import './Consultation.css';
 
 const { Title, Text } = Typography;
@@ -28,14 +30,6 @@ const STATUS_COLORS = {
     rejected: 'red',
 };
 
-const ANALYSIS_ROUTES = {
-    EKG: '/ecg-analyses/view',
-    SMAD: '/smad-analyses/view',
-    Holter: '/holter-analyses/view',
-    Lab: '/lab-analyses/view',
-    Parasit: '/parasitology-analyses/view',
-};
-
 export default function ConsultationDetailDoctorPage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -46,7 +40,7 @@ export default function ConsultationDetailDoctorPage() {
     const [loading, setLoading] = useState(false);
     const [conclusionLoading, setConclusionLoading] = useState(false);
     const [tokenLoading, setTokenLoading] = useState(false);
-    const [selectedAnalysis, setSelectedAnalysis] = useState(null);
+    const [expandedAnalysisKey, setExpandedAnalysisKey] = useState(null);
     const [form] = Form.useForm();
 
     useEffect(() => {
@@ -99,7 +93,17 @@ export default function ConsultationDetailDoctorPage() {
         try {
             const res = await getConsultationTokenDoctor(id);
             const { token, liveKitUrl, roomName } = res.data;
-            setVideoCall({ activeRoom: { token, liveKitUrl, roomName, consultationId: Number(id) }, isCalling: false });
+            setVideoCall({
+                activeRoom: {
+                    token,
+                    liveKitUrl,
+                    roomName,
+                    consultationId: Number(id),
+                    peerName: detail?.adminFullName || detail?.clinicName || null,
+                },
+                isCalling: false,
+            });
+            await initiateConsultationCall(Number(id), roomName);
         } catch {
             message.error(t('error'));
         } finally {
@@ -270,28 +274,43 @@ export default function ConsultationDetailDoctorPage() {
                         <>
                             <Divider orientation="left">{t('shared_analyses')}</Divider>
                             {detail.analyses.map((a) => {
-                                const route = ANALYSIS_ROUTES[a.type || a.analysisType];
+                                const type = normalizeAnalysisType(a);
+                                const analysisKey = `${type}-${a.id}`;
+                                const isExpanded = expandedAnalysisKey === analysisKey;
                                 return (
-                                <div key={`${a.type}-${a.id}`} className="cons-analysis-card">
+                                <div key={analysisKey} className={`cons-analysis-card ${isExpanded ? 'is-expanded' : ''}`}>
                                     <div className="cons-analysis-card-header">
                                         <Space>
-                                            <Tag color="blue">{a.type || a.analysisType}</Tag>
+                                            <Tag color="blue">{type}</Tag>
                                             <Text strong>#{a.id}</Text>
                                         </Space>
-                                        {route && (
-                                            <Button
-                                                size="small"
-                                                icon={<EyeOutlined />}
-                                                onClick={() => setSelectedAnalysis({ ...a, route })}
-                                            >
-                                                {t('view_analyse')}
-                                            </Button>
-                                        )}
+                                        <Button
+                                            size="small"
+                                            icon={<EyeOutlined />}
+                                            onClick={() => setExpandedAnalysisKey(isExpanded ? null : analysisKey)}
+                                        >
+                                            {isExpanded ? (t('hide') || 'Yopish') : t('view_analyse')}
+                                        </Button>
                                     </div>
                                     {a.date && (
                                         <Text type="secondary">
                                             {dayjs(a.date).format('DD.MM.YYYY')}
                                         </Text>
+                                    )}
+                                    <div className="cons-analysis-meta-row">
+                                        {a.clinicName && (
+                                            <Text type="secondary">
+                                                <b>{t('clinic_name')}:</b> {a.clinicName}
+                                            </Text>
+                                        )}
+                                        {a.createdByFullName && (
+                                            <Text type="secondary">
+                                                <b>{t('doctor_of_created')}:</b> {a.createdByFullName}
+                                            </Text>
+                                        )}
+                                    </div>
+                                    {isExpanded && (
+                                        <ConsultationAnalysisInlineView analysis={a} />
                                     )}
                                 </div>
                             );})}
@@ -299,22 +318,6 @@ export default function ConsultationDetailDoctorPage() {
                     )}
                 </div>
             </div>
-
-            <Drawer
-                open={!!selectedAnalysis}
-                onClose={() => setSelectedAnalysis(null)}
-                width="min(1100px, 96vw)"
-                title={selectedAnalysis ? `${selectedAnalysis.type || selectedAnalysis.analysisType} #${selectedAnalysis.id}` : ''}
-                destroyOnClose
-            >
-                {selectedAnalysis?.route && (
-                    <iframe
-                        title="analysis-viewer"
-                        src={`${selectedAnalysis.route}/${selectedAnalysis.id}`}
-                        style={{ width: '100%', height: 'calc(100vh - 120px)', border: 0 }}
-                    />
-                )}
-            </Drawer>
         </div>
     );
 }

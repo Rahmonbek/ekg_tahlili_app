@@ -4,8 +4,7 @@ import { PhoneOutlined, CloseOutlined, UserOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/Store';
-import { getVideoToken, endVideoCall } from '../../host/requests/VideoCallRequest';
-import { acceptCall, endCall } from '../../hooks/videoSignalRService';
+import { acceptIncomingVideoCall, rejectIncomingVideoCall } from './videoCallActions';
 import './VideoConference.css';
 
 const { Text } = Typography;
@@ -14,47 +13,27 @@ export default function IncomingCallModal() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { videoCall, setVideoCall, user } = useStore();
-    const { incomingCall } = videoCall;
+    const { incomingCall, activeRoom } = videoCall;
     const [accepting, setAccepting] = useState(false);
 
     const handleAccept = async () => {
         if (accepting) return;
         try {
             setAccepting(true);
-            const myName = user?.doctor
-                ? `${user.doctor.firstName ?? ''} ${user.doctor.lastName ?? ''}`.trim()
-                : user?.username ?? 'Shifokor';
-
-            const res = await getVideoToken(incomingCall.roomName, myName);
-            const { token, liveKitUrl } = res.data;
-
-            await acceptCall(incomingCall.roomName);
-
-            setVideoCall({
-                incomingCall: null,
-                activeRoom: {
-                    roomName: incomingCall.roomName,
-                    token,
-                    liveKitUrl,
-                    consultationId: incomingCall.consultationId ?? null,
-                },
+            await acceptIncomingVideoCall({
+                incomingCall,
+                activeRoom,
+                user,
+                setVideoCall,
+                navigate,
             });
-
-            const isDoctor = user?.roleId === 4;
-            navigate(incomingCall.consultationId && isDoctor
-                ? `/consultations/${incomingCall.consultationId}/work`
-                : '/video-conference');
         } catch {
             setAccepting(false);
         }
     };
 
     const handleReject = async () => {
-        try {
-            await endCall(incomingCall.roomName);
-            await endVideoCall(incomingCall.roomName);
-        } catch { }
-        setVideoCall({ incomingCall: null });
+        await rejectIncomingVideoCall({ incomingCall, setVideoCall });
     };
 
     return (

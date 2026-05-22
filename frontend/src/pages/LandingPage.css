@@ -337,9 +337,9 @@
 .nmed-hero h1 {
   margin: 0;
   color: var(--nmed-text);
-  font-size: clamp(3.4rem, 7vw, 6.4rem);
+  font-size: clamp(3rem, 5.5vw, 6rem);
   font-weight: 950;
-  line-height: 0.92;
+  line-height: 1.2;
   letter-spacing: 0;
 }
 
@@ -569,7 +569,7 @@
 
 .nmed-float-one { top: 12%; left: -18px; }
 .nmed-float-two { right: 18px; bottom: -16px; }
-.nmed-float-three { right: 6%; top: 7%; color: #facc15; }
+.nmed-float-three { right: 6%; top: 3%; color: #facc15; }
 
 .nmed-section {
   position: relative;
@@ -1422,7 +1422,7 @@
   }
 
   .nmed-hero h1 {
-    font-size: clamp(3.6rem, 7.4vw, 5.8rem);
+    font-size: clamp(3.4rem, 7.2vw, 5.6rem);
   }
 
   .nmed-dashboard {

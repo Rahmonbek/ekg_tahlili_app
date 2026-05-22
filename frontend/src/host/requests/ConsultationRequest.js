@@ -1,4 +1,4 @@
-import { httpGetRequest, httpPostRequest, httpPutRequest } from "../Host";
+import { httpDeleteRequest, httpGetRequest, httpPostRequest, httpPutRequest } from "../Host";
 
 // ─── ADMIN ─────────────────────────────────────────────────────────────────
 
@@ -19,6 +19,12 @@ export const getSentInvitations = () =>
 
 export const getConsultationBadgeCounts = () =>
     httpGetRequest("/consultation/badge-counts");
+
+export const deleteInvitation = (id) =>
+    httpDeleteRequest(`/consultation/invitations/${id}`);
+
+export const getConsultantPriceHistory = (id) =>
+    httpGetRequest(`/consultation/consultants/${id}/price-history`);
 
 export const updateConsultantPrice = (id, data) =>
     httpPutRequest(`/consultation/consultants/${id}/update-price`, data);
@@ -57,6 +63,9 @@ export const getMyClinics = () =>
 
 export const getClinicHistory = (id, params) =>
     httpGetRequest(`/consultation/my-clinics/${id}/history`, params);
+
+export const getDoctorClinicPriceHistory = (id) =>
+    httpGetRequest(`/consultation/my-clinics/${id}/price-history`);
 
 export const getMyConsultations = (params) =>
     httpGetRequest("/consultation/my-consultations", params);

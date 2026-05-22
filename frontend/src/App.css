@@ -641,6 +641,109 @@ input:-webkit-autofill:active {
   align-items: center;
 }
 
+.video-call-header-btn {
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d9eeea;
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--back_color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+.video-call-header-btn svg {
+  font-size: 20px;
+}
+
+.video-call-header-btn:hover,
+.video-call-header-btn.is-active {
+  border-color: var(--back_color);
+  background: #f2fffc;
+  color: var(--back_hover_color);
+}
+
+.video-call-header-btn.is-ringing {
+  background: linear-gradient(135deg, #22c55e, #14b8a6);
+  color: #ffffff;
+  border-color: transparent;
+  animation: video-call-ring 1.2s ease-in-out infinite;
+}
+
+.video-call-header-dropdown {
+  width: min(360px, calc(100vw - 28px));
+  padding: 8px;
+  border: 1px solid #e6f3ef;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
+}
+
+.video-call-header-card {
+  padding: 14px;
+  border-radius: 12px;
+  background: #f8fffd;
+}
+
+.video-call-header-card + .video-call-header-card {
+  margin-top: 8px;
+}
+
+.video-call-header-card.incoming {
+  border: 1px solid #b7ebd8;
+}
+
+.video-call-header-card.active {
+  border: 1px solid #dbeafe;
+  background: #f8fbff;
+}
+
+.video-call-header-kicker,
+.video-call-header-name,
+.video-call-header-meta {
+  display: block;
+}
+
+.video-call-header-kicker {
+  margin-bottom: 4px;
+  color: #0f766e;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.video-call-header-name {
+  margin-bottom: 4px;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.video-call-header-meta {
+  margin-bottom: 12px;
+  font-size: 0.8125rem;
+}
+
+.video-call-header-actions {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+@keyframes video-call-ring {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.36);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 8px rgba(20, 184, 166, 0);
+  }
+}
+
 .menu_close {
   color: var(--text_color);
   display: flex;
@@ -883,6 +986,7 @@ input:-webkit-autofill:active {
 .lang_exit {
   display: flex;
   align-items: center !important;
+  gap: 12px;
 }
 
 .exit_icon {

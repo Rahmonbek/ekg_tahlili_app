@@ -14,7 +14,7 @@ axiosInstance.interceptors.request.use(
         const token = Cookies.get("NMED_token");
 
         // Login va register sahifalarini tekshirish
-        const publicPaths = ["/", "/register"];
+        const publicPaths = ["/", "/login", "/register"];
         const currentPath = window.location.pathname;
 
         if (!token && !publicPaths.includes(currentPath)) {
@@ -44,7 +44,7 @@ axiosInstance.interceptors.response.use(
         if (error.response && error.response.status === 401) {
             Cookies.remove("NMED_token");
 
-            const publicPaths = ["/", "/register"];
+            const publicPaths = ["/", "/login", "/register"];
             const currentPath = window.location.pathname;
 
             if (!publicPaths.includes(currentPath)) {

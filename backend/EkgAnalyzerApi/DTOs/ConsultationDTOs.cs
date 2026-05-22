@@ -67,6 +67,18 @@ namespace EkgAnalyzerApi.DTOs
         public DateTime LinkedAt { get; set; }
     }
 
+    /// <summary>Admin: GET /consultants/{id}/price-history</summary>
+    public class ConsultantPriceHistoryDto
+    {
+        public int Id { get; set; }
+        public decimal OldPrice { get; set; }
+        public decimal NewPrice { get; set; }
+        public DateOnly EffectiveFrom { get; set; }
+        public DateTime ChangedAt { get; set; }
+        public string? ChangedByFullName { get; set; }
+        public bool IsActiveToday { get; set; }
+    }
+
     /// <summary>Admin: GET /my-sent-invitations</summary>
     public class SentInvitationDto
     {
@@ -152,6 +164,8 @@ namespace EkgAnalyzerApi.DTOs
         public int Id { get; set; }
         public DateTime? Date { get; set; }
         public bool HasAiResult { get; set; }
+        public string? ClinicName { get; set; }
+        public string? CreatedByFullName { get; set; }
     }
 
     /// <summary>Admin: GET /{id}/detail</summary>

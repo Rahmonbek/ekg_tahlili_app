@@ -2,18 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
-    Button, Form, Input, DatePicker, Radio, message, Typography, Divider, Space,
-    Table, Tag, Alert
+    Button, Form, message, Typography, Divider, Space, Table, Tag, Tooltip, Alert, DatePicker
 } from 'antd';
-import { ArrowLeftOutlined, SearchOutlined, SaveOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
+import { IoAlertCircleSharp } from 'react-icons/io5';
 import dayjs from 'dayjs';
 import {
     createConsultations,
-    findConsultationPatient,
     getConsultationBadgeCounts,
     getMyConsultants
 } from '../../../host/requests/ConsultationRequest';
 import { useStore } from '../../../store/Store';
+import { usePatientSearch } from '../../../hooks/usePatientSearch';
+import { useRegionDistrict } from '../../../hooks/useRegionDistrict';
+import PatientSearchSection from '../../../components/shared/PatientSearchSection';
+import PatientInfoForm from '../../../components/shared/PatientInfoForm';
 import './Consultation.css';
 
 const { Title, Text } = Typography;
@@ -23,12 +26,29 @@ export default function CreateConsultationPage() {
     const navigate = useNavigate();
     const { setConsultationBadge } = useStore();
 
-    const [form] = Form.useForm();
+    const [patientForm] = Form.useForm();
+    const [patientSearchForm] = Form.useForm();
+    const [consultationForm] = Form.useForm();
+    const [gender, setGender] = useState(true);
     const [consultants, setConsultants] = useState([]);
     const [selectedDoctors, setSelectedDoctors] = useState([]);
-    const [patientLookup, setPatientLookup] = useState(null);
-    const [lookupLoading, setLookupLoading] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    const { regions, districts, fetchDistricts } = useRegionDistrict();
+    const {
+        patcient,
+        loading: patientLoading,
+        loadingSave,
+        checkReady,
+        phoneValue,
+        setPhoneValue,
+        searchPatcient,
+        savePatcient,
+        resetPatient,
+    } = usePatientSearch({
+        form: patientForm,
+        getDistricts: fetchDistricts,
+    });
 
     useEffect(() => {
         loadConsultants();
@@ -43,48 +63,19 @@ export default function CreateConsultationPage() {
         }
     };
 
-    const handleFindPatient = async () => {
-        try {
-            const values = await form.validateFields(['passportSeries', 'birthDate']);
-            setLookupLoading(true);
-            const res = await findConsultationPatient({
-                passportSeries: values.passportSeries,
-                birthDate: values.birthDate.format('YYYY-MM-DD'),
-            });
-
-            const patient = res.data;
-            setPatientLookup(patient);
-
-            if (patient?.found) {
-                form.setFieldsValue({
-                    fullName: patient.fullName,
-                    phone: patient.phone,
-                    address: patient.address,
-                    gender: patient.gender,
-                });
-                message.success(t('data_found'));
-            } else {
-                form.setFieldsValue({
-                    fullName: '',
-                    phone: '',
-                    address: '',
-                    gender: undefined,
-                });
-                message.info(t('no_data'));
-            }
-        } catch (err) {
-            if (err?.errorFields) return;
-            message.error(t('error'));
-        } finally {
-            setLookupLoading(false);
-        }
+    const resetPatientBlock = () => {
+        resetPatient();
+        patientForm.resetFields();
+        consultationForm.resetFields();
+        setSelectedDoctors([]);
+        setGender(true);
     };
 
     const handleSubmit = async () => {
         try {
-            const values = await form.validateFields();
-            if (!patientLookup) {
-                message.warning(t('search'));
+            const values = await consultationForm.validateFields();
+            if (!checkReady || !patcient?.id) {
+                message.warning(t('search_patcient'));
                 return;
             }
             if (selectedDoctors.length === 0) {
@@ -93,25 +84,12 @@ export default function CreateConsultationPage() {
             }
 
             setLoading(true);
-            const payload = {
+            await createConsultations({
+                patientId: patcient.id,
                 doctorIds: selectedDoctors,
-                consultationDate: values.consultationDate.format('YYYY-MM-DD'),
-            };
+                consultationDate: values.consultationDate,
+            });
 
-            if (patientLookup?.found && patientLookup.patientId) {
-                payload.patientId = patientLookup.patientId;
-            } else {
-                payload.newPatient = {
-                    passportSeries: values.passportSeries,
-                    fullName: values.fullName,
-                    birthDate: values.birthDate.format('YYYY-MM-DD'),
-                    gender: values.gender,
-                    phone: values.phone,
-                    address: values.address,
-                };
-            }
-
-            await createConsultations(payload);
             getConsultationBadgeCounts().then((res) => setConsultationBadge(res.data || {})).catch(() => {});
             message.success(t('data_saved'));
             navigate('/consultations');
@@ -159,6 +137,7 @@ export default function CreateConsultationPage() {
     const selectedNames = consultants
         .filter((item) => selectedDoctors.includes(item.doctorId))
         .map((item) => item.fullName);
+    const patientIsReady = checkReady && !!patcient?.id;
 
     return (
         <div className="consultation-page">
@@ -186,135 +165,97 @@ export default function CreateConsultationPage() {
                 </div>
 
                 <div className="consultation-body">
-                    <Form form={form} layout="vertical">
-                        <Divider orientation="left">{t('patient_info')}</Divider>
-                        <div className="consultation-patient-search">
-                            <Form.Item
-                                name="passportSeries"
-                                label={t('passport_seria')}
-                                rules={[{ required: true, message: t('not_empty') }]}
-                            >
-                                <Input placeholder="AA1234567" onChange={() => setPatientLookup(null)} />
-                            </Form.Item>
-                            <Form.Item
-                                name="birthDate"
-                                label={t('birthdate')}
-                                rules={[{ required: true, message: t('not_empty') }]}
-                            >
-                                <DatePicker
-                                    style={{ width: '100%' }}
-                                    format="DD.MM.YYYY"
-                                    onChange={() => setPatientLookup(null)}
-                                />
-                            </Form.Item>
-                            <Form.Item label=" ">
-                                <Button
-                                    type="primary"
-                                    icon={<SearchOutlined />}
-                                    loading={lookupLoading}
-                                    onClick={handleFindPatient}
-                                >
-                                    {t('search')}
-                                </Button>
-                            </Form.Item>
+                    <div className="main_card consultation-patient-card">
+                        <h1>
+                            {t('patcient_info')}{' '}
+                            <Tooltip placement="bottomRight" title={t('alert_patcient')}>
+                                <span className="alert_icon"><IoAlertCircleSharp /></span>
+                            </Tooltip>
+                        </h1>
+                        <div className="main_card_content">
+                            <PatientSearchSection
+                                form={patientSearchForm}
+                                onFinish={searchPatcient}
+                                onReset={resetPatientBlock}
+                                loading={patientLoading}
+                            />
+                            <PatientInfoForm
+                                form={patientForm}
+                                patcient={patcient}
+                                onFinish={savePatcient}
+                                loading={loadingSave}
+                                phoneValue={phoneValue}
+                                setPhoneValue={setPhoneValue}
+                                gender={gender}
+                                setGender={setGender}
+                                regions={regions}
+                                districts={districts}
+                                fetchDistricts={fetchDistricts}
+                            />
                         </div>
+                    </div>
 
-                        {patientLookup?.found && (
-                            <Alert
-                                type="success"
-                                showIcon
-                                className="consultation-inline-alert"
-                                message={t('data_found')}
-                                description={patientLookup.fullName}
-                            />
-                        )}
-
-                        {patientLookup && !patientLookup.found && (
-                            <Alert
-                                type="info"
-                                showIcon
-                                className="consultation-inline-alert"
-                                message={t('new_patient')}
-                                description={t('no_data')}
-                            />
-                        )}
-
-                        {patientLookup && (
-                            <div className="consultation-form-grid">
-                                <Form.Item
-                                    name="fullName"
-                                    label={t('FIO')}
-                                    rules={[{ required: true, message: t('not_empty') }]}
-                                >
-                                    <Input disabled={patientLookup.found} />
-                                </Form.Item>
-                                <Form.Item
-                                    name="gender"
-                                    label={t('gender')}
-                                    rules={[{ required: true, message: t('not_empty') }]}
-                                >
-                                    <Radio.Group disabled={patientLookup.found}>
-                                        <Radio value={true}>{t('male')}</Radio>
-                                        <Radio value={false}>{t('female')}</Radio>
-                                    </Radio.Group>
-                                </Form.Item>
-                                <Form.Item
-                                    name="phone"
-                                    label={t('phone_number')}
-                                    rules={[{ required: true, message: t('not_empty') }]}
-                                >
-                                    <Input disabled={patientLookup.found} />
-                                </Form.Item>
-                                <Form.Item name="address" label={t('address')}>
-                                    <Input disabled={patientLookup.found} />
-                                </Form.Item>
-                            </div>
-                        )}
-
-                        <Divider orientation="left">{t('consultant_doctor')}</Divider>
-                        <Table
-                            rowKey="doctorId"
-                            columns={consultantColumns}
-                            dataSource={consultants}
-                            pagination={{ pageSize: 8 }}
-                            rowSelection={{
-                                selectedRowKeys: selectedDoctors,
-                                onChange: (keys) => setSelectedDoctors(keys),
-                            }}
-                            locale={{ emptyText: t('no_data') }}
-                            scroll={{ x: 760 }}
+                    {patientIsReady && (
+                        <Alert
+                            type="success"
+                            showIcon
+                            className="consultation-inline-alert"
+                            message={t('data_found')}
+                            description={[patcient.lastName, patcient.firstName, patcient.sureName].filter(Boolean).join(' ')}
                         />
+                    )}
 
-                        {selectedNames.length > 0 && (
-                            <Space wrap style={{ marginTop: 12 }}>
-                                {selectedNames.map((name) => (
-                                    <Tag key={name} color="blue">{name}</Tag>
-                                ))}
-                            </Space>
-                        )}
-
-                        <Divider orientation="left">{t('consultation_date')}</Divider>
-                        <Form.Item
-                            name="consultationDate"
-                            label={t('consultation_date')}
-                            rules={[{ required: true, message: t('not_empty') }]}
-                        >
-                            <DatePicker
-                                style={{ width: '100%' }}
-                                format="DD.MM.YYYY"
-                                disabledDate={consultationDateDisabled}
+                    {patientIsReady && (
+                        <>
+                            <Divider orientation="left">{t('consultant_doctor')}</Divider>
+                            <Table
+                                rowKey="doctorId"
+                                columns={consultantColumns}
+                                dataSource={consultants}
+                                pagination={{ pageSize: 8 }}
+                                rowSelection={{
+                                    selectedRowKeys: selectedDoctors,
+                                    onChange: (keys) => setSelectedDoctors(keys),
+                                }}
+                                locale={{ emptyText: t('no_data') }}
+                                scroll={{ x: 760 }}
                             />
-                        </Form.Item>
 
-                        <Space>
-                            <Button type="primary" icon={<SaveOutlined />} loading={loading} onClick={handleSubmit}>
-                                {t('save')}
-                            </Button>
-                            <Button onClick={() => navigate('/consultations')}>
-                                {t('cancel')}
-                            </Button>
-                        </Space>
-                    </Form>
+                            {selectedNames.length > 0 && (
+                                <Space wrap style={{ marginTop: 12 }}>
+                                    {selectedNames.map((name) => (
+                                        <Tag key={name} color="blue">{name}</Tag>
+                                    ))}
+                                </Space>
+                            )}
+
+                            <Divider orientation="left">{t('consultation_date')}</Divider>
+                            <Form form={consultationForm} layout="vertical">
+                                <Form.Item
+                                    name="consultationDate"
+                                    label={t('consultation_date')}
+                                    rules={[{ required: true, message: t('not_empty') }]}
+                                    getValueFromEvent={(value) => value ? value.format('YYYY-MM-DD') : undefined}
+                                    getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
+                                >
+                                    <DatePicker
+                                        style={{ width: '100%' }}
+                                        format="DD.MM.YYYY"
+                                        disabledDate={consultationDateDisabled}
+                                    />
+                                </Form.Item>
+                            </Form>
+
+                            <Space>
+                                <Button type="primary" icon={<SaveOutlined />} loading={loading} onClick={handleSubmit}>
+                                    {t('save')}
+                                </Button>
+                                <Button onClick={() => navigate('/consultations')}>
+                                    {t('cancel')}
+                                </Button>
+                            </Space>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

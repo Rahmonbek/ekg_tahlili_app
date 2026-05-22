@@ -30,7 +30,15 @@ export default function DoctorCallCard({ doctor }) {
 
             await initiateCall(doctor.userId, roomName);
 
-            setVideoCall({ isCalling: false, activeRoom: { roomName, token, liveKitUrl } });
+            setVideoCall({
+                isCalling: false,
+                activeRoom: {
+                    roomName,
+                    token,
+                    liveKitUrl,
+                    peerName: doctor.fullName || null,
+                },
+            });
         } catch (err) {
             setVideoCall({ isCalling: false });
         } finally {

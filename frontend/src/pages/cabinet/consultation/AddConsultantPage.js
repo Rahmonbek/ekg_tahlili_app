@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
-    Button, Table, Input, Modal, Form, InputNumber, message, Typography, Select
+    Button, Table, Modal, Form, InputNumber, message, Typography, Select
 } from 'antd';
 import { ArrowLeftOutlined, SearchOutlined, UserAddOutlined } from '@ant-design/icons';
+import Cleave from 'cleave.js/react';
 import {
     searchDoctors,
     inviteDoctor,
@@ -13,6 +14,7 @@ import {
 } from '../../../host/requests/ConsultationRequest';
 import { get_region_data, get_districts_data } from '../../../host/requests/RegionRequest';
 import { useStore } from '../../../store/Store';
+import { formatPhoneNumber } from '../../../tools/formatters';
 import './Consultation.css';
 
 const { Title, Text } = Typography;
@@ -23,7 +25,6 @@ export default function AddConsultantPage() {
     const { setConsultationBadge } = useStore();
 
     const [filters, setFilters] = useState({
-        passportSeries: '',
         phone: '',
         regionId: undefined,
         districtId: undefined,
@@ -42,6 +43,7 @@ export default function AddConsultantPage() {
     useEffect(() => {
         loadRegions();
         loadClinics({});
+        handleSearch({});
     }, []);
 
     const loadRegions = async () => {
@@ -90,22 +92,17 @@ export default function AddConsultantPage() {
         setFilters(next);
     };
 
-    const handleSearch = async () => {
-        const params = {
-            passportSeries: filters.passportSeries?.trim() || undefined,
-            phone: filters.phone?.trim() || undefined,
-            regionId: filters.regionId,
-            districtId: filters.districtId,
-            clinicId: filters.clinicId,
-        };
-        const hasFilter = Object.values(params).some((v) => v !== undefined && v !== '');
-        if (!hasFilter) {
-            message.warning(t('not_empty'));
-            return;
-        }
+    const buildParams = (source = filters) => ({
+        phone: formatPhoneNumber(source.phone)?.trim() || undefined,
+        regionId: source.regionId,
+        districtId: source.districtId,
+        clinicId: source.clinicId,
+    });
+
+    const handleSearch = async (source = filters) => {
         setSearching(true);
         try {
-            const res = await searchDoctors(params);
+            const res = await searchDoctors(buildParams(source));
             setResults(res.data || []);
         } catch {
             message.error(t('error'));
@@ -195,18 +192,18 @@ export default function AddConsultantPage() {
                     </div>
                 </div>
                 <div className="consultation-body">
-                    <div className="consultation-filter-grid">
-                        <Input
-                            placeholder={t('passport_seria')}
-                            value={filters.passportSeries}
-                            onChange={(e) => updateFilter('passportSeries', e.target.value)}
-                            onPressEnter={handleSearch}
-                        />
-                        <Input
-                            placeholder={t('phone_number')}
+                    <div className="consultation-filter-grid consultation-filter-grid-consultants">
+                        <Cleave
+                            options={{
+                                prefix: '+998',
+                                delimiters: [' (', ') ', '-', '-'],
+                                blocks: [4, 2, 3, 2, 2],
+                                numericOnly: true,
+                            }}
                             value={filters.phone}
                             onChange={(e) => updateFilter('phone', e.target.value)}
-                            onPressEnter={handleSearch}
+                            placeholder="+998 (__) ___-__-__"
+                            className="ant-input claveInput"
                         />
                         <Select
                             allowClear
@@ -248,7 +245,7 @@ export default function AddConsultantPage() {
                             type="primary"
                             icon={<SearchOutlined />}
                             loading={searching}
-                            onClick={handleSearch}
+                            onClick={() => handleSearch()}
                         >
                             {t('search')}
                         </Button>

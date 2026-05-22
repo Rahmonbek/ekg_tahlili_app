@@ -31,15 +31,6 @@ public class ConsultationController : ControllerBase
         if (userId == 0) return Unauthorized(new { message = "Token invalid" });
         if (roleId != 2 && roleId != 3) return Forbid();
 
-        var hasFilter = !string.IsNullOrWhiteSpace(q.PassportSeries)
-            || !string.IsNullOrWhiteSpace(q.Phone)
-            || q.RegionId.HasValue
-            || q.DistrictId.HasValue
-            || q.ClinicId.HasValue;
-
-        if (!hasFilter)
-            return BadRequest(new { message = "Kamida 1 ta filter kiritish shart" });
-
         var clinicId = await GetUserClinicIdAsync(userId);
         var result = await _service.SearchDoctorsAsync(q, clinicId);
         return Ok(result);
@@ -129,6 +120,33 @@ public class ConsultationController : ControllerBase
     }
 
     // ─── ADMIN: NARX O'ZGARTIRISH ─────────────────────────────────────────────
+
+    [HttpDelete("invitations/{id}")]
+    public async Task<IActionResult> DeleteSentInvitation(int id)
+    {
+        var userId = GetUserId();
+        var roleId = GetRoleId();
+        if (userId == 0) return Unauthorized(new { message = "Token invalid" });
+        if (roleId != 2 && roleId != 3) return Forbid();
+
+        var clinicId = await GetUserClinicIdAsync(userId);
+        var (success, error) = await _service.DeleteInvitationAsync(id, clinicId);
+        if (!success) return BadRequest(new { message = error });
+        return Ok(new { message = "Taklif o'chirildi" });
+    }
+
+    [HttpGet("consultants/{clinicConsultantId}/price-history")]
+    public async Task<IActionResult> GetConsultantPriceHistory(int clinicConsultantId)
+    {
+        var userId = GetUserId();
+        var roleId = GetRoleId();
+        if (userId == 0) return Unauthorized(new { message = "Token invalid" });
+        if (roleId != 2 && roleId != 3) return Forbid();
+
+        var clinicId = await GetUserClinicIdAsync(userId);
+        var result = await _service.GetConsultantPriceHistoryAsync(clinicConsultantId, clinicId);
+        return Ok(result);
+    }
 
     [HttpPut("consultants/{clinicConsultantId}/update-price")]
     public async Task<IActionResult> UpdateConsultantPrice(
@@ -316,6 +334,21 @@ public class ConsultationController : ControllerBase
     }
 
     // ─── SHIFOKOR: KLINIKA TARIXI ─────────────────────────────────────────────
+
+    [HttpGet("my-clinics/{clinicConsultantId}/price-history")]
+    public async Task<IActionResult> GetMyClinicPriceHistory(int clinicConsultantId)
+    {
+        var userId = GetUserId();
+        var roleId = GetRoleId();
+        if (userId == 0) return Unauthorized(new { message = "Token invalid" });
+        if (roleId != 4) return Forbid();
+
+        var doctorId = await GetDoctorIdAsync(userId);
+        if (doctorId == 0) return NotFound(new { message = "Shifokor topilmadi" });
+
+        var result = await _service.GetDoctorPriceHistoryAsync(clinicConsultantId, doctorId);
+        return Ok(result);
+    }
 
     [HttpGet("my-clinics/{clinicConsultantId}/history")]
     public async Task<IActionResult> GetDoctorClinicHistory(

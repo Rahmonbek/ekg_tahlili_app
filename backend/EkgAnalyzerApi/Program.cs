@@ -146,11 +146,8 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Migration bajarishda xatolik yuz berdi. Server noto'g'ri holatda ishga tushgan bo'lishi mumkin.");
     }
 }
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 app.UseRouting();
 app.UseCors("AllowAll");
 app.UseRateLimiter(); // TT 4.1.6.3 — IP asosida so'rovlar cheklovi

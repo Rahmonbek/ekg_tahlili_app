@@ -135,6 +135,10 @@
     margin-bottom: 18px;
 }
 
+.consultation-filter-grid-consultants {
+    grid-template-columns: repeat(4, minmax(160px, 1fr)) auto;
+}
+
 .consultation-filter-row {
     display: flex;
     align-items: center;
@@ -317,12 +321,27 @@
     box-shadow: 0 2px 10px rgba(15, 23, 42, 0.07);
 }
 
+.cons-analysis-card.is-expanded {
+    background: #ffffff;
+    border-color: #bfeee7;
+    box-shadow: 0 8px 26px rgba(15, 23, 42, 0.08);
+}
+
 .cons-analysis-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
     margin-bottom: 8px;
+}
+
+.cons-analysis-meta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    margin-top: 8px;
+    font-size: 0.8125rem;
 }
 
 .cons-analysis-ai-text {
@@ -336,6 +355,52 @@
     padding: 10px 14px;
     max-height: 420px;
     overflow-y: auto;
+}
+
+.cons-analysis-inline-view {
+    margin-top: 14px;
+    padding: 12px;
+    border: 1px solid #dff3ef;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #f8fffd 0%, #ffffff 100%);
+}
+
+.cons-analysis-inline-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e8f5f2;
+}
+
+.cons-analysis-inline-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+}
+
+.cons-analysis-inline-result {
+    overflow-x: auto;
+}
+
+.cons-analysis-files {
+    margin-bottom: 12px;
+    padding: 12px;
+    border: 1px dashed #bfeee7;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.cons-analysis-inline-result .old_analyse {
+    margin: 0 !important;
+    box-shadow: none;
+}
+
+.cons-analysis-inline-result .old_analyse + .old_analyse {
+    margin-top: 12px !important;
 }
 
 /* ── Ish maydoni gridi ── */
@@ -469,5 +534,11 @@
     .consultation-filter-row > *,
     .consultation-filter-grid > * {
         width: 100% !important;
+    }
+
+    .cons-analysis-card-header,
+    .cons-analysis-inline-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }

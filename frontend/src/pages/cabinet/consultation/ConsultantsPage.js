@@ -2,11 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
-    Button, Table, Tag, Modal, Form, InputNumber, DatePicker, message, Typography, Space, Divider
+    Button, Table, Tag, Modal, Form, InputNumber, DatePicker, message, Typography, Space, Divider, Popconfirm, Empty
 } from 'antd';
-import { PlusOutlined, HistoryOutlined, EditOutlined } from '@ant-design/icons';
+import { PlusOutlined, HistoryOutlined, EditOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { getMyConsultants, getSentInvitations, updateConsultantPrice } from '../../../host/requests/ConsultationRequest';
+import {
+    deleteInvitation,
+    getConsultantPriceHistory,
+    getMyConsultants,
+    getSentInvitations,
+    updateConsultantPrice
+} from '../../../host/requests/ConsultationRequest';
 import './Consultation.css';
 
 const { Title, Text } = Typography;
@@ -22,6 +28,10 @@ export default function ConsultantsPage() {
     const [priceModal, setPriceModal] = useState(false);
     const [selectedConsultant, setSelectedConsultant] = useState(null);
     const [priceLoading, setPriceLoading] = useState(false);
+    const [priceHistoryModal, setPriceHistoryModal] = useState(false);
+    const [priceHistory, setPriceHistory] = useState([]);
+    const [priceHistoryLoading, setPriceHistoryLoading] = useState(false);
+    const [deletingInvitationId, setDeletingInvitationId] = useState(null);
     const [form] = Form.useForm();
 
     useEffect(() => {
@@ -82,6 +92,41 @@ export default function ConsultantsPage() {
         }
     };
 
+    const openPriceHistoryModal = async (record) => {
+        setSelectedConsultant(record);
+        setPriceHistory([]);
+        setPriceHistoryModal(true);
+        setPriceHistoryLoading(true);
+        try {
+            const res = await getConsultantPriceHistory(record.clinicConsultantId);
+            setPriceHistory(res.data || []);
+        } catch {
+            message.error(t('error'));
+        } finally {
+            setPriceHistoryLoading(false);
+        }
+    };
+
+    const handleDeleteInvitation = async (record) => {
+        setDeletingInvitationId(record.id);
+        try {
+            await deleteInvitation(record.id);
+            message.success(t('data_deleted') || "O'chirildi");
+            loadSentInvitations();
+        } catch {
+            message.error(t('error'));
+        } finally {
+            setDeletingInvitationId(null);
+        }
+    };
+
+    const statusColor = (status) => {
+        if (status === 'accepted') return 'green';
+        if (status === 'rejected') return 'red';
+        if (status === 'pending') return 'gold';
+        return 'default';
+    };
+
     const columns = [
         {
             title: t('FIO'),
@@ -102,7 +147,17 @@ export default function ConsultantsPage() {
             title: t('price_per_session'),
             dataIndex: 'currentPrice',
             key: 'currentPrice',
-            render: (v) => v != null ? `${Number(v).toLocaleString()} UZS` : '—',
+            render: (v, record) => (
+                <Space size={6}>
+                    <Text strong>{v != null ? `${Number(v).toLocaleString()} UZS` : '-'}</Text>
+                    <Button
+                        size="small"
+                        className="table_view_btn"
+                        icon={<EyeOutlined />}
+                        onClick={() => openPriceHistoryModal(record)}
+                    />
+                </Space>
+            ),
         },
         {
             title: t('total_consultations'),
@@ -113,7 +168,7 @@ export default function ConsultantsPage() {
             title: t('created_at'),
             dataIndex: 'linkedAt',
             key: 'linkedAt',
-            render: (v) => v ? dayjs(v).format('DD.MM.YYYY') : '—',
+            render: (v) => v ? dayjs(v).format('DD.MM.YYYY') : '-',
         },
         {
             title: '',
@@ -138,13 +193,6 @@ export default function ConsultantsPage() {
             ),
         },
     ];
-
-    const statusColor = (status) => {
-        if (status === 'accepted') return 'green';
-        if (status === 'rejected') return 'red';
-        if (status === 'pending') return 'gold';
-        return 'default';
-    };
 
     const invitationColumns = [
         {
@@ -186,6 +234,53 @@ export default function ConsultantsPage() {
             key: 'respondedAt',
             render: (v) => v ? dayjs(v).format('DD.MM.YYYY HH:mm') : '-',
         },
+        {
+            title: '',
+            key: 'actions',
+            render: (_, record) => record.status !== 'accepted' ? (
+                <Popconfirm
+                    title={t('confirm_delete') || "O'chirishni tasdiqlaysizmi?"}
+                    okText={t('yes') || 'Ha'}
+                    cancelText={t('cancel')}
+                    onConfirm={() => handleDeleteInvitation(record)}
+                >
+                    <Button
+                        danger
+                        size="small"
+                        icon={<DeleteOutlined />}
+                        loading={deletingInvitationId === record.id}
+                    >
+                        {t('delete') || "O'chirish"}
+                    </Button>
+                </Popconfirm>
+            ) : null,
+        },
+    ];
+
+    const priceHistoryColumns = [
+        {
+            title: t('effective_from'),
+            dataIndex: 'effectiveFrom',
+            key: 'effectiveFrom',
+            render: (v) => v ? dayjs(v).format('DD.MM.YYYY') : '-',
+        },
+        {
+            title: t('price_per_session'),
+            dataIndex: 'newPrice',
+            key: 'newPrice',
+            render: (v, record) => (
+                <Space direction="vertical" size={0}>
+                    <Text strong>{Number(v || 0).toLocaleString()} UZS</Text>
+                    {record.isActiveToday && <Tag color="green">Bugun amal qiladi</Tag>}
+                </Space>
+            ),
+        },
+        {
+            title: t('created_at'),
+            dataIndex: 'changedAt',
+            key: 'changedAt',
+            render: (v) => v ? dayjs(v).format('DD.MM.YYYY HH:mm') : '-',
+        },
     ];
 
     return (
@@ -211,7 +306,7 @@ export default function ConsultantsPage() {
                         columns={columns}
                         loading={loading}
                         pagination={{ pageSize: 20 }}
-                        scroll={{ x: 800 }}
+                        scroll={{ x: 900 }}
                     />
 
                     <Divider />
@@ -226,7 +321,7 @@ export default function ConsultantsPage() {
                         columns={invitationColumns}
                         loading={sentLoading}
                         pagination={{ pageSize: 10 }}
-                        scroll={{ x: 900 }}
+                        scroll={{ x: 1000 }}
                     />
                 </div>
             </div>
@@ -254,9 +349,35 @@ export default function ConsultantsPage() {
                         label={t('effective_from')}
                         rules={[{ required: true, message: t('not_empty') }]}
                     >
-                        <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+                        <DatePicker
+                            style={{ width: '100%' }}
+                            format="DD.MM.YYYY"
+                            disabledDate={(current) => current && current < dayjs().startOf('day')}
+                        />
                     </Form.Item>
                 </Form>
+            </Modal>
+
+            <Modal
+                className="consultation-modal"
+                open={priceHistoryModal}
+                title={selectedConsultant ? `${selectedConsultant.fullName} - narxlar tarixi` : 'Narxlar tarixi'}
+                onCancel={() => setPriceHistoryModal(false)}
+                footer={null}
+                width={720}
+            >
+                {priceHistory.length === 0 && !priceHistoryLoading ? (
+                    <Empty description="Narx tarixi hali mavjud emas" />
+                ) : (
+                    <Table
+                        rowKey="id"
+                        dataSource={priceHistory}
+                        columns={priceHistoryColumns}
+                        loading={priceHistoryLoading}
+                        pagination={false}
+                        scroll={{ x: 560 }}
+                    />
+                )}
             </Modal>
         </div>
     );

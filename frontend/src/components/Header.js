@@ -11,6 +11,7 @@ import { formatHeaderLastname } from '../tools/formatters'
 import { FaHome } from 'react-icons/fa'
 import { MdChevronRight } from 'react-icons/md'
 import { buildCrumbs } from '../tools/breadcrumbs'
+import VideoCallHeaderIndicator from './video/VideoCallHeaderIndicator'
 
 export default function Header() {
   const { open_menu, setopen_menu, setuser_id, setuser, user, setopen_admin_modal } = useStore();
@@ -67,6 +68,7 @@ export default function Header() {
       </nav>
 
       <div className='lang_exit'>
+        <VideoCallHeaderIndicator />
         <div className='header_others'>
           <ChangeLangs />
         </div>

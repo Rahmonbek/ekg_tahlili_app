@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
     LiveKitRoom,
     RoomAudioRenderer,
@@ -6,9 +6,10 @@ import {
     VideoTrack,
     useLocalParticipant,
     useRoomContext,
+    useConnectionState,
 } from '@livekit/components-react';
 import '@livekit/components-styles';
-import { Track } from 'livekit-client';
+import { Track, ConnectionState, RoomEvent } from 'livekit-client';
 import { Avatar, Typography } from 'antd';
 import {
     AudioOutlined,
@@ -31,6 +32,8 @@ const { Text } = Typography;
 function TelegramLayout({ roomName, onLeave }) {
     const { localParticipant } = useLocalParticipant();
     const room = useRoomContext();
+    const connectionState = useConnectionState();
+    const leavingRef = useRef(false);
 
     // Kamera treklari
     const cameraTracks = useTracks(
@@ -51,6 +54,31 @@ function TelegramLayout({ roomName, onLeave }) {
     const [screenOn, setScreenOn] = useState(false);
     const [cameraDevices, setCameraDevices] = useState([]);
     const [cameraIndex, setCameraIndex] = useState(0);
+
+    // Ulanish tayyor bo'lganda kamera va mikrofonni yoqish (PublishTrackError oldini olish)
+    useEffect(() => {
+        if (connectionState !== ConnectionState.Connected) return;
+        localParticipant?.enableCameraAndMicrophone().catch(() => {});
+    }, [connectionState, localParticipant]);
+
+    // Remote ishtirokchi chiqib ketganda avtomatik tugatish (auto-disconnect fallback)
+    const handleLeave = useCallback(async () => {
+        if (leavingRef.current) return;
+        leavingRef.current = true;
+        try { await room.disconnect(); } catch { }
+        onLeave();
+    }, [room, onLeave]);
+
+    useEffect(() => {
+        if (!room) return;
+        const onParticipantDisconnected = () => {
+            if (room.remoteParticipants.size === 0 && !leavingRef.current) {
+                handleLeave();
+            }
+        };
+        room.on(RoomEvent.ParticipantDisconnected, onParticipantDisconnected);
+        return () => { room.off(RoomEvent.ParticipantDisconnected, onParticipantDisconnected); };
+    }, [room, handleLeave]);
 
     const toggleMic = useCallback(async () => {
         const next = !micOn;
@@ -85,11 +113,6 @@ function TelegramLayout({ roomName, onLeave }) {
         await localParticipant?.setCameraEnabled(true, { deviceId: devices[nextIndex].deviceId });
         setCamOn(true);
     }, [cameraDevices, cameraIndex, localParticipant]);
-
-    const handleLeave = useCallback(async () => {
-        try { await room.disconnect(); } catch { }
-        onLeave();
-    }, [room, onLeave]);
 
     return (
         <div className="nmed-tg-root">
@@ -207,14 +230,18 @@ function TelegramLayout({ roomName, onLeave }) {
 export default function LiveKitRoomView({ embedded = false }) {
     const { videoCall, setVideoCall } = useStore();
     const { activeRoom } = videoCall;
+    const disconnectedRef = useRef(false);
 
     const handleDisconnect = useCallback(async () => {
+        if (disconnectedRef.current) return;
+        disconnectedRef.current = true;
+        const roomName = useStore.getState().videoCall.activeRoom?.roomName;
         try {
-            await endCall(activeRoom?.roomName);
-            await endVideoCall(activeRoom?.roomName);
+            await endCall(roomName);
+            await endVideoCall(roomName);
         } catch { }
         setVideoCall({ activeRoom: null, incomingCall: null, isCalling: false });
-    }, [activeRoom, setVideoCall]);
+    }, [setVideoCall]);
 
     if (!activeRoom) return null;
 
@@ -224,8 +251,8 @@ export default function LiveKitRoomView({ embedded = false }) {
                 token={activeRoom.token}
                 serverUrl={activeRoom.liveKitUrl}
                 connect={true}
-                audio={true}
-                video={true}
+                audio={false}
+                video={false}
                 onDisconnected={handleDisconnect}
                 style={{ flex: 1, minHeight: 0 }}
             >

@@ -120,7 +120,7 @@ export default function HolterAnalyzer() {
             analyzePromise: analyzeHolterFile(formData),
         });
         retryAnalyse();
-    }, [state, patcient, user, selectedDoctors, selectedMainDoctor, runInBackground, t, retryAnalyse]);
+    }, [state, patcient, user, selectedDoctors, selectedMainDoctor, runInBackground, t]);
 
     // ─── Retry / Reset ───
     const retryAnalyse = useCallback(() => {

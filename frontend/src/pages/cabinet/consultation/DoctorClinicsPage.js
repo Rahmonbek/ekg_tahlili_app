@@ -2,12 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
-    Button, Table, Tag, message, Typography, Divider, Space, Popconfirm
+    Button, Table, Tag, message, Typography, Divider, Space, Popconfirm, Modal, Empty
 } from 'antd';
-import { HistoryOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { HistoryOutlined, CheckOutlined, CloseOutlined, EyeOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import {
-    getMyInvitations, acceptInvitation, rejectInvitation, getMyClinics, getConsultationBadgeCounts
+    getMyInvitations,
+    acceptInvitation,
+    rejectInvitation,
+    getMyClinics,
+    getConsultationBadgeCounts,
+    getDoctorClinicPriceHistory
 } from '../../../host/requests/ConsultationRequest';
 import { useStore } from '../../../store/Store';
 import './Consultation.css';
@@ -30,6 +35,10 @@ export default function DoctorClinicsPage() {
     const [clinics, setClinics] = useState([]);
     const [clinicsLoading, setClinicsLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState(null);
+    const [priceHistoryModal, setPriceHistoryModal] = useState(false);
+    const [selectedClinic, setSelectedClinic] = useState(null);
+    const [priceHistory, setPriceHistory] = useState([]);
+    const [priceHistoryLoading, setPriceHistoryLoading] = useState(false);
 
     useEffect(() => {
         loadInvitations();
@@ -89,6 +98,21 @@ export default function DoctorClinicsPage() {
         }
     };
 
+    const openPriceHistoryModal = async (record) => {
+        setSelectedClinic(record);
+        setPriceHistory([]);
+        setPriceHistoryModal(true);
+        setPriceHistoryLoading(true);
+        try {
+            const res = await getDoctorClinicPriceHistory(record.clinicConsultantId);
+            setPriceHistory(res.data || []);
+        } catch {
+            message.error(t('error'));
+        } finally {
+            setPriceHistoryLoading(false);
+        }
+    };
+
     const invStatusLabel = (status) => {
         const map = {
             pending: t('cons_status_created'),
@@ -108,13 +132,13 @@ export default function DoctorClinicsPage() {
             title: t('price_per_session'),
             dataIndex: 'pricePerSession',
             key: 'pricePerSession',
-            render: (v) => v != null ? `${Number(v).toLocaleString()} UZS` : '—',
+            render: (v) => v != null ? `${Number(v).toLocaleString()} UZS` : '-',
         },
         {
             title: t('created_at'),
             dataIndex: 'invitedAt',
             key: 'invitedAt',
-            render: (v) => v ? dayjs(v).format('DD.MM.YYYY') : '—',
+            render: (v) => v ? dayjs(v).format('DD.MM.YYYY') : '-',
         },
         {
             title: t('ecg_status'),
@@ -177,13 +201,23 @@ export default function DoctorClinicsPage() {
             title: t('price_per_session'),
             dataIndex: 'currentPrice',
             key: 'currentPrice',
-            render: (v) => v != null ? `${Number(v).toLocaleString()} UZS` : '—',
+            render: (v, record) => (
+                <Space size={6}>
+                    <Text strong>{v != null ? `${Number(v).toLocaleString()} UZS` : '-'}</Text>
+                    <Button
+                        size="small"
+                        className="table_view_btn"
+                        icon={<EyeOutlined />}
+                        onClick={() => openPriceHistoryModal(record)}
+                    />
+                </Space>
+            ),
         },
         {
             title: t('created_at'),
             dataIndex: 'linkedAt',
             key: 'linkedAt',
-            render: (v) => v ? dayjs(v).format('DD.MM.YYYY') : '—',
+            render: (v) => v ? dayjs(v).format('DD.MM.YYYY') : '-',
         },
         {
             title: t('total_consultations'),
@@ -202,6 +236,32 @@ export default function DoctorClinicsPage() {
                     {t('consultation_history')}
                 </Button>
             ),
+        },
+    ];
+
+    const priceHistoryColumns = [
+        {
+            title: t('effective_from'),
+            dataIndex: 'effectiveFrom',
+            key: 'effectiveFrom',
+            render: (v) => v ? dayjs(v).format('DD.MM.YYYY') : '-',
+        },
+        {
+            title: t('price_per_session'),
+            dataIndex: 'newPrice',
+            key: 'newPrice',
+            render: (v, record) => (
+                <Space direction="vertical" size={0}>
+                    <Text strong>{Number(v || 0).toLocaleString()} UZS</Text>
+                    {record.isActiveToday && <Tag color="green">Bugun amal qiladi</Tag>}
+                </Space>
+            ),
+        },
+        {
+            title: t('created_at'),
+            dataIndex: 'changedAt',
+            key: 'changedAt',
+            render: (v) => v ? dayjs(v).format('DD.MM.YYYY HH:mm') : '-',
         },
     ];
 
@@ -237,10 +297,32 @@ export default function DoctorClinicsPage() {
                         columns={clinicColumns}
                         loading={clinicsLoading}
                         pagination={{ pageSize: 10 }}
-                        scroll={{ x: 700 }}
+                        scroll={{ x: 760 }}
                     />
                 </div>
             </div>
+
+            <Modal
+                className="consultation-modal"
+                open={priceHistoryModal}
+                title={selectedClinic ? `${selectedClinic.clinicName} - narxlar tarixi` : 'Narxlar tarixi'}
+                onCancel={() => setPriceHistoryModal(false)}
+                footer={null}
+                width={720}
+            >
+                {priceHistory.length === 0 && !priceHistoryLoading ? (
+                    <Empty description="Narx tarixi hali mavjud emas" />
+                ) : (
+                    <Table
+                        rowKey="id"
+                        dataSource={priceHistory}
+                        columns={priceHistoryColumns}
+                        loading={priceHistoryLoading}
+                        pagination={false}
+                        scroll={{ x: 560 }}
+                    />
+                )}
+            </Modal>
         </div>
     );
 }
