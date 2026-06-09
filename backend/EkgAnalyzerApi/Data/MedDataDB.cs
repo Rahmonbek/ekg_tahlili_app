@@ -48,6 +48,8 @@ namespace EkgAnalyzerApi.Data
         public DbSet<ParasitologyResults> ParasitologyResults { get; set; }
         public DbSet<AnalysisDiagnosis> AnalysisDiagnoses { get; set; }
         public DbSet<VideoCallSession> VideoCallSessions { get; set; }
+        public DbSet<VideoConference> VideoConferences { get; set; }
+        public DbSet<VideoConferenceParticipant> VideoConferenceParticipants { get; set; }
 
         // Online Konsultatsiya
         public DbSet<ConsultantInvitation> ConsultantInvitations { get; set; }

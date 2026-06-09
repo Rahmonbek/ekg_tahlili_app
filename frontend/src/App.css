@@ -119,14 +119,21 @@ body {
 }
 
 .login_bottom a,
-.reset_pass_text a {
+.reset_pass_text a,
+.reset_pass_text button {
   color: var(--back_color);
   transition: 0.3s;
   margin-left: 5px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
 }
 
 .login_bottom a:hover,
-.reset_pass_text a:hover {
+.reset_pass_text a:hover,
+.reset_pass_text button:hover {
   color: var(--back_hover_color);
 }
 

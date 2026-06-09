@@ -1,5 +1,4 @@
 import { Button, Col, Form, Input, message, Row, Tooltip } from 'antd';
-import Cleave from 'cleave.js/react';
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { Select } from 'antd';
@@ -12,6 +11,7 @@ import { checkusername } from '../../../../../host/requests/AuthRequest';
 import { IoMdLock } from 'react-icons/io';
 import { formatPhoneNumber, formatPhoneNumberForForm } from '../../../../../tools/formatters';
 import { useNavigate, useParams } from 'react-router-dom';
+import PhoneInput from '../../../../../components/shared/PhoneInput';
 
 export default function CreateUpdateDoctor() {
     const { t } = useTranslation();
@@ -154,7 +154,7 @@ changeRole(form.getFieldValue('role'))
              }
             
           }catch(err){
- message.danger(t("server_error"))
+ message.error(t(err?.response?.data?.message || "server_error"))
           }finally{
             setLoading(false)
           }
@@ -289,17 +289,7 @@ changeRole(form.getFieldValue('role'))
                       wrapperCol={{ span: 24 }}
                       rules={[{ required: true, message: '' }, { len: 19, message: '' }]}
                     >
-                      <Cleave
-                        options={{
-                          prefix: '+998',
-                          delimiters: [' (', ') ', '-', '-'],
-                          blocks: [4, 2, 3, 2, 2],
-                          numericOnly: true,
-                        }}
-                        placeholder="+998 (__) ___-__-__"
-                        className="ant-input claveInput"
-                        style={{ width: '100%' }}
-                      />
+                      <PhoneInput />
                     </Form.Item>
                   </Col>
                   <Col className="main_col" lg={8} xs={24} sm={24} md={24}></Col>

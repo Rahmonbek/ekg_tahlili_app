@@ -8,3 +8,18 @@ export const endVideoCall = (roomName) =>
 
 export const getOnlineDoctors = () =>
     httpGetRequest("/videocall/doctors");
+
+export const createVideoConference = (data) =>
+    httpPostRequest("/videocall/conferences", data);
+
+export const getVideoConferences = () =>
+    httpGetRequest("/videocall/conferences");
+
+export const getVideoConferenceDetail = (id) =>
+    httpGetRequest(`/videocall/conferences/${id}`);
+
+export const getVideoConferenceToken = (id) =>
+    httpPostRequest(`/videocall/conferences/${id}/token`, {});
+
+export const endVideoConference = (id) =>
+    httpPostRequest(`/videocall/conferences/${id}/end`, {});

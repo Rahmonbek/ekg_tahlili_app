@@ -1,23 +1,23 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     LiveKitRoom,
     RoomAudioRenderer,
-    useTracks,
-    VideoTrack,
     useLocalParticipant,
     useRoomContext,
+    useTracks,
+    VideoTrack,
 } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { Track } from 'livekit-client';
 import { Avatar, Typography } from 'antd';
 import {
-    AudioOutlined,
     AudioMutedOutlined,
+    AudioOutlined,
     DesktopOutlined,
-    SwapOutlined,
-    VideoCameraOutlined,
     PhoneOutlined,
+    SwapOutlined,
     UserOutlined,
+    VideoCameraOutlined,
 } from '@ant-design/icons';
 import { MdOutlineVideocamOff } from 'react-icons/md';
 import { useStore } from '../../store/Store';
@@ -27,36 +27,25 @@ import './VideoConference.css';
 
 const { Text } = Typography;
 
-// ── Telegram uslubidagi asosiy layout (LiveKitRoom konteksti ichida) ──────────
-function TelegramLayout({ roomName, onLeave }) {
+function useRoomControls(initialAudio, onLeave) {
     const { localParticipant } = useLocalParticipant();
     const room = useRoomContext();
-
-    // Kamera treklari
-    const cameraTracks = useTracks(
-        [{ source: Track.Source.Camera, withPlaceholder: true }],
-        { onlySubscribed: false }
-    );
-
-    const remoteVideoTrack = cameraTracks.find(t => !t.participant.isLocal && t.publication);
-    const localVideoTrack  = cameraTracks.find(t =>  t.participant.isLocal && t.publication);
-
-    const remoteParticipantName = cameraTracks
-        .find(t => !t.participant.isLocal)
-        ?.participant?.name ?? '';
-
-    // Mikrofon / kamera holati
-    const [micOn, setMicOn] = useState(true);
+    const [micOn, setMicOn] = useState(initialAudio);
     const [camOn, setCamOn] = useState(true);
     const [screenOn, setScreenOn] = useState(false);
     const [cameraDevices, setCameraDevices] = useState([]);
     const [cameraIndex, setCameraIndex] = useState(0);
 
+    useEffect(() => {
+        localParticipant?.setMicrophoneEnabled(initialAudio);
+        setMicOn(initialAudio);
+    }, [initialAudio, localParticipant]);
+
     const toggleMic = useCallback(async () => {
         const next = !micOn;
         await localParticipant?.setMicrophoneEnabled(next);
         setMicOn(next);
-    }, [micOn, localParticipant]);
+    }, [localParticipant, micOn]);
 
     const toggleCam = useCallback(async () => {
         const next = !camOn;
@@ -68,14 +57,14 @@ function TelegramLayout({ roomName, onLeave }) {
         const next = !screenOn;
         await localParticipant?.setScreenShareEnabled(next);
         setScreenOn(next);
-    }, [screenOn, localParticipant]);
+    }, [localParticipant, screenOn]);
 
     const switchCamera = useCallback(async () => {
         if (!navigator?.mediaDevices?.enumerateDevices) return;
 
         const devices = cameraDevices.length > 0
             ? cameraDevices
-            : (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+            : (await navigator.mediaDevices.enumerateDevices()).filter((device) => device.kind === 'videoinput');
 
         setCameraDevices(devices);
         if (devices.length <= 1) return;
@@ -87,24 +76,171 @@ function TelegramLayout({ roomName, onLeave }) {
     }, [cameraDevices, cameraIndex, localParticipant]);
 
     const handleLeave = useCallback(async () => {
-        try { await room.disconnect(); } catch { }
+        try {
+            await room.disconnect();
+        } catch {
+            // disconnect can already be in progress
+        }
         onLeave();
-    }, [room, onLeave]);
+    }, [onLeave, room]);
+
+    return {
+        micOn,
+        camOn,
+        screenOn,
+        toggleMic,
+        toggleCam,
+        toggleScreen,
+        switchCamera,
+        handleLeave,
+    };
+}
+
+function RoomControls({ controls }) {
+    return (
+        <div className="nmed-tg-controls">
+            <button
+                className={`nmed-tg-btn${controls.micOn ? '' : ' nmed-tg-btn-off'}`}
+                onClick={controls.toggleMic}
+                title={controls.micOn ? 'Mikrofonni o\'chirish' : 'Mikrofonni yoqish'}
+                type="button"
+            >
+                {controls.micOn
+                    ? <AudioOutlined style={{ fontSize: 22 }} />
+                    : <AudioMutedOutlined style={{ fontSize: 22 }} />}
+            </button>
+
+            <button
+                className="nmed-tg-btn nmed-tg-btn-end"
+                onClick={controls.handleLeave}
+                title="Qo'ng'iroqni tugatish"
+                type="button"
+            >
+                <PhoneOutlined style={{ fontSize: 26, transform: 'rotate(135deg)' }} />
+            </button>
+
+            <button
+                className={`nmed-tg-btn${controls.camOn ? '' : ' nmed-tg-btn-off'}`}
+                onClick={controls.toggleCam}
+                title={controls.camOn ? 'Kamerani o\'chirish' : 'Kamerani yoqish'}
+                type="button"
+            >
+                {controls.camOn
+                    ? <VideoCameraOutlined style={{ fontSize: 22 }} />
+                    : <MdOutlineVideocamOff size={22} />}
+            </button>
+
+            <button
+                className={`nmed-tg-btn${controls.screenOn ? ' nmed-tg-btn-off' : ''}`}
+                onClick={controls.toggleScreen}
+                title={controls.screenOn ? 'Ekran namoyishini to\'xtatish' : 'Ekranni namoyish qilish'}
+                type="button"
+            >
+                <DesktopOutlined style={{ fontSize: 22 }} />
+            </button>
+
+            <button
+                className="nmed-tg-btn"
+                onClick={controls.switchCamera}
+                title="Kamerani almashtirish"
+                type="button"
+            >
+                <SwapOutlined style={{ fontSize: 22 }} />
+            </button>
+        </div>
+    );
+}
+
+function ParticipantVideoTile({ trackRef, compact = false }) {
+    const participantName = trackRef?.participant?.name || 'Foydalanuvchi';
+    const hasVideo = Boolean(trackRef?.publication);
+
+    return (
+        <div className={`nmed-conf-tile${compact ? ' is-compact' : ''}`}>
+            {hasVideo ? (
+                <VideoTrack trackRef={trackRef} className="nmed-conf-video" />
+            ) : (
+                <div className="nmed-conf-placeholder">
+                    <Avatar size={compact ? 42 : 64} icon={<UserOutlined />} />
+                    <Text style={{ color: '#fff', fontWeight: 600 }}>{participantName}</Text>
+                    <Text style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12 }}>Kamera o'chirilgan</Text>
+                </div>
+            )}
+            <div className="nmed-conf-name">{participantName}</div>
+        </div>
+    );
+}
+
+function ConferenceLayout({ onLeave, initialAudio }) {
+    const controls = useRoomControls(initialAudio, onLeave);
+    const cameraTracks = useTracks(
+        [{ source: Track.Source.Camera, withPlaceholder: true }],
+        { onlySubscribed: false }
+    );
+    const screenTracks = useTracks(
+        [{ source: Track.Source.ScreenShare, withPlaceholder: false }],
+        { onlySubscribed: false }
+    );
+
+    const activeScreenTrack = screenTracks.find((track) => track.publication);
+    const visibleCameraTracks = useMemo(() => {
+        return [...cameraTracks].sort((a, b) => Number(a.participant.isLocal) - Number(b.participant.isLocal));
+    }, [cameraTracks]);
+
+    return (
+        <div className="nmed-conf-root">
+            <RoomAudioRenderer />
+
+            {activeScreenTrack && (
+                <div className="nmed-conf-featured">
+                    <VideoTrack trackRef={activeScreenTrack} className="nmed-conf-featured-video" />
+                    <div className="nmed-conf-featured-label">
+                        <DesktopOutlined /> {activeScreenTrack.participant?.name || 'Foydalanuvchi'} ekran namoyishi
+                    </div>
+                </div>
+            )}
+
+            <div className={`nmed-conf-grid${activeScreenTrack ? ' has-featured' : ''}`}>
+                {visibleCameraTracks.map((trackRef) => (
+                    <ParticipantVideoTile
+                        key={`${trackRef.participant.identity}-${trackRef.source}`}
+                        trackRef={trackRef}
+                        compact={Boolean(activeScreenTrack)}
+                    />
+                ))}
+            </div>
+
+            <RoomControls controls={controls} />
+        </div>
+    );
+}
+
+function TelegramLayout({ onLeave, initialAudio }) {
+    const controls = useRoomControls(initialAudio, onLeave);
+    const cameraTracks = useTracks(
+        [{ source: Track.Source.Camera, withPlaceholder: true }],
+        { onlySubscribed: false }
+    );
+    const screenTracks = useTracks(
+        [{ source: Track.Source.ScreenShare, withPlaceholder: false }],
+        { onlySubscribed: false }
+    );
+
+    const remoteScreenTrack = screenTracks.find((track) => !track.participant.isLocal && track.publication);
+    const remoteVideoTrack = cameraTracks.find((track) => !track.participant.isLocal && track.publication);
+    const localVideoTrack = cameraTracks.find((track) => track.participant.isLocal && track.publication);
+    const mainTrack = remoteScreenTrack || remoteVideoTrack;
+    const remoteParticipantName = (mainTrack || cameraTracks.find((track) => !track.participant.isLocal))
+        ?.participant?.name ?? '';
 
     return (
         <div className="nmed-tg-root">
-            {/* Audio render (ko'rinmaydi, faqat ovoz) */}
             <RoomAudioRenderer />
 
-            {/* ── Katta video — remote ishtirokchi ── */}
             <div className="nmed-tg-main">
-                {remoteVideoTrack ? (
-                    <VideoTrack
-                        trackRef={remoteVideoTrack}
-                        className="nmed-tg-main-video"
-                    />
+                {mainTrack ? (
+                    <VideoTrack trackRef={mainTrack} className="nmed-tg-main-video" />
                 ) : (
-                    /* Remote hali ulanmagan — kutish holati */
                     <div className="nmed-tg-waiting">
                         <Avatar
                             size={84}
@@ -125,22 +261,17 @@ function TelegramLayout({ roomName, onLeave }) {
                     </div>
                 )}
 
-                {/* Remote ishtirokchi ismi overlay */}
-                {remoteVideoTrack && remoteParticipantName && (
+                {mainTrack && remoteParticipantName && (
                     <div className="nmed-tg-participant-name">
-                        {remoteParticipantName}
+                        {remoteScreenTrack ? `${remoteParticipantName} ekran namoyishi` : remoteParticipantName}
                     </div>
                 )}
             </div>
 
-            {/* ── Kichkina PiP — o'z videosi ── */}
             {localVideoTrack && (
                 <div className="nmed-tg-pip">
-                    <VideoTrack
-                        trackRef={localVideoTrack}
-                        className="nmed-tg-pip-video"
-                    />
-                    {!camOn && (
+                    <VideoTrack trackRef={localVideoTrack} className="nmed-tg-pip-video" />
+                    {!controls.camOn && (
                         <div className="nmed-tg-pip-nocam">
                             <MdOutlineVideocamOff size={22} color="rgba(255,255,255,0.7)" />
                         </div>
@@ -148,73 +279,33 @@ function TelegramLayout({ roomName, onLeave }) {
                 </div>
             )}
 
-            {/* ── Tugmalar — video ustida overlay ── */}
-            <div className="nmed-tg-controls">
-                {/* Mikrofon */}
-                <button
-                    className={`nmed-tg-btn${micOn ? '' : ' nmed-tg-btn-off'}`}
-                    onClick={toggleMic}
-                    title={micOn ? 'Mikrofonni o\'chirish' : 'Mikrofonni yoqish'}
-                >
-                    {micOn
-                        ? <AudioOutlined style={{ fontSize: 22 }} />
-                        : <AudioMutedOutlined style={{ fontSize: 22 }} />
-                    }
-                </button>
-
-                {/* Tugatish — markazda, kattaroq, qizil */}
-                <button
-                    className="nmed-tg-btn nmed-tg-btn-end"
-                    onClick={handleLeave}
-                    title="Qo'ng'iroqni tugatish"
-                >
-                    <PhoneOutlined style={{ fontSize: 26, transform: 'rotate(135deg)' }} />
-                </button>
-
-                {/* Kamera */}
-                <button
-                    className={`nmed-tg-btn${camOn ? '' : ' nmed-tg-btn-off'}`}
-                    onClick={toggleCam}
-                    title={camOn ? 'Kamerani o\'chirish' : 'Kamerani yoqish'}
-                >
-                    {camOn
-                        ? <VideoCameraOutlined style={{ fontSize: 22 }} />
-                        : <MdOutlineVideocamOff size={22} />
-                    }
-                </button>
-
-                <button
-                    className={`nmed-tg-btn${screenOn ? ' nmed-tg-btn-off' : ''}`}
-                    onClick={toggleScreen}
-                    title={screenOn ? 'Ekran namoyishini to\'xtatish' : 'Ekranni namoyish qilish'}
-                >
-                    <DesktopOutlined style={{ fontSize: 22 }} />
-                </button>
-
-                <button
-                    className="nmed-tg-btn"
-                    onClick={switchCamera}
-                    title="Kamerani almashtirish"
-                >
-                    <SwapOutlined style={{ fontSize: 22 }} />
-                </button>
-            </div>
+            <RoomControls controls={controls} />
         </div>
     );
 }
 
-// ── Asosiy export ─────────────────────────────────────────────────────────────
-export default function LiveKitRoomView({ embedded = false }) {
+export default function LiveKitRoomView({
+    embedded = false,
+    endOnLeave = true,
+    onLeft,
+    layout = 'call',
+    initialAudio = true,
+}) {
     const { videoCall, setVideoCall } = useStore();
     const { activeRoom } = videoCall;
 
     const handleDisconnect = useCallback(async () => {
-        try {
-            await endCall(activeRoom?.roomName);
-            await endVideoCall(activeRoom?.roomName);
-        } catch { }
+        if (endOnLeave) {
+            try {
+                await endCall(activeRoom?.roomName);
+                await endVideoCall(activeRoom?.roomName);
+            } catch {
+                // call may already be closed by the other side
+            }
+        }
         setVideoCall({ activeRoom: null, incomingCall: null, isCalling: false });
-    }, [activeRoom, setVideoCall]);
+        onLeft?.();
+    }, [activeRoom, endOnLeave, onLeft, setVideoCall]);
 
     if (!activeRoom) return null;
 
@@ -224,15 +315,16 @@ export default function LiveKitRoomView({ embedded = false }) {
                 token={activeRoom.token}
                 serverUrl={activeRoom.liveKitUrl}
                 connect={true}
-                audio={true}
+                audio={initialAudio}
                 video={true}
                 onDisconnected={handleDisconnect}
                 style={{ flex: 1, minHeight: 0 }}
             >
-                <TelegramLayout
-                    roomName={activeRoom.roomName}
-                    onLeave={handleDisconnect}
-                />
+                {layout === 'conference' ? (
+                    <ConferenceLayout onLeave={handleDisconnect} initialAudio={initialAudio} />
+                ) : (
+                    <TelegramLayout onLeave={handleDisconnect} initialAudio={initialAudio} />
+                )}
             </LiveKitRoom>
         </div>
     );

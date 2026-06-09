@@ -237,6 +237,128 @@
 }
 
 /* ================================================================
+   VIDEO CONFERENCE GRID
+   ================================================================ */
+
+.nmed-conf-root {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+    padding-bottom: 102px;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 16% 18%, rgba(66, 200, 189, 0.18), transparent 32%),
+        radial-gradient(circle at 86% 22%, rgba(59, 130, 246, 0.14), transparent 28%),
+        #0d1929;
+}
+
+.nmed-conf-featured {
+    position: relative;
+    flex: 1.25;
+    min-height: 190px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #050b12;
+    border: 1px solid rgba(66, 200, 189, 0.24);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+}
+
+.nmed-conf-featured-video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    background: #050b12;
+}
+
+.nmed-conf-featured-label {
+    position: absolute;
+    left: 14px;
+    bottom: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    color: #fff;
+    font-weight: 700;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+}
+
+.nmed-conf-grid {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+    overflow: auto;
+    scrollbar-width: thin;
+    padding-right: 2px;
+}
+
+.nmed-conf-grid.has-featured {
+    flex: 0.78;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.nmed-conf-tile {
+    position: relative;
+    min-height: 150px;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #112033, #0a1320);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: inset 0 0 0 1px rgba(66, 200, 189, 0.04);
+}
+
+.nmed-conf-tile.is-compact {
+    min-height: 112px;
+}
+
+.nmed-conf-video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    background: #050b12;
+}
+
+.nmed-conf-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+    padding: 16px;
+}
+
+.nmed-conf-name {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    max-width: calc(100% - 20px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 5px 10px;
+    border-radius: 999px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    background: rgba(0, 0, 0, 0.52);
+    backdrop-filter: blur(8px);
+}
+
+/* ================================================================
    Kiruvchi qo'ng'iroq modali
    ================================================================ */
 
@@ -281,6 +403,67 @@
 }
 
 /* ================================================================
+   Video Conference V2 workflow
+   ================================================================ */
+
+.nmed-vc-page {
+    padding: 24px 0;
+}
+
+.nmed-vc-header,
+.nmed-vc-room-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.nmed-vc-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 4px !important;
+    color: #1a2942 !important;
+}
+
+.nmed-vc-create-card,
+.nmed-vc-room,
+.nmed-vc-analyses {
+    margin-bottom: 18px;
+}
+
+.nmed-vc-patient-alert {
+    margin: 12px 0 16px;
+}
+
+.nmed-vc-room {
+    background: #fff;
+    border: 1px solid #eef2f7;
+    border-radius: 8px;
+    padding: 18px;
+    box-shadow: 0 10px 28px rgba(26, 41, 66, 0.06);
+}
+
+.nmed-vc-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+    margin: 16px 0;
+}
+
+.nmed-vc-participant {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    background: #f8fbfd;
+    border: 1px solid #edf3f7;
+    border-radius: 8px;
+}
+
+/* ================================================================
    PLANSHET (768px — 1023px)
    ================================================================ */
 @media (max-width: 1023px) {
@@ -309,6 +492,19 @@
     .nmed-tg-btn.nmed-tg-btn-end {
         width: 60px;
         height: 60px;
+    }
+
+    .nmed-vc-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .nmed-conf-root {
+        padding: 10px;
+        padding-bottom: 92px;
+    }
+
+    .nmed-conf-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     }
 }
 
@@ -372,6 +568,49 @@
     .nmed-doctor-waiting {
         padding: 48px 16px !important;
     }
+
+    .nmed-vc-page {
+        padding: 14px 0 !important;
+    }
+
+    .nmed-vc-header,
+    .nmed-vc-room-head {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .nmed-vc-room {
+        padding: 12px;
+    }
+
+    .nmed-vc-participant {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .nmed-livekit-wrapper.is-embedded {
+        height: 430px;
+        min-height: 360px;
+    }
+
+    .nmed-conf-root {
+        padding: 8px;
+        padding-bottom: 88px;
+    }
+
+    .nmed-conf-featured {
+        min-height: 160px;
+    }
+
+    .nmed-conf-grid,
+    .nmed-conf-grid.has-featured {
+        grid-template-columns: 1fr;
+    }
+
+    .nmed-conf-tile,
+    .nmed-conf-tile.is-compact {
+        min-height: 135px;
+    }
 }
 
 /* ================================================================
@@ -400,5 +639,10 @@
     .nmed-tg-btn.nmed-tg-btn-end {
         width: 52px;
         height: 52px;
+    }
+
+    .nmed-conf-featured-label,
+    .nmed-conf-name {
+        font-size: 11px;
     }
 }

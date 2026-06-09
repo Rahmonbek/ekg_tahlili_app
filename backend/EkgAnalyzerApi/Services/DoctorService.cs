@@ -19,6 +19,13 @@ namespace EkgAnalyzerApi.Services
         {
             _context = context;
         }
+
+        private static string NormalizePhone(string? phone)
+        {
+            var digits = new string((phone ?? "").Where(char.IsDigit).ToArray());
+            if (digits.Length == 9) digits = "998" + digits;
+            return digits;
+        }
         public async Task<string> GetDefaultUserName(int user_id)
         {
             var user = await _context.Users
@@ -244,6 +251,16 @@ namespace EkgAnalyzerApi.Services
 
             if (currentUser.RoleId != _adminRoleId && currentUser.RoleId != _directorRoleId)
                 return Fail("user_has_not_permission");
+
+            dto.Phone = NormalizePhone(dto.Phone);
+            if (dto.Phone.Length != 12)
+                return Fail("phone_number_invalid");
+
+            var phoneExists = await _context.Doctors
+                .AnyAsync(d => d.Phone == dto.Phone && (dto.Id == null || d.Id != dto.Id));
+
+            if (phoneExists)
+                return Fail("phone_already_exists");
 
             Doctor doctor;
 

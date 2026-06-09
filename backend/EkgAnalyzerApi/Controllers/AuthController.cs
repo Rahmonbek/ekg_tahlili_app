@@ -7,11 +7,13 @@ public class AuthController : ControllerBase
 {
     private readonly AuthService _authService;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<AuthController> _logger;
 
-    public AuthController(AuthService authService, IConfiguration configuration)
+    public AuthController(AuthService authService, IConfiguration configuration, ILogger<AuthController> logger)
     {
         _authService = authService;
         _configuration = configuration;
+        _logger = logger;
     }
 
     // ========================= REGISTER =========================
@@ -48,7 +50,37 @@ public class AuthController : ControllerBase
             message = exists ? "username_already_exists" : "username_available"
         });
     }
-    // ========================= VERIFY EMAIL =========================
+
+    [HttpGet("check-phone")]
+    public async Task<IActionResult> CheckPhone([FromQuery] string phone, int? doctorId)
+    {
+        if (string.IsNullOrWhiteSpace(phone))
+            return BadRequest(new { message = "phone_required" });
+
+        var exists = await _authService.CheckPhoneAsync(phone, doctorId);
+
+        return Ok(new
+        {
+            exists,
+            message = exists ? "phone_already_exists" : "phone_available"
+        });
+    }
+
+    [HttpGet("check-clinic-inn")]
+    public async Task<IActionResult> CheckClinicInn([FromQuery] string clinicInn)
+    {
+        if (string.IsNullOrWhiteSpace(clinicInn))
+            return BadRequest(new { message = "clinic_inn_required" });
+
+        var exists = await _authService.CheckClinicInnAsync(clinicInn);
+
+        return Ok(new
+        {
+            exists,
+            message = exists ? "clinic_already_registered" : "clinic_available"
+        });
+    }
+    // ========================= VERIFY PHONE NUMBER =========================
     [HttpPost("verify")]
     public async Task<IActionResult> Verify([FromBody] VerifyCodeDto dto)
     {
@@ -128,5 +160,19 @@ public class AuthController : ControllerBase
         }
     }
 
+    [HttpPost("send-reset-code")]
+    public async Task<IActionResult> SendResetCode([FromBody] PhoneNumberDto dto)
+    {
+        try
+        {
+            await _authService.SendResetCodeAsync(dto);
+            return Ok(new { message = "code_sended" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Register request failed. Inner: {InnerMessage}", ex.InnerException?.Message);
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 
 }

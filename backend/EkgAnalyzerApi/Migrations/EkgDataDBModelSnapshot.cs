@@ -1947,10 +1947,10 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("Email")
+                    b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("email");
+                        .HasColumnName("phone_number");
 
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone")
@@ -2021,6 +2021,103 @@ namespace EkgAnalyzerApi.Migrations
                     b.HasIndex("RecipientId");
 
                     b.ToTable("video_call_sessions");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.VideoConference", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClinicId")
+                        .HasColumnType("integer")
+                        .HasColumnName("clinic_id");
+
+                    b.Property<int>("CreatedByAdminId")
+                        .HasColumnType("integer")
+                        .HasColumnName("created_by_admin_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("EndedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ended_at");
+
+                    b.Property<int>("PatientId")
+                        .HasColumnType("integer")
+                        .HasColumnName("patient_id");
+
+                    b.Property<string>("RoomName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("room_name");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClinicId");
+
+                    b.HasIndex("CreatedByAdminId");
+
+                    b.HasIndex("PatientId");
+
+                    b.HasIndex("RoomName")
+                        .IsUnique();
+
+                    b.ToTable("video_conferences");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.VideoConferenceParticipant", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("integer")
+                        .HasColumnName("doctor_id");
+
+                    b.Property<DateTime>("InvitedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("invited_at");
+
+                    b.Property<DateTime?>("JoinedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("joined_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<int>("VideoConferenceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("video_conference_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId");
+
+                    b.HasIndex("VideoConferenceId", "DoctorId")
+                        .IsUnique();
+
+                    b.ToTable("video_conference_participants");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.AnalysisDiagnosis", b =>
@@ -2611,6 +2708,52 @@ namespace EkgAnalyzerApi.Migrations
                     b.Navigation("Recipient");
                 });
 
+            modelBuilder.Entity("EkgAnalyzerApi.Models.VideoConference", b =>
+                {
+                    b.HasOne("EkgAnalyzerApi.Models.Clinic", "Clinic")
+                        .WithMany()
+                        .HasForeignKey("ClinicId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EkgAnalyzerApi.Models.User", "CreatedByAdmin")
+                        .WithMany()
+                        .HasForeignKey("CreatedByAdminId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EkgAnalyzerApi.Models.Patcient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Clinic");
+
+                    b.Navigation("CreatedByAdmin");
+
+                    b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.VideoConferenceParticipant", b =>
+                {
+                    b.HasOne("EkgAnalyzerApi.Models.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EkgAnalyzerApi.Models.VideoConference", "VideoConference")
+                        .WithMany("Participants")
+                        .HasForeignKey("VideoConferenceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("VideoConference");
+                });
+
             modelBuilder.Entity("EkgAnalyzerApi.Models.Clinic", b =>
                 {
                     b.Navigation("ClinicDetail");
@@ -2625,6 +2768,11 @@ namespace EkgAnalyzerApi.Migrations
                     b.Navigation("Analyses");
 
                     b.Navigation("Conclusion");
+                });
+
+            modelBuilder.Entity("EkgAnalyzerApi.Models.VideoConference", b =>
+                {
+                    b.Navigation("Participants");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.Doctor", b =>

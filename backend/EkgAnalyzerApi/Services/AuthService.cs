@@ -1,154 +1,208 @@
-using BCrypt.Net;
 using Microsoft.EntityFrameworkCore;
 using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
-using EkgAnalyzerApi.Services;
 using EkgAnalyzerApi.Constants;
+using EkgAnalyzerApi.Services;
 
 public class AuthService
 {
     private readonly MedDataDB _context;
-    private readonly IEmailService _emailService;
+    private readonly ISmsService _smsService;
     private readonly TokenService _tokenService;
     private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         MedDataDB context,
-        IEmailService emailService,
+        ISmsService smsService,
         TokenService tokenService,
         ILogger<AuthService> logger)
     {
         _context = context;
-        _emailService = emailService;
+        _smsService = smsService;
         _tokenService = tokenService;
         _logger = logger;
     }
-
-    // ========================= HELPERS =========================
 
     private string GenerateCode()
     {
         return Random.Shared.Next(1000, 9999).ToString();
     }
 
-    private async Task<VerificationCode?> GetActiveCodeByUserIdAsync(int userId)
+    private static string NormalizePhone(string? phone)
+    {
+        var digits = new string((phone ?? "").Where(char.IsDigit).ToArray());
+        if (digits.Length == 9) digits = "998" + digits;
+        return digits;
+    }
+
+    private static string NormalizeInn(string? inn)
+    {
+        return new string((inn ?? "").Where(char.IsDigit).ToArray());
+    }
+
+    private static string GetDtoPhoneNumber(string? phoneNumber, string? legacyPhone = null)
+    {
+        return !string.IsNullOrWhiteSpace(phoneNumber) ? phoneNumber : legacyPhone ?? "";
+    }
+
+    private static string InternalPhoneEmail(string phone)
+    {
+        return $"{phone}@phone.nmed.local";
+    }
+
+    private async Task<VerificationCode?> GetActiveCodeAsync(int userId, string phoneNumber)
     {
         return await _context.VerificationCodes
-            .Where(x => x.UserId == userId && !x.IsUsed)
-            .OrderByDescending(x => x.Id)
-            .FirstOrDefaultAsync();
-    }
-    public async Task<bool> CheckUsernameAsync(string username, int? user_id, string? email)
-    {
-        return await _context.Users
-            .AnyAsync(x => x.Username.ToLower() == username.ToLower() && ((user_id != null && x.Id != user_id) || (user_id == null)) && ((email != null && x.Email != email) || (email == null)));
-    }
-    private async Task<VerificationCode?> GetActiveCodeByEmailAsync(string email)
-    {
-        return await _context.VerificationCodes
-            .Where(x => x.Email == email && !x.IsUsed)
+            .Where(x => x.UserId == userId && x.PhoneNumber == phoneNumber && !x.IsUsed)
             .OrderByDescending(x => x.Id)
             .FirstOrDefaultAsync();
     }
 
-    private async Task SendVerificationCodeAsync(User user)
+    public async Task<bool> CheckUsernameAsync(string username, int? user_id, string? email)
     {
+        return await _context.Users
+            .AnyAsync(x => x.Username.ToLower() == username.ToLower() &&
+                           ((user_id != null && x.Id != user_id) || user_id == null) &&
+                           ((email != null && x.Email != email) || email == null));
+    }
+
+    public async Task<bool> CheckPhoneAsync(string phone, int? doctorId = null)
+    {
+        var normalizedPhone = NormalizePhone(phone);
+        if (normalizedPhone.Length != 12)
+            return false;
+
+        return await _context.Doctors
+            .AnyAsync(x => x.Phone == normalizedPhone && (doctorId == null || x.Id != doctorId));
+    }
+
+    public async Task<bool> CheckClinicInnAsync(string clinicInn)
+    {
+        var normalizedInn = NormalizeInn(clinicInn);
+        if (string.IsNullOrWhiteSpace(normalizedInn))
+            return false;
+
+        return await _context.ClinicDetails.AnyAsync(x => x.INN == normalizedInn);
+    }
+
+    private async Task<(string Phone, string Code)> AddVerificationCodeAsync(User user)
+    {
+        var phone = user.Doctor?.Phone ?? await _context.Doctors
+            .Where(x => x.UserId == user.Id)
+            .Select(x => x.Phone)
+            .FirstOrDefaultAsync();
+
+        phone = NormalizePhone(phone);
+        if (phone.Length != 12)
+            throw new Exception("phone_number_invalid");
+
         var code = GenerateCode();
 
         _context.VerificationCodes.Add(new VerificationCode
         {
             UserId = user.Id,
-            Email = user.Email,
+            PhoneNumber = phone,
             Code = code,
             ExpiresAt = DateTime.UtcNow.AddMinutes(10),
             IsUsed = false
         });
         await _context.SaveChangesAsync();
 
-        // Email background da yuboriladi — API ni bloklamamaslik uchun
+        return (phone, code);
+    }
+
+    private void SendSmsInBackground(string phone, string code)
+    {
         _ = Task.Run(async () =>
         {
             try
             {
-                await _emailService.SendVerificationCodeAsync(user.Email, code);
+                await _smsService.SendVerificationCodeAsync(phone, code);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Email yuborishda xato: {Email}", user.Email);
+                _logger.LogError(ex, "SMS yuborishda xato: {Phone}", phone);
             }
         });
     }
 
-    // ========================= REGISTER =========================
+    private async Task SendVerificationCodeAsync(User user)
+    {
+        var (phone, code) = await AddVerificationCodeAsync(user);
+        SendSmsInBackground(phone, code);
+    }
 
     public async Task RegisterAsync(RegisterDto dto)
     {
-        var existingUser = await _context.Users
-        .Include(x => x.Clinic)
-        .FirstOrDefaultAsync(x => x.Email == dto.Email);
-        if (await _context.Users.AnyAsync(x =>
-        x.Username == dto.Username &&
-        (existingUser == null || x.Id != existingUser.Id)))
-        {
-            throw new Exception("username_already_exists");
-        }
+        var phone = NormalizePhone(GetDtoPhoneNumber(dto.PhoneNumber, dto.Phone));
+        var clinicInn = NormalizeInn(dto.ClinicInn);
+        var internalEmail = InternalPhoneEmail(phone);
 
-        // Email mavjud va aktiv bo‘lsa
-        if (existingUser != null && existingUser.Status == true)
-        {
-            throw new Exception("email_already_exists");
-        }
+        if (phone.Length != 12)
+            throw new Exception("phone_number_invalid");
+
+        if (string.IsNullOrWhiteSpace(clinicInn))
+            throw new Exception("clinic_inn_required");
+
+        var existingDoctor = await _context.Doctors
+            .Include(x => x.User)
+                .ThenInclude(x => x.Clinic)
+                    .ThenInclude(x => x.ClinicDetail)
+            .FirstOrDefaultAsync(x => x.Phone == phone);
+
+        if (existingDoctor?.User?.Status == true)
+            throw new Exception("phone_already_exists");
+
+        var existingClinicInn = await _context.ClinicDetails
+            .AnyAsync(x => x.INN == clinicInn &&
+                           (existingDoctor == null || x.ClinicId != existingDoctor.User.ClinicId));
+
+        if (existingClinicInn)
+            throw new Exception("clinic_already_registered");
 
         using var transaction = await _context.Database.BeginTransactionAsync();
+        var committed = false;
 
         try
         {
             User user;
             Doctor doctor;
 
-            // 🔁 Email bor, lekin status = false → UPDATE
-            if (existingUser != null && existingUser.Status == false)
+            if (existingDoctor?.User != null && existingDoctor.User.Status == false)
             {
-                user = existingUser;
+                user = existingDoctor.User;
+                doctor = existingDoctor;
 
-                user.Username = dto.Username;
+                user.Username = phone;
+                user.Email = internalEmail;
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
                 user.RoleId = RoleConstants.Admin;
 
                 if (user.Clinic == null)
                 {
-                    user.Clinic = new Clinic
-                    {
-                        ClinicName = ""
-                    };
+                    user.Clinic = new Clinic { ClinicName = "" };
                 }
 
-                doctor = await _context.Doctors
-                    .FirstOrDefaultAsync(d => d.UserId == user.Id);
-
-                if (doctor == null)
-                {
-                    doctor = new Doctor
-                    {
-                        User = user,
-                        Gender = true
-                    };
-                    _context.Doctors.Add(doctor);
-                }
+                user.Clinic.ClinicDetail ??= new ClinicDetail();
+                user.Clinic.ClinicDetail.INN = clinicInn;
+                doctor.Phone = phone;
             }
             else
             {
-                // 🆕 Yangi user
                 var clinic = new Clinic
                 {
-                    ClinicName = ""
+                    ClinicName = "",
+                    ClinicDetail = new ClinicDetail
+                    {
+                        INN = clinicInn
+                    }
                 };
 
                 user = new User
                 {
-                    Username = dto.Username,
-                    Email = dto.Email,
+                    Username = phone,
+                    Email = internalEmail,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                     Status = false,
                     RoleId = RoleConstants.Admin,
@@ -158,7 +212,8 @@ public class AuthService
                 doctor = new Doctor
                 {
                     User = user,
-                    Gender = true
+                    Gender = true,
+                    Phone = phone
                 };
 
                 _context.Clinics.Add(clinic);
@@ -168,8 +223,7 @@ public class AuthService
 
             await _context.SaveChangesAsync();
 
-            // DoctorPosition bo‘lmasa qo‘shiladi
-            bool hasPosition = await _context.DoctorPositions
+            var hasPosition = await _context.DoctorPositions
                 .AnyAsync(x => x.DoctorId == doctor.Id);
 
             if (!hasPosition)
@@ -183,28 +237,31 @@ public class AuthService
                 await _context.SaveChangesAsync();
             }
 
-            await transaction.CommitAsync();
+            var sms = await AddVerificationCodeAsync(user);
 
-            await SendVerificationCodeAsync(user);
+            await transaction.CommitAsync();
+            committed = true;
+            SendSmsInBackground(sms.Phone, sms.Code);
         }
         catch
         {
-            await transaction.RollbackAsync();
+            if (!committed)
+                await transaction.RollbackAsync();
             throw;
         }
     }
 
-    // ========================= VERIFY EMAIL =========================
-
     public async Task<VerifyCodeResult> VerifyCodeAsync(VerifyCodeDto dto)
     {
+        var phone = NormalizePhone(GetDtoPhoneNumber(dto.PhoneNumber, dto.Phone));
         var user = await _context.Users
-            .FirstOrDefaultAsync(x => x.Email == dto.Email);
+            .Include(x => x.Doctor)
+            .FirstOrDefaultAsync(x => x.Doctor != null && x.Doctor.Phone == phone);
 
         if (user == null)
             return Fail("user_not_found");
 
-        var code = await GetActiveCodeByUserIdAsync(user.Id);
+        var code = await GetActiveCodeAsync(user.Id, phone);
 
         if (code == null)
             return Fail("retry_register");
@@ -226,25 +283,24 @@ public class AuthService
         };
     }
 
-    // ========================= LOGIN =========================
-
     public async Task<VerifyCodeResult> LoginAsync(LoginDto dto)
     {
+        var phone = NormalizePhone(GetDtoPhoneNumber(dto.PhoneNumber, dto.Phone));
+
         var user = await _context.Users
             .Include(u => u.Clinic)
-            .FirstOrDefaultAsync(x => x.Username == dto.Username);
+            .Include(u => u.Doctor)
+            .FirstOrDefaultAsync(x => x.Doctor != null && x.Doctor.Phone == phone);
 
         if (user == null)
             return Fail("user_not_found");
 
         if (!user.Status)
-            return Fail("email_not_verified");
+            return Fail("phone_not_verified");
 
         if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
             return Fail("invalid_password");
 
-        // SuperAdmin (1), Admin (2), Direktor (3) uchun klinika bloklanmaydi
-        // Shifokor (4), Hamshira (5) uchun klinika is_active tekshiriladi
         bool isPrivileged = user.RoleId == RoleConstants.SuperAdmin
                          || user.RoleId == RoleConstants.Admin
                          || user.RoleId == RoleConstants.Director;
@@ -261,17 +317,30 @@ public class AuthService
         };
     }
 
-    // ========================= CHANGE PASSWORD =========================
-
-    public async Task ChangePasswordAsync(ChangePasswordDto dto)
+    public async Task SendResetCodeAsync(PhoneNumberDto dto)
     {
+        var phone = NormalizePhone(GetDtoPhoneNumber(dto.PhoneNumber, dto.Phone));
         var user = await _context.Users
-            .FirstOrDefaultAsync(x => x.Email == dto.Email);
+            .Include(x => x.Doctor)
+            .FirstOrDefaultAsync(x => x.Doctor != null && x.Doctor.Phone == phone);
 
         if (user == null)
             throw new Exception("user_not_found");
 
-        var code = await GetActiveCodeByEmailAsync(dto.Email);
+        await SendVerificationCodeAsync(user);
+    }
+
+    public async Task ChangePasswordAsync(ChangePasswordDto dto)
+    {
+        var phone = NormalizePhone(GetDtoPhoneNumber(dto.PhoneNumber, dto.Phone));
+        var user = await _context.Users
+            .Include(x => x.Doctor)
+            .FirstOrDefaultAsync(x => x.Doctor != null && x.Doctor.Phone == phone);
+
+        if (user == null)
+            throw new Exception("user_not_found");
+
+        var code = await GetActiveCodeAsync(user.Id, phone);
 
         if (code == null ||
             code.Code != dto.Code ||
@@ -279,12 +348,11 @@ public class AuthService
             throw new Exception("invalid_or_expired_code");
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+        user.PasswordPlain = dto.NewPassword;
         code.IsUsed = true;
 
         await _context.SaveChangesAsync();
     }
-
-    // ========================= RESULT HELPER =========================
 
     private VerifyCodeResult Fail(string message)
     {

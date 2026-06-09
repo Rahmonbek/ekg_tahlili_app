@@ -11,8 +11,8 @@ namespace EkgAnalyzerApi.Models
         [Column("id")]
         public int Id { get; set; }
         
-        [Column("email")]
-        public string Email { get; set; } = default!;
+        [Column("phone_number")]
+        public string PhoneNumber { get; set; } = default!;
 
         [Column("user_id")]
         public int UserId { get; set; }

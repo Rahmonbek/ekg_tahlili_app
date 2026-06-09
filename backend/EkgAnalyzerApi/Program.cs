@@ -25,6 +25,7 @@ builder.Services.AddScoped<ECGAnalyseService>();
 builder.Services.AddScoped<MedicalDiagnoseService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddHttpClient<ISmsService, EskizSmsService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ClinicService>();;

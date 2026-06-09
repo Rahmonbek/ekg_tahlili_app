@@ -31,7 +31,7 @@ public class DoctorController : ControllerBase
             return NotFound(new { message = "error" });
         if (clinic.Status == false)
         {
-            return BadRequest(new { message = "error" });
+            return BadRequest(new { message = clinic.Message ?? "error" });
         }
 
         return Ok(clinic);
