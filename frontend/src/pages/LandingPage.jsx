@@ -322,6 +322,11 @@ function Icon({ name, className }) {
 
 function useReveal() {
   useEffect(() => {
+    const isVisibleNow = (item) => {
+      const rect = item.getBoundingClientRect();
+      return rect.top < window.innerHeight * 0.92 && rect.bottom > 0;
+    };
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -330,11 +335,18 @@ function useReveal() {
           }
         });
       },
-      { threshold: 0.14 }
+      { threshold: 0.04, rootMargin: '0px 0px -8% 0px' }
     );
 
     const items = document.querySelectorAll('.reveal');
-    items.forEach((item) => observer.observe(item));
+    requestAnimationFrame(() => {
+      items.forEach((item) => {
+        if (isVisibleNow(item)) {
+          item.classList.add('in');
+        }
+        observer.observe(item);
+      });
+    });
 
     return () => observer.disconnect();
   }, []);
@@ -1081,7 +1093,7 @@ function Stats() {
             <p className="landing-map-note">Rang to‘qroq bo‘lsa, shu hududda faol klinikalar ko‘proq.</p>
             <div className="landing-map" onMouseLeave={() => setTip(null)}>
               {regions.map((region) => {
-                const opacity = 0.16 + 0.8 * (region.count / maxRegion);
+                const opacity = 0.34 + 0.64 * (region.count / maxRegion);
                 return (
                   <button
                     key={region.name}

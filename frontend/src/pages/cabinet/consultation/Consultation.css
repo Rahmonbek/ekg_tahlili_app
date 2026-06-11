@@ -392,6 +392,10 @@
     border: 1px dashed #bfeee7;
     border-radius: 10px;
     background: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    width:100%;
+    align-items: center;
 }
 
 .cons-analysis-inline-result .old_analyse {

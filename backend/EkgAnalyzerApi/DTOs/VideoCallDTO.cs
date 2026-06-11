@@ -27,11 +27,14 @@ namespace EkgAnalyzerApi.DTOs
         public int Id { get; set; }
         public int DoctorId { get; set; }
         public int? DoctorUserId { get; set; }
+        public int? UserId { get; set; }
+        public bool IsAdmin { get; set; }
         public string FullName { get; set; } = "";
         public string? Position { get; set; }
         public string? Phone { get; set; }
         public string Status { get; set; } = "";
         public DateTime? JoinedAt { get; set; }
+        public DateTime? LeftAt { get; set; }
         public bool IsOnline { get; set; }
     }
 

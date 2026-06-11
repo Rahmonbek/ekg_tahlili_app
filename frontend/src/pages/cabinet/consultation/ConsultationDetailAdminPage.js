@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     Button, Tag, message, Typography, Descriptions, Divider, Spin, Space
 } from 'antd';
-import { ArrowLeftOutlined, EyeOutlined, VideoCameraOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, DownloadOutlined, EyeOutlined, VideoCameraOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { getConsultationDetailAdmin, getConsultationTokenAdmin } from '../../../host/requests/ConsultationRequest';
+import { downloadReport } from '../../../host/requests/ReportRequest';
 import { initiateConsultationCall } from '../../../hooks/videoSignalRService';
 import LiveKitRoomView from '../../../components/video/LiveKitRoom';
 import { useStore } from '../../../store/Store';
@@ -33,23 +34,23 @@ export default function ConsultationDetailAdminPage() {
     const [tokenLoading, setTokenLoading] = useState(false);
     const [expandedAnalysisKey, setExpandedAnalysisKey] = useState(null);
 
-    useEffect(() => {
-        loadDetail();
-        const interval = setInterval(loadDetail, 15000);
-        return () => clearInterval(interval);
-    }, [id]);
-
-    const loadDetail = async () => {
-        setLoading(true);
+    const loadDetail = useCallback(async ({ silent = false } = {}) => {
+        if (!silent) setLoading(true);
         try {
             const res = await getConsultationDetailAdmin(id);
             setDetail(res.data);
         } catch {
-            message.error(t('error'));
+            if (!silent) message.error(t('error'));
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
-    };
+    }, [id, t]);
+
+    useEffect(() => {
+        loadDetail();
+        const interval = setInterval(() => loadDetail({ silent: true }), 30000);
+        return () => clearInterval(interval);
+    }, [id, loadDetail]);
 
     const handleVideoCall = async () => {
         setTokenLoading(true);
@@ -71,6 +72,14 @@ export default function ConsultationDetailAdminPage() {
             message.error(t('error'));
         } finally {
             setTokenLoading(false);
+        }
+    };
+
+    const handleDownloadPdf = async () => {
+        try {
+            await downloadReport('consultation', id);
+        } catch {
+            message.error(t('error'));
         }
     };
 
@@ -118,6 +127,11 @@ export default function ConsultationDetailAdminPage() {
                         <Tag color={STATUS_COLORS[detail.status] || 'default'} style={{ fontSize: 14, padding: '4px 12px' }}>
                             {statusLabel(detail.status)}
                         </Tag>
+                        {detail.conclusion && (
+                            <Button icon={<DownloadOutlined />} onClick={handleDownloadPdf}>
+                                PDF
+                            </Button>
+                        )}
                         {canCall && (
                             <Button
                                 type="primary"

@@ -1,4 +1,4 @@
-import { httpPostRequest, httpGetRequest } from "../Host";
+import { httpPostRequest, httpGetRequest, httpDeleteRequest } from "../Host";
 
 export const getVideoToken = (roomName, participantName) =>
     httpPostRequest("/videocall/token", { roomName, participantName });
@@ -23,3 +23,9 @@ export const getVideoConferenceToken = (id) =>
 
 export const endVideoConference = (id) =>
     httpPostRequest(`/videocall/conferences/${id}/end`, {});
+
+export const leaveVideoConference = (id) =>
+    httpPostRequest(`/videocall/conferences/${id}/leave`, {});
+
+export const deleteVideoConference = (id) =>
+    httpDeleteRequest(`/videocall/conferences/${id}`);

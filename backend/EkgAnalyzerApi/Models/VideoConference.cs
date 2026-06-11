@@ -31,6 +31,12 @@ namespace EkgAnalyzerApi.Models
         [Column("started_at")]
         public DateTime? StartedAt { get; set; }
 
+        [Column("admin_joined_at")]
+        public DateTime? AdminJoinedAt { get; set; }
+
+        [Column("admin_left_at")]
+        public DateTime? AdminLeftAt { get; set; }
+
         [Column("ended_at")]
         public DateTime? EndedAt { get; set; }
 

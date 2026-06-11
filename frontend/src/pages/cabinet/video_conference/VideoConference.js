@@ -1,8 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Card, Descriptions, Empty, Form, message, Space, Table, Tag, Typography } from 'antd';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Alert, Button, Card, Descriptions, Empty, Form, message, Popconfirm, Space, Table, Tag, Typography } from 'antd';
 import {
+    ArrowLeftOutlined,
     CheckCircleOutlined,
     ClockCircleOutlined,
+    DeleteOutlined,
+    EyeOutlined,
     PlusOutlined,
     PoweroffOutlined,
     ReloadOutlined,
@@ -14,14 +18,17 @@ import { useTranslation } from 'react-i18next';
 import { useStore } from '../../../store/Store';
 import {
     createVideoConference,
+    deleteVideoConference,
     endVideoConference,
     getVideoConferenceDetail,
     getVideoConferences,
     getVideoConferenceToken,
+    leaveVideoConference,
 } from '../../../host/requests/VideoCallRequest';
 import { findConsultationPatient, getMyConsultants } from '../../../host/requests/ConsultationRequest';
 import PatientSearchSection from '../../../components/shared/PatientSearchSection';
 import LiveKitRoomView from '../../../components/video/LiveKitRoom';
+import ConsultationAnalysisInlineView, { normalizeAnalysisType } from '../consultation/ConsultationAnalysisInlineView';
 import '../../../components/video/VideoConference.css';
 
 const { Title, Text } = Typography;
@@ -32,11 +39,23 @@ const statusColors = {
     ended: 'default',
 };
 
+const participantStatusMeta = {
+    joined: { color: 'green', label: "Qo'shilgan" },
+    invited: { color: 'blue', label: 'Taklif qilingan' },
+    left: { color: 'default', label: 'Chiqib ketgan' },
+};
+
 export default function VideoConference() {
     const { t } = useTranslation();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const params = useParams();
     const { user, videoCall, setVideoCall } = useStore();
     const isAdmin = user?.roleId === 2 || user?.roleId === 3;
     const isDoctor = user?.roleId === 4;
+    const routeConferenceId = Number(params.id || 0);
+    const isRoomRoute = routeConferenceId > 0;
+    const autoJoin = new URLSearchParams(location.search).get('join') === '1';
 
     const [searchForm] = Form.useForm();
     const [loading, setLoading] = useState(false);
@@ -46,6 +65,7 @@ export default function VideoConference() {
     const [selectedDoctors, setSelectedDoctors] = useState([]);
     const [conferences, setConferences] = useState([]);
     const [activeDetail, setActiveDetail] = useState(null);
+    const [expandedAnalysisKey, setExpandedAnalysisKey] = useState(null);
 
     const loadConferences = useCallback(async () => {
         try {
@@ -127,7 +147,7 @@ export default function VideoConference() {
         }
     };
 
-    const openConference = useCallback(async (id, join = false) => {
+    const loadConferenceDetail = useCallback(async (id, join = false) => {
         try {
             setLoading(true);
             const detailRes = await getVideoConferenceDetail(id);
@@ -136,9 +156,11 @@ export default function VideoConference() {
 
             if (join) {
                 const tokenRes = await getVideoConferenceToken(id);
+                const freshDetailRes = await getVideoConferenceDetail(id);
+                setActiveDetail(freshDetailRes.data);
                 setVideoCall({
                     activeRoom: {
-                        roomName: detail.roomName,
+                        roomName: freshDetailRes.data?.roomName || detail.roomName,
                         token: tokenRes.data.token,
                         liveKitUrl: tokenRes.data.liveKitUrl,
                         conferenceId: id,
@@ -156,6 +178,48 @@ export default function VideoConference() {
         }
     }, [loadConferences, setVideoCall, t]);
 
+    const openConference = useCallback((id, join = false) => {
+        navigate(`/video-conference/${id}${join ? '?join=1' : ''}`);
+    }, [navigate]);
+
+    useEffect(() => {
+        if (!isRoomRoute) {
+            setActiveDetail(null);
+            setExpandedAnalysisKey(null);
+            return;
+        }
+
+        loadConferenceDetail(routeConferenceId, autoJoin).finally(() => {
+            if (autoJoin) {
+                navigate(`/video-conference/${routeConferenceId}`, { replace: true });
+            }
+        });
+    }, [autoJoin, isRoomRoute, loadConferenceDetail, navigate, routeConferenceId]);
+
+    useEffect(() => {
+        return () => {
+            const conferenceId = videoCall.activeRoom?.conferenceId;
+            if (conferenceId) {
+                leaveVideoConference(conferenceId).catch(() => {});
+                setVideoCall({ activeRoom: null, incomingCall: null, isCalling: false });
+            }
+        };
+    }, [setVideoCall, videoCall.activeRoom?.conferenceId]);
+
+    const leaveActiveConference = useCallback(async () => {
+        const conferenceId = videoCall.activeRoom?.conferenceId || activeDetail?.id;
+        if (!conferenceId) return;
+
+        try {
+            await leaveVideoConference(conferenceId);
+            setVideoCall({ activeRoom: null, incomingCall: null, isCalling: false });
+            await loadConferenceDetail(conferenceId, false);
+            await loadConferences();
+        } catch {
+            setVideoCall({ activeRoom: null, incomingCall: null, isCalling: false });
+        }
+    }, [activeDetail?.id, loadConferenceDetail, loadConferences, setVideoCall, videoCall.activeRoom?.conferenceId]);
+
     const finishConference = async () => {
         if (!activeDetail?.id) return;
         try {
@@ -164,10 +228,26 @@ export default function VideoConference() {
             message.success(t('video_conference_ended'));
             setActiveDetail(null);
             await loadConferences();
+            navigate('/video-conference');
         } catch {
             message.error(t('error'));
         }
     };
+
+    const removeConference = useCallback(async (id) => {
+        try {
+            await deleteVideoConference(id);
+            message.success("O'chirildi");
+            if (activeDetail?.id === id) {
+                setVideoCall({ activeRoom: null, incomingCall: null, isCalling: false });
+                setActiveDetail(null);
+                navigate('/video-conference');
+            }
+            await loadConferences();
+        } catch (err) {
+            message.error(t(err?.response?.data?.message || 'error'));
+        }
+    }, [activeDetail?.id, loadConferences, navigate, setVideoCall, t]);
 
     const consultantColumns = [
         {
@@ -208,7 +288,7 @@ export default function VideoConference() {
             render: (_, row) => `${row.joinedCount || 0}/${row.participantCount || 0}`,
         },
         {
-            title: t('status'),
+            title: 'Holati',
             dataIndex: 'status',
             render: (status) => <Tag color={statusColors[status] || 'default'}>{t(`vc_status_${status}`)}</Tag>,
         },
@@ -229,10 +309,22 @@ export default function VideoConference() {
                             {isAdmin ? t('start') : t('join')}
                         </Button>
                     )}
+                    {isAdmin && (
+                        <Popconfirm
+                            title="O'chirishni tasdiqlaysizmi?"
+                            okText="Ha"
+                            cancelText="Yo'q"
+                            onConfirm={() => removeConference(row.id)}
+                        >
+                            <Button danger icon={<DeleteOutlined />}>
+                                O'chirish
+                            </Button>
+                        </Popconfirm>
+                    )}
                 </Space>
             ),
         },
-    ], [isAdmin, openConference, t]);
+    ], [isAdmin, openConference, removeConference, t]);
 
     const renderRoom = () => (
         <div className="nmed-vc-room">
@@ -242,9 +334,17 @@ export default function VideoConference() {
                     <Text type="secondary">{activeDetail?.patient?.fullName || activeDetail?.patientFullName}</Text>
                 </div>
                 <Space>
-                    <Button onClick={() => openConference(activeDetail.id)} icon={<ReloadOutlined />}>
+                    <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/video-conference')}>
+                        {t('back')}
+                    </Button>
+                    <Button onClick={() => loadConferenceDetail(activeDetail.id)} icon={<ReloadOutlined />}>
                         {t('refresh')}
                     </Button>
+                    {videoCall.activeRoom && (
+                        <Button icon={<PoweroffOutlined />} onClick={leaveActiveConference}>
+                            {t('leave') || 'Chiqish'}
+                        </Button>
+                    )}
                     {activeDetail?.canManage && (
                         <Button danger icon={<PoweroffOutlined />} onClick={finishConference}>
                             {t('end_conference')}
@@ -259,7 +359,7 @@ export default function VideoConference() {
                     endOnLeave={false}
                     layout="conference"
                     initialAudio={false}
-                    onLeft={() => setVideoCall({ activeRoom: null })}
+                    onLeft={leaveActiveConference}
                 />
             )}
 
@@ -269,7 +369,7 @@ export default function VideoConference() {
                     showIcon
                     message={t('conference_not_joined')}
                     action={(
-                        <Button type="primary" icon={<VideoCameraOutlined />} onClick={() => openConference(activeDetail.id, true)}>
+                        <Button type="primary" icon={<VideoCameraOutlined />} onClick={() => loadConferenceDetail(activeDetail.id, true)}>
                             {activeDetail?.canManage ? t('start') : t('join')}
                         </Button>
                     )}
@@ -290,7 +390,7 @@ export default function VideoConference() {
                 <Card title={t('participants')}>
                     <Space direction="vertical" style={{ width: '100%' }}>
                         {(activeDetail?.participants || []).map((item) => (
-                            <div className="nmed-vc-participant" key={item.id}>
+                            <div className={`nmed-vc-participant is-${item.status || 'invited'}`} key={`${item.isAdmin ? 'admin' : 'doctor'}-${item.id}`}>
                                 <div>
                                     <Text strong>{item.fullName}</Text>
                                     <div><Text type="secondary">{item.position || '-'}</Text></div>
@@ -299,8 +399,8 @@ export default function VideoConference() {
                                     <Tag color={item.isOnline ? 'green' : 'default'}>
                                         {item.isOnline ? 'Online' : 'Offline'}
                                     </Tag>
-                                    <Tag color={item.status === 'joined' ? 'green' : 'blue'}>
-                                        {item.status === 'joined' ? t('joined') : t('invited')}
+                                    <Tag color={participantStatusMeta[item.status]?.color || 'default'}>
+                                        {participantStatusMeta[item.status]?.label || item.status || '-'}
                                     </Tag>
                                 </Space>
                             </div>
@@ -317,8 +417,36 @@ export default function VideoConference() {
                         { title: t('analysis_date'), dataIndex: 'date', render: (v) => v ? dayjs(v).format('DD.MM.YYYY HH:mm') : '-' },
                         { title: t('clinic'), dataIndex: 'clinicName', render: (v) => v || '-' },
                         { title: 'AI', dataIndex: 'hasAiResult', render: (v) => v ? <CheckCircleOutlined style={{ color: '#42c8bd' }} /> : <ClockCircleOutlined /> },
+                        {
+                            title: t('actions'),
+                            render: (_, row) => {
+                                const key = `${normalizeAnalysisType(row)}-${row.id}`;
+                                const isOpen = expandedAnalysisKey === key;
+                                return (
+                                    <Button
+                                        icon={<EyeOutlined />}
+                                        onClick={() => setExpandedAnalysisKey(isOpen ? null : key)}
+                                    >
+                                        {isOpen ? (t('hide') || 'Yashirish') : (t('view') || "Ko'rish")}
+                                    </Button>
+                                );
+                            },
+                        },
                     ]}
                     dataSource={activeDetail?.analyses || []}
+                    expandable={{
+                        expandedRowKeys: expandedAnalysisKey ? [expandedAnalysisKey] : [],
+                        onExpand: (expanded, record) => {
+                            const key = `${normalizeAnalysisType(record)}-${record.id}`;
+                            setExpandedAnalysisKey(expanded ? key : null);
+                        },
+                        expandedRowRender: (record) => (
+                            <div className="nmed-vc-analysis-inline">
+                                <ConsultationAnalysisInlineView analysis={record} />
+                            </div>
+                        ),
+                        rowExpandable: () => true,
+                    }}
                     pagination={{ pageSize: 5 }}
                     locale={{ emptyText: t('no_data') }}
                     scroll={{ x: 640 }}
@@ -341,9 +469,15 @@ export default function VideoConference() {
                 </Button>
             </div>
 
-            {activeDetail && renderRoom()}
+            {isRoomRoute && activeDetail && renderRoom()}
 
-            {isAdmin && !activeDetail && (
+            {isRoomRoute && !activeDetail && (
+                <Card>
+                    <Empty description={loading ? t('loading') : t('no_data')} />
+                </Card>
+            )}
+
+            {!isRoomRoute && isAdmin && (
                 <Card className="nmed-vc-create-card" title={<><PlusOutlined /> {t('create_video_conference')}</>}>
                     <PatientSearchSection
                         form={searchForm}
@@ -390,7 +524,7 @@ export default function VideoConference() {
                 </Card>
             )}
 
-            {!activeDetail && (
+            {!isRoomRoute && (
                 <Card title={isDoctor ? t('my_video_conferences') : t('video_conferences')}>
                     <Table
                         rowKey="id"
@@ -402,12 +536,6 @@ export default function VideoConference() {
                         scroll={{ x: 900 }}
                     />
                 </Card>
-            )}
-
-            {activeDetail && (
-                <Button style={{ marginTop: 16 }} onClick={() => setActiveDetail(null)}>
-                    {t('back')}
-                </Button>
             )}
         </div>
     );

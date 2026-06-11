@@ -3,6 +3,7 @@ using System;
 using EkgAnalyzerApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EkgAnalyzerApi.Migrations
 {
     [DbContext(typeof(MedDataDB))]
-    partial class EkgDataDBModelSnapshot : ModelSnapshot
+    [Migration("20260609151257_AddAdminJoinedAtToVideoConferences")]
+    partial class AddAdminJoinedAtToVideoConferences
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2036,10 +2039,6 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("admin_joined_at");
 
-                    b.Property<DateTime?>("AdminLeftAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("admin_left_at");
-
                     b.Property<int>("ClinicId")
                         .HasColumnType("integer")
                         .HasColumnName("clinic_id");
@@ -2105,10 +2104,6 @@ namespace EkgAnalyzerApi.Migrations
                     b.Property<DateTime?>("JoinedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("joined_at");
-
-                    b.Property<DateTime?>("LeftAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("left_at");
 
                     b.Property<string>("Status")
                         .IsRequired()

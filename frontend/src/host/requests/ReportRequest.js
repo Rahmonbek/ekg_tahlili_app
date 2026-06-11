@@ -3,7 +3,7 @@ import axiosInstance from "../Api";
 /**
  * PDF hisobotni serverdan blob sifatida yuklab, brauzerda avtomatik saqlaydigan funksiya.
  *
- * @param {"ecg"|"smad"|"holter"|"lab"|"parasitology"|"combined"} type  - tahlil turi
+ * @param {"ecg"|"smad"|"holter"|"lab"|"parasitology"|"combined"|"consultation"} type  - tahlil turi
  * @param {number} id         - analysisId yoki combined uchun patientId
  * @param {"uz"|"ru"|"en"} lang - PDF tili
  * @returns {Promise<void>}

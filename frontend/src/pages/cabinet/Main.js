@@ -247,6 +247,11 @@ export default function Main() {
                                 <VideoConference />
                             </ProtectedRoute>
                         } />
+                        <Route path="/video-conference/:id" element={
+                            <ProtectedRoute allowedRoles={[2, 3, 4]} userRole={user.roleId}>
+                                <VideoConference />
+                            </ProtectedRoute>
+                        } />
 
                         {/* ── Online Konsultatsiya — Admin/Direktor ── */}
                         <Route path="/consultants" element={

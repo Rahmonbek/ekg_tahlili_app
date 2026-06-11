@@ -157,6 +157,21 @@ namespace EkgAnalyzerApi.DTOs
         public DateTime UpdatedAt { get; set; }
     }
 
+    public class ConsultationVerificationDto
+    {
+        public int ConsultationId { get; set; }
+        public bool IsValid { get; set; }
+        public string DocumentNumber { get; set; } = default!;
+        public string PatientFullName { get; set; } = default!;
+        public string DoctorFullName { get; set; } = default!;
+        public string ClinicName { get; set; } = default!;
+        public DateOnly ConsultationDate { get; set; }
+        public DateTime ConclusionCreatedAt { get; set; }
+        public string PatientCondition { get; set; } = default!;
+        public string Status { get; set; } = default!;
+        public string VerificationText { get; set; } = default!;
+    }
+
     /// <summary>Bemorning tahlil (faqat ro'yxat uchun)</summary>
     public class PatientAnalysisItemDto
     {

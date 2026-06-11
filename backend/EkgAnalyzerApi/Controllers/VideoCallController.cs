@@ -193,7 +193,9 @@ public class VideoCallController : ControllerBase
         var query = _db.VideoConferences.AsNoTracking()
             .Include(c => c.Patient)
             .Include(c => c.Clinic)
+            .Include(c => c.CreatedByAdmin)
             .Include(c => c.Participants)
+                .ThenInclude(p => p.Doctor)
             .AsQueryable();
 
         if (roleId == 4)
@@ -247,18 +249,22 @@ public class VideoCallController : ControllerBase
         var access = await HasConferenceAccessAsync(conference, userId, roleId);
         if (!access) return Forbid();
 
+        conference.Status = "active";
+        conference.StartedAt ??= DateTime.UtcNow;
+
         if (roleId == 4)
         {
             var doctorId = await GetDoctorIdAsync(userId);
             var participant = conference.Participants.FirstOrDefault(p => p.DoctorId == doctorId);
             if (participant == null) return Forbid();
             participant.Status = "joined";
-            participant.JoinedAt ??= DateTime.UtcNow;
+            participant.JoinedAt = DateTime.UtcNow;
+            participant.LeftAt = null;
         }
         else
         {
-            conference.Status = "active";
-            conference.StartedAt ??= DateTime.UtcNow;
+            conference.AdminJoinedAt = DateTime.UtcNow;
+            conference.AdminLeftAt = null;
         }
 
         await _db.SaveChangesAsync();
@@ -273,6 +279,43 @@ public class VideoCallController : ControllerBase
         var token = GenerateLiveKitToken(apiKey, apiSecret, $"user_{userId}", conference.RoomName, displayName);
 
         return Ok(new VideoTokenResponseDto(token, liveKitUrl));
+    }
+
+    [HttpPost("conferences/{id}/leave")]
+    public async Task<IActionResult> LeaveConference(int id)
+    {
+        var userId = GetUserId();
+        var roleId = GetRoleId();
+        if (userId == 0) return Unauthorized();
+        if (roleId != 2 && roleId != 3 && roleId != 4) return Forbid();
+
+        var conference = await LoadConferenceAsync(id, tracking: true);
+        if (conference == null) return NotFound(new { message = "video_conference_not_found" });
+
+        var access = await HasConferenceAccessAsync(conference, userId, roleId);
+        if (!access) return Forbid();
+
+        var now = DateTime.UtcNow;
+        if (roleId == 4)
+        {
+            var doctorId = await GetDoctorIdAsync(userId);
+            var participant = conference.Participants.FirstOrDefault(p => p.DoctorId == doctorId);
+            if (participant == null) return Forbid();
+
+            participant.Status = "left";
+            participant.LeftAt = now;
+        }
+        else
+        {
+            conference.AdminLeftAt = now;
+        }
+
+        if (conference.Status != "ended" && !HasAnyActiveConferenceMember(conference))
+            conference.Status = "scheduled";
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "video_conference_left" });
     }
 
     [HttpPost("conferences/{id}/end")]
@@ -295,6 +338,29 @@ public class VideoCallController : ControllerBase
         await _db.SaveChangesAsync();
 
         return Ok(new { message = "video_conference_ended" });
+    }
+
+    [HttpDelete("conferences/{id}")]
+    public async Task<IActionResult> DeleteConference(int id)
+    {
+        var userId = GetUserId();
+        var roleId = GetRoleId();
+        if (userId == 0) return Unauthorized();
+        if (roleId != 2 && roleId != 3) return Forbid();
+
+        var conference = await _db.VideoConferences
+            .Include(c => c.Participants)
+            .FirstOrDefaultAsync(c => c.Id == id);
+        if (conference == null) return NotFound(new { message = "video_conference_not_found" });
+
+        var clinicId = await GetUserClinicIdAsync(userId);
+        if (conference.ClinicId != clinicId) return Forbid();
+
+        _db.VideoConferenceParticipants.RemoveRange(conference.Participants);
+        _db.VideoConferences.Remove(conference);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "video_conference_deleted" });
     }
 
     private int GetUserId()
@@ -325,6 +391,7 @@ public class VideoCallController : ControllerBase
         return await query
             .Include(c => c.Patient)
             .Include(c => c.Clinic)
+            .Include(c => c.CreatedByAdmin)
             .Include(c => c.Participants)
                 .ThenInclude(p => p.Doctor)
                     .ThenInclude(d => d!.User)
@@ -359,13 +426,13 @@ public class VideoCallController : ControllerBase
         {
             Id = c.Id,
             RoomName = c.RoomName,
-            Status = c.Status,
+            Status = GetConferenceEffectiveStatus(c),
             CreatedAt = c.CreatedAt,
             StartedAt = c.StartedAt,
             EndedAt = c.EndedAt,
             PatientFullName = patientName,
-            ParticipantCount = c.Participants.Count,
-            JoinedCount = c.Participants.Count(p => p.Status == "joined"),
+            ParticipantCount = c.Participants.Count + 1,
+            JoinedCount = c.Participants.Count(IsParticipantCurrentlyInConference) + (IsAdminCurrentlyInConference(c) ? 1 : 0),
             ClinicName = c.Clinic?.ClinicName
         };
     }
@@ -400,24 +467,94 @@ public class VideoCallController : ControllerBase
                 Phone = patient.Phone,
                 Address = patient.Address
             },
-            Participants = c.Participants.Select(p =>
-            {
-                var position = p.Doctor?.DoctorPositions?.FirstOrDefault()?.Position;
-                return new VideoConferenceParticipantDto
-                {
-                    Id = p.Id,
-                    DoctorId = p.DoctorId,
-                    DoctorUserId = p.Doctor?.UserId,
-                    FullName = p.Doctor == null ? "" : $"{p.Doctor.LastName} {p.Doctor.FirstName} {p.Doctor.SureName}".Trim(),
-                    Position = position?.NameUz ?? position?.NameRu,
-                    Phone = p.Doctor?.Phone,
-                    Status = p.Status,
-                    JoinedAt = p.JoinedAt,
-                    IsOnline = p.Doctor != null && _connections.IsOnline(p.Doctor.UserId)
-                };
-            }).ToList(),
+            Participants = BuildConferenceParticipants(c),
             Analyses = analyses
         };
+    }
+
+    private List<VideoConferenceParticipantDto> BuildConferenceParticipants(VideoConference c)
+    {
+        var effectiveStatus = GetConferenceEffectiveStatus(c);
+        var adminIsJoined = effectiveStatus == "active" && IsAdminCurrentlyInConference(c);
+
+        var participants = new List<VideoConferenceParticipantDto>
+        {
+            new VideoConferenceParticipantDto
+            {
+                Id = 0,
+                DoctorId = 0,
+                DoctorUserId = null,
+                UserId = c.CreatedByAdminId,
+                IsAdmin = true,
+                FullName = BuildUserFullName(c.CreatedByAdmin, "Admin"),
+                Position = "Admin",
+                Phone = null,
+                Status = adminIsJoined ? "joined" : c.AdminJoinedAt.HasValue ? "left" : "invited",
+                JoinedAt = c.AdminJoinedAt,
+                LeftAt = c.AdminLeftAt,
+                IsOnline = _connections.IsOnline(c.CreatedByAdminId)
+            }
+        };
+
+        participants.AddRange(c.Participants.Select(p =>
+        {
+            var position = p.Doctor?.DoctorPositions?.FirstOrDefault()?.Position;
+            var participantIsJoined = effectiveStatus == "active" && IsParticipantCurrentlyInConference(p);
+            return new VideoConferenceParticipantDto
+            {
+                Id = p.Id,
+                DoctorId = p.DoctorId,
+                DoctorUserId = p.Doctor?.UserId,
+                UserId = p.Doctor?.UserId,
+                IsAdmin = false,
+                FullName = p.Doctor == null ? "" : $"{p.Doctor.LastName} {p.Doctor.FirstName} {p.Doctor.SureName}".Trim(),
+                Position = position?.NameUz ?? position?.NameRu,
+                Phone = p.Doctor?.Phone,
+                Status = participantIsJoined ? "joined" : p.JoinedAt.HasValue ? "left" : "invited",
+                JoinedAt = p.JoinedAt,
+                LeftAt = p.LeftAt,
+                IsOnline = p.Doctor != null && _connections.IsOnline(p.Doctor.UserId)
+            };
+        }));
+
+        return participants;
+    }
+
+    private string GetConferenceEffectiveStatus(VideoConference c)
+    {
+        if (c.Status == "ended" || c.EndedAt.HasValue) return "ended";
+        if (HasAnyActiveConferenceMember(c)) return "active";
+        return "scheduled";
+    }
+
+    private bool HasAnyActiveConferenceMember(VideoConference c)
+    {
+        return IsAdminCurrentlyInConference(c) || c.Participants.Any(IsParticipantCurrentlyInConference);
+    }
+
+    private bool IsAdminCurrentlyInConference(VideoConference c)
+    {
+        return IsAdminCurrentlyJoined(c) && _connections.IsOnline(c.CreatedByAdminId);
+    }
+
+    private bool IsParticipantCurrentlyInConference(VideoConferenceParticipant p)
+    {
+        return IsParticipantCurrentlyJoined(p)
+            && p.Doctor != null
+            && _connections.IsOnline(p.Doctor.UserId);
+    }
+
+    private static bool IsAdminCurrentlyJoined(VideoConference c)
+    {
+        return c.AdminJoinedAt.HasValue
+            && (!c.AdminLeftAt.HasValue || c.AdminLeftAt < c.AdminJoinedAt);
+    }
+
+    private static bool IsParticipantCurrentlyJoined(VideoConferenceParticipant p)
+    {
+        return p.Status == "joined"
+            && p.JoinedAt.HasValue
+            && (!p.LeftAt.HasValue || p.LeftAt < p.JoinedAt);
     }
 
     private string? TryDecrypt(string? value)

@@ -17,8 +17,8 @@
     position: relative;
     inset: auto;
     z-index: auto;
-    height: min(52vh, 460px);
-    min-height: 320px;
+    height: clamp(620px, 72vh, 820px);
+    min-height: 560px;
     border-radius: 8px;
 }
 
@@ -441,7 +441,7 @@
     background: #fff;
     border: 1px solid #eef2f7;
     border-radius: 8px;
-    padding: 18px;
+    padding: 20px;
     box-shadow: 0 10px 28px rgba(26, 41, 66, 0.06);
 }
 
@@ -461,6 +461,28 @@
     background: #f8fbfd;
     border: 1px solid #edf3f7;
     border-radius: 8px;
+}
+
+.nmed-vc-participant.is-joined {
+    background: #ecfffb;
+    border-color: rgba(66, 200, 189, 0.34);
+}
+
+.nmed-vc-participant.is-left {
+    background: #fafafa;
+    border-color: #eeeeee;
+    opacity: 0.82;
+}
+
+.nmed-vc-analysis-inline {
+    padding: 14px;
+    background: #fbfeff;
+    border: 1px solid #eef6f6;
+    border-radius: 8px;
+}
+
+.nmed-vc-analyses .ant-table-expanded-row > .ant-table-cell {
+    padding: 0 !important;
 }
 
 /* ================================================================
@@ -589,8 +611,8 @@
     }
 
     .nmed-livekit-wrapper.is-embedded {
-        height: 430px;
-        min-height: 360px;
+        height: 520px;
+        min-height: 440px;
     }
 
     .nmed-conf-root {

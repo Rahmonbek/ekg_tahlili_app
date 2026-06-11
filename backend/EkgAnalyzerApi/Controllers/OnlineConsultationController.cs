@@ -493,6 +493,37 @@ public class ConsultationController : ControllerBase
 
     // ─── PRIVATE HELPERS ──────────────────────────────────────────────────────
 
+    [HttpGet("verify/{id:int}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> VerifyConsultation(int id)
+    {
+        var row = await _db.Consultations
+            .AsNoTracking()
+            .Include(c => c.Patient)
+            .Include(c => c.Doctor)
+            .Include(c => c.Clinic)
+            .Include(c => c.Conclusion)
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (row?.Conclusion == null)
+            return NotFound(new { message = "Konsultatsiya xulosasi topilmadi yoki hali tasdiqlanmagan" });
+
+        return Ok(new ConsultationVerificationDto
+        {
+            ConsultationId = row.Id,
+            IsValid = true,
+            DocumentNumber = $"CONS-{row.CreatedAt:yyyyMM}-{row.Id:D4}",
+            PatientFullName = row.Patient == null ? "" : $"{row.Patient.LastName} {row.Patient.FirstName} {row.Patient.SureName}".Trim(),
+            DoctorFullName = row.Doctor == null ? "" : $"{row.Doctor.LastName} {row.Doctor.FirstName} {row.Doctor.SureName}".Trim(),
+            ClinicName = row.Clinic?.ClinicName ?? "",
+            ConsultationDate = row.ConsultationDate,
+            ConclusionCreatedAt = row.Conclusion.CreatedAt,
+            PatientCondition = row.Conclusion.PatientCondition,
+            Status = row.Status,
+            VerificationText = "Ushbu konsultatsiya xulosasi NMED platformasida shakllantirilgan va QR orqali tasdiqlandi."
+        });
+    }
+
     private int GetUserId()
     {
         var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;

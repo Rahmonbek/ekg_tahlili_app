@@ -22,6 +22,9 @@ namespace EkgAnalyzerApi.Models
         [Column("joined_at")]
         public DateTime? JoinedAt { get; set; }
 
+        [Column("left_at")]
+        public DateTime? LeftAt { get; set; }
+
         [Column("status")]
         public string Status { get; set; } = "invited";
 

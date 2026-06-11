@@ -146,6 +146,40 @@ public class ReportController : ControllerBase
             $"nmed_combined_{patientId}_{DateTime.Now:ddMMyyyy}.pdf");
     }
 
+    [HttpGet("consultation/{id:int}")]
+    public async Task<IActionResult> DownloadConsultation(int id, [FromQuery] string lang = "uz")
+    {
+        var userId = GetUserId();
+        if (userId == 0) return Unauthorized(new { message = "Token invalid" });
+
+        var roleId = GetRoleId();
+        var clinicId = await GetCallerClinicId();
+        var hasAccess = false;
+
+        if ((roleId == 2 || roleId == 3) && clinicId.HasValue)
+        {
+            hasAccess = await _context.Consultations
+                .AnyAsync(c => c.Id == id && c.ClinicId == clinicId.Value && c.Conclusion != null);
+        }
+        else if (roleId == 4)
+        {
+            var doctorId = await _context.Doctors.AsNoTracking()
+                .Where(d => d.UserId == userId)
+                .Select(d => d.Id)
+                .FirstOrDefaultAsync();
+
+            hasAccess = doctorId > 0 && await _context.Consultations
+                .AnyAsync(c => c.Id == id && c.DoctorId == doctorId && c.Conclusion != null);
+        }
+
+        if (!hasAccess)
+            return NotFound(new { message = "Konsultatsiya xulosasi topilmadi yoki ruxsat yo'q" });
+
+        return await BuildPdfResponse(
+            () => _pdf.GenerateConsultationReport(id, lang),
+            $"nmed_consultation_{id}_{DateTime.Now:ddMMyyyy}.pdf");
+    }
+
     // ════════════════════════════════════════════════════════════════════
     //  YORDAMCHI METODLAR
     // ════════════════════════════════════════════════════════════════════
@@ -187,5 +221,17 @@ public class ReportController : ControllerBase
             .FirstOrDefaultAsync(u => u.Id == userId);
 
         return user?.ClinicId;
+    }
+
+    private int GetUserId()
+    {
+        var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+        return int.TryParse(claim, out var id) ? id : 0;
+    }
+
+    private int GetRoleId()
+    {
+        var claim = User.Claims.FirstOrDefault(c => c.Type == "roleId")?.Value;
+        return int.TryParse(claim, out var id) ? id : 0;
     }
 }

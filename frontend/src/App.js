@@ -6,7 +6,7 @@ import './locale/i18next'
 import { useStore } from './store/Store'
 import Main from './pages/cabinet/Main'
 import { getTokenAccess } from './host/Host'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { get_user_data } from './host/requests/UserRequest';
 import Loader from './components/Loader';
 import { get_unviewed_counts } from './host/requests/DashboardRequest'
@@ -16,6 +16,7 @@ import AnalysisProgressFloat from './components/AnalysisProgressFloat'
 import useVideoSignalR from './hooks/useVideoSignalR'
 import useConsultationSignalR from './hooks/useConsultationSignalR'
 import IncomingCallModal from './components/video/IncomingCallModal'
+import ConsultationVerificationPage from './pages/ConsultationVerificationPage'
 
 export default function App() {
   const {
@@ -35,10 +36,16 @@ export default function App() {
 
   const [first_load, setfirst_load] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
+  const isPublicConsultationVerify = location.pathname.startsWith('/consultation/verify/')
 
   // Boshlang'ich yuklanish: faqat user yuklanmagan bo'lsa fetch qilish
   useEffect(() => {
     const token = getTokenAccess()
+    if (isPublicConsultationVerify) {
+      setfirst_load(true)
+      return
+    }
     if (token != null) {
       if (user == null) {
         getUserData()
@@ -47,7 +54,7 @@ export default function App() {
       navigate("/")
       setfirst_load(true)
     }
-  }, [user_id])
+  }, [user_id, isPublicConsultationVerify])
 
   // AdminModal yopilgandan keyin: user ma'lumotlarini yangilash va klinika setupni tekshirish
   useEffect(() => {
@@ -140,7 +147,7 @@ export default function App() {
     <>
       {first_load && (
         <div className="main_app">
-          {user_id == null ? <Auth /> : <Main />}
+          {isPublicConsultationVerify ? <ConsultationVerificationPage /> : user_id == null ? <Auth /> : <Main />}
           {loader ? <Loader /> : <></>}
         </div>
       )}

@@ -47,6 +47,9 @@ export const getConsultationDetailAdmin = (id) =>
 export const getConsultationTokenAdmin = (id) =>
     httpGetRequest(`/consultation/${id}/livekit-token`);
 
+export const getConsultationVerification = (id) =>
+    httpGetRequest(`/consultation/verify/${id}`);
+
 // ─── DOCTOR ────────────────────────────────────────────────────────────────
 
 export const getMyInvitations = () =>

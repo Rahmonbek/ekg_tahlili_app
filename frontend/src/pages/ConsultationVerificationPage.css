@@ -1,0 +1,55 @@
+.cons-verify-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    background:
+        radial-gradient(circle at top left, rgba(66, 200, 189, 0.18), transparent 34%),
+        linear-gradient(135deg, #eefaf8 0%, #f7fbff 100%);
+}
+
+.cons-verify-card {
+    width: min(760px, 100%);
+    border-radius: 12px;
+    box-shadow: 0 22px 70px rgba(26, 41, 66, 0.12);
+}
+
+.cons-verify-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #edf3f7;
+}
+
+.cons-verify-brand h3 {
+    margin: 0;
+    color: #1a2942;
+}
+
+.cons-verify-logo {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 28px;
+    background: linear-gradient(135deg, #42c8bd 0%, #1d9e75 100%);
+}
+
+.cons-verify-success-icon {
+    color: #1d9e75 !important;
+}
+
+@media (max-width: 560px) {
+    .cons-verify-page {
+        align-items: flex-start;
+        padding-top: 18px;
+    }
+
+    .cons-verify-brand {
+        align-items: flex-start;
+    }
+}

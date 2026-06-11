@@ -21,6 +21,7 @@ public class PdfReportService
     private readonly MedDataDB          _context;
     private readonly EncryptionService  _encryption;
     private readonly IWebHostEnvironment _env;
+    private readonly IConfiguration _config;
     private readonly ILogger<PdfReportService> _logger;
 
     // ── Sahifa geometriyasi (mm → pt: 1 mm = 2.8346 pt) ────────────────
@@ -50,11 +51,13 @@ public class PdfReportService
         MedDataDB context,
         EncryptionService encryption,
         IWebHostEnvironment env,
+        IConfiguration config,
         ILogger<PdfReportService> logger)
     {
         _context    = context;
         _encryption = encryption;
         _env        = env;
+        _config     = config;
         _logger     = logger;
     }
 
@@ -352,6 +355,60 @@ public class PdfReportService
     // ════════════════════════════════════════════════════════════════════
     //  ASOSIY BUILDER
     // ════════════════════════════════════════════════════════════════════
+
+    public async Task<byte[]> GenerateConsultationReport(int id, string lang)
+    {
+        var tr = PdfTranslations.Get(lang);
+        var row = await _context.Consultations
+            .Include(c => c.Patient)
+            .Include(c => c.Clinic).ThenInclude(c => c!.ClinicDetail).ThenInclude(d => d!.District).ThenInclude(d => d!.Region)
+            .Include(c => c.Clinic).ThenInclude(c => c!.ClinicPhoneNumber)
+            .Include(c => c.Doctor)
+            .Include(c => c.CreatedByAdmin).ThenInclude(u => u!.Doctor)
+            .Include(c => c.Conclusion)
+            .FirstOrDefaultAsync(c => c.Id == id)
+            ?? throw new KeyNotFoundException($"Konsultatsiya #{id}");
+
+        if (row.Conclusion == null)
+            throw new KeyNotFoundException($"Konsultatsiya #{id} xulosasi mavjud emas");
+
+        var docNum = DocNum("CONS", row.CreatedAt, row.Id);
+        var verifyUrl = BuildConsultationVerifyUrl(row.Id);
+        var ms = new MemoryStream();
+        var doc = CreateDoc();
+        var writer = PdfWriter.GetInstance(doc, ms);
+        var fonts = BuildFonts();
+
+        writer.PageEvent = new FooterEvent(fonts, tr, docNum);
+        doc.Open();
+
+        ComposeHeader(doc, tr, fonts, row.Clinic, docNum, row.Conclusion.CreatedAt,
+            "Online konsultatsiya xulosasi", "NMED konsultatsiya hujjati");
+
+        if (row.Patient != null)
+            ComposePatientBlock(doc, tr, fonts, row.Patient, row.ConsultationDate.ToDateTime(TimeOnly.MinValue));
+
+        ComposeSectionHeader(doc, fonts, "Konsultatsiya ma'lumotlari", CL_DarkBlue);
+        var info = InfoTable();
+        InfoRow(info, "Konsultatsiya sanasi:", row.ConsultationDate.ToString("dd.MM.yyyy"), fonts, 0);
+        InfoRow(info, "Konsultant shifokor:", DoctorFullName(row.Doctor), fonts, 1);
+        InfoRow(info, "Klinika:", row.Clinic?.ClinicName ?? "—", fonts, 0);
+        InfoRow(info, "Yuborgan admin:", BuildUserFullName(row.CreatedByAdmin), fonts, 1);
+        InfoRow(info, "Bemor holati:", ConditionLabel(row.Conclusion.PatientCondition), fonts, 0);
+        InfoRow(info, "Xulosa sanasi:", row.Conclusion.CreatedAt.ToString("dd.MM.yyyy HH:mm"), fonts, 1);
+        doc.Add(info);
+
+        ComposeSectionHeader(doc, fonts, "Shifokor xulosasi", CL_Green);
+        AddLabeledText(doc, fonts, "Bemor holati", ConditionLabel(row.Conclusion.PatientCondition));
+        AddLabeledText(doc, fonts, "Tashxis", row.Conclusion.Diagnosis);
+        AddLabeledText(doc, fonts, "Davolash yo'riqnomasi", row.Conclusion.Treatment);
+
+        ComposeConsultationQrVerification(doc, fonts, docNum, verifyUrl, row.Conclusion.CreatedAt);
+        ComposeDisclaimer(doc, tr, fonts);
+
+        doc.Close();
+        return ms.ToArray();
+    }
 
     private byte[] Build(
         Dictionary<string, string> tr,
@@ -1749,6 +1806,47 @@ public class PdfReportService
     //  BLOK 7 — MUHIM ESLATMA
     // ════════════════════════════════════════════════════════════════════
 
+    private void ComposeConsultationQrVerification(Document doc, Dictionary<string, Font> fonts,
+        string docNum, string verifyUrl, DateTime date)
+    {
+        var outer = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 8, SpacingAfter = 4 };
+        var inner = new PdfPTable(2) { WidthPercentage = 100 };
+        inner.SetWidths(new[] { 72f, 28f });
+
+        var textCell = new PdfPCell { Border = Rectangle.NO_BORDER, Padding = 8 };
+        textCell.AddElement(new Paragraph("NMED raqamli tasdiqlash", fonts["verify_title"]) { SpacingAfter = 2 });
+        textCell.AddElement(new Paragraph($"Hujjat raqami: {docNum}", fonts["verify_sub"]) { SpacingAfter = 2 });
+        textCell.AddElement(new Paragraph($"Shakllantirildi: {date:dd.MM.yyyy HH:mm}", fonts["verify_sub"]) { SpacingAfter = 2 });
+        textCell.AddElement(new Paragraph("QR kodni skaner qilib hujjat NMED platformasida shakllantirilganini tekshiring.", fonts["verify_sub"]) { SpacingAfter = 2 });
+        textCell.AddElement(new Paragraph(verifyUrl, fonts["verify_url"]));
+        inner.AddCell(textCell);
+
+        var qrCell = new PdfPCell { Border = Rectangle.NO_BORDER, Padding = 8, HorizontalAlignment = Element.ALIGN_CENTER };
+        try
+        {
+            var image = iTextSharp.text.Image.GetInstance(SimpleQrPng.CreateVersion4Low(verifyUrl));
+            image.ScaleToFit(86f, 86f);
+            image.Alignment = Element.ALIGN_CENTER;
+            qrCell.AddElement(image);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Konsultatsiya QR kodi yaratilmadi");
+            qrCell.AddElement(new Paragraph("QR", fonts["nmed_logo"]) { Alignment = Element.ALIGN_CENTER });
+        }
+        inner.AddCell(qrCell);
+
+        outer.AddCell(new PdfPCell(inner)
+        {
+            BackgroundColor = CL_VerifyBg,
+            Border = Rectangle.BOX,
+            BorderColor = CL_Border,
+            BorderWidth = 0.5f,
+            Padding = 0,
+        });
+        doc.Add(outer);
+    }
+
     private static void ComposeDisclaimer(Document doc,
         Dictionary<string, string> tr, Dictionary<string, Font> fonts)
     {
@@ -1905,6 +2003,48 @@ public class PdfReportService
     {
         if (d == null) return "—";
         return $"{d.LastName} {d.FirstName} {d.SureName}".Trim();
+    }
+
+    private static string BuildUserFullName(User? user)
+    {
+        if (user?.Doctor != null)
+            return $"{user.Doctor.LastName} {user.Doctor.FirstName} {user.Doctor.SureName}".Trim();
+        return user?.Username ?? "—";
+    }
+
+    private static string ConditionLabel(string? value) =>
+        value switch
+        {
+            "good" => "Yaxshi",
+            "moderate" => "O'rtacha",
+            "bad" => "Yomon",
+            _ => value ?? "—"
+        };
+
+    private string BuildConsultationVerifyUrl(int id)
+    {
+        var baseUrl = _config["App:PublicUrl"]
+            ?? _config["Frontend:PublicUrl"]
+            ?? _config["Frontend:Url"]
+            ?? "https://nmed.uz";
+        return $"{baseUrl.TrimEnd('/')}/consultation/verify/{id}";
+    }
+
+    private static void AddLabeledText(Document doc, Dictionary<string, Font> fonts, string label, string? text)
+    {
+        var wrapper = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 5, SpacingAfter = 4 };
+        var phrase = new Phrase();
+        phrase.Add(new Chunk($"{label}:\n", fonts["th9"]));
+        phrase.Add(new Chunk(string.IsNullOrWhiteSpace(text) ? "—" : text.Trim(), fonts["td9"]));
+
+        wrapper.AddCell(new PdfPCell(phrase)
+        {
+            Border = Rectangle.BOX,
+            BorderColor = CL_Border,
+            BackgroundColor = new BaseColor(252, 253, 253),
+            Padding = 7,
+        });
+        doc.Add(wrapper);
     }
 
     private static string? DoctorNames(IEnumerable<Doctor?>? list)
@@ -2067,6 +2207,292 @@ public class PdfReportService
     // ════════════════════════════════════════════════════════════════════
     //  FOOTER — har bir sahifa pastida (total pages bilan)
     // ════════════════════════════════════════════════════════════════════
+
+    private static class SimpleQrPng
+    {
+        private const int Version = 4;
+        private const int Size = 17 + Version * 4;
+        private const int DataCodewords = 80;
+        private const int EccCodewords = 20;
+
+        public static byte[] CreateVersion4Low(string text)
+        {
+            var data = Encoding.UTF8.GetBytes(text);
+            if (data.Length > 78)
+                throw new InvalidOperationException("QR tasdiqlash URL juda uzun. App:PublicUrl qiymatini qisqartiring.");
+
+            var dataCodewords = BuildDataCodewords(data);
+            var eccCodewords = ReedSolomonComputeRemainder(dataCodewords, EccCodewords);
+            var allCodewords = dataCodewords.Concat(eccCodewords).ToArray();
+
+            var modules = new bool[Size, Size];
+            var reserved = new bool[Size, Size];
+            DrawFunctionPatterns(modules, reserved);
+            DrawCodewords(modules, reserved, allCodewords);
+            ApplyMask0(modules, reserved);
+            DrawFormatBits(modules, reserved, 0);
+
+            return RenderPng(modules, 6, 4);
+        }
+
+        private static byte[] BuildDataCodewords(byte[] data)
+        {
+            var bits = new List<int>(DataCodewords * 8);
+            AppendBits(bits, 0x4, 4);
+            AppendBits(bits, data.Length, 8);
+            foreach (var b in data)
+                AppendBits(bits, b, 8);
+
+            var remaining = DataCodewords * 8 - bits.Count;
+            AppendBits(bits, 0, Math.Min(4, remaining));
+            while (bits.Count % 8 != 0)
+                bits.Add(0);
+
+            var result = new List<byte>(DataCodewords);
+            for (var i = 0; i < bits.Count; i += 8)
+            {
+                var value = 0;
+                for (var j = 0; j < 8; j++)
+                    value = (value << 1) | bits[i + j];
+                result.Add((byte)value);
+            }
+
+            for (var pad = 0; result.Count < DataCodewords; pad++)
+                result.Add((byte)(pad % 2 == 0 ? 0xEC : 0x11));
+
+            return result.ToArray();
+        }
+
+        private static void AppendBits(List<int> bits, int value, int count)
+        {
+            for (var i = count - 1; i >= 0; i--)
+                bits.Add((value >> i) & 1);
+        }
+
+        private static void DrawFunctionPatterns(bool[,] modules, bool[,] reserved)
+        {
+            DrawFinder(modules, reserved, 0, 0);
+            DrawFinder(modules, reserved, Size - 7, 0);
+            DrawFinder(modules, reserved, 0, Size - 7);
+
+            for (var i = 0; i < Size; i++)
+            {
+                SetFunction(modules, reserved, 6, i, i % 2 == 0);
+                SetFunction(modules, reserved, i, 6, i % 2 == 0);
+            }
+
+            DrawAlignment(modules, reserved, 26, 26);
+            SetFunction(modules, reserved, 8, 4 * Version + 9, true);
+
+            for (var i = 0; i < 9; i++)
+            {
+                Reserve(reserved, 8, i);
+                Reserve(reserved, i, 8);
+                Reserve(reserved, Size - 1 - i, 8);
+                Reserve(reserved, 8, Size - 1 - i);
+            }
+        }
+
+        private static void DrawFinder(bool[,] modules, bool[,] reserved, int left, int top)
+        {
+            for (var y = -1; y <= 7; y++)
+            {
+                for (var x = -1; x <= 7; x++)
+                {
+                    var xx = left + x;
+                    var yy = top + y;
+                    if (xx < 0 || xx >= Size || yy < 0 || yy >= Size)
+                        continue;
+                    var dark = x >= 0 && x <= 6 && y >= 0 && y <= 6 &&
+                               (x == 0 || x == 6 || y == 0 || y == 6 || (x >= 2 && x <= 4 && y >= 2 && y <= 4));
+                    SetFunction(modules, reserved, xx, yy, dark);
+                }
+            }
+        }
+
+        private static void DrawAlignment(bool[,] modules, bool[,] reserved, int cx, int cy)
+        {
+            for (var y = -2; y <= 2; y++)
+                for (var x = -2; x <= 2; x++)
+                    SetFunction(modules, reserved, cx + x, cy + y,
+                        Math.Max(Math.Abs(x), Math.Abs(y)) != 1);
+        }
+
+        private static void SetFunction(bool[,] modules, bool[,] reserved, int x, int y, bool dark)
+        {
+            modules[y, x] = dark;
+            reserved[y, x] = true;
+        }
+
+        private static void Reserve(bool[,] reserved, int x, int y)
+        {
+            if (x >= 0 && x < Size && y >= 0 && y < Size)
+                reserved[y, x] = true;
+        }
+
+        private static void DrawCodewords(bool[,] modules, bool[,] reserved, byte[] codewords)
+        {
+            var bitIndex = 0;
+            var upward = true;
+
+            for (var right = Size - 1; right >= 1; right -= 2)
+            {
+                if (right == 6)
+                    right--;
+
+                for (var vert = 0; vert < Size; vert++)
+                {
+                    var y = upward ? Size - 1 - vert : vert;
+                    for (var j = 0; j < 2; j++)
+                    {
+                        var x = right - j;
+                        if (reserved[y, x])
+                            continue;
+
+                        var dark = false;
+                        if (bitIndex < codewords.Length * 8)
+                            dark = ((codewords[bitIndex >> 3] >> (7 - (bitIndex & 7))) & 1) != 0;
+                        modules[y, x] = dark;
+                        bitIndex++;
+                    }
+                }
+                upward = !upward;
+            }
+        }
+
+        private static void ApplyMask0(bool[,] modules, bool[,] reserved)
+        {
+            for (var y = 0; y < Size; y++)
+                for (var x = 0; x < Size; x++)
+                    if (!reserved[y, x] && ((x + y) & 1) == 0)
+                        modules[y, x] = !modules[y, x];
+        }
+
+        private static void DrawFormatBits(bool[,] modules, bool[,] reserved, int mask)
+        {
+            var data = (1 << 3) | mask; // L correction level + mask pattern.
+            var bits = ((data << 10) | GetBchRemainder(data << 10, 0x537)) ^ 0x5412;
+
+            for (var i = 0; i <= 5; i++) SetFunction(modules, reserved, 8, i, GetBit(bits, i));
+            SetFunction(modules, reserved, 8, 7, GetBit(bits, 6));
+            SetFunction(modules, reserved, 8, 8, GetBit(bits, 7));
+            SetFunction(modules, reserved, 7, 8, GetBit(bits, 8));
+            for (var i = 9; i < 15; i++) SetFunction(modules, reserved, 14 - i, 8, GetBit(bits, i));
+
+            for (var i = 0; i < 8; i++) SetFunction(modules, reserved, Size - 1 - i, 8, GetBit(bits, i));
+            for (var i = 8; i < 15; i++) SetFunction(modules, reserved, 8, Size - 15 + i, GetBit(bits, i));
+            SetFunction(modules, reserved, 8, Size - 8, true);
+        }
+
+        private static bool GetBit(int value, int index) => ((value >> index) & 1) != 0;
+
+        private static int GetBchRemainder(int value, int generator)
+        {
+            var genDegree = BitLength(generator) - 1;
+            while (BitLength(value) - 1 >= genDegree)
+                value ^= generator << (BitLength(value) - 1 - genDegree);
+            return value;
+        }
+
+        private static int BitLength(int value)
+        {
+            var result = 0;
+            while (value != 0)
+            {
+                result++;
+                value >>= 1;
+            }
+            return result;
+        }
+
+        private static byte[] ReedSolomonComputeRemainder(byte[] data, int degree)
+        {
+            var generator = ReedSolomonGenerator(degree);
+            var result = new byte[degree];
+
+            foreach (var b in data)
+            {
+                var factor = (byte)(b ^ result[0]);
+                Array.Copy(result, 1, result, 0, degree - 1);
+                result[degree - 1] = 0;
+
+                for (var i = 0; i < degree; i++)
+                    result[i] ^= GfMultiply(generator[i], factor);
+            }
+            return result;
+        }
+
+        private static byte[] ReedSolomonGenerator(int degree)
+        {
+            var result = new byte[] { 1 };
+            for (var i = 0; i < degree; i++)
+            {
+                var next = new byte[result.Length + 1];
+                for (var j = 0; j < result.Length; j++)
+                {
+                    next[j] ^= GfMultiply(result[j], 1);
+                    next[j + 1] ^= GfMultiply(result[j], GfPow(2, i));
+                }
+                result = next;
+            }
+            return result.Skip(1).ToArray();
+        }
+
+        private static byte GfPow(byte value, int power)
+        {
+            var result = (byte)1;
+            for (var i = 0; i < power; i++)
+                result = GfMultiply(result, value);
+            return result;
+        }
+
+        private static byte GfMultiply(byte x, byte y)
+        {
+            var result = 0;
+            var a = (int)x;
+            var b = (int)y;
+
+            while (b != 0)
+            {
+                if ((b & 1) != 0)
+                    result ^= a;
+                a <<= 1;
+                if ((a & 0x100) != 0)
+                    a ^= 0x11D;
+                b >>= 1;
+            }
+            return (byte)result;
+        }
+
+        private static byte[] RenderPng(bool[,] modules, int scale, int quietZone)
+        {
+            var pixels = (Size + quietZone * 2) * scale;
+            using var bitmap = new System.Drawing.Bitmap(pixels, pixels);
+            using (var graphics = System.Drawing.Graphics.FromImage(bitmap))
+            {
+                graphics.Clear(System.Drawing.Color.White);
+                using var brush = new System.Drawing.SolidBrush(System.Drawing.Color.Black);
+
+                for (var y = 0; y < Size; y++)
+                {
+                    for (var x = 0; x < Size; x++)
+                    {
+                        if (!modules[y, x])
+                            continue;
+                        graphics.FillRectangle(brush,
+                            (x + quietZone) * scale,
+                            (y + quietZone) * scale,
+                            scale,
+                            scale);
+                    }
+                }
+            }
+
+            using var ms = new MemoryStream();
+            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            return ms.ToArray();
+        }
+    }
 
     private class FooterEvent : PdfPageEventHelper
     {

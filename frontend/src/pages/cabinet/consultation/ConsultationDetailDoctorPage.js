@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     Button, Tag, message, Typography, Descriptions, Divider, Spin,
     Form, Select, Input, Space
 } from 'antd';
-import { ArrowLeftOutlined, EyeOutlined, VideoCameraOutlined, SaveOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, DownloadOutlined, EyeOutlined, VideoCameraOutlined, SaveOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import {
     getConsultationDetailDoctor,
@@ -13,6 +13,7 @@ import {
     getConsultationTokenDoctor,
     getConsultationBadgeCounts
 } from '../../../host/requests/ConsultationRequest';
+import { downloadReport } from '../../../host/requests/ReportRequest';
 import { initiateConsultationCall } from '../../../hooks/videoSignalRService';
 import LiveKitRoomView from '../../../components/video/LiveKitRoom';
 import { useStore } from '../../../store/Store';
@@ -42,31 +43,34 @@ export default function ConsultationDetailDoctorPage() {
     const [tokenLoading, setTokenLoading] = useState(false);
     const [expandedAnalysisKey, setExpandedAnalysisKey] = useState(null);
     const [form] = Form.useForm();
+    const formHydratedRef = useRef(false);
 
-    useEffect(() => {
-        loadDetail();
-        const interval = setInterval(loadDetail, 15000);
-        return () => clearInterval(interval);
-    }, [id]);
-
-    const loadDetail = async () => {
-        setLoading(true);
+    const loadDetail = useCallback(async ({ silent = false } = {}) => {
+        if (!silent) setLoading(true);
         try {
             const res = await getConsultationDetailDoctor(id);
             setDetail(res.data);
-            if (res.data?.conclusion) {
+            if (res.data?.conclusion && !formHydratedRef.current && !form.isFieldsTouched()) {
                 form.setFieldsValue({
                     patientCondition: res.data.conclusion.patientCondition,
                     diagnosis: res.data.conclusion.diagnosis,
                     treatment: res.data.conclusion.treatment,
                 });
+                formHydratedRef.current = true;
             }
         } catch {
-            message.error(t('error'));
+            if (!silent) message.error(t('error'));
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
-    };
+    }, [form, id, t]);
+
+    useEffect(() => {
+        formHydratedRef.current = false;
+        loadDetail();
+        const interval = setInterval(() => loadDetail({ silent: true }), 30000);
+        return () => clearInterval(interval);
+    }, [id, loadDetail]);
 
     const handleSaveConclusion = async () => {
         try {
@@ -79,7 +83,8 @@ export default function ConsultationDetailDoctorPage() {
             });
             getConsultationBadgeCounts().then((res) => setConsultationBadge(res.data || {})).catch(() => {});
             message.success(t('data_saved'));
-            loadDetail();
+            formHydratedRef.current = false;
+            loadDetail({ silent: true });
         } catch (err) {
             if (err?.errorFields) return;
             message.error(t('error'));
@@ -108,6 +113,14 @@ export default function ConsultationDetailDoctorPage() {
             message.error(t('error'));
         } finally {
             setTokenLoading(false);
+        }
+    };
+
+    const handleDownloadPdf = async () => {
+        try {
+            await downloadReport('consultation', id);
+        } catch {
+            message.error(t('error'));
         }
     };
 
@@ -156,6 +169,11 @@ export default function ConsultationDetailDoctorPage() {
                         <Tag color={STATUS_COLORS[detail.status] || 'default'} style={{ fontSize: 14, padding: '4px 12px' }}>
                             {statusLabel(detail.status)}
                         </Tag>
+                        {detail.conclusion && (
+                            <Button icon={<DownloadOutlined />} onClick={handleDownloadPdf}>
+                                PDF
+                            </Button>
+                        )}
                         {canCall && (
                             <Button
                                 type="primary"
