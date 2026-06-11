@@ -1,0 +1,41 @@
+/* NMED Design System — global entry point.
+   Order: fonts first (must precede other rules), then tokens. */
+
+@import url("tokens/fonts.css");
+@import url("tokens/colors.css");
+@import url("tokens/typography.css");
+@import url("tokens/spacing.css");
+
+/* ---------------------------------------------------------------
+   Responsive type-scale overrides.
+   Desktop values live in tokens/typography.css. These step the
+   display sizes down for tablet and mobile so headlines never blow
+   out of the viewport. Body / label sizes are intentionally kept
+   legible (never below 15px) per the brand's "medical legibility".
+----------------------------------------------------------------- */
+@media (max-width: 1023px) {
+  :root {
+    --fs-display-xl: 56px;
+    --fs-display-lg: 52px;
+    --fs-h1: 40px;
+    --fs-h2: 32px;
+    --fs-h3: 24px;
+    --fs-stat: 56px;
+    --fs-lead: 18px;
+    --space-section: 80px;
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --fs-display-xl: 40px;
+    --fs-display-lg: 38px;
+    --fs-h1: 30px;
+    --fs-h2: 26px;
+    --fs-h3: 21px;
+    --fs-stat: 44px;
+    --fs-lead: 17px;
+    --space-section: 64px;
+    --container-max: 100%;
+  }
+}

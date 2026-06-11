@@ -1,0 +1,44 @@
+/* NMED — Spacing, radius, layout, motion tokens */
+
+:root {
+  /* ---- Spacing scale (4px base) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 80px;
+  --space-section: 100px;   /* minimum vertical section padding */
+
+  /* ---- Radii ---- */
+  --radius-sm: 8px;         /* inputs, small buttons */
+  --radius-md: 10px;        /* buttons */
+  --radius-lg: 16px;        /* compact glass cards */
+  --radius-xl: 20px;        /* feature cards */
+  --radius-2xl: 24px;       /* large glass panels */
+  --radius-pill: 999px;     /* chips, badges */
+
+  /* ---- Layout ---- */
+  --nav-height: 72px;
+  --container-max: 1200px;
+  --content-gap: 24px;
+
+  /* ---- Blur (glassmorphism) ---- */
+  --blur-card: 16px;
+  --blur-nav: 20px;
+
+  /* ---- Motion ---- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);    /* @kind other */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* @kind other */
+  --dur-fast: 0.2s;         /* @kind other */
+  --dur-base: 0.3s;         /* @kind other */
+  --dur-slow: 0.6s;         /* @kind other */
+  --stagger: 100ms;         /* @kind other */
+
+  /* ---- Background textures ---- */
+  --grid-line: rgba(42, 167, 155, 0.06);   /* faint grid pattern */
+  --dot-grid: rgba(42, 167, 155, 0.04);    /* hero dot grid */
+}
