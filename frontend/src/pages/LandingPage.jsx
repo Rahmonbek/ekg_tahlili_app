@@ -1,484 +1,1381 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, useMotionValue, useScroll, useTransform } from 'framer-motion';
 import './LandingPage.css';
+import logo from '../images/logo.png';
 import {
   FiActivity,
   FiArrowRight,
+  FiArrowUp,
   FiBarChart2,
+  FiCalendar,
   FiCheck,
   FiChevronDown,
+  FiChevronLeft,
+  FiChevronRight,
+  FiClock,
   FiCpu,
-  FiGithub,
+  FiExternalLink,
+  FiFileText,
   FiGlobe,
   FiHeart,
+  FiLock,
   FiMenu,
   FiMic,
-  FiMoon,
+  FiMonitor,
+  FiPhoneOff,
   FiPlay,
-  FiSun,
+  FiSend,
+  FiShield,
+  FiTrendingUp,
   FiUpload,
   FiUserPlus,
+  FiUsers,
   FiVideo,
   FiX,
 } from 'react-icons/fi';
-import logo from '../images/logo.png';
-import CustomCursor from '../components/ui/CustomCursor';
-import ScrollProgress from '../components/ui/ScrollProgress';
-import ParticleField from '../components/ui/ParticleField';
-import Reveal from '../components/ui/Reveal';
-import AnimatedCounter from '../components/ui/AnimatedCounter';
-import {
-  blurVariants,
-  containerVariants,
-  fadeUpVariants,
-  scaleVariants,
-  slideLeftVariants,
-  slideRightVariants,
-} from '../animations/variants';
-
-const features = [
-  ['EKG Tahlili', '12 qo‘rg‘oshinli EKG faylini yuklang. AI 30 soniyada yurak ritmi, ST segment va QTc intervalni tahlil qiladi.', FiActivity],
-  ['SMAD Monitoring', '24 soatlik qon bosimi monitoringi sutkalik profil va tsirkad indeks bilan tahlil qilinadi.', FiBarChart2],
-  ['Holter Monitoring', '48 soatlik yurak monitoringida aritmiyalar, pauzalar va ST siljishlar avtomatik aniqlanadi.', FiHeart],
-  ['Laboratoriya Tahlili', '36 ta parametr rasmdan ajratiladi, normadan og‘ish bo‘lsa shifokorga aniq signal beradi.', FiMic],
-  ['Parazitologiya', 'Mikroskop rasmi asosida gijja turi aniqlanadi va epidemiologik kuzatuvga tayyorlanadi.', FiGlobe],
-  ['Online Konsultatsiya', 'Boshqa klinika mutaxassisi bilan real vaqt video konsultatsiya va bemor diagnostikasini birga ko‘rish.', FiVideo],
-];
-
-const chartData = [28, 44, 39, 62, 78, 91, 105, 122, 136, 151, 168, 192];
-const months = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyn', 'Iyl', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'];
-const testimonials = [
-  ['KS', 'EKG tahlili avval 30 daqiqa olardi, endi 30 soniya. Bemorlarim sonini 2 baravarga oshirdim.', 'Dr. Karimov Sh.', 'Kardiolog, Toshkent'],
-  ['AM', 'Lab natijalarini AI tahlil qilgandan so‘ng, vaqtim bemor bilan gaplashishga ko‘proq qoldi.', 'Dr. Azimova M.', 'Terapevt, Samarqand'],
-  ['YB', 'Holter monitoring xulosasi juda batafsil, hatto o‘zim ko‘rmagan narsalarni AI topdi.', 'Dr. Yusupov B.', 'Kardiolog, Farg‘ona'],
-  ['RN', 'Parazitologiya moduli laboratoriyamiz ish hajmini ikki baravarga qisqartirdi.', 'Dr. Rahimova N.', 'Laborant, Namangan'],
-  ['HA', 'Online konsultatsiya orqali Toshkentdagi mutaxassis bilan real vaqtda maslahat olaman.', 'Dr. Hasanov A.', 'Shifokor, Termiz'],
-];
+import { FaHospital, FaMicroscope } from 'react-icons/fa';
+import { FaGaugeHigh, FaHeartPulse } from 'react-icons/fa6';
 
 const navLinks = [
-  ['Platforma haqida', '#platforma'],
-  ['Xizmatlar', '#xizmatlar'],
-  ['Statistika', '#statistika'],
-  ['Klinikalar', '#klinikalar'],
-  ['Bog‘lanish', '#boglanish'],
+  { label: 'Platforma', href: '#top' },
+  { label: 'Xizmatlar', href: '#xizmatlar' },
+  { label: 'Konsultatsiya', href: '#konsultatsiya' },
+  { label: 'Statistika', href: '#statistika' },
+  { label: "Bog'lanish", href: '#footer' },
 ];
+
+const problemItems = [
+  "Qog'oz tahlillar yo'qoladi",
+  'Qayta ishlash 30+ daqiqa',
+  'Xato tashxis xavfi',
+  "Shifokor vaqtini boy beradi",
+  "Masofaviy ko'rik imkonsiz",
+];
+
+const solutionItems = [
+  'Tahlil 30 soniyada tayyor',
+  'AI xatolikni 95% kamaytiradi',
+  'Hamma joydan kirish mumkin',
+  'Avto-arxivlash va hisobot',
+  'Masofaviy konsultatsiya',
+];
+
+const features = [
+  {
+    icon: 'activity',
+    title: 'EKG Tahlili',
+    body: "12 qo'rg'oshinli EKG faylini yuklang, AI yurak ritmi, ST segment va QTc intervalni bir necha soniyada tahlil qiladi.",
+  },
+  {
+    icon: 'gauge',
+    title: 'SMAD Monitoring',
+    body: '24 soatlik qon bosimi monitoringi sutkalik profil va tsirkad indeks bilan avtomatik ko‘rinishga keladi.',
+  },
+  {
+    icon: 'heart-pulse',
+    title: 'Holter Monitoring',
+    body: '48 soatlik yurak monitoringida aritmiyalar, pauzalar va ST siljishlar batafsil ajratib beriladi.',
+  },
+  {
+    icon: 'lab',
+    title: 'Laboratoriya',
+    body: 'Laboratoriya rasmlaridan ko‘rsatkichlar ajratiladi, normadan og‘ishlar va tavsiyalar tayyorlanadi.',
+  },
+  {
+    icon: 'microscope',
+    title: 'Parazitologiya',
+    body: "Mikroskop rasmi asosida gijja turi va epidemiologik kuzatuv uchun kerakli ma'lumotlar tayyorlanadi.",
+  },
+  {
+    icon: 'video',
+    title: 'Online Konsultatsiya',
+    body: 'Mutaxassis shifokorlar bilan bemor diagnostikasini platforma ichida video orqali birga ko‘rish mumkin.',
+    tags: ['Video qo‘ng‘iroq', 'Masofaviy'],
+    highlight: true,
+  },
+];
+
+const consultSteps = [
+  {
+    icon: 'send',
+    number: '01',
+    title: 'Diagnostika yuboriladi',
+    body: 'Admin bemor tahlillarini tanlangan mutaxassisga platforma ichida yuboradi.',
+  },
+  {
+    icon: 'monitor',
+    number: '02',
+    title: "Mutaxassis ko'radi",
+    body: "Shifokor o'z kabinetidan bemorning EKG, SMAD, Holter va laboratoriya natijalarini ko'radi.",
+  },
+  {
+    icon: 'video',
+    number: '03',
+    title: 'Video muloqot',
+    body: "Platforma ichida shifokor, admin va bemor o'rtasida bevosita masofaviy maslahat bo'ladi.",
+  },
+];
+
+const timelineSteps = [
+  {
+    number: '01',
+    icon: 'hospital',
+    title: "Klinikani ro'yxatdan o'tkazing",
+    body: '5 daqiqada klinika nomi, INN va asosiy ma’lumotlarni kiritib ishni boshlang.',
+  },
+  {
+    number: '02',
+    icon: 'user-plus',
+    title: "Bemorni qo'shing",
+    body: "Passport seriyasi va tug'ilgan sana orqali bemorni toping yoki yangi kartasini yarating.",
+  },
+  {
+    number: '03',
+    icon: 'upload',
+    title: 'Tahlil faylini yuklang',
+    body: "EKG, SMAD, Holter yoki laboratoriya faylini drag-and-drop yoki tanlash orqali yuklang.",
+  },
+  {
+    number: '04',
+    icon: 'cpu',
+    title: 'AI natijani tayyorlaydi',
+    body: 'Tahlil, tavsiya, ko‘rsatkichlar va PDF hisobot bir joyda tayyor bo‘ladi.',
+  },
+];
+
+const stats = [
+  { icon: 'hospital', value: 142, suffix: '+', label: 'Faol klinikalar' },
+  { icon: 'chart', value: 50000, suffix: '+', label: 'Amalga oshirilgan tahlillar' },
+  { icon: 'globe', value: 14, suffix: '', label: "Viloyatlar bo'yicha qamrov" },
+  { icon: 'shield', value: 99.2, suffix: '%', label: 'AI aniqlik darajasi', fixed: 1 },
+];
+
+const months = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyn', 'Iyl', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'];
+const monthValues = [42, 55, 61, 58, 73, 80, 77, 88, 92, 99, 108, 120];
 
 const regions = [
-  ['Toshkent', 38],
-  ['Samarqand', 16],
-  ['Farg‘ona', 14],
-  ['Andijon', 12],
-  ['Namangan', 10],
-  ['Buxoro', 9],
-  ['Qashqadaryo', 8],
-  ['Surxondaryo', 7],
-  ['Navoiy', 6],
-  ['Xorazm', 6],
-  ['Jizzax', 5],
-  ['Sirdaryo', 4],
-  ['Qoraqalpog‘iston', 4],
-  ['Toshkent vil.', 3],
+  { name: 'Qoraqalpog‘iston', count: 6, x: 3, y: 6, w: 24, h: 42 },
+  { name: 'Xorazm', count: 4, x: 3, y: 50, w: 17, h: 20 },
+  { name: 'Navoiy', count: 6, x: 29, y: 8, w: 21, h: 38 },
+  { name: 'Buxoro', count: 8, x: 23, y: 52, w: 22, h: 30 },
+  { name: 'Sirdaryo', count: 3, x: 52, y: 6, w: 10, h: 13 },
+  { name: 'Jizzax', count: 3, x: 52, y: 21, w: 13, h: 18 },
+  { name: 'Toshkent', count: 20, x: 64, y: 4, w: 16, h: 15 },
+  { name: 'Toshkent sh.', count: 38, x: 66, y: 21, w: 11, h: 10 },
+  { name: 'Samarqand', count: 14, x: 49, y: 43, w: 16, h: 18 },
+  { name: 'Qashqadaryo', count: 7, x: 47, y: 63, w: 19, h: 22 },
+  { name: 'Surxondaryo', count: 3, x: 52, y: 87, w: 16, h: 11 },
+  { name: 'Namangan', count: 9, x: 82, y: 8, w: 16, h: 11 },
+  { name: 'Andijon', count: 10, x: 86, y: 21, w: 12, h: 11 },
+  { name: "Farg'ona", count: 11, x: 80, y: 34, w: 14, h: 13 },
 ];
 
-function Navbar({ light, setLight }) {
-  const [mobileOpen, setMobileOpen] = useState(false);
+const securityItems = [
+  {
+    icon: 'lock',
+    title: 'AES-256 shifrlash',
+    body: "Barcha bemor ma'lumotlari saqlash va uzatish jarayonida himoyalanadi.",
+  },
+  {
+    icon: 'shield',
+    title: 'Rasmiy litsenziya',
+    body: "Sog'liqni saqlash talablari asosida ishlaydigan xavfsiz tibbiy platforma.",
+  },
+  {
+    icon: 'monitor',
+    title: "Ma'lumotlar O'zbekistonda",
+    body: 'Server infratuzilmasi mahalliy talablarga mos, audit va kuzatuv uchun tayyor.',
+  },
+  {
+    icon: 'users',
+    title: 'Rolga asoslangan kirish',
+    body: "Har bir xodim faqat o'z vakolati doirasidagi ma'lumotni ko'radi.",
+  },
+  {
+    icon: 'file',
+    title: "To'liq audit jurnali",
+    body: "Ko'rish, tahrirlash va chaqiruvlar bo'yicha izlar tizimda qayd etiladi.",
+  },
+  {
+    icon: 'check-circle',
+    title: '99.9% ishonchlilik',
+    body: 'Doimiy monitoring, zaxira nusxa va uzluksiz xizmat ko‘rsatish arxitekturasi.',
+  },
+];
 
-  return (
-    <motion.header
-      className="nmed-navbar"
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
-    >
-      <Link className="nmed-nav-brand" to="/">
-        <span className="nmed-logo-pulse"><img src={logo} alt="NMED" /></span>
-        <span>NMED</span>
-      </Link>
-      <nav aria-label="Landing navigation">
-        {navLinks.map(([label, href]) => <a href={href} key={label}>{label}</a>)}
-      </nav>
-      <div className="nmed-nav-actions">
-        <button className="nmed-icon-btn" type="button" onClick={() => setLight(!light)} aria-label="Toggle theme">
-          {light ? <FiMoon /> : <FiSun />}
-        </button>
-        <Link className="nmed-gradient-btn nmed-login-cta" to="/login">Kirish</Link>
-        <Link className="nmed-outline-btn nmed-start-cta" to="/register">Boshlash</Link>
-        <button className="nmed-icon-btn nmed-menu-btn" type="button" onClick={() => setMobileOpen(true)} aria-label="Menyuni ochish">
-          <FiMenu />
-        </button>
-      </div>
-      <motion.div
-        className="nmed-mobile-drawer"
-        initial={false}
-        animate={mobileOpen ? 'open' : 'closed'}
-        variants={{
-          open: { opacity: 1, x: 0, pointerEvents: 'auto' },
-          closed: { opacity: 0, x: 40, pointerEvents: 'none' },
-        }}
-        transition={{ duration: 0.24 }}
-        aria-hidden={!mobileOpen}
-      >
-        <button type="button" onClick={() => setMobileOpen(false)} aria-label="Menyuni yopish"><FiX /></button>
-        {navLinks.map(([label, href]) => <a href={href} key={label} onClick={() => setMobileOpen(false)}>{label}</a>)}
-        <Link to="/login" onClick={() => setMobileOpen(false)}>Kirish</Link>
-        <Link to="/register" onClick={() => setMobileOpen(false)}>Boshlash</Link>
-      </motion.div>
-    </motion.header>
-  );
-}
+const testimonials = [
+  {
+    initials: 'DK',
+    name: 'Dr. Karimov',
+    role: 'Kardiolog',
+    quote: 'EKG tahlili 30 daqiqadan 30 soniyaga tushdi va bemor oqimi sezilarli oshdi.',
+  },
+  {
+    initials: 'DA',
+    name: 'Dr. Azimova',
+    role: 'Terapevt',
+    quote: "Laboratoriya natijalarini AI tayyorlagach, bemor bilan muloqot uchun ko'proq vaqt qolmoqda.",
+  },
+  {
+    initials: 'DY',
+    name: 'Dr. Yusupov',
+    role: 'Kardiolog',
+    quote: 'Holter xulosasi juda batafsil, AI ko‘rinmay qoladigan nuqtalarni ham topadi.',
+  },
+  {
+    initials: 'DR',
+    name: 'Dr. Rahimova',
+    role: 'Laborant',
+    quote: 'Parazitologiya moduli laboratoriya jarayonlarini tezlashtirib, xatolarni kamaytirdi.',
+  },
+];
 
-function HeroSection() {
-  const rotateX = useMotionValue(0);
-  const rotateY = useMotionValue(0);
+const blogPosts = [
+  {
+    category: 'Texnologiya',
+    icon: 'activity',
+    title: 'AI EKG tahlilida ST segment va QTc qanday hisoblanadi',
+    date: '12-Iyun, 2026',
+    read: '5 daqiqa',
+  },
+  {
+    category: 'Amaliyot',
+    icon: 'video',
+    title: 'Online konsultatsiya: 142 klinika tajribasidan 5 saboq',
+    date: '4-Iyun, 2026',
+    read: '7 daqiqa',
+  },
+  {
+    category: 'Tadqiqot',
+    icon: 'microscope',
+    title: 'Parazitologiyada AI va epidemiologik monitoring',
+    date: '28-May, 2026',
+    read: '6 daqiqa',
+  },
+];
 
-  const handleMove = (event) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width - 0.5;
-    const y = (event.clientY - rect.top) / rect.height - 0.5;
-    rotateY.set(x * 16);
-    rotateX.set(y * -12);
+const faqs = [
+  {
+    q: "NMED qanday tahlillarni qo'llab-quvvatlaydi?",
+    a: 'EKG, SMAD, Holter, laboratoriya va parazitologiya tahlillari bitta platformada ishlaydi.',
+  },
+  {
+    q: 'AI tahlili qancha vaqt oladi?',
+    a: "Fayl turi va hajmiga qarab odatda bir necha soniyadan 30 soniyagacha bo'lgan oraliqda natija tayyorlanadi.",
+  },
+  {
+    q: 'Online konsultatsiya qanday ishlaydi?',
+    a: 'Admin natijalarni mutaxassisga yuboradi, mutaxassis esa tahlillarni ko‘rib platforma ichida video maslahat beradi.',
+  },
+  {
+    q: "Ma'lumotlar xavfsizligi qanday ta'minlanadi?",
+    a: "Shifrlash, audit, rolga asoslangan kirish va kuzatuv qatlamlari orqali bemor ma'lumotlari himoyalanadi.",
+  },
+  {
+    q: "Ro'yxatdan o'tish qancha vaqt oladi?",
+    a: 'Asosiy klinika ma’lumotlari tayyor bo‘lsa, tizimga kirish va ishni boshlash bir necha daqiqada yakunlanadi.',
+  },
+];
+
+function iconFor(name) {
+  const iconMap = {
+    activity: FiActivity,
+    gauge: FaGaugeHigh,
+    'heart-pulse': FaHeartPulse,
+    lab: FiMic,
+    microscope: FaMicroscope,
+    video: FiVideo,
+    send: FiSend,
+    monitor: FiMonitor,
+    hospital: FaHospital,
+    'user-plus': FiUserPlus,
+    upload: FiUpload,
+    cpu: FiCpu,
+    chart: FiBarChart2,
+    globe: FiGlobe,
+    shield: FiShield,
+    lock: FiLock,
+    users: FiUsers,
+    file: FiFileText,
+    'check-circle': FiCheck,
+    play: FiPlay,
+    calendar: FiCalendar,
+    clock: FiClock,
+    menu: FiMenu,
+    close: FiX,
+    chevronDown: FiChevronDown,
+    arrowRight: FiArrowRight,
+    arrowUp: FiArrowUp,
+    phoneOff: FiPhoneOff,
+    heart: FiHeart,
+    external: FiExternalLink,
+    trend: FiTrendingUp,
   };
 
-  return (
-    <section className="nmed-hero" id="platforma">
-      <ParticleField />
-      <div className="nmed-grid-overlay" />
-      <motion.div className="nmed-hero-copy" variants={containerVariants} initial="hidden" animate="visible">
-        <motion.div className="nmed-hero-badge" variants={fadeUpVariants}>O‘zbekistondagi birinchi AI diagnostika platformasi</motion.div>
-        <motion.h1 variants={containerVariants} aria-label="Tibbiyotni Aqlli qiling">
-          {['Tibbiyotni', 'Aqlli qiling'].map((word, index) => (
-            <motion.span key={word} className={index === 1 ? 'nmed-gradient-text' : ''} variants={blurVariants} aria-hidden="true">
-              {word}
-            </motion.span>
-          ))}
-        </motion.h1>
-        <motion.p className="nmed-typewriter" variants={fadeUpVariants}>
-          NMED — EKG, SMAD, Holter va laboratoriya tahlillarini sun'iy intellekt yordamida tahlil qiluvchi zamonaviy tibbiy diagnostika platformasi.
-        </motion.p>
-        <motion.div className="nmed-hero-actions" variants={fadeUpVariants}>
-          <Link className="nmed-gradient-btn nmed-large-btn" to="/login">Tizimga kirish <FiArrowRight /></Link>
-          <button className="nmed-video-btn" type="button"><FiPlay /> Video ko‘rish</button>
-        </motion.div>
-        {/* <motion.div className="nmed-scroll-cue" animate={{ y: [0, 10, 0] }} transition={{ duration: 1.8, repeat: Infinity }}>
-          <FiChevronDown />
-          <span>Pastga suring</span>
-        </motion.div> */}
-      </motion.div>
+  return iconMap[name] || FiActivity;
+}
 
-      <motion.div
-        className="nmed-dashboard-wrap"
-        onMouseMove={handleMove}
-        onMouseLeave={() => { rotateX.set(0); rotateY.set(0); }}
-        initial={{ x: 100, opacity: 0, rotateY: 15 }}
-        animate={{ x: 0, opacity: 1, rotateY: 0 }}
-        transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
-        style={{ rotateX, rotateY }}
-      >
-        <div className="nmed-glow-ring" />
-        <div className="nmed-dashboard">
-          <div className="nmed-window-dots"><span /><span /><span /></div>
-          <div className="nmed-dash-sidebar"><b>NMED</b><span>EKG</span><span>SMAD</span><span>Holter</span><span>Lab</span></div>
-          <div className="nmed-dash-main">
-            <div className="nmed-dash-top"><span>Bemor: A. Rahmonov</span><em>AI tayyor</em></div>
-            <svg viewBox="0 0 460 150" className="nmed-ecg-wave" aria-hidden="true">
-              <motion.path d="M0 82 L60 82 L76 32 L92 120 L112 82 L160 82 L176 56 L190 96 L208 82 L260 82 L278 22 L296 128 L318 82 L460 82" pathLength={1} initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 2, repeat: Infinity, repeatType: 'loop', repeatDelay: 0.4 }} />
-            </svg>
-            <div className="nmed-dash-cards"><span>QTc 412 ms</span><span>ST normal</span><span>Ritm sinus</span></div>
+function Icon({ name, className }) {
+  const Component = iconFor(name);
+  return <Component className={className} />;
+}
+
+function useReveal() {
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in');
+          }
+        });
+      },
+      { threshold: 0.14 }
+    );
+
+    const items = document.querySelectorAll('.reveal');
+    items.forEach((item) => observer.observe(item));
+
+    return () => observer.disconnect();
+  }, []);
+}
+
+function useScrollProgress() {
+  useEffect(() => {
+    const update = () => {
+      const doc = document.documentElement;
+      const maxScroll = doc.scrollHeight - doc.clientHeight;
+      const progress = maxScroll > 0 ? (doc.scrollTop / maxScroll) * 100 : 0;
+      doc.style.setProperty('--landing-progress', `${progress}%`);
+    };
+
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+
+    return () => window.removeEventListener('scroll', update);
+  }, []);
+}
+
+function useCounter(target, start, fixed = 0) {
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    if (!start) {
+      return;
+    }
+
+    const startTime = performance.now();
+    const duration = 1600;
+    let frameId;
+
+    const tick = (now) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(target * eased);
+      if (progress < 1) {
+        frameId = window.requestAnimationFrame(tick);
+      }
+    };
+
+    frameId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frameId);
+  }, [start, target]);
+
+  return fixed ? value.toFixed(fixed) : Math.round(value).toLocaleString();
+}
+
+function SectionHeader({ eyebrow, title, accent, description }) {
+  return (
+    <div className="landing-head reveal">
+      <span className="landing-eyebrow">{eyebrow}</span>
+      <h2 className="landing-title">
+        {title} {accent ? <span>{accent}</span> : null}
+      </h2>
+      {description ? <p className="landing-subtitle">{description}</p> : null}
+    </div>
+  );
+}
+
+function StatCard({ item, start, delay }) {
+  const value = useCounter(item.value, start, item.fixed);
+
+  return (
+    <article className="landing-card reveal" data-delay={delay}>
+      <span className="landing-icon-box">
+        <Icon name={item.icon} />
+      </span>
+      <strong className="landing-stat-value">
+        {value}
+        {item.suffix}
+      </strong>
+      <p>{item.label}</p>
+    </article>
+  );
+}
+
+function Navbar() {
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState('#top');
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActive(`#${entry.target.id}`);
+          }
+        });
+      },
+      { rootMargin: '-45% 0px -45% 0px' }
+    );
+
+    navLinks.forEach((link) => {
+      const id = link.href.replace('#', '');
+      const section = document.getElementById(id);
+      if (section) {
+        observer.observe(section);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
+
+  return (
+    <>
+      <header className={`landing-nav ${scrolled ? 'is-scrolled' : ''}`}>
+        <div className="landing-container landing-nav-inner">
+          <a className="landing-brand" href="#top">
+            <span className="landing-brand-mark">
+              <img src={logo} alt="NMED" />
+            </span>
+            <span className="landing-brand-text">NMED</span>
+          </a>
+
+          <nav className="landing-links">
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                className={active === link.href ? 'is-active' : ''}
+                href={link.href}
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+
+          <div className="landing-nav-actions">
+            <Link className="landing-btn landing-btn-outline landing-btn-sm" to="/login">
+              Kirish
+            </Link>
+            <Link className="landing-btn landing-btn-primary landing-btn-sm" to="/register">
+              Boshlash <Icon name="arrowRight" />
+            </Link>
+            <button
+              className="landing-menu-button"
+              type="button"
+              onClick={() => setOpen(true)}
+              aria-label="Menyuni ochish"
+            >
+              <Icon name="menu" />
+            </button>
           </div>
         </div>
-        <motion.div className="nmed-float-card nmed-float-one" animate={{ y: [0, -12, 0] }} transition={{ duration: 3, repeat: Infinity }}>EKG tahlil tayyor</motion.div>
-        <motion.div className="nmed-float-card nmed-float-two" animate={{ y: [0, -16, 0] }} transition={{ duration: 3.7, repeat: Infinity }}>AI aniqladi: Normal ritm</motion.div>
-        <motion.div className="nmed-float-card nmed-float-three" animate={{ y: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity }}>142 ta klinika</motion.div>
-      </motion.div>
-    </section>
-  );
-}
+      </header>
 
-function PaperChaosIllustration() {
-  return (
-    <div className="nmed-paper-illustration" aria-hidden="true">
-      <svg viewBox="0 0 520 170" role="img">
-        <defs>
-          <linearGradient id="paperScan" x1="0" x2="1">
-            <stop offset="0%" stopColor="#fb7185" stopOpacity="0" />
-            <stop offset="48%" stopColor="#fb7185" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
-          </linearGradient>
-          <filter id="paperGlow">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-        <motion.g animate={{ rotate: [-1, 1.5, -1], y: [0, -4, 0] }} transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}>
-          <path className="nmed-paper-sheet back" d="M70 30h210l34 34v74H70z" />
-          <path className="nmed-paper-fold back" d="M280 30v34h34" />
-          {[58, 78, 98, 118].map((y) => <path key={y} className="nmed-paper-line back" d={`M96 ${y}h150`} />)}
-        </motion.g>
-        <motion.g animate={{ rotate: [1.5, -1.5, 1.5], y: [0, 5, 0] }} transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut' }}>
-          <path className="nmed-paper-sheet front" d="M180 18h220l38 38v96H180z" />
-          <path className="nmed-paper-fold front" d="M400 18v38h38" />
-          <motion.path
-            className="nmed-paper-ecg"
-            d="M210 92h34l10-26 17 60 16-34h35l13-24 14 48 12-24h48"
-            initial={{ pathLength: 0 }}
-            whileInView={{ pathLength: 1 }}
-            viewport={{ once: false }}
-            transition={{ duration: 1.9, repeat: Infinity, repeatDelay: 0.35 }}
-          />
-          {[56, 122, 140].map((y) => <path key={y} className="nmed-paper-line front" d={`M210 ${y}h150`} />)}
-        </motion.g>
-        <motion.path className="nmed-lost-path" d="M78 132 C145 88, 214 168, 292 124 S402 104, 455 136" animate={{ pathLength: [0.18, 1, 0.18], opacity: [0.25, 0.9, 0.25] }} transition={{ duration: 3.3, repeat: Infinity, ease: 'easeInOut' }} />
-        <motion.rect className="nmed-scan-danger" x="60" y="18" width="42" height="136" animate={{ x: [60, 418, 60], opacity: [0, 0.8, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }} />
-        <motion.g className="nmed-warning-chip" animate={{ scale: [1, 1.04, 1], opacity: [0.86, 1, 0.86] }} transition={{ duration: 1.8, repeat: Infinity }}>
-          <rect x="338" y="106" width="112" height="34" rx="17" />
-          <path d="M358 115l9 17m0-17l-9 17" />
-          <text x="382" y="128">Qo'lda</text>
-        </motion.g>
-      </svg>
-    </div>
-  );
-}
-
-function AiMonitorIllustration() {
-  return (
-    <div className="nmed-monitor-illustration" aria-hidden="true">
-      <svg viewBox="0 0 520 170" role="img">
-        <defs>
-          <radialGradient id="aiCore" cx="50%" cy="50%" r="55%">
-            <stop offset="0%" stopColor="#00d4aa" stopOpacity="0.9" />
-            <stop offset="55%" stopColor="#3b82f6" stopOpacity="0.34" />
-            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
-          </radialGradient>
-          <filter id="aiGlow">
-            <feGaussianBlur stdDeviation="5" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-        <motion.rect className="nmed-monitor-frame" x="64" y="18" width="392" height="118" rx="22" animate={{ opacity: [0.88, 1, 0.88] }} transition={{ duration: 3, repeat: Infinity }} />
-        <path className="nmed-monitor-stand" d="M238 136h44l8 18h-60z" />
-        <path className="nmed-monitor-base" d="M204 154h112" />
-        <motion.circle className="nmed-ai-core" cx="260" cy="76" r="38" animate={{ scale: [0.92, 1.08, 0.92] }} transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }} />
-        <motion.g className="nmed-ai-orbits" animate={{ rotate: 360 }} transition={{ duration: 14, repeat: Infinity, ease: 'linear' }} style={{ originX: '260px', originY: '76px' }}>
-          <ellipse cx="260" cy="76" rx="84" ry="34" />
-          <ellipse cx="260" cy="76" rx="84" ry="34" transform="rotate(60 260 76)" />
-          <ellipse cx="260" cy="76" rx="84" ry="34" transform="rotate(120 260 76)" />
-        </motion.g>
-        <text className="nmed-ai-text" x="260" y="84">AI</text>
-        {[0, 1, 2, 3, 4, 5].map((index) => (
-          <motion.circle
-            key={index}
-            className="nmed-ai-node"
-            cx={[162, 206, 332, 358, 224, 304][index]}
-            cy={[62, 116, 42, 108, 44, 128][index]}
-            r="5"
-            animate={{ opacity: [0.35, 1, 0.35], scale: [0.85, 1.24, 0.85] }}
-            transition={{ duration: 2.2, delay: index * 0.18, repeat: Infinity }}
-          />
+      <div className={`landing-drawer ${open ? 'is-open' : ''}`}>
+        <button
+          className="landing-drawer-close"
+          type="button"
+          onClick={() => setOpen(false)}
+          aria-label="Menyuni yopish"
+        >
+          <Icon name="close" />
+        </button>
+        {navLinks.map((link) => (
+          <a key={link.href} href={link.href} onClick={() => setOpen(false)}>
+            <span>{link.label}</span>
+            <Icon name="external" />
+          </a>
         ))}
-        <motion.path className="nmed-clean-ecg" d="M92 104h72l14-34 20 66 22-48h70l18-30 18 58 17-28h86" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: false }} transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 0.35 }} />
-        <motion.g className="nmed-ready-chip" animate={{ y: [0, -4, 0] }} transition={{ duration: 2.4, repeat: Infinity }}>
-          <rect x="334" y="28" width="100" height="30" rx="15" />
-          <path d="M352 43l8 8 17-18" />
-          <text x="386" y="48">Tayyor</text>
-        </motion.g>
-      </svg>
+        <Link className="landing-btn landing-btn-outline" to="/login" onClick={() => setOpen(false)}>
+          Kirish
+        </Link>
+        <Link className="landing-btn landing-btn-primary" to="/register" onClick={() => setOpen(false)}>
+          Boshlash
+        </Link>
+      </div>
+    </>
+  );
+}
+
+function HeroDemo() {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(
+      () => setStep((current) => (current + 1) % 3),
+      [2200, 2400, 3400][step]
+    );
+    return () => window.clearTimeout(timeout);
+  }, [step]);
+
+  return (
+    <div className="landing-demo reveal" data-delay="2">
+      <div className="landing-demo-glow" />
+      <div className="landing-demo-frame">
+        <div className="landing-demo-bar">
+          <span />
+          <span />
+          <span />
+          <b>nmed.uz/dashboard</b>
+        </div>
+
+        <div className="landing-demo-body">
+          <div className="landing-demo-head">
+            <div>
+              <h4>EKG · Bemor #4471</h4>
+              <p>Kardiologiya · 10:24</p>
+            </div>
+            <span className={`landing-pill ${step === 2 ? 'is-solid' : step === 1 ? 'is-light' : 'is-ghost'}`}>
+              {step === 0 ? 'Yuklanmoqda' : step === 1 ? 'Tahlil qilinmoqda' : 'Tahlil tayyor'}
+            </span>
+          </div>
+
+          {step === 0 ? (
+            <div className="landing-demo-upload">
+              <Icon name="upload" />
+              <p>ekg_4471.dcm</p>
+              <div className="landing-demo-progress">
+                <span />
+              </div>
+            </div>
+          ) : null}
+
+          {step === 1 ? (
+            <div className="landing-demo-loading">
+              <div className="landing-demo-loading-row" />
+              <div className="landing-demo-loading-card-row">
+                <span />
+                <span />
+                <span />
+              </div>
+            </div>
+          ) : null}
+
+          {step === 2 ? (
+            <div className="landing-demo-result">
+              <div className="landing-demo-wave">
+                <svg viewBox="0 0 360 74" aria-hidden="true">
+                  <path d="M0 37 L78 37 L96 14 L110 61 L124 8 L138 64 L152 37 L246 37 L296 37 L308 18 L322 57 L336 12 L350 61 L360 37" />
+                </svg>
+              </div>
+              <div className="landing-demo-metrics">
+                <div>
+                  <small>Ritm</small>
+                  <strong>Sinus</strong>
+                </div>
+                <div>
+                  <small>QTc</small>
+                  <strong>412 ms</strong>
+                </div>
+                <div>
+                  <small>ST</small>
+                  <strong>Normal</strong>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="landing-float-card landing-float-card-left">
+        <span className="landing-float-icon"><Icon name="check-circle" /></span>
+        <div>
+          <strong>EKG tahlil tayyor</strong>
+          <small>30 soniyada</small>
+        </div>
+      </div>
+
+      <div className="landing-float-card landing-float-card-right">
+        <span className="landing-float-icon is-blue"><Icon name="cpu" /></span>
+        <div>
+          <strong>AI: Normal ritm</strong>
+          <small>Ishonch 99.2%</small>
+        </div>
+      </div>
     </div>
+  );
+}
+
+function Hero() {
+  return (
+    <section className="landing-hero" id="top">
+      <div className="landing-hero-mesh" />
+      <div className="landing-container landing-hero-grid">
+        <div className="landing-hero-copy">
+          <span className="landing-pill is-ghost reveal">O‘zbekistondagi birinchi AI tibbiy platforma</span>
+          <h1 className="reveal" data-delay="1">
+            <span>Tibbiyotni</span>
+            <span className="landing-gradient-text">aqlli qiling</span>
+          </h1>
+          <p className="reveal" data-delay="2">
+            EKG, SMAD, Holter, laboratoriya va parazitologiya tahlillarini sun’iy intellekt
+            bilan birlashtiruvchi zamonaviy platforma.
+          </p>
+          <div className="landing-hero-actions reveal" data-delay="3">
+            <Link className="landing-btn landing-btn-primary landing-btn-lg" to="/login">
+              Platformani ko‘rish <Icon name="arrowRight" />
+            </Link>
+            <button className="landing-btn landing-btn-ghost landing-btn-lg" type="button">
+              <Icon name="play" /> Video ko‘rish
+            </button>
+          </div>
+          <div className="landing-hero-stats reveal" data-delay="4">
+            <div>
+              <strong>142+</strong>
+              <span>klinika</span>
+            </div>
+            <div>
+              <strong>50K+</strong>
+              <span>tahlil</span>
+            </div>
+            <div>
+              <strong>99.2%</strong>
+              <span>aniqlik</span>
+            </div>
+          </div>
+        </div>
+
+        <HeroDemo />
+      </div>
+    </section>
   );
 }
 
 function ProblemSolution() {
-  const problems = ['Qog‘oz tahlillar yo‘qoladi', 'Qayta ishlash sekin', 'Xato tashxis xavfi', 'Shifokor vaqtini boy beradi'];
-  const solutions = ['Soniyalarda tahlil', 'AI xatolikni kamaytiradi', 'Hamma joydan kirish', 'Arxivlash avtomatik'];
   return (
-    <section className="nmed-section nmed-problem" id="muammo">
-      <Reveal className="nmed-problem-panel danger" variants={slideRightVariants}>
-        <h2>Hozirgi holat</h2>
-        <PaperChaosIllustration />
-        {problems.map((item) => <p key={item}><FiX /> {item}</p>)}
-      </Reveal>
-      <Reveal className="nmed-problem-arrow" variants={scaleVariants}>
-        <span>→</span>
-        <b>NMED bilan o‘zgaradi</b>
-      </Reveal>
-      <Reveal className="nmed-problem-panel success" variants={slideLeftVariants}>
-        <h2>NMED bilan</h2>
-        <AiMonitorIllustration />
-        {solutions.map((item) => <p key={item}><FiCheck /> {item}</p>)}
-      </Reveal>
+    <section className="landing-section">
+      <div className="landing-container">
+        <SectionHeader
+          eyebrow="Nima o‘zgaradi"
+          title="Qog‘oz davridan"
+          accent="raqamli davrga"
+        />
+
+        <div className="landing-problem-grid">
+          <div className="landing-state-card landing-state-card-problem reveal" data-delay="1">
+            <h3>Bugungi muammo</h3>
+            <ul>
+              {problemItems.map((item) => (
+                <li key={item}>
+                  <span className="landing-list-icon is-problem">
+                    <Icon name="close" />
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="landing-state-arrow reveal" data-delay="2">
+            <span><Icon name="arrowRight" /></span>
+            <b>NMED</b>
+          </div>
+
+          <div className="landing-state-card landing-state-card-solution reveal" data-delay="3">
+            <h3>NMED bilan</h3>
+            <ul>
+              {solutionItems.map((item) => (
+                <li key={item}>
+                  <span className="landing-list-icon">
+                    <Icon name="check-circle" />
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
 
-function FeaturesSection() {
+function BeforeAfter() {
+  const [position, setPosition] = useState(52);
+  const wrapRef = useRef(null);
+  const draggingRef = useRef(false);
+
+  const updatePosition = (clientX) => {
+    if (!wrapRef.current) {
+      return;
+    }
+
+    const rect = wrapRef.current.getBoundingClientRect();
+    const next = ((clientX - rect.left) / rect.width) * 100;
+    setPosition(Math.max(4, Math.min(96, next)));
+  };
+
+  useEffect(() => {
+    const move = (event) => {
+      if (!draggingRef.current) {
+        return;
+      }
+      const point = 'touches' in event ? event.touches[0].clientX : event.clientX;
+      updatePosition(point);
+    };
+
+    const stop = () => {
+      draggingRef.current = false;
+    };
+
+    window.addEventListener('mousemove', move);
+    window.addEventListener('touchmove', move);
+    window.addEventListener('mouseup', stop);
+    window.addEventListener('touchend', stop);
+
+    return () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('touchmove', move);
+      window.removeEventListener('mouseup', stop);
+      window.removeEventListener('touchend', stop);
+    };
+  }, []);
+
   return (
-    <section className="nmed-section" id="xizmatlar">
-      <Reveal as="div" className="nmed-section-head" variants={blurVariants}>
-        <span>Xizmatlar</span>
-        <h2>Nima qila oladi?</h2>
-      </Reveal>
-      <Reveal className="nmed-feature-grid" variants={containerVariants}>
-        {features.map(([title, text, Icon], index) => (
-          <motion.article
-            className="nmed-glass-card nmed-feature-card nmed-hover-target"
-            key={title}
-            custom={index}
-            variants={fadeUpVariants}
-            whileHover={{ rotateX: -5, rotateY: 5, scale: 1.02, boxShadow: '0 20px 60px rgba(0, 212, 170, 0.2)' }}
+    <section className="landing-section landing-section-alt">
+      <div className="landing-container">
+        <SectionHeader
+          eyebrow="Solishtiring"
+          title="Qog‘oz davri"
+          accent="vs NMED"
+          description="Tutqichni suring va jarayonlar farqini bir qarashda ko‘ring."
+        />
+
+        <div
+          ref={wrapRef}
+          className="landing-compare reveal"
+          onMouseDown={(event) => {
+            draggingRef.current = true;
+            updatePosition(event.clientX);
+          }}
+          onTouchStart={(event) => {
+            draggingRef.current = true;
+            updatePosition(event.touches[0].clientX);
+          }}
+        >
+          <div className="landing-compare-pane landing-compare-after">
+            <span className="landing-compare-tag is-after">NMED</span>
+            <div className="landing-compare-panel">
+              <div className="landing-compare-panel-head">
+                <strong>EKG · #4471</strong>
+                <span className="landing-pill is-solid">30 soniya</span>
+              </div>
+              <div className="landing-compare-wave">
+                <svg viewBox="0 0 320 56" aria-hidden="true">
+                  <path d="M0 28 L70 28 L88 10 L98 46 L108 4 L118 52 L128 28 L218 28 L300 28 L308 14 L314 42 L320 28" />
+                </svg>
+              </div>
+              <div className="landing-compare-chips">
+                <span>Sinus</span>
+                <span>412 ms</span>
+                <span>Normal</span>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="landing-compare-pane landing-compare-before"
+            style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
           >
-            <Icon />
-            <h3>{title}</h3>
-            <p>{text}</p>
-          </motion.article>
-        ))}
-      </Reveal>
+            <span className="landing-compare-tag is-before">Qog‘oz</span>
+            <div className="landing-paper-stack">
+              {[0, 1, 2].map((index) => (
+                <div key={index} className={`landing-paper-sheet landing-paper-sheet-${index}`}>
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="landing-compare-handle" style={{ left: `${position}%` }}>
+            <span>
+              <FiChevronLeft />
+              <FiChevronRight />
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Features() {
+  return (
+    <section className="landing-section" id="xizmatlar">
+      <div className="landing-container">
+        <SectionHeader
+          eyebrow="Xizmatlar"
+          title="Bitta platforma"
+          accent="6 ta modul"
+          description="Diagnostikadan masofaviy konsultatsiyagacha bo‘lgan butun jarayon yagona tizimga yig‘iladi."
+        />
+
+        <div className="landing-feature-grid">
+          {features.map((feature, index) => (
+            <article
+              key={feature.title}
+              className={`landing-card landing-feature-card reveal ${feature.highlight ? 'is-highlight' : ''}`}
+              data-delay={(index % 3) + 1}
+            >
+              <div className="landing-feature-head">
+                <span className="landing-icon-box">
+                  <Icon name={feature.icon} />
+                </span>
+                {feature.highlight ? <span className="landing-pill is-solid">Yangi</span> : null}
+              </div>
+              <h3>{feature.title}</h3>
+              <p>{feature.body}</p>
+              {feature.tags ? (
+                <div className="landing-feature-tags">
+                  {feature.tags.map((tag) => (
+                    <span key={tag} className="landing-pill">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Consultation() {
+  return (
+    <section className="landing-section landing-section-alt" id="konsultatsiya">
+      <div className="landing-container">
+        <SectionHeader
+          eyebrow="Online Konsultatsiya"
+          title="Masofadan"
+          accent="malaka bilan"
+          description="Boshqa shahardagi mutaxassis shifokor bemor diagnostikasini platforma ichida ko‘rib, darhol maslahat beradi."
+        />
+
+        <div className="landing-consult-steps">
+          {consultSteps.map((step, index) => (
+            <article key={step.title} className="landing-card reveal" data-delay={index + 1}>
+              <span className="landing-icon-box">
+                <Icon name={step.icon} />
+              </span>
+              <small>{step.number}</small>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="landing-consult-showcase">
+          <div className="landing-consult-copy reveal">
+            <h3>Video qo‘ng‘iroq platforma ichida</h3>
+            <ul>
+              <li>Diagnostika va suhbat bitta oynada.</li>
+              <li>Bemor bilan yonma-yon tushuntirish imkoniyati.</li>
+              <li>Masofaviy shifokor fikrini zudlik bilan olish.</li>
+              <li>Qo‘ng‘iroq va xulosa tarixini saqlash.</li>
+              <li>Tahlil natijasini parallel ko‘rish.</li>
+              <li>Mutaxassis bilan tezkor hamkorlik.</li>
+            </ul>
+          </div>
+
+          <div className="landing-video-frame reveal" data-delay="2">
+            <div className="landing-demo-bar">
+              <span />
+              <span />
+              <span />
+              <b>nmed.uz/konsultatsiya</b>
+              <em>LIVE</em>
+            </div>
+            <div className="landing-video-grid">
+              <div className="landing-video-column">
+                <div className="landing-video-person is-green">
+                  <strong>Dr. Karimov</strong>
+                  <small>Kardiolog · Toshkent</small>
+                </div>
+                <div className="landing-video-person is-blue">
+                  <strong>Admin + Bemor</strong>
+                  <small>Anor Klinikasi</small>
+                </div>
+              </div>
+              <div className="landing-video-side">
+                <b>Bemor diagnostikasi</b>
+                <div className="landing-video-side-wave">
+                  <svg viewBox="0 0 200 44" aria-hidden="true">
+                    <path d="M0 22 L60 22 L72 8 L82 36 L92 4 L102 40 L112 22 L200 22" />
+                  </svg>
+                </div>
+                <div className="landing-video-metrics">
+                  <span><small>Ritm</small><strong>Sinus</strong></span>
+                  <span><small>QTc</small><strong>412 ms</strong></span>
+                  <span><small>BP</small><strong>128/82</strong></span>
+                </div>
+              </div>
+            </div>
+            <div className="landing-video-actions">
+              <span className="landing-icon-box"><FiMic /></span>
+              <span className="landing-icon-box"><FiVideo /></span>
+              <span className="landing-icon-box"><FiMonitor /></span>
+              <span className="landing-icon-box is-danger"><Icon name="phoneOff" /></span>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
 
 function HowItWorks() {
-  const steps = [
-    ['01', 'Ro‘yxatdan o‘tish', 'Klinika ma’lumotlari, INN → 5 daqiqada tayyor', FiGlobe],
-    ['02', 'Bemor qo‘shish', 'Passport scan yoki qo‘lda kiritish', FiUserPlus],
-    ['03', 'Tahlil yuklash', 'Drag & Drop fayl — format tekshiriladi', FiUpload],
-    ['04', 'Natija olish', 'AI tahlil qiladi, PDF hisobot, shifokor ko‘radi', FiCpu],
-  ];
+  const lineRef = useRef(null);
+  const fillRef = useRef(null);
+
+  useEffect(() => {
+    const update = () => {
+      if (!lineRef.current || !fillRef.current) {
+        return;
+      }
+
+      const rect = lineRef.current.getBoundingClientRect();
+      const viewport = window.innerHeight;
+      const total = rect.height + viewport * 0.4;
+      const passed = Math.min(Math.max(viewport * 0.7 - rect.top, 0), total);
+      fillRef.current.style.height = `${Math.min((passed / total) * 100, 100)}%`;
+    };
+
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+
+    return () => window.removeEventListener('scroll', update);
+  }, []);
+
   return (
-    <section className="nmed-section nmed-how">
-      <Reveal className="nmed-section-head" variants={blurVariants}>
-        <span>Jarayon</span>
-        <h2>Qanday ishlaydi?</h2>
-      </Reveal>
-      <div className="nmed-how-grid">
-        <Reveal className="nmed-steps" variants={containerVariants}>
-          <motion.svg className="nmed-step-line" viewBox="0 0 20 460" preserveAspectRatio="none" aria-hidden="true">
-            <motion.path d="M10 0 V460" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: false }} transition={{ duration: 1.5, ease: 'easeInOut' }} />
-          </motion.svg>
-          {steps.map(([num, title, text, Icon]) => (
-            <motion.article className="nmed-step-card" key={num} variants={fadeUpVariants}>
-              <Icon />
-              <div><strong>{num}</strong><h3>{title}</h3><p>{text}</p></div>
-            </motion.article>
-          ))}
-        </Reveal>
-        <Reveal className="nmed-live-demo" variants={slideLeftVariants}>
-          <div className="nmed-ai-orbit"><span>AI</span><i /><i /><i /></div>
-          <h3>Live demo</h3>
-          <p>Fayl yuklanadi, AI tekshiradi, shifokor yakunlaydi. Jarayon vizual va nazorat ostida.</p>
-        </Reveal>
+    <section className="landing-section">
+      <div className="landing-container">
+        <SectionHeader eyebrow="Qanday ishlaydi" title="4 qadamda boshlang" />
+
+        <div className="landing-timeline" ref={lineRef}>
+          <span className="landing-timeline-line">
+            <i ref={fillRef} />
+          </span>
+
+          <div className="landing-timeline-list">
+            {timelineSteps.map((step, index) => (
+              <div key={step.number} className={`landing-timeline-row reveal ${index % 2 === 0 ? 'is-right' : 'is-left'}`}>
+                <span className="landing-timeline-dot" />
+                <article className="landing-card landing-timeline-card">
+                  <div className="landing-timeline-head">
+                    <span className="landing-icon-box">
+                      <Icon name={step.icon} />
+                    </span>
+                    <strong>{step.number}</strong>
+                  </div>
+                  <h3>{step.title}</h3>
+                  <p>{step.body}</p>
+                </article>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
 }
 
-function StatsSection() {
-  const stats = [[142, '+', 'Klinikalar'], [50000, '+', 'Tahlillar'], [14, '', 'Viloyat'], [99.2, '%', 'Aniqlik darajasi']];
+function Stats() {
+  const ref = useRef(null);
+  const [start, setStart] = useState(false);
+  const [tip, setTip] = useState(null);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (!ref.current || start) {
+        return;
+      }
+      const rect = ref.current.getBoundingClientRect();
+      if (rect.top < window.innerHeight * 0.75 && rect.bottom > 0) {
+        setStart(true);
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [start]);
+
+  const maxValue = Math.max(...monthValues);
+  const maxRegion = Math.max(...regions.map((region) => region.count));
+
   return (
-    <section className="nmed-section nmed-stats" id="statistika">
-      <Reveal className="nmed-section-head center" variants={blurVariants}>
-        <span>Statistika</span>
-        <h2>Raqamlarda NMED</h2>
-      </Reveal>
-      <Reveal className="nmed-stats-grid" variants={containerVariants}>
-        {stats.map(([value, suffix, label]) => (
-          <motion.article className="nmed-stat-card" key={label} variants={scaleVariants}>
-            <AnimatedCounter value={value} suffix={suffix} precision={value % 1 ? 1 : 0} />
-            <span>{label}</span>
-          </motion.article>
-        ))}
-      </Reveal>
-      <Reveal className="nmed-chart-map" variants={containerVariants}>
-        <motion.div className="nmed-chart" variants={fadeUpVariants}>
-          {chartData.map((value, index) => (
-            <motion.div className="nmed-bar-wrap" key={months[index]}>
-              <motion.span initial={{ height: 0 }} whileInView={{ height: `${value / 2}px` }} viewport={{ once: false }} transition={{ duration: 1.2, delay: index * 0.04 }} />
-              <b>{months[index]}</b>
-            </motion.div>
+    <section className="landing-section landing-section-alt" id="statistika" ref={ref}>
+      <div className="landing-container">
+        <SectionHeader
+          eyebrow="Statistika"
+          title="Raqamlarda NMED"
+          description="Platforma klinikalar va tahlillar oqimini bir necha yo‘nalishda kuzatib boradi."
+        />
+
+        <div className="landing-stats-grid">
+          {stats.map((item, index) => (
+            <StatCard key={item.label} item={item} start={start} delay={(index % 4) + 1} />
           ))}
-        </motion.div>
-        <motion.div className="nmed-uz-map" variants={fadeUpVariants} aria-label="O‘zbekiston klinikalar xaritasi">
-          {regions.map(([name, clinics], index) => (
-            <motion.span
-              key={name}
-              title={`${name}: ${clinics} klinika`}
-              aria-label={`${name}: ${clinics} klinika`}
-              initial={{ opacity: 0, scale: 0.6 }}
-              whileInView={{ opacity: 0.46 + index * 0.035, scale: 1 }}
-              viewport={{ once: false }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <b>{name}</b>
-              <small>{clinics}</small>
-            </motion.span>
+        </div>
+
+        <div className="landing-stats-detail">
+          <article className="landing-card reveal">
+            <div className="landing-chart-head">
+              <h3>Oylik tahlillar soni (2026)</h3>
+              <span className="landing-pill">
+                <Icon name="trend" /> +186% o‘sish
+              </span>
+            </div>
+            <div className="landing-bar-wrap">
+              <div className="landing-bar-grid">
+                {monthValues.map((value, index) => (
+                  <div key={months[index]} className="landing-bar-item">
+                    <span
+                      className="landing-bar"
+                      style={{ height: start ? `${(value / maxValue) * 100}%` : '0%' }}
+                    />
+                    <small>{months[index]}</small>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </article>
+
+          <article className="landing-card reveal" data-delay="2">
+            <div className="landing-chart-head">
+              <h3>Hududlar bo‘yicha qamrov</h3>
+              <span className="landing-pill">14 viloyat</span>
+            </div>
+            <p className="landing-map-note">Rang to‘qroq bo‘lsa, shu hududda faol klinikalar ko‘proq.</p>
+            <div className="landing-map" onMouseLeave={() => setTip(null)}>
+              {regions.map((region) => {
+                const opacity = 0.16 + 0.8 * (region.count / maxRegion);
+                return (
+                  <button
+                    key={region.name}
+                    className="landing-map-region"
+                    type="button"
+                    style={{
+                      left: `${region.x}%`,
+                      top: `${region.y}%`,
+                      width: `${region.w}%`,
+                      height: `${region.h}%`,
+                      background: `rgba(17, 148, 136, ${opacity})`,
+                    }}
+                    onMouseMove={(event) =>
+                      setTip({
+                        x: event.nativeEvent.offsetX,
+                        y: event.nativeEvent.offsetY,
+                        name: region.name,
+                        count: region.count,
+                      })
+                    }
+                  >
+                    <span>{region.name}</span>
+                  </button>
+                );
+              })}
+
+              {tip ? (
+                <div className="landing-map-tooltip" style={{ left: tip.x, top: tip.y }}>
+                  {tip.name} · <b>{tip.count}</b> klinika
+                </div>
+              ) : null}
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Security() {
+  return (
+    <section className="landing-section">
+      <div className="landing-container">
+        <SectionHeader
+          eyebrow="Xavfsizlik"
+          title="Ma’lumot ishonchli"
+          accent="qo‘llarda"
+          description="Tibbiy ma’lumotlar uchun xavfsizlik, audit va boshqaruv qatlamlari yagona tizimga yig‘ilgan."
+        />
+
+        <div className="landing-feature-grid">
+          {securityItems.map((item, index) => (
+            <article key={item.title} className="landing-card reveal" data-delay={(index % 3) + 1}>
+              <span className="landing-icon-box">
+                <Icon name={item.icon} />
+              </span>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+            </article>
           ))}
-        </motion.div>
-      </Reveal>
+        </div>
+
+        <div className="landing-cert-row reveal">
+          {['ISO 27001', 'HIPAA-mos', 'GDPR-mos', "O‘zStandart"].map((item) => (
+            <span key={item} className="landing-pill is-ghost">
+              <Icon name="shield" /> {item}
+            </span>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }
 
 function Testimonials() {
-  const doubled = useMemo(() => [...testimonials, ...testimonials], []);
+  const marqueeItems = useMemo(() => [...testimonials, ...testimonials], []);
+
   return (
-    <section className="nmed-section nmed-testimonials" id="klinikalar">
-      <Reveal className="nmed-section-head center" variants={blurVariants}>
-        <span>Klinikalar</span>
-        <h2>Shifokorlar ishlatadigan platforma</h2>
-      </Reveal>
-      <div className="nmed-logo-marquee"><div className="nmed-marquee-track">{['R.Doctor Clinics', 'Med Center', 'NMED Lab', 'Cardio Plus', 'Toshkent Medical', 'Samarqand Clinic', 'R.Doctor Clinics', 'Med Center', 'NMED Lab', 'Cardio Plus', 'Toshkent Medical', 'Samarqand Clinic'].map((item, index) => <span key={`${item}-${index}`}>{item}</span>)}</div></div>
-      <div className="nmed-review-marquee"><div className="nmed-marquee-track reverse">{doubled.map(([initials, quote, name, role], index) => <article className="nmed-review-card" key={`${name}-${index}`}><div>{initials}</div><b>★★★★★</b><p>“{quote}”</p><h3>{name}</h3><span>{role}</span></article>)}</div></div>
+    <section className="landing-section landing-section-alt landing-section-overflow">
+      <div className="landing-container">
+        <SectionHeader eyebrow="Mijozlar fikri" title="Shifokorlar nima deydi?" />
+      </div>
+
+      <div className="landing-logo-marquee">
+        <div>
+          {['R.Doctor Clinics', 'MedCenter Toshkent', 'Anor Klinikasi', 'Shifobaxsh', 'SilkMed', 'NMED Partner'].map((item) => (
+            <span key={item}>
+              {item} <b>•</b>
+            </span>
+          ))}
+          {['R.Doctor Clinics', 'MedCenter Toshkent', 'Anor Klinikasi', 'Shifobaxsh', 'SilkMed', 'NMED Partner'].map((item) => (
+            <span key={`${item}-copy`}>
+              {item} <b>•</b>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="landing-testimonial-marquee">
+        <div>
+          {marqueeItems.map((item, index) => (
+            <article key={`${item.name}-${index}`} className="landing-card landing-testimonial-card">
+              <div className="landing-testimonial-head">
+                <span>{item.initials}</span>
+                <div>
+                  <strong>{item.name}</strong>
+                  <small>{item.role}</small>
+                </div>
+              </div>
+              <b className="landing-testimonial-stars">★★★★★</b>
+              <p>{item.quote}</p>
+            </article>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }
 
-function CtaFooter() {
+function Blog() {
   return (
-    <section className="nmed-cta-footer" id="boglanish">
-      <Reveal className="nmed-cta" variants={containerVariants}>
-        <motion.h2 variants={blurVariants}>O‘z klinikangizni <span>raqamlashtiring</span></motion.h2>
-        <motion.p variants={fadeUpVariants}>5 daqiqada ro‘yxatdan o‘ting. Birinchi oy bepul.</motion.p>
-        <motion.div variants={fadeUpVariants}><Link className="nmed-gradient-btn nmed-large-btn" to="/register">Hoziroq boshlash <FiArrowRight /></Link></motion.div>
-      </Reveal>
-      <footer className="nmed-footer">
-        <div><h3>NMED</h3><a href="#platforma">Haqimizda</a><a href="#klinikalar">Blog</a><a href="#statistika">Yangiliklar</a></div>
-        <div><h3>Xizmatlar</h3><a href="#xizmatlar">EKG</a><a href="#xizmatlar">SMAD</a><a href="#xizmatlar">Holter</a><a href="#xizmatlar">Lab</a></div>
-        <div><h3>Yordam</h3><a href="#platforma">Qo‘llanma</a><a href="#xizmatlar">FAQ</a><a href="#boglanish">Bog‘lanish</a></div>
-        <div><h3>Kontakt</h3><p>Toshkent, O‘zbekiston</p><p>info@nmed.uz</p><div className="nmed-social"><a href="https://github.com" aria-label="GitHub"><FiGithub /></a><a href="#platforma" aria-label="Veb-sayt"><FiGlobe /></a><a href="#xizmatlar" aria-label="Video konsultatsiya"><FiVideo /></a></div></div>
-      </footer>
-      <div className="nmed-copyright">2026 NMED. Barcha huquqlar himoyalangan.</div>
+    <section className="landing-section">
+      <div className="landing-container">
+        <SectionHeader
+          eyebrow="Blog"
+          title="So‘nggi"
+          accent="maqolalar"
+          description="Tibbiy AI, amaliy tajriba va platforma yangiliklari bo‘yicha qisqa materiallar."
+        />
+
+        <div className="landing-blog-grid">
+          {blogPosts.map((post, index) => (
+            <article key={post.title} className="landing-card landing-blog-card reveal" data-delay={index + 1}>
+              <div className={`landing-blog-thumb landing-blog-thumb-${index}`}>
+                <Icon name={post.icon} />
+                <span className="landing-pill is-ghost">{post.category}</span>
+              </div>
+              <div className="landing-blog-body">
+                <h3>{post.title}</h3>
+                <div className="landing-blog-meta">
+                  <span>
+                    <Icon name="calendar" /> {post.date}
+                  </span>
+                  <span>
+                    <Icon name="clock" /> {post.read}
+                  </span>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
     </section>
+  );
+}
+
+function Faq() {
+  const [open, setOpen] = useState(0);
+
+  return (
+    <section className="landing-section landing-section-alt">
+      <div className="landing-container landing-faq-wrap">
+        <SectionHeader eyebrow="Savol-javob" title="Ko‘p so‘raladigan savollar" />
+        <div className="landing-faq-list reveal">
+          {faqs.map((item, index) => (
+            <article key={item.q} className={`landing-faq-item ${open === index ? 'is-open' : ''}`}>
+              <button type="button" onClick={() => setOpen(open === index ? -1 : index)}>
+                <span>{item.q}</span>
+                <Icon name="chevronDown" />
+              </button>
+              <div className="landing-faq-answer">
+                <p>{item.a}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <>
+      <section className="landing-section landing-cta-section">
+        <div className="landing-container">
+          <div className="landing-cta-card reveal">
+            <div className="landing-cta-background" />
+            <div className="landing-cta-content">
+              <span>Bugundan boshlang</span>
+              <h2>
+                <strong>O‘z klinikangizni</strong>
+                <b>raqamlashtiring</b>
+              </h2>
+              <p>5 daqiqada ro‘yxatdan o‘ting va platformani klinika jarayonlariga ulab ko‘ring.</p>
+              <Link className="landing-btn landing-btn-white landing-btn-lg" to="/register">
+                Hoziroq boshlash <Icon name="arrowRight" />
+              </Link>
+              <small>Kredit karta talab qilinmaydi · Sozlash 5 daqiqa · Istalgan payt bekor qilish</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer className="landing-footer" id="footer">
+        <div className="landing-container">
+          <div className="landing-footer-grid">
+            <div className="landing-footer-brand">
+              <div className="landing-brand">
+                <span className="landing-brand-mark">
+                  <img src={logo} alt="NMED" />
+                </span>
+                <span className="landing-brand-text">NMED</span>
+              </div>
+              <p>O‘zbekistondagi tibbiy diagnostika platformasi.</p>
+            </div>
+
+            <div>
+              <h4>Platforma</h4>
+              <a href="#top">Platforma haqida</a>
+              <a href="#xizmatlar">Xizmatlar</a>
+              <a href="#konsultatsiya">Online konsultatsiya</a>
+              <a href="#statistika">Statistika</a>
+            </div>
+
+            <div>
+              <h4>Yordam</h4>
+              <a href="#top">Foydalanuvchi qo‘llanmasi</a>
+              <a href="#top">FAQ</a>
+              <a href="#footer">Bog‘lanish</a>
+              <a href="#top">Texnik yordam</a>
+            </div>
+
+            <div>
+              <h4>Kontakt</h4>
+              <span>Toshkent, O‘zbekiston</span>
+              <span>info@nmed.uz</span>
+              <span>nmed.uz</span>
+            </div>
+          </div>
+
+          <div className="landing-footer-bottom">
+            <span>© 2026 NMED. Barcha huquqlar himoyalangan.</span>
+            <span>Maxfiylik siyosati · Foydalanish shartlari</span>
+          </div>
+        </div>
+      </footer>
+    </>
+  );
+}
+
+function BackToTop() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 700);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return (
+    <button
+      type="button"
+      className={`landing-top-button ${visible ? 'is-visible' : ''}`}
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      aria-label="Yuqoriga qaytish"
+    >
+      <Icon name="arrowUp" />
+    </button>
   );
 }
 
 export default function LandingPage() {
-  const [light, setLight] = useState(false);
-  const { scrollYProgress } = useScroll();
-  const y1 = useTransform(scrollYProgress, [0, 1], [0, -150]);
-  const y2 = useTransform(scrollYProgress, [0, 1], [0, -300]);
+  useReveal();
+  useScrollProgress();
 
   return (
-    <div className={`nmed-landing ${light ? 'light' : ''}`}>
-      <a className="nmed-skip-link" href="#main">Asosiy kontentga o‘tish</a>
-      <ScrollProgress />
-      <CustomCursor />
-      <Navbar light={light} setLight={setLight} />
-      <motion.div className="nmed-parallax one" style={{ y: y1 }} />
-      <motion.div className="nmed-parallax two" style={{ y: y2 }} />
-      <main id="main">
-        <HeroSection />
-        <ProblemSolution />
-        <FeaturesSection />
-        <HowItWorks />
-        <StatsSection />
-        <Testimonials />
-        <CtaFooter />
-      </main>
+    <div className="landing-page-shell">
+      <div className="landing-progress" />
+      <Navbar />
+      <Hero />
+      <ProblemSolution />
+      <BeforeAfter />
+      <Features />
+      <Consultation />
+      <HowItWorks />
+      <Stats />
+      <Security />
+      <Testimonials />
+      <Blog />
+      <Faq />
+      <Footer />
+      <BackToTop />
     </div>
   );
 }

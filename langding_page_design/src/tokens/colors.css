@@ -1,0 +1,49 @@
+/* NMED — Color tokens
+   "Medical Precision meets Digital Futurism"
+   Dark theme primary. Brand teal-green #2AA79B is the throughline. */
+
+:root {
+  /* ---- Brand green (the throughline) ---- */
+  --green: #2AA79B;          /* primary CTAs, accents, highlights, active states */
+  --green-dark: #1D8A7F;     /* hover states */
+  --green-light: #3DBFB3;    /* glow, gradient highlights */
+
+  /* ---- Accents ---- */
+  --accent-blue: #1E6FBF;    /* electric blue — gradient end, secondary accent */
+  --accent-purple: #7C5CE0;  /* AI / tech purple */
+
+  /* ---- Backgrounds ---- */
+  --bg-primary: #030F1A;     /* deep navy black — base */
+  --bg-secondary: #071828;   /* slightly lighter navy — alternating sections */
+  --bg-card: rgba(255, 255, 255, 0.04); /* glass card fill */
+  --bg-card-bright: rgba(42, 167, 155, 0.08); /* highlighted glass card */
+
+  /* ---- Text ---- */
+  --text-primary: #F0F6FF;   /* headings, primary copy */
+  --text-secondary: #7A97B8; /* body, muted, labels */
+  --text-on-green: #FFFFFF;  /* text over green fills */
+
+  /* ---- Borders ---- */
+  --border-subtle: rgba(42, 167, 155, 0.15);
+  --border-hover: rgba(42, 167, 155, 0.40);
+  --border-strong: rgba(42, 167, 155, 0.35);
+
+  /* ---- Semantic ---- */
+  --success: #2AA79B;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --error-tint: rgba(239, 68, 68, 0.04);
+  --error-border: rgba(239, 68, 68, 0.15);
+  --green-tint: rgba(42, 167, 155, 0.04);
+
+  /* ---- Glows (box-shadow ready) ---- */
+  --glow-green-soft: 0 0 40px rgba(42, 167, 155, 0.12);
+  --glow-green-strong: 0 8px 30px rgba(42, 167, 155, 0.40);
+  --glow-mockup: 0 40px 120px rgba(42, 167, 155, 0.25);
+
+  /* ---- Signature gradients ---- */
+  --grad-brand: linear-gradient(135deg, #2AA79B, #1E6FBF);          /* @kind color */
+  --grad-brand-text: linear-gradient(135deg, #2AA79B 0%, #1E6FBF 100%); /* @kind color */
+  --grad-cta: linear-gradient(120deg, #2AA79B, #1E6FBF, #7C5CE0);   /* @kind color */
+  --grad-section: linear-gradient(180deg, #071828, #030F1A);        /* @kind color */
+}
