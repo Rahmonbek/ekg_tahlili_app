@@ -41,6 +41,12 @@ public class AuthService
         return new string((inn ?? "").Where(char.IsDigit).ToArray());
     }
 
+    private static string? NormalizeText(string? value)
+    {
+        var normalized = value?.Trim();
+        return string.IsNullOrWhiteSpace(normalized) ? null : normalized;
+    }
+
     private static string GetDtoPhoneNumber(string? phoneNumber, string? legacyPhone = null)
     {
         return !string.IsNullOrWhiteSpace(phoneNumber) ? phoneNumber : legacyPhone ?? "";
@@ -137,13 +143,28 @@ public class AuthService
     {
         var phone = NormalizePhone(GetDtoPhoneNumber(dto.PhoneNumber, dto.Phone));
         var clinicInn = NormalizeInn(dto.ClinicInn);
+        var clinicName = NormalizeText(dto.ClinicName);
+        var address = NormalizeText(dto.Address);
+        var bankAccaunt = NormalizeText(dto.BankAccaunt);
+        var mfo = NormalizeText(dto.MFO);
+        var bankName = NormalizeText(dto.BankName);
+        var license = NormalizeText(dto.License);
         var internalEmail = InternalPhoneEmail(phone);
 
         if (phone.Length != 12)
             throw new Exception("phone_number_invalid");
 
+        if (string.IsNullOrWhiteSpace(clinicName))
+            throw new Exception("clinic_name_required");
+
         if (string.IsNullOrWhiteSpace(clinicInn))
             throw new Exception("clinic_inn_required");
+
+        if (dto.DistrictId == null || dto.DistrictId <= 0)
+            throw new Exception("district_required");
+
+        if (string.IsNullOrWhiteSpace(address))
+            throw new Exception("address_required");
 
         var existingDoctor = await _context.Doctors
             .Include(x => x.User)
@@ -176,26 +197,41 @@ public class AuthService
 
                 user.Username = phone;
                 user.Email = internalEmail;
+                user.PasswordPlain = dto.Password;
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
                 user.RoleId = RoleConstants.Admin;
 
                 if (user.Clinic == null)
                 {
-                    user.Clinic = new Clinic { ClinicName = "" };
+                    user.Clinic = new Clinic { ClinicName = clinicName };
                 }
 
+                user.Clinic.ClinicName = clinicName;
                 user.Clinic.ClinicDetail ??= new ClinicDetail();
                 user.Clinic.ClinicDetail.INN = clinicInn;
+                user.Clinic.ClinicDetail.DistrictId = dto.DistrictId;
+                user.Clinic.ClinicDetail.Address = address;
+                user.Clinic.ClinicDetail.BankAccaunt = bankAccaunt;
+                user.Clinic.ClinicDetail.MFO = mfo;
+                user.Clinic.ClinicDetail.BankName = bankName;
+                user.Clinic.ClinicDetail.License = license;
+                user.Clinic.ClinicDetail.UpdatedAt = DateTime.UtcNow;
                 doctor.Phone = phone;
             }
             else
             {
                 var clinic = new Clinic
                 {
-                    ClinicName = "",
+                    ClinicName = clinicName,
                     ClinicDetail = new ClinicDetail
                     {
-                        INN = clinicInn
+                        INN = clinicInn,
+                        DistrictId = dto.DistrictId,
+                        Address = address,
+                        BankAccaunt = bankAccaunt,
+                        MFO = mfo,
+                        BankName = bankName,
+                        License = license
                     }
                 };
 
@@ -203,6 +239,7 @@ public class AuthService
                 {
                     Username = phone,
                     Email = internalEmail,
+                    PasswordPlain = dto.Password,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                     Status = false,
                     RoleId = RoleConstants.Admin,

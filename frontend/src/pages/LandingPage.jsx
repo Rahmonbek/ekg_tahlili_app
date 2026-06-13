@@ -158,10 +158,10 @@ const regions = [
   { name: 'Xorazm', count: 4, x: 3, y: 50, w: 17, h: 20 },
   { name: 'Navoiy', count: 6, x: 29, y: 8, w: 21, h: 38 },
   { name: 'Buxoro', count: 8, x: 23, y: 52, w: 22, h: 30 },
-  { name: 'Sirdaryo', count: 3, x: 52, y: 6, w: 10, h: 13 },
+  { name: 'Sirdaryo', count: 3, x: 50, y: 6, w: 13, h: 13 },
   { name: 'Jizzax', count: 3, x: 52, y: 21, w: 13, h: 18 },
-  { name: 'Toshkent', count: 20, x: 64, y: 4, w: 16, h: 15 },
-  { name: 'Toshkent sh.', count: 38, x: 66, y: 21, w: 11, h: 10 },
+  { name: 'Toshkent', count: 20, x: 64, y: 4, w: 17, h: 15 },
+  { name: 'Toshkent sh.', count: 38, x: 66, y: 21, w: 19, h: 12 },
   { name: 'Samarqand', count: 14, x: 49, y: 43, w: 16, h: 18 },
   { name: 'Qashqadaryo', count: 7, x: 47, y: 63, w: 19, h: 22 },
   { name: 'Surxondaryo', count: 3, x: 52, y: 87, w: 16, h: 11 },
@@ -413,6 +413,7 @@ function StatCard({ item, start, delay }) {
 
   return (
     <article className="landing-card reveal" data-delay={delay}>
+      
       <span className="landing-icon-box">
         <Icon name={item.icon} />
       </span>
@@ -897,10 +898,12 @@ function Consultation() {
         <div className="landing-consult-steps">
           {consultSteps.map((step, index) => (
             <article key={step.title} className="landing-card reveal" data-delay={index + 1}>
+             <div className="landing-consult-step-head">
               <span className="landing-icon-box">
                 <Icon name={step.icon} />
               </span>
               <small>{step.number}</small>
+              </div>
               <h3>{step.title}</h3>
               <p>{step.body}</p>
             </article>
@@ -1093,7 +1096,7 @@ function Stats() {
             <p className="landing-map-note">Rang to‘qroq bo‘lsa, shu hududda faol klinikalar ko‘proq.</p>
             <div className="landing-map" onMouseLeave={() => setTip(null)}>
               {regions.map((region) => {
-                const opacity = 0.34 + 0.64 * (region.count / maxRegion);
+                const opacity = 0.54 + 0.64 * (region.count / maxRegion);
                 return (
                   <button
                     key={region.name}

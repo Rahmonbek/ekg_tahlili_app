@@ -175,7 +175,16 @@
   font-size: 1.125rem;
   line-height: 1.7;
 }
-
+.landing-consult-step-head{display: flex;
+  align-items: center;
+}
+.landing-card small{
+   color: #119488fa;
+  font-size: 2.6rem;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  margin-left:15px;
+}
 .landing-card {
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -1005,7 +1014,7 @@
   inset: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: center !important;
   padding: 24px;
 }
 
@@ -1051,7 +1060,7 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--surface);
-  transform: translateX(52%);
+  /* transform: translateX(52%); */
 }
 
 .landing-compare-panel-head {
@@ -1087,7 +1096,7 @@
   position: relative;
   width: min(430px, 32vw);
   height: 210px;
-  transform: translateX(-52%);
+  /* transform: translateX(-52%); */
 }
 
 .landing-paper-sheet {
@@ -1397,7 +1406,7 @@
 }
 
 .landing-timeline-head strong {
-  color: rgba(17, 148, 136, 0.28);
+  color: #119488fa;
   font-size: 2.6rem;
   font-weight: 800;
   letter-spacing: -0.05em;
@@ -1548,15 +1557,22 @@
 }
 
 .landing-logo-marquee div,
-.landing-testimonial-marquee div {
+.landing-testimonial-marquee .landing-card {
   display: flex;
   gap: 22px;
   width: max-content;
   animation: landing-marquee 34s linear infinite;
 }
-
-.landing-testimonial-marquee div {
-  gap: 20px;
+.landing-testimonial-marquee div{
+    display: flex;
+  gap: 22px;
+  width: max-content;
+}
+.landing-testimonial-marquee .landing-card {
+  gap: 10px;
+  postion: relative;
+  width:20vw;
+  flex-direction: column;
   animation-direction: reverse;
 }
 
@@ -1581,7 +1597,9 @@
 .landing-testimonial-head {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  width:100%;
+  justify-content: space-between;
   min-width: 0;
 }
 
@@ -1613,13 +1631,18 @@
   overflow: hidden;
   color: var(--ink-muted);
   font-size: 0.8rem;
+  position: absolute;
+  font-weight: 700;
+  top:15px;
+  letter-spacing: 0.02em;
+  right:20px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .landing-testimonial-stars {
   display: block;
-  margin: 14px 0 10px;
+  margin: 0px 0 0px;
   color: var(--amber);
   letter-spacing: 2px;
 }
@@ -1686,7 +1709,7 @@
   display: flex;
   flex-direction: column;
   min-height: 210px;
-  padding: 24px;
+  padding:  24px 0px;
 }
 
 .landing-blog-body h3 {

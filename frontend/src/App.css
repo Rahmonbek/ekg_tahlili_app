@@ -71,11 +71,20 @@ body {
   border-radius: 20px;
   box-shadow: 0px 2px 10px 1px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 500px;
+  max-width: 640px;
 }
 
 .login_form_form {
   padding: 10px 30px 10px;
+}
+
+.register_section_title {
+  margin: 6px 0 14px;
+  color: var(--text_color);
+  font-size: var(--small_size);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .login_img,
@@ -158,6 +167,39 @@ body {
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
+}
+
+/* ─── Register sahifasi maxsus override'lar ─── */
+.register_page.login_box {
+  height: auto;
+  min-height: 100vh;
+  align-items: flex-start;
+}
+
+.register_page .login_img {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.register_page .login_form_box {
+  height: auto;
+  min-height: 100vh;
+  overflow-y: visible;
+  justify-content: flex-start;
+  padding: 40px 24px 20px;
+}
+
+.register_page .login_form {
+  max-width: 760px;
+}
+
+.register_page .login_bottom {
+  position: relative;
+  bottom: auto;
+  margin: 12px 0 32px;
+  padding: 0 30px;
+  justify-content: center;
 }
 
 .auth_navbar {

@@ -5,7 +5,14 @@ public class RegisterDto
     public string? Username { get; set; }
     public string? Phone { get; set; }
     public string? PhoneNumber { get; set; }
+    public string ClinicName { get; set; } = default!;
     public string ClinicInn { get; set; } = default!;
+    public int? DistrictId { get; set; }
+    public string? BankAccaunt { get; set; }
+    public string? MFO { get; set; }
+    public string? BankName { get; set; }
+    public string? License { get; set; }
+    public string? Address { get; set; }
     public string Password { get; set; } = default!;
     // nullable: model binding "field is required" xatoligini oldini oladi
     public string? RecaptchaToken { get; set; }

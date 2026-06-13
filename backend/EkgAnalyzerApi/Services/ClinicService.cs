@@ -28,6 +28,9 @@ namespace EkgAnalyzerApi.Services
         public async Task<ClinicDetail> CreateUpdateClinicDetail(ClinicDetailUpsertDto dto)
         {
             ClinicDetail detail;
+            var savedLicensePath = dto.LicenseFile != null
+                ? await SaveLicense(dto.LicenseFile)
+                : dto.License;
 
             // ================= CREATE =================
             if (dto.Id == 0)
@@ -41,9 +44,7 @@ namespace EkgAnalyzerApi.Services
                     DistrictId=dto.DistrictId,
                     INN = dto.INN,
                     Address = dto.Address,
-                    License = dto.LicenseFile != null
-                        ? await SaveLicense(dto.LicenseFile)
-                        : null
+                    License = savedLicensePath
                 };
 
                 _context.ClinicDetails.Add(detail);
@@ -66,7 +67,11 @@ namespace EkgAnalyzerApi.Services
                 if (dto.LicenseFile != null)
                 {
                     DeleteOldLicense(detail.License);
-                    detail.License = await SaveLicense(dto.LicenseFile);
+                    detail.License = savedLicensePath;
+                }
+                else if (!string.IsNullOrWhiteSpace(dto.License))
+                {
+                    detail.License = dto.License;
                 }
             }
 
@@ -105,6 +110,8 @@ namespace EkgAnalyzerApi.Services
         }
         public async Task UpsertClinicPhonesAsync(ClinicPhoneUpsertDto dto)
         {
+            dto.PhoneNumbers ??= new List<ClinicPhoneNumberDTO>();
+
             // Bazadagi mavjud telefonlar
             var existingPhones = await _context.ClinicPhoneNumbers
                 .Where(x => x.ClinicId == dto.ClinicId)
@@ -249,7 +256,7 @@ namespace EkgAnalyzerApi.Services
             INN = c.ClinicDetail.INN,
             License = c.ClinicDetail.License,
             Address = c.ClinicDetail.Address,
-            Region=c.ClinicDetail.District.Region,
+            Region = c.ClinicDetail.District != null ? c.ClinicDetail.District.Region : null,
             District = c.ClinicDetail.District
         },
 
