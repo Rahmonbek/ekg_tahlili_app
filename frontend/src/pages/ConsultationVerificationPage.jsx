@@ -3,6 +3,7 @@ import { Card, Descriptions, Result, Spin, Tag, Typography } from 'antd';
 import { CheckCircleOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { getConsultationVerification } from '../host/requests/ConsultationRequest';
+import { getAnalysisVerification } from '../host/requests/ReportRequest';
 import './ConsultationVerificationPage.css';
 
 const { Text, Title } = Typography;
@@ -18,15 +19,25 @@ export default function ConsultationVerificationPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const consultationId = useMemo(() => {
-        const match = window.location.pathname.match(/\/consultation\/verify\/(\d+)/);
-        return match ? Number(match[1]) : 0;
+    const route = useMemo(() => {
+        const consultationMatch = window.location.pathname.match(/\/consultation\/verify\/(\d+)/);
+        if (consultationMatch) {
+            return { kind: 'consultation', id: Number(consultationMatch[1]) };
+        }
+        const analysisMatch = window.location.pathname.match(/\/analysis\/verify\/([^/]+)\/(\d+)/);
+        if (analysisMatch) {
+            return { kind: 'analysis', type: analysisMatch[1], id: Number(analysisMatch[2]) };
+        }
+        return { kind: 'unknown', id: 0 };
     }, []);
 
     useEffect(() => {
         let mounted = true;
         setLoading(true);
-        getConsultationVerification(consultationId)
+        const request = route.kind === 'analysis'
+            ? getAnalysisVerification(route.type, route.id)
+            : getConsultationVerification(route.id);
+        request
             .then((res) => {
                 if (mounted) setData(res.data);
             })
@@ -37,7 +48,7 @@ export default function ConsultationVerificationPage() {
                 if (mounted) setLoading(false);
             });
         return () => { mounted = false; };
-    }, [consultationId]);
+    }, [route]);
 
     if (loading) {
         return (
@@ -80,18 +91,32 @@ export default function ConsultationVerificationPage() {
                     <Descriptions.Item label="Hujjat raqami">
                         <Text strong>{data.documentNumber}</Text>
                     </Descriptions.Item>
+                    {'analysisTypeName' in data && (
+                        <Descriptions.Item label="Tahlil turi">{data.analysisTypeName}</Descriptions.Item>
+                    )}
                     <Descriptions.Item label="Bemor">{data.patientFullName}</Descriptions.Item>
-                    <Descriptions.Item label="Konsultant shifokor">{data.doctorFullName}</Descriptions.Item>
+                    <Descriptions.Item label={route.kind === 'analysis' ? 'Tahlil kiritgan shifokor' : 'Konsultant shifokor'}>{data.doctorFullName}</Descriptions.Item>
                     <Descriptions.Item label="Klinika">{data.clinicName}</Descriptions.Item>
-                    <Descriptions.Item label="Konsultatsiya sanasi">
-                        {data.consultationDate ? dayjs(data.consultationDate).format('DD.MM.YYYY') : '-'}
+                    <Descriptions.Item label={route.kind === 'analysis' ? 'Tahlil sanasi' : 'Konsultatsiya sanasi'}>
+                        {data.analysisDate
+                            ? dayjs(data.analysisDate).format('DD.MM.YYYY HH:mm')
+                            : data.consultationDate ? dayjs(data.consultationDate).format('DD.MM.YYYY') : '-'}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Xulosa sanasi">
-                        {data.conclusionCreatedAt ? dayjs(data.conclusionCreatedAt).format('DD.MM.YYYY HH:mm') : '-'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Bemor holati">
-                        <Tag color="green">{conditionLabels[data.patientCondition] || data.patientCondition}</Tag>
-                    </Descriptions.Item>
+                    {route.kind === 'consultation' && (
+                        <>
+                            <Descriptions.Item label="Xulosa sanasi">
+                                {data.conclusionCreatedAt ? dayjs(data.conclusionCreatedAt).format('DD.MM.YYYY HH:mm') : '-'}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Bemor holati">
+                                <Tag color="green">{conditionLabels[data.patientCondition] || data.patientCondition}</Tag>
+                            </Descriptions.Item>
+                        </>
+                    )}
+                    {route.kind === 'analysis' && (
+                        <Descriptions.Item label="Holati">
+                            <Tag color="green">{String(data.status ?? '-')}</Tag>
+                        </Descriptions.Item>
+                    )}
                 </Descriptions>
             </Card>
         </div>

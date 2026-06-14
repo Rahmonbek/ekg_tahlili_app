@@ -1,4 +1,5 @@
 import axiosInstance from "../Api";
+import { httpGetRequest } from "../Host";
 
 /**
  * PDF hisobotni serverdan blob sifatida yuklab, brauzerda avtomatik saqlaydigan funksiya.
@@ -33,3 +34,6 @@ export const downloadReport = async (type, id, lang = "uz") => {
     // Xotira tozalash
     setTimeout(() => URL.revokeObjectURL(url), 5000);
 };
+
+export const getAnalysisVerification = (type, id) =>
+    httpGetRequest(`/report/verify/${type}/${id}`);

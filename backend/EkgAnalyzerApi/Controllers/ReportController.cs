@@ -184,6 +184,113 @@ public class ReportController : ControllerBase
     //  YORDAMCHI METODLAR
     // ════════════════════════════════════════════════════════════════════
 
+    [HttpGet("verify/{type}/{id:int}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> VerifyAnalysis(string type, int id)
+    {
+        type = (type ?? "").Trim().ToLowerInvariant();
+
+        object? result = type switch
+        {
+            "ecg" => await _context.ECGAnalyse.AsNoTracking()
+                .Where(e => e.Id == id)
+                .Select(e => new
+                {
+                    IsValid = true,
+                    AnalysisId = e.Id,
+                    AnalysisType = "ecg",
+                    AnalysisTypeName = "EKG",
+                    DocumentNumber = e.DocumentNumber ?? $"EKG-{(e.CreatedAt ?? DateTime.UtcNow):yyyyMM}-{e.Id:D4}",
+                    PatientFullName = (e.Patcient.LastName + " " + e.Patcient.FirstName + " " + e.Patcient.SureName).Trim(),
+                    DoctorFullName = (e.CreatedDoctor.LastName + " " + e.CreatedDoctor.FirstName + " " + e.CreatedDoctor.SureName).Trim(),
+                    ClinicName = e.Clinic.ClinicName,
+                    AnalysisDate = e.AnalysisDate ?? e.CreatedAt,
+                    CreatedAt = e.CreatedAt,
+                    Status = e.Status.ToString(),
+                    VerificationText = "Ushbu diagnostika hujjati NMED platformasida shakllantirilgan va QR orqali tasdiqlandi."
+                }).FirstOrDefaultAsync(),
+
+            "smad" => await _context.SmadAnalyses.AsNoTracking()
+                .Where(e => e.Id == id)
+                .Select(e => new
+                {
+                    IsValid = true,
+                    AnalysisId = e.Id,
+                    AnalysisType = "smad",
+                    AnalysisTypeName = "SMAD",
+                    DocumentNumber = e.DocumentNumber ?? $"SMAD-{(e.CreatedAt ?? DateTime.UtcNow):yyyyMM}-{e.Id:D4}",
+                    PatientFullName = (e.Patcient.LastName + " " + e.Patcient.FirstName + " " + e.Patcient.SureName).Trim(),
+                    DoctorFullName = (e.CreatedDoctor.LastName + " " + e.CreatedDoctor.FirstName + " " + e.CreatedDoctor.SureName).Trim(),
+                    ClinicName = e.Clinic.ClinicName,
+                    AnalysisDate = e.AnalysisDate ?? e.CreatedAt,
+                    CreatedAt = e.CreatedAt,
+                    Status = e.Status.ToString(),
+                    VerificationText = "Ushbu diagnostika hujjati NMED platformasida shakllantirilgan va QR orqali tasdiqlandi."
+                }).FirstOrDefaultAsync(),
+
+            "holter" => await _context.HolterAnalyses.AsNoTracking()
+                .Where(e => e.Id == id)
+                .Select(e => new
+                {
+                    IsValid = true,
+                    AnalysisId = e.Id,
+                    AnalysisType = "holter",
+                    AnalysisTypeName = "Holter",
+                    DocumentNumber = e.DocumentNumber ?? $"HOL-{(e.CreatedAt ?? DateTime.UtcNow):yyyyMM}-{e.Id:D4}",
+                    PatientFullName = (e.Patcient.LastName + " " + e.Patcient.FirstName + " " + e.Patcient.SureName).Trim(),
+                    DoctorFullName = (e.CreatedDoctor.LastName + " " + e.CreatedDoctor.FirstName + " " + e.CreatedDoctor.SureName).Trim(),
+                    ClinicName = e.Clinic.ClinicName,
+                    AnalysisDate = e.AnalysisDate ?? e.CreatedAt,
+                    CreatedAt = e.CreatedAt,
+                    Status = e.Status.ToString(),
+                    VerificationText = "Ushbu diagnostika hujjati NMED platformasida shakllantirilgan va QR orqali tasdiqlandi."
+                }).FirstOrDefaultAsync(),
+
+            "lab" => await _context.LabAnalyse.AsNoTracking()
+                .Where(e => e.Id == id)
+                .Select(e => new
+                {
+                    IsValid = true,
+                    AnalysisId = e.Id,
+                    AnalysisType = "lab",
+                    AnalysisTypeName = "Laboratoriya",
+                    DocumentNumber = e.DocumentNumber ?? $"LAB-{(e.CreatedAt ?? DateTime.UtcNow):yyyyMM}-{e.Id:D4}",
+                    PatientFullName = (e.Patcient.LastName + " " + e.Patcient.FirstName + " " + e.Patcient.SureName).Trim(),
+                    DoctorFullName = (e.CreatedDoctor.LastName + " " + e.CreatedDoctor.FirstName + " " + e.CreatedDoctor.SureName).Trim(),
+                    ClinicName = e.Clinic.ClinicName,
+                    AnalysisDate = e.AnalysisDate ?? e.CreatedAt,
+                    CreatedAt = e.CreatedAt,
+                    Status = e.Status.ToString(),
+                    VerificationText = "Ushbu diagnostika hujjati NMED platformasida shakllantirilgan va QR orqali tasdiqlandi."
+                }).FirstOrDefaultAsync(),
+
+            "para" or "parasitology" => await _context.ParasitologyAnalyses.AsNoTracking()
+                .Where(e => e.Id == id)
+                .Select(e => new
+                {
+                    IsValid = true,
+                    AnalysisId = e.Id,
+                    AnalysisType = "parasitology",
+                    AnalysisTypeName = "Parazitologiya",
+                    DocumentNumber = e.DocumentNumber ?? $"PARA-{(e.CreatedAt ?? DateTime.UtcNow):yyyyMM}-{e.Id:D4}",
+                    PatientFullName = (e.Patcient.LastName + " " + e.Patcient.FirstName + " " + e.Patcient.SureName).Trim(),
+                    DoctorFullName = (e.CreatedDoctor.LastName + " " + e.CreatedDoctor.FirstName + " " + e.CreatedDoctor.SureName).Trim(),
+                    ClinicName = e.Clinic.ClinicName,
+                    AnalysisDate = e.AnalysisDate ?? e.CreatedAt,
+                    CreatedAt = e.CreatedAt,
+                    Status = e.AnalysisStatus,
+                    VerificationText = "Ushbu diagnostika hujjati NMED platformasida shakllantirilgan va QR orqali tasdiqlandi."
+                }).FirstOrDefaultAsync(),
+
+            _ => null
+        };
+
+        if (result == null)
+            return NotFound(new { message = "Tahlil topilmadi yoki QR tasdiqlash turi noto'g'ri" });
+
+        return Ok(result);
+    }
+
     private async Task<IActionResult> BuildPdfResponse(Func<Task<byte[]>> generator, string filename)
     {
         try

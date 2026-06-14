@@ -5,7 +5,7 @@ export const api = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 export const imgApi = process.env.REACT_APP_IMG_URL || "http://localhost:5000";
 // Python API — faqat ichki (server tomonida .NET proxy orqali)
 // export const apiEcg = process.env.REACT_APP_ECG_URL || "http://127.0.0.1:8000";
-export const apiEcg = "http://127.0.0.1:8000";
+export const apiEcg = process.env.REACT_APP_MEDIA_URL || `${api}/files`;
 
 export const getTokenAccess = () => {
     var token = Cookies.get("NMED_token")

@@ -38,13 +38,15 @@ export default function App() {
   const navigate = useNavigate()
   const location = useLocation()
   const isPublicConsultationVerify = location.pathname.startsWith('/consultation/verify/')
+  const isPublicAnalysisVerify = location.pathname.startsWith('/analysis/verify/')
+  const isPublicVerify = isPublicConsultationVerify || isPublicAnalysisVerify
   const publicPaths = ['/', '/login', '/register']
   const isPublicPath = publicPaths.includes(location.pathname)
 
   // Boshlang'ich yuklanish: faqat user yuklanmagan bo'lsa fetch qilish
   useEffect(() => {
     const token = getTokenAccess()
-    if (isPublicConsultationVerify) {
+    if (isPublicVerify) {
       setfirst_load(true)
       return
     }
@@ -58,7 +60,7 @@ export default function App() {
       }
       setfirst_load(true)
     }
-  }, [isPublicConsultationVerify, isPublicPath, user, user_id])
+  }, [isPublicVerify, isPublicPath, user, user_id])
 
   // AdminModal yopilgandan keyin: user ma'lumotlarini yangilash va klinika setupni tekshirish
   useEffect(() => {
@@ -153,7 +155,7 @@ export default function App() {
     <>
       {first_load && (
         <div className="main_app">
-          {isPublicConsultationVerify ? <ConsultationVerificationPage /> : user_id == null ? <Auth /> : <Main />}
+          {isPublicVerify ? <ConsultationVerificationPage /> : user_id == null ? <Auth /> : <Main />}
           {loader ? <Loader /> : <></>}
         </div>
       )}

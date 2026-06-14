@@ -45,12 +45,20 @@ runs/
 **/*.pubxml.user
 node_modules/
 /frontend/build/
+/admin/build/
+/frontend/node_modules/
+/admin/node_modules/
 
 # Frontend — local env overrides (secrets bo'lishi mumkin)
 frontend/.env.local
 frontend/.env.development.local
 frontend/.env.test.local
 frontend/.env.production.local
+
+admin/.env.local
+admin/.env.development.local
+admin/.env.test.local
+admin/.env.production.local
 
 # Python
 **/__pycache__/

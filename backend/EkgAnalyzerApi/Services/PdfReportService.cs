@@ -4,6 +4,7 @@ using EkgAnalyzerApi.Models;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using Microsoft.EntityFrameworkCore;
+using QRCoder;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -346,7 +347,7 @@ public class PdfReportService
             AddParaAiBlock(doc, tr, para, lang);
         }
 
-        ComposeNmedVerification(doc, tr, fonts, docNum, DateTime.UtcNow);
+        ComposeNmedVerification(doc, tr, fonts, docNum, DateTime.UtcNow, null);
         ComposeDisclaimer(doc, tr, fonts);
         doc.Close();
         return ms.ToArray();
@@ -447,7 +448,10 @@ public class PdfReportService
         if (!string.IsNullOrEmpty(analysisType) && analysisId.HasValue)
             ComposeDoctorDiagnoses(doc, tr, fonts, analysisType, analysisId.Value);
 
-        ComposeNmedVerification(doc, tr, fonts, docNum, createdAt ?? DateTime.UtcNow);
+        var verifyUrl = analysisType != null && analysisId.HasValue
+            ? BuildAnalysisVerifyUrl(analysisType, analysisId.Value)
+            : null;
+        ComposeNmedVerification(doc, tr, fonts, docNum, createdAt ?? DateTime.UtcNow, verifyUrl);
         ComposeDisclaimer(doc, tr, fonts);
 
         doc.Close();
@@ -1745,13 +1749,14 @@ public class PdfReportService
     // ════════════════════════════════════════════════════════════════════
 
     private void ComposeNmedVerification(Document doc, Dictionary<string, string> tr,
-        Dictionary<string, Font> fonts, string docNum, DateTime date)
+        Dictionary<string, Font> fonts, string docNum, DateTime date, string? verifyUrl)
     {
         // ── Ikki ustunli: [Logo + matnlar | bo'sh (QR kelajakda)] ─────
         var outer = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 8, SpacingAfter = 4 };
+        var hasQr = !string.IsNullOrWhiteSpace(verifyUrl);
 
-        var inner = new PdfPTable(2) { WidthPercentage = 100 };
-        inner.SetWidths(new[] { 15f, 85f });
+        var inner = new PdfPTable(hasQr ? 3 : 2) { WidthPercentage = 100 };
+        inner.SetWidths(hasQr ? new[] { 14f, 62f, 24f } : new[] { 15f, 85f });
 
         // ── CHAP: NMED logotipi ───────────────────────────────────────
         var logoCell = new PdfPCell { Border = Rectangle.NO_BORDER, Padding = 6, VerticalAlignment = Element.ALIGN_MIDDLE };
@@ -1787,8 +1792,40 @@ public class PdfReportService
         textCell.AddElement(new Paragraph(
             $"{tr["verified_at"]}: {date:dd.MM.yyyy  HH:mm}", fonts["verify_sub"])
             { SpacingAfter = 1 });
-        textCell.AddElement(new Paragraph("nmed.uz", fonts["verify_url"]));
+        textCell.AddElement(new Paragraph(
+            hasQr
+                ? "QR kodni skaner qilib hujjat NMED platformasida shakllantirilganini tekshiring."
+                : "nmed.uz",
+            hasQr ? fonts["verify_sub"] : fonts["verify_url"]));
+        if (hasQr)
+            textCell.AddElement(new Paragraph(verifyUrl!, fonts["verify_url"]));
         inner.AddCell(textCell);
+
+        if (hasQr)
+        {
+            var qrCell = new PdfPCell
+            {
+                Border = Rectangle.NO_BORDER,
+                Padding = 6,
+                HorizontalAlignment = Element.ALIGN_CENTER,
+                VerticalAlignment = Element.ALIGN_MIDDLE
+            };
+
+            try
+            {
+                var image = iTextSharp.text.Image.GetInstance(CreateQrPng(verifyUrl!));
+                image.ScaleToFit(74f, 74f);
+                image.Alignment = Element.ALIGN_CENTER;
+                qrCell.AddElement(image);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "PDF QR kodi yaratilmadi: {Url}", verifyUrl);
+                qrCell.AddElement(new Paragraph("QR", fonts["nmed_logo"]) { Alignment = Element.ALIGN_CENTER });
+            }
+
+            inner.AddCell(qrCell);
+        }
 
         var outerCell = new PdfPCell(inner)
         {
@@ -1824,7 +1861,7 @@ public class PdfReportService
         var qrCell = new PdfPCell { Border = Rectangle.NO_BORDER, Padding = 8, HorizontalAlignment = Element.ALIGN_CENTER };
         try
         {
-            var image = iTextSharp.text.Image.GetInstance(SimpleQrPng.CreateVersion4Low(verifyUrl));
+            var image = iTextSharp.text.Image.GetInstance(CreateQrPng(verifyUrl));
             image.ScaleToFit(86f, 86f);
             image.Alignment = Element.ALIGN_CENTER;
             qrCell.AddElement(image);
@@ -1977,9 +2014,23 @@ public class PdfReportService
         catch { return null; }
     }
 
-    private string PhysicalPath(string rel) =>
-        Path.Combine(_env.WebRootPath ?? "",
-            rel.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+    private string PhysicalPath(string rel)
+    {
+        var normalized = rel.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+        if (normalized.StartsWith("uploads" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+        {
+            var withoutUploads = normalized[("uploads" + Path.DirectorySeparatorChar).Length..];
+            var pythonRoot = _config["Python:UploadsRoot"] ?? _config["Uploads:PythonRoot"];
+            var uploadsRoot = !string.IsNullOrWhiteSpace(pythonRoot)
+                ? pythonRoot
+                : Path.Combine(_env.ContentRootPath, "..", "..", "python_back", "uploads");
+            var pythonPath = Path.GetFullPath(Path.Combine(uploadsRoot, withoutUploads));
+            if (File.Exists(pythonPath))
+                return pythonPath;
+        }
+
+        return Path.Combine(_env.WebRootPath ?? "", normalized);
+    }
 
     private string MaskPassport(string? raw)
     {
@@ -2023,16 +2074,51 @@ public class PdfReportService
 
     private string BuildConsultationVerifyUrl(int id)
     {
+        return $"{BuildPublicFrontendUrl()}/consultation/verify/{id}";
+    }
+
+    private string BuildAnalysisVerifyUrl(string type, int id)
+    {
+        return $"{BuildPublicFrontendUrl()}/analysis/verify/{type}/{id}";
+    }
+
+    private string BuildPublicFrontendUrl()
+    {
         var baseUrl = _config["App:PublicUrl"]
             ?? _config["Frontend:PublicUrl"]
             ?? _config["Frontend:Url"]
             ?? "https://nmed.uz";
-        return $"{baseUrl.TrimEnd('/')}/consultation/verify/{id}";
+        return baseUrl.TrimEnd('/');
+    }
+
+    private static byte[] CreateQrPng(string text)
+    {
+        using var generator = new QRCodeGenerator();
+        using var data = generator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
+        var png = new PngByteQRCode(data);
+        return png.GetGraphic(10);
     }
 
     private static void AddLabeledText(Document doc, Dictionary<string, Font> fonts, string label, string? text)
     {
-        var wrapper = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 5, SpacingAfter = 4 };
+        var wrapper = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 7, SpacingAfter = 6 };
+        var formattedCell = new PdfPCell
+        {
+            Border = Rectangle.BOX,
+            BorderColor = CL_Border,
+            BackgroundColor = new BaseColor(252, 253, 253),
+            Padding = 7,
+            PaddingBottom = 9,
+        };
+        formattedCell.AddElement(new Paragraph($"{label}:", fonts["th9"]) { SpacingAfter = 4, Leading = 12f });
+        formattedCell.AddElement(new Paragraph(string.IsNullOrWhiteSpace(text) ? "-" : text.Trim(), fonts["td9"])
+        {
+            Leading = 14f,
+            SpacingAfter = 1,
+        });
+        wrapper.AddCell(formattedCell);
+        doc.Add(wrapper);
+        return;
         var phrase = new Phrase();
         phrase.Add(new Chunk($"{label}:\n", fonts["th9"]));
         phrase.Add(new Chunk(string.IsNullOrWhiteSpace(text) ? "—" : text.Trim(), fonts["td9"]));
