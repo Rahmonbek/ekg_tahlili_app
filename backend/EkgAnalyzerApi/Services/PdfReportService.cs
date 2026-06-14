@@ -91,10 +91,12 @@ public class PdfReportService
             "ecg", id,
             doc =>
             {
-                AddEcgSourceFile(doc, tr, row.AnalyseFileLink);
-                AddEcgImage(doc, tr, row.GeneratedFileLink);
                 AddEcgTable(doc, tr, aiData);
                 AddAiBlock(doc, tr, aiData);
+            },
+            doc =>
+            {
+                AddEcgImage(doc, tr, row.GeneratedFileLink);
             });
     }
 
@@ -298,7 +300,6 @@ public class PdfReportService
                  GetAnalysisTypeName(tr, "ecg"), ecg.CreatedDoctor,
                  DoctorNames(ecg.Doctors?.Select(d => d.Doctor).ToList()),
                  ComplaintNames(ecg.Complaints));
-             AddEcgSourceFile(doc, tr, ecg.AnalyseFileLink);
              AddEcgImage(doc, tr, ecg.GeneratedFileLink);
              AddEcgTable(doc, tr, ai);
              AddAiBlock(doc, tr, ai);
@@ -425,7 +426,8 @@ public class PdfReportService
         string? complaints,
         string? analysisType,
         int? analysisId,
-        Action<Document> content)
+        Action<Document> content,
+        Action<Document>? beforeResultsContent = null)
     {
         var ms     = new MemoryStream();
         var doc    = CreateDoc();
@@ -440,6 +442,8 @@ public class PdfReportService
         ComposePatientBlock(doc, tr, fonts, patient, analysisDate);
         ComposeAnalysisBlock(doc, tr, fonts, analysisDate, analysisTypeName,
             createdDoctor, treatingDoctors, complaints);
+
+        beforeResultsContent?.Invoke(doc);
 
         ComposeSectionHeader(doc, fonts, tr["results_title"], CL_DarkBlue);
         content(doc);
@@ -706,10 +710,10 @@ public class PdfReportService
         {
             // Extensionga bog'lanmaymiz: real fayl image bo'lsa PDF'ga chiqaramiz.
             var img = Image.GetInstance(path);
-            img.ScaleToFit(doc.PageSize.Width - MrgSide * 2, 200f);
+            img.ScaleToFit(doc.PageSize.Width - MrgSide * 2, 360f);
             img.Alignment     = Element.ALIGN_CENTER;
-            img.SpacingBefore = 4;
-            img.SpacingAfter  = 4;
+            img.SpacingBefore = 8;
+            img.SpacingAfter  = 10;
             doc.Add(img);
             return;
         }
@@ -2016,6 +2020,13 @@ public class PdfReportService
 
     private string PhysicalPath(string rel)
     {
+        if (Uri.TryCreate(rel, UriKind.Absolute, out var uri))
+            rel = uri.AbsolutePath;
+
+        const string filesPrefix = "/api/files/";
+        if (rel.StartsWith(filesPrefix, StringComparison.OrdinalIgnoreCase))
+            rel = rel[("/api/files").Length..];
+
         var normalized = rel.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
         if (normalized.StartsWith("uploads" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
         {
@@ -2303,22 +2314,9 @@ public class PdfReportService
 
         public static byte[] CreateVersion4Low(string text)
         {
-            var data = Encoding.UTF8.GetBytes(text);
-            if (data.Length > 78)
-                throw new InvalidOperationException("QR tasdiqlash URL juda uzun. App:PublicUrl qiymatini qisqartiring.");
-
-            var dataCodewords = BuildDataCodewords(data);
-            var eccCodewords = ReedSolomonComputeRemainder(dataCodewords, EccCodewords);
-            var allCodewords = dataCodewords.Concat(eccCodewords).ToArray();
-
-            var modules = new bool[Size, Size];
-            var reserved = new bool[Size, Size];
-            DrawFunctionPatterns(modules, reserved);
-            DrawCodewords(modules, reserved, allCodewords);
-            ApplyMask0(modules, reserved);
-            DrawFormatBits(modules, reserved, 0);
-
-            return RenderPng(modules, 6, 4);
+            using var generator = new QRCodeGenerator();
+            using var data = generator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
+            return new PngByteQRCode(data).GetGraphic(10);
         }
 
         private static byte[] BuildDataCodewords(byte[] data)
@@ -2552,31 +2550,7 @@ public class PdfReportService
 
         private static byte[] RenderPng(bool[,] modules, int scale, int quietZone)
         {
-            var pixels = (Size + quietZone * 2) * scale;
-            using var bitmap = new System.Drawing.Bitmap(pixels, pixels);
-            using (var graphics = System.Drawing.Graphics.FromImage(bitmap))
-            {
-                graphics.Clear(System.Drawing.Color.White);
-                using var brush = new System.Drawing.SolidBrush(System.Drawing.Color.Black);
-
-                for (var y = 0; y < Size; y++)
-                {
-                    for (var x = 0; x < Size; x++)
-                    {
-                        if (!modules[y, x])
-                            continue;
-                        graphics.FillRectangle(brush,
-                            (x + quietZone) * scale,
-                            (y + quietZone) * scale,
-                            scale,
-                            scale);
-                    }
-                }
-            }
-
-            using var ms = new MemoryStream();
-            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-            return ms.ToArray();
+            throw new NotSupportedException("Legacy QR renderer ishlatilmaydi. QRCoder PngByteQRCode cross-platform renderer ishlatiladi.");
         }
     }
 

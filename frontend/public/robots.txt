@@ -1,3 +1,43 @@
+# NMED — nmed.uz
 # https://www.robotstxt.org/robotstxt.html
+
 User-agent: *
-Disallow:
+Allow: /
+Allow: /login
+Allow: /register
+
+# Private authenticated areas
+Disallow: /dashboard
+Disallow: /cabinet/
+Disallow: /api/
+Disallow: /static/
+
+# Common crawler traps
+Disallow: /*?*utm_
+Disallow: /*?*ref=
+Disallow: /*?*session=
+
+# Sitemap
+Sitemap: https://nmed.uz/sitemap.xml
+
+# Crawl delay (seconds) — respectful crawl rate
+Crawl-delay: 5
+
+# Googlebot specific — no delay, full access to public pages
+User-agent: Googlebot
+Allow: /
+Allow: /login
+Allow: /register
+Disallow: /dashboard
+Disallow: /cabinet/
+Disallow: /api/
+
+# Yandex — important for CIS market
+User-agent: Yandexbot
+Allow: /
+Allow: /login
+Allow: /register
+Disallow: /dashboard
+Disallow: /cabinet/
+Disallow: /api/
+Crawl-delay: 10

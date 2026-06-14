@@ -14,11 +14,13 @@ public class ParasitologyAnalyseController : ControllerBase
 {
     private readonly MedDataDB _context;
     private readonly ParasitologyAnalyseService _service;
+    private readonly AnalysisProgressTracker _progressTracker;
 
-    public ParasitologyAnalyseController(MedDataDB context, ParasitologyAnalyseService service)
+    public ParasitologyAnalyseController(MedDataDB context, ParasitologyAnalyseService service, AnalysisProgressTracker progressTracker)
     {
         _context = context;
         _service = service;
+        _progressTracker = progressTracker;
     }
 
     [HttpPost("save-and-analyze")]
@@ -43,6 +45,7 @@ public class ParasitologyAnalyseController : ControllerBase
         try
         {
             var result = await _service.SaveAndAnalyzeAsync(file, dto, token);
+            _progressTracker.Track(int.Parse(userIdClaim.Value), "parasitology", result.Id);
             return Ok(result);
         }
         catch (Exception ex)
@@ -96,6 +99,7 @@ public class ParasitologyAnalyseController : ControllerBase
             var result = await _service.SendToAiAsync(id, token);
             if (result == null)
                 return StatusCode(500, new { message = "Fayl topilmadi yoki qayta yuborish imkonsiz" });
+            _progressTracker.Track(int.Parse(userIdClaim.Value), "parasitology", result.Id);
             return Ok(result);
         }
         catch (Exception ex)

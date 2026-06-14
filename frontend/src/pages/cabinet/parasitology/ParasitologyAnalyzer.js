@@ -119,6 +119,7 @@ export default function ParasitologyAnalyzer() {
         }
 
         runInBackground({
+            type: 'parasitology',
             label: 'Parazitologiya tahlil',
             listPath: '/parasitology-analyses',
             analyzePromise: analyzeParasitologyFile(formData),

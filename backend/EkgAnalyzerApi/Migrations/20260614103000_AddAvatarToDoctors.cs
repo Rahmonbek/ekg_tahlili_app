@@ -1,9 +1,13 @@
+using EkgAnalyzerApi.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace EkgAnalyzerApi.Migrations
 {
+    [DbContext(typeof(MedDataDB))]
+    [Migration("20260614103000_AddAvatarToDoctors")]
     public partial class AddAvatarToDoctors : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

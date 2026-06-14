@@ -15,6 +15,7 @@ import ClinicSetupModal from './components/ClinicSetupModal'
 import AnalysisProgressFloat from './components/AnalysisProgressFloat'
 import useVideoSignalR from './hooks/useVideoSignalR'
 import useConsultationSignalR from './hooks/useConsultationSignalR'
+import useAnalysisSignalR from './hooks/useAnalysisSignalR'
 import IncomingCallModal from './components/video/IncomingCallModal'
 import ConsultationVerificationPage from './pages/ConsultationVerificationPage'
 
@@ -33,6 +34,7 @@ export default function App() {
 
   // SignalR konsultatsiya bildirishnomalari — faqat Admin/Direktor/Shifokor uchun
   useConsultationSignalR(videoEnabled)
+  useAnalysisSignalR(!!user_id)
 
   const [first_load, setfirst_load] = useState(false)
   const navigate = useNavigate()

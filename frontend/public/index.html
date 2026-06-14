@@ -1,59 +1,363 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="NMED — Tibbiyot diagnostikasi uchun AI yordamchisi"
-    />
+    <meta name="theme-color" content="#119488" />
+<meta name="google-site-verification" content="gP-v_KjOYZk75ddc64so_iSnvuSELxtUM8avpYQJQgE" />
+    <!-- ═══════════════════════════════════════════════
+         PRIMARY META — O'ZBEK
+    ═══════════════════════════════════════════════ -->
+    <title>NMED — AI EKG va Tibbiy Diagnostika Platformasi | O'zbekiston</title>
+    <meta name="title" content="NMED — AI EKG va Tibbiy Diagnostika Platformasi | O'zbekiston">
+    <meta name="description" content="O'zbekistondagi birinchi AI tibbiy diagnostika platformasi. EKG, SMAD, Holter, laboratoriya va parazitologiya tahlillarini 30 soniyada tayyorlang. 142+ klinika, 50 000+ tahlil, 99.2% aniqlik darajasi.">
+    <meta name="keywords" content="EKG tahlili, AI tibbiy diagnostika, SMAD monitoring, Holter monitoring, laboratoriya tahlili, parazitologiya, sun'iy intellekt tibbiyot, online konsultatsiya shifokor, klinika boshqaruv tizimi, elektrokardiogramma O'zbekiston, tibbiy platforma, qon bosimi monitoringi, yurak tahlili, анализ ЭКГ, медицинская диагностика ИИ, СМАД мониторинг, Холтер мониторинг, медицинская платформа Узбекистан, ECG analysis AI, medical platform Uzbekistan, Holter monitoring Uzbekistan, SMAD blood pressure AI">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <meta name="author" content="NMED">
+    <meta name="copyright" content="© 2026 NMED">
+    <meta name="geo.region" content="UZ">
+    <meta name="geo.placename" content="Toshkent, O'zbekiston">
+    <meta name="geo.position" content="41.2995;69.2401">
+    <meta name="ICBM" content="41.2995, 69.2401">
+    <meta name="language" content="uz">
+    <meta name="revisit-after" content="7 days">
+    <meta name="rating" content="general">
+    <meta name="category" content="Medical, Healthcare, AI, Technology">
+
+    <!-- ═══════════════════════════════════════════════
+         HREFLANG — MULTILINGUAL
+    ═══════════════════════════════════════════════ -->
+    <link rel="alternate" hreflang="uz" href="https://nmed.uz/">
+    <link rel="alternate" hreflang="ru" href="https://nmed.uz/ru/">
+    <link rel="alternate" hreflang="en" href="https://nmed.uz/en/">
+    <link rel="alternate" hreflang="x-default" href="https://nmed.uz/">
+
+    <!-- ═══════════════════════════════════════════════
+         CANONICAL & ICONS
+    ═══════════════════════════════════════════════ -->
+    <link rel="canonical" href="https://nmed.uz/">
+    <link rel="icon" href="%PUBLIC_URL%/logo.png" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>NMED</title>
-    <meta name="title" content="NMED — AI yordamchi tibbiyot diagnostikasi">
-<meta name="description" content="NMED platformasi bemorlarning kardiologik va laboratoriya ma’lumotlarini boshqarish, AI yordamida tahlil qilish va shifokorlar uchun tez va aniq tashxis qo‘yishda yordam beruvchi tibbiyot diagnostikasi tizimidir.">
+    <!-- ═══════════════════════════════════════════════
+         OPEN GRAPH / FACEBOOK / LINKEDIN
+    ═══════════════════════════════════════════════ -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="NMED">
+    <meta property="og:url" content="https://nmed.uz/">
+    <meta property="og:title" content="NMED — AI EKG va Tibbiy Diagnostika Platformasi | O'zbekiston">
+    <meta property="og:description" content="O'zbekistondagi birinchi AI tibbiy diagnostika platformasi. EKG, SMAD, Holter, laboratoriya va parazitologiya tahlillarini 30 soniyada tayyorlang. 142+ klinika, 50 000+ tahlil, 99.2% aniqlik.">
+    <meta property="og:image" content="https://nmed.uz/main_img.png">
+    <meta property="og:image:secure_url" content="https://nmed.uz/main_img.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="NMED — O'zbekistondagi AI tibbiy diagnostika platformasi">
+    <meta property="og:locale" content="uz_UZ">
+    <meta property="og:locale:alternate" content="ru_RU">
+    <meta property="og:locale:alternate" content="en_US">
 
-<!-- Open Graph / Facebook -->
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://nmed.uz/">
-<meta property="og:title" content="NMED — AI yordamchi tibbiyot diagnostikasi">
-<meta property="og:description" content="Bemorlarning kardiologik va laboratoriya ma’lumotlarini boshqarish, AI yordamida tahlil qilish va shifokorlar uchun tez va aniq tashxis qo‘yishda yordam beruvchi tibbiyot diagnostikasi tizimi.">
-<meta property="og:image" content="https://nmed.uz/main_img.png">
+    <!-- ═══════════════════════════════════════════════
+         TWITTER / X
+    ═══════════════════════════════════════════════ -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@nmeduz">
+    <meta name="twitter:creator" content="@nmeduz">
+    <meta name="twitter:url" content="https://nmed.uz/">
+    <meta name="twitter:title" content="NMED — AI EKG va Tibbiy Diagnostika Platformasi">
+    <meta name="twitter:description" content="O'zbekistondagi birinchi AI tibbiy diagnostika platformasi. EKG, SMAD, Holter, laboratoriya va parazitologiya tahlillari 30 soniyada. 142+ klinika, 99.2% aniqlik.">
+    <meta name="twitter:image" content="https://nmed.uz/main_img.png">
+    <meta name="twitter:image:alt" content="NMED AI tibbiy platforma — O'zbekiston">
 
-<!-- Twitter -->
-<meta property="twitter:card" content="summary_large_image">
-<meta property="twitter:url" content="https://nmed.uz/">
-<meta property="twitter:title" content="NMED — AI yordamchi tibbiyot diagnostikasi">
-<meta property="twitter:description" content="Bemorlarning kardiologik va laboratoriya ma’lumotlarini boshqarish, AI yordamida tahlil qilish va shifokorlar uchun tez va aniq tashxis qo‘yishda yordam beruvchi tibbiyot diagnostikasi tizimi.">
-<meta property="twitter:image" content="https://nmed.uz/main_img.png">
+    <!-- ═══════════════════════════════════════════════
+         SCHEMA.ORG JSON-LD — STRUCTURED DATA
+    ═══════════════════════════════════════════════ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://nmed.uz/#organization",
+          "name": "NMED",
+          "alternateName": ["НМЕД", "NMED Uzbekistan"],
+          "url": "https://nmed.uz",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://nmed.uz/logo.png",
+            "width": 512,
+            "height": 512
+          },
+          "image": "https://nmed.uz/main_img.png",
+          "description": "O'zbekistondagi birinchi AI tibbiy diagnostika platformasi. EKG, SMAD, Holter, laboratoriya va parazitologiya tahlillarini sun'iy intellekt yordamida qayta ishlaydi. 142+ klinika, 14 viloyat.",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Toshkent",
+            "addressLocality": "Toshkent",
+            "addressRegion": "Toshkent",
+            "addressCountry": "UZ"
+          },
+          "contactPoint": [
+            {
+              "@type": "ContactPoint",
+              "email": "info@nmed.uz",
+              "contactType": "customer support",
+              "availableLanguage": ["Uzbek", "Russian", "English"]
+            }
+          ],
+          "foundingDate": "2024",
+          "areaServed": {
+            "@type": "Country",
+            "name": "Uzbekistan"
+          },
+          "numberOfEmployees": {
+            "@type": "QuantitativeValue",
+            "minValue": 10
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://nmed.uz/#website",
+          "url": "https://nmed.uz",
+          "name": "NMED",
+          "description": "AI EKG va tibbiy diagnostika platformasi — O'zbekiston",
+          "publisher": {
+            "@id": "https://nmed.uz/#organization"
+          },
+          "inLanguage": ["uz", "ru", "en"],
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://nmed.uz/search?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://nmed.uz/#webpage",
+          "url": "https://nmed.uz",
+          "name": "NMED — AI EKG va Tibbiy Diagnostika Platformasi | O'zbekiston",
+          "isPartOf": { "@id": "https://nmed.uz/#website" },
+          "about": { "@id": "https://nmed.uz/#organization" },
+          "description": "O'zbekistondagi birinchi AI tibbiy diagnostika platformasi. EKG, SMAD, Holter, laboratoriya va parazitologiya tahlillari.",
+          "inLanguage": "uz",
+          "datePublished": "2024-01-01",
+          "dateModified": "2026-06-14",
+          "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Bosh sahifa",
+                "item": "https://nmed.uz"
+              }
+            ]
+          }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://nmed.uz/#app",
+          "name": "NMED",
+          "applicationCategory": "MedicalApplication",
+          "applicationSubCategory": "Medical Diagnostics",
+          "operatingSystem": "Web, iOS, Android",
+          "url": "https://nmed.uz",
+          "description": "AI yordamida EKG, SMAD, Holter, laboratoriya va parazitologiya tahlillarini boshqarish platformasi. 30 soniyada AI xulosasi, online video konsultatsiya.",
+          "featureList": [
+            "EKG tahlili — 30 soniyada AI xulosasi va PDF hisobot",
+            "SMAD 24 soatlik qon bosimi monitoringi va tsirkad indeks",
+            "Holter 48 soatlik yurak monitoringi — aritmiya va ST siljish",
+            "Laboratoriya natijalarini AI bilan tahlil qilish",
+            "Parazitologiya mikroskop rasmi asosida gijja tahlili",
+            "Online video konsultatsiya platforma ichida",
+            "AES-256 shifrlash bilan ma'lumotlar xavfsizligi",
+            "Rolga asoslangan kirish tizimi",
+            "To'liq audit jurnali"
+          ],
+          "screenshot": "https://nmed.uz/main_img.png",
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "ratingCount": "142",
+            "bestRating": "5",
+            "worstRating": "1"
+          },
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "UZS",
+            "description": "Demo versiyani sinab ko'ring",
+            "url": "https://nmed.uz/register"
+          },
+          "provider": {
+            "@id": "https://nmed.uz/#organization"
+          }
+        },
+        {
+          "@type": "MedicalWebPage",
+          "@id": "https://nmed.uz/#medical",
+          "name": "NMED Tibbiy Diagnostika",
+          "url": "https://nmed.uz",
+          "description": "AI yordamidagi tibbiy diagnostika platformasi",
+          "medicalAudience": {
+            "@type": "MedicalAudience",
+            "audienceType": "Clinician"
+          },
+          "about": [
+            {
+              "@type": "MedicalProcedure",
+              "name": "EKG (Elektrokardiogramma) Tahlili",
+              "description": "12 qo'rg'oshinli EKG faylini yuklang, AI yurak ritmi, ST segment va QTc intervalni tahlil qiladi",
+              "procedureType": "Diagnostic"
+            },
+            {
+              "@type": "MedicalProcedure",
+              "name": "SMAD — 24 soatlik qon bosimi monitoringi",
+              "description": "Sutkalik qon bosimi profili va tsirkad indeks avtomatik hisoblanadi",
+              "procedureType": "Diagnostic"
+            },
+            {
+              "@type": "MedicalProcedure",
+              "name": "Holter Monitoring",
+              "description": "48 soatlik yurak monitoringida aritmiyalar, pauzalar va ST siljishlar aniqlanadi",
+              "procedureType": "Diagnostic"
+            }
+          ]
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://nmed.uz/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "NMED qanday tahlillarni qo'llab-quvvatlaydi?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "EKG (elektrokardiogramma), SMAD (24 soatlik qon bosimi monitoringi), Holter monitoring (48 soatlik yurak monitoringi), laboratoriya va parazitologiya tahlillari bitta platformada ishlaydi."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "AI tahlili qancha vaqt oladi?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Fayl turi va hajmiga qarab odatda bir necha soniyadan 30 soniyagacha oraliqda natija tayyorlanadi. EKG tahlili odatda 30 soniya ichida yakunlanadi."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Online konsultatsiya qanday ishlaydi?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Admin bemor tahlillarini tanlangan mutaxassisga yuboradi. Mutaxassis o'z kabinetidan bemorning EKG, SMAD, Holter va laboratoriya natijalarini ko'rib, platforma ichida video maslahat beradi."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Ma'lumotlar xavfsizligi qanday ta'minlanadi?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "AES-256 shifrlash, to'liq audit jurnali, rolga asoslangan kirish va doimiy monitoring orqali bemor ma'lumotlari himoyalanadi. Tizim O'zDSt 2814:2014 xavfsizlik talablariga javob beradi."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Ro'yxatdan o'tish qancha vaqt oladi?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Asosiy klinika ma'lumotlari (nomi, INN) tayyor bo'lsa, 5 daqiqada tizimga kirish va ishni boshlash mumkin."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Nechta klinika NMED dan foydalanmoqda?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Hozirda 142 dan ortiq klinika O'zbekistonning 14 viloyatida NMED platformasidan foydalanmoqda. Jami 50 000 dan ortiq tahlil amalga oshirilgan."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Какие анализы поддерживает NMED?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "NMED поддерживает ЭКГ анализ, СМАД мониторинг (24-часовой мониторинг артериального давления), Холтер мониторинг (48-часовой), лабораторные анализы и паразитологию — всё в одной платформе."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What analyses does NMED support?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "NMED supports ECG analysis, SMAD (24-hour blood pressure monitoring), Holter monitoring (48-hour cardiac), laboratory analysis, and parasitology — all powered by AI in one platform."
+              }
+            }
+          ]
+        },
+        {
+          "@type": "ItemList",
+          "@id": "https://nmed.uz/#services",
+          "name": "NMED Xizmatlari",
+          "description": "NMED taqdim etadigan tibbiy tahlil xizmatlari",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "EKG Tahlili",
+              "description": "12 qo'rg'oshinli EKG faylini AI tahlil qiladi — yurak ritmi, ST segment, QTc interval, 30 soniyada natija",
+              "url": "https://nmed.uz/#xizmatlar"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "SMAD Monitoring",
+              "description": "24 soatlik qon bosimi monitoringi — sutkalik profil va tsirkad indeks avtomatik hisobot",
+              "url": "https://nmed.uz/#xizmatlar"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "Holter Monitoring",
+              "description": "48 soatlik yurak monitoringi — aritmiyalar, pauzalar va ST siljishlar aniqlanadi",
+              "url": "https://nmed.uz/#xizmatlar"
+            },
+            {
+              "@type": "ListItem",
+              "position": 4,
+              "name": "Laboratoriya Tahlili",
+              "description": "Laboratoriya rasmlaridan AI ko'rsatkichlarni ajratadi, normadan og'ishlar va tavsiyalar tayyorlanadi",
+              "url": "https://nmed.uz/#xizmatlar"
+            },
+            {
+              "@type": "ListItem",
+              "position": 5,
+              "name": "Parazitologiya",
+              "description": "Mikroskop rasmi asosida gijja turi va epidemiologik kuzatuv ma'lumotlari aniqlanadi",
+              "url": "https://nmed.uz/#xizmatlar"
+            },
+            {
+              "@type": "ListItem",
+              "position": 6,
+              "name": "Online Konsultatsiya",
+              "description": "Mutaxassis shifokorlar bilan platforma ichida video orqali masofaviy konsultatsiya",
+              "url": "https://nmed.uz/#konsultatsiya"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>
+      NMED — O'zbekistondagi birinchi AI tibbiy diagnostika platformasi.
+      EKG, SMAD, Holter, laboratoriya va parazitologiya tahlillarini sun'iy intellekt bilan qayta ishlang.
+      Ushbu sahifani ko'rish uchun JavaScript-ni yoqing.
+    </noscript>
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
   </body>
 </html>

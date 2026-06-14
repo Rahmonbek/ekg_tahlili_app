@@ -53,6 +53,35 @@ public class FileProxyController : ControllerBase
         return PhysicalFile(fullPath, contentType, enableRangeProcessing: true);
     }
 
+    [HttpGet("{**relativePath}")]
+    [AllowAnonymous]
+    public IActionResult GetBackendFile(string relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath))
+            return NotFound();
+
+        var safeRelative = relativePath
+            .Replace('\\', Path.DirectorySeparatorChar)
+            .Replace('/', Path.DirectorySeparatorChar)
+            .TrimStart(Path.DirectorySeparatorChar);
+
+        var webRoot = Path.GetFullPath(_env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"));
+        var fullPath = Path.GetFullPath(Path.Combine(webRoot, safeRelative));
+        if (!fullPath.StartsWith(webRoot, StringComparison.OrdinalIgnoreCase))
+            return BadRequest(new { message = "Fayl yo'li noto'g'ri" });
+
+        if (!System.IO.File.Exists(fullPath))
+        {
+            _logger.LogWarning("Backend media fayl topilmadi: {Path}", fullPath);
+            return NotFound(new { message = "Fayl topilmadi" });
+        }
+
+        if (!_contentTypes.TryGetContentType(fullPath, out var contentType))
+            contentType = "application/octet-stream";
+
+        return PhysicalFile(fullPath, contentType, enableRangeProcessing: true);
+    }
+
     private string GetUploadsRoot()
     {
         var configured = _config["Python:UploadsRoot"] ?? _config["Uploads:PythonRoot"];

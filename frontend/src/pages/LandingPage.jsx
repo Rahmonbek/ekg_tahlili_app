@@ -1088,7 +1088,7 @@ function Stats() {
             </div>
           </article>
 
-          <article className="landing-card reveal" data-delay="2">
+          <article className="landing-card reveal regions_landing" data-delay="2">
             <div className="landing-chart-head">
               <h3>Hududlar bo‘yicha qamrov</h3>
               <span className="landing-pill">14 viloyat</span>
@@ -1175,7 +1175,7 @@ function Testimonials() {
   const marqueeItems = useMemo(() => [...testimonials, ...testimonials], []);
 
   return (
-    <section className="landing-section landing-section-alt landing-section-overflow">
+    <section className="landing-section landing-section-alt landing-section-overflow opinion_doctors">
       <div className="landing-container">
         <SectionHeader eyebrow="Mijozlar fikri" title="Shifokorlar nima deydi?" />
       </div>

@@ -17,8 +17,8 @@
           "Microsoft.EntityFrameworkCore.Design": "7.0.20",
           "Newtonsoft.Json": "13.0.4",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "7.0.18",
+          "QRCoder": "1.6.0",
           "Swashbuckle.AspNetCore": "6.5.0",
-          "System.Drawing.Common": "9.0.10",
           "iTextSharp.LGPLv2.Core": "3.7.7"
         },
         "runtime": {
@@ -298,22 +298,6 @@
           }
         }
       },
-      "Microsoft.Win32.SystemEvents/9.0.10": {
-        "runtime": {
-          "lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1025.47515"
-          }
-        },
-        "runtimeTargets": {
-          "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
-            "rid": "win",
-            "assetType": "runtime",
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1025.47515"
-          }
-        }
-      },
       "MimeKit/4.16.0": {
         "dependencies": {
           "BouncyCastle.Cryptography": "2.6.2",
@@ -367,6 +351,14 @@
           "lib/net7.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll": {
             "assemblyVersion": "7.0.18.0",
             "fileVersion": "7.0.18.0"
+          }
+        }
+      },
+      "QRCoder/1.6.0": {
+        "runtime": {
+          "lib/net6.0/QRCoder.dll": {
+            "assemblyVersion": "1.6.0.0",
+            "fileVersion": "1.6.0.0"
           }
         }
       },
@@ -453,21 +445,6 @@
           "lib/netstandard2.0/System.CodeDom.dll": {
             "assemblyVersion": "4.0.0.0",
             "fileVersion": "4.6.25519.3"
-          }
-        }
-      },
-      "System.Drawing.Common/9.0.10": {
-        "dependencies": {
-          "Microsoft.Win32.SystemEvents": "9.0.10"
-        },
-        "runtime": {
-          "lib/net8.0/System.Drawing.Common.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1025.47506"
-          },
-          "lib/net8.0/System.Private.Windows.Core.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1025.47506"
           }
         }
       },
@@ -738,13 +715,6 @@
       "path": "microsoft.openapi/1.4.3",
       "hashPath": "microsoft.openapi.1.4.3.nupkg.sha512"
     },
-    "Microsoft.Win32.SystemEvents/9.0.10": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-P1CEtsxar/RhfoH3r1vc9ra28LLVYphpcFBxyRIEMM/jP3qh4j9TU4sWH2RUhMZX+GbFxZ+zz1oSP2n9MwjshA==",
-      "path": "microsoft.win32.systemevents/9.0.10",
-      "hashPath": "microsoft.win32.systemevents.9.0.10.nupkg.sha512"
-    },
     "MimeKit/4.16.0": {
       "type": "package",
       "serviceable": true,
@@ -779,6 +749,13 @@
       "sha512": "sha512-W+mFtJ1D4kSsCIBMScaq3tq8jdoR0Healb6knhSKqnlIoGGQwkHltHMsFeWacieLQPA+e4UrIgucfDpRpRXQRA==",
       "path": "npgsql.entityframeworkcore.postgresql/7.0.18",
       "hashPath": "npgsql.entityframeworkcore.postgresql.7.0.18.nupkg.sha512"
+    },
+    "QRCoder/1.6.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-XmPA81eo+oRxBuyVdswsSkTGTE1d3thfF11Z1PdD7oB56A6HU4G4AAOdySmGRMb/cljwlFTMWUtosGEnwpS6GA==",
+      "path": "qrcoder/1.6.0",
+      "hashPath": "qrcoder.1.6.0.nupkg.sha512"
     },
     "SkiaSharp/3.119.0": {
       "type": "package",
@@ -835,13 +812,6 @@
       "sha512": "sha512-2sCCb7doXEwtYAbqzbF/8UAeDRMNmPaQbU2q50Psg1J9KzumyVVCgKQY8s53WIPTufNT0DpSe9QRvVjOzfDWBA==",
       "path": "system.codedom/4.4.0",
       "hashPath": "system.codedom.4.4.0.nupkg.sha512"
-    },
-    "System.Drawing.Common/9.0.10": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-FDakPhIcxHnhslLiz4ZQ+ALpHRpCU3zOep9Mcq+4hL23XwQrzmgJNYvf1tH4kJ/V36wO/ZhRr8nOfiz26P3wKg==",
-      "path": "system.drawing.common/9.0.10",
-      "hashPath": "system.drawing.common.9.0.10.nupkg.sha512"
     },
     "System.Formats.Asn1/8.0.1": {
       "type": "package",

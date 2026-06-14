@@ -104,6 +104,28 @@ export const useStore = create((set) => ({
     updatePendingAnalysis: (key, updates) => set((s) => ({
         pendingAnalyses: s.pendingAnalyses.map((a) => a.key === key ? { ...a, ...updates } : a),
     })),
+    updatePendingAnalysisByRef: (type, analysisId, updates) => set((s) => ({
+        pendingAnalyses: s.pendingAnalyses.map((a) =>
+            a.type === type && Number(a.analysisId) === Number(analysisId)
+                ? { ...a, ...updates }
+                : a
+        ),
+    })),
+    upsertPendingAnalysisByRef: (item) => set((s) => {
+        const exists = s.pendingAnalyses.some((a) =>
+            a.type === item.type && Number(a.analysisId) === Number(item.analysisId)
+        );
+        if (exists) {
+            return {
+                pendingAnalyses: s.pendingAnalyses.map((a) =>
+                    a.type === item.type && Number(a.analysisId) === Number(item.analysisId)
+                        ? { ...a, ...item }
+                        : a
+                ),
+            };
+        }
+        return { pendingAnalyses: [...s.pendingAnalyses, item] };
+    }),
     removePendingAnalysis: (key) => set((s) => ({
         pendingAnalyses: s.pendingAnalyses.filter((a) => a.key !== key),
     })),

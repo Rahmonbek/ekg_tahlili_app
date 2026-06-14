@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --landing-progress: 0%;
 }
 
@@ -1966,7 +1966,8 @@
 .landing-top-button svg {
   font-size: 1.2rem;
 }
-
+.opinion_doctors .landing-card{width:25vw}
+.opinion_doctors{display: none !important;}
 @media (max-width: 1023px) {
   .landing-page-shell {
     --section-pad: 82px;
@@ -2069,9 +2070,18 @@
   .landing-footer-grid {
     grid-template-columns: 1fr 1fr;
   }
+    .opinion_doctors .landing-card{width:45vw}
+    #statistika .landing-card{
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 20px;
+    }
 }
 
 @media (max-width: 640px) {
+  .regions_landing, .opinion_doctors{
+    display: none !important;
+  }
   .landing-page-shell {
     --section-pad: 66px;
     --nav-height: 72px;

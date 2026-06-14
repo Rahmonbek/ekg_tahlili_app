@@ -127,6 +127,7 @@ export default function SmadAnalyzer() {
         }
 
         runInBackground({
+            type: 'smad',
             label: 'SMAD tahlil',
             listPath: '/smad-analyses',
             analyzePromise: analyzeSmadFile(formData),

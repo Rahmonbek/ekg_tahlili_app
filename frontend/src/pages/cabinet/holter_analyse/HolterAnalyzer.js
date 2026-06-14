@@ -127,6 +127,7 @@ export default function HolterAnalyzer() {
         }
 
         runInBackground({
+            type: 'holter',
             label: 'Holter tahlil',
             listPath: '/holter-analyses',
             analyzePromise: analyzeHolterFile(formData),

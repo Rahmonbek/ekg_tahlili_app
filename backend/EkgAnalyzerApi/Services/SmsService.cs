@@ -31,7 +31,7 @@ public class EskizSmsService : ISmsService
 
         var token = await GetTokenAsync(email, password);
         // var message = $"<#> NMED platformasida telefon raqamni tasdiqlash kod: {code} @nmed.uz #ab12cd34ef";
-        var message = $"<#> Uyavto platformasiga kirish uchun kod: {code} @uyavto.uz #ab12cd34ef";
+        var message = $"<#> NMED platformasida telefon raqamni tasdiqlash kod: {code} @nmed.uz #ab12cd34ef";
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://notify.eskiz.uz/api/message/sms/send");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);

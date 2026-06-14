@@ -137,6 +137,7 @@ export default function EcgAnalyzer() {
         if (checkAI) {
             // ─── AI rejimi: fon da ishlaydi, forma darhol tozalanadi ───
             runInBackground({
+                type: 'ecg',
                 label: 'EKG AI tahlil',
                 listPath: '/ecg-analyses',
                 analyzePromise: analyzeEkgFile(formData),

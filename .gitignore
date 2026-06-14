@@ -25,7 +25,14 @@ runs/
 # Maxfiy fayllar (secrets)
 /backend/EkgAnalyzerApi/appsettings.Development.json
 /backend/EkgAnalyzerApi/appsettings.Production.json
+/backend/EkgAnalyzerApi/.env
+/backend/EkgAnalyzerApi/.env.*
+!/backend/EkgAnalyzerApi/.env.example
+!/backend/EkgAnalyzerApi/.env.production.example
 /python_back/.env
+/python_back/.env.*
+!/python_back/.env.example
+!/python_back/.env.production.example
 /python_back/venv
 /python_back/__pycache__
 

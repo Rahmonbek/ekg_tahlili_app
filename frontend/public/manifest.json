@@ -1,6 +1,7 @@
 {
-  "short_name": "Nmed",
-  "name": "NMED — Tibbiyot diagnostikasi uchun AI yordamchisi",
+  "short_name": "NMED",
+  "name": "NMED — AI Tibbiy Diagnostika Platformasi",
+  "description": "O'zbekistondagi birinchi AI tibbiy diagnostika platformasi. EKG, SMAD, Holter, laboratoriya va parazitologiya tahlillari 30 soniyada.",
   "icons": [
     {
       "src": "logo.png",
@@ -10,16 +11,33 @@
     {
       "src": "logo.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "maskable any"
     },
     {
       "src": "logo.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "maskable any"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "orientation": "any",
+  "theme_color": "#119488",
+  "background_color": "#0a0f1e",
+  "lang": "uz",
+  "dir": "ltr",
+  "categories": ["medical", "health", "productivity"],
+  "screenshots": [
+    {
+      "src": "main_img.png",
+      "type": "image/png",
+      "sizes": "1200x630",
+      "label": "NMED Dashboard — AI tibbiy diagnostika"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }

@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.RateLimiting;
 using EkgAnalyzerApi.Middleware;
+using System.Net;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -63,7 +64,12 @@ builder.Services.AddAuthentication(options =>
     // C6 talabi: production da HTTPS majburiy, faqat dev da o'chiriladi
     options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
     options.SaveToken = true;
-    var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
+    var jwtKey = builder.Configuration["Jwt:Key"];
+    if (string.IsNullOrWhiteSpace(jwtKey))
+    {
+        throw new InvalidOperationException("Jwt:Key sozlanmagan. Productionda Jwt__Key environment variable orqali kiriting.");
+    }
+    var key = Encoding.UTF8.GetBytes(jwtKey);
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -117,17 +123,36 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "https://nmed.uz") // Aniq manzillar
+        var allowedOrigins =
+            builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? builder.Configuration["Cors:AllowedOrigins"]?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            ?? builder.Configuration["AllowedOrigins"]?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            ?? new[] { "http://localhost:3000", "https://nmed.uz" };
+
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials(); // Endi xatolik bermaydi
+              .AllowCredentials();
     });
 });
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.ListenAnyIP(5000); // HTTP
-    options.ListenAnyIP(5001, listenOptions => listenOptions.UseHttps());
+    var bindAddress = builder.Configuration["Kestrel:BindAddress"] ?? "0.0.0.0";
+    var httpPort = builder.Configuration.GetValue<int?>("Kestrel:HttpPort") ?? 5000;
+    var enableHttpsEndpoint = builder.Configuration.GetValue("Kestrel:EnableHttpsEndpoint", builder.Environment.IsDevelopment());
+    var httpsPort = builder.Configuration.GetValue<int?>("Kestrel:HttpsPort") ?? 5001;
+
+    var bindIp = bindAddress is "*" or "0.0.0.0"
+        ? IPAddress.Any
+        : IPAddress.Parse(bindAddress);
+
+    options.Listen(bindIp, httpPort);
+
+    if (enableHttpsEndpoint)
+    {
+        options.Listen(bindIp, httpsPort, listenOptions => listenOptions.UseHttps());
+    }
 });
 
 var app = builder.Build();
@@ -149,8 +174,11 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Migration bajarishda xatolik yuz berdi. Server noto'g'ri holatda ishga tushgan bo'lishi mumkin.");
     }
 }
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment() || app.Configuration.GetValue("Swagger:Enabled", false))
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 app.UseRouting();
 app.UseCors("AllowAll");
 app.UseRateLimiter(); // TT 4.1.6.3 — IP asosida so'rovlar cheklovi

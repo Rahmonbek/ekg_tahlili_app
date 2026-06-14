@@ -53,6 +53,7 @@ export default function AnalysisProgressFloat() {
                     key: item.key,
                     duration: 10,
                 });
+                setTimeout(() => removePendingAnalysis(item.key), 12000);
             } else if (item.status === 'error') {
                 notification.error({
                     message: `${item.label} xatolik bilan tugadi`,
@@ -60,6 +61,7 @@ export default function AnalysisProgressFloat() {
                     key: item.key,
                     duration: 8,
                 });
+                setTimeout(() => removePendingAnalysis(item.key), 8000);
             }
         });
     }, [pendingAnalyses, navigate]);

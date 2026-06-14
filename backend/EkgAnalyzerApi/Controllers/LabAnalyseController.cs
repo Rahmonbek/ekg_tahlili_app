@@ -59,6 +59,7 @@ public class LabAnalyseController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(502, new { message = "AI tahlil xizmati bilan bog'lanib bo'lmadi", error = ex.Message });
+        }
     }
 
     private void TrackAnalysisProgress(string content, string type, string idKey)
@@ -91,7 +92,6 @@ public class LabAnalyseController : ControllerBase
             return null;
         }
     }
-}
     [HttpGet("get-by-clinic")]
     public async Task<IActionResult> GetByClinic(
         [FromQuery] int page = 1,

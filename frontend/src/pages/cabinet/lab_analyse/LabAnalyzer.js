@@ -152,6 +152,7 @@ export default function LabAnalyzer() {
         }
 
         runInBackground({
+            type: 'lab',
             label: 'Laboratoriya tahlil',
             listPath: '/lab-analyses',
             analyzePromise: analyzeLabFile(formData),
