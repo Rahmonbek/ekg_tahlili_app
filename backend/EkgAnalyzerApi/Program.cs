@@ -36,6 +36,8 @@ builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<PdfReportService>();     // PDF hisobot generatsiyasi
 builder.Services.AddSingleton<EncryptionService>(); // AES-256 shifrlash
 builder.Services.AddSingleton<IVideoCallConnectionService, VideoCallConnectionService>();
+builder.Services.AddSingleton<AnalysisProgressTracker>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<AnalysisProgressTracker>());
 builder.Services.AddScoped<IOnlineConsultationService, OnlineConsultationService>();
 builder.Services.AddSingleton<IConsultationConnectionService, ConsultationConnectionService>();
 builder.Services.AddHostedService<ConsultationExpiryService>();
@@ -159,4 +161,5 @@ app.UseAuditLogging(); // TT 4.1.6 — audit log middleware
 app.MapControllers();
 app.MapHub<VideoCallHub>("/hubs/videocall");
 app.MapHub<EkgAnalyzerApi.Hubs.ConsultationHub>("/hubs/consultation");
+app.MapHub<AnalysisHub>("/hubs/analysis");
 app.Run();

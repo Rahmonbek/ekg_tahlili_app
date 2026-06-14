@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using EkgAnalyzerApi.Services;
 using Microsoft.AspNetCore.SignalR;
 
 namespace EkgAnalyzerApi.Hubs;

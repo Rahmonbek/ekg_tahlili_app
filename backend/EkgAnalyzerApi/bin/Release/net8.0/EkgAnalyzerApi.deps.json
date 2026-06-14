@@ -17,6 +17,7 @@
           "Microsoft.EntityFrameworkCore.Design": "7.0.20",
           "Newtonsoft.Json": "13.0.4",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "7.0.18",
+          "QRCoder": "1.6.0",
           "Swashbuckle.AspNetCore": "6.5.0",
           "System.Drawing.Common": "9.0.10",
           "iTextSharp.LGPLv2.Core": "3.7.7"
@@ -367,6 +368,14 @@
           "lib/net7.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll": {
             "assemblyVersion": "7.0.18.0",
             "fileVersion": "7.0.18.0"
+          }
+        }
+      },
+      "QRCoder/1.6.0": {
+        "runtime": {
+          "lib/net6.0/QRCoder.dll": {
+            "assemblyVersion": "1.6.0.0",
+            "fileVersion": "1.6.0.0"
           }
         }
       },
@@ -779,6 +788,13 @@
       "sha512": "sha512-W+mFtJ1D4kSsCIBMScaq3tq8jdoR0Healb6knhSKqnlIoGGQwkHltHMsFeWacieLQPA+e4UrIgucfDpRpRXQRA==",
       "path": "npgsql.entityframeworkcore.postgresql/7.0.18",
       "hashPath": "npgsql.entityframeworkcore.postgresql.7.0.18.nupkg.sha512"
+    },
+    "QRCoder/1.6.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-XmPA81eo+oRxBuyVdswsSkTGTE1d3thfF11Z1PdD7oB56A6HU4G4AAOdySmGRMb/cljwlFTMWUtosGEnwpS6GA==",
+      "path": "qrcoder/1.6.0",
+      "hashPath": "qrcoder.1.6.0.nupkg.sha512"
     },
     "SkiaSharp/3.119.0": {
       "type": "package",

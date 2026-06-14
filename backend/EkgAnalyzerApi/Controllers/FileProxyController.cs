@@ -25,6 +25,7 @@ public class FileProxyController : ControllerBase
     }
 
     [HttpGet("uploads/{**relativePath}")]
+    [AllowAnonymous]
     public IActionResult GetUpload(string relativePath)
     {
         if (string.IsNullOrWhiteSpace(relativePath))

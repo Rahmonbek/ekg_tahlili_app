@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.RateLimiting;
 
 [ApiController]
@@ -16,12 +17,14 @@ public class LabAnalyseController : ControllerBase
     private readonly MedDataDB _context;
     private readonly LabAnalyseService _labService;
     private readonly PythonApiProxyService _proxyService;
+    private readonly AnalysisProgressTracker _progressTracker;
 
-    public LabAnalyseController(MedDataDB context, LabAnalyseService labService, PythonApiProxyService proxyService)
+    public LabAnalyseController(MedDataDB context, LabAnalyseService labService, PythonApiProxyService proxyService, AnalysisProgressTracker progressTracker)
     {
         _context = context;
         _labService = labService;
         _proxyService = proxyService;
+        _progressTracker = progressTracker;
     }
 
 
@@ -50,13 +53,45 @@ public class LabAnalyseController : ControllerBase
         {
             var response = await _proxyService.ProxyMultipartAsync("/lab/analyze", Request, token);
             var content = await response.Content.ReadAsStringAsync();
+            TrackAnalysisProgress(content, "lab", "lab_id");
             return Content(content, "application/json");
         }
         catch (Exception ex)
         {
             return StatusCode(502, new { message = "AI tahlil xizmati bilan bog'lanib bo'lmadi", error = ex.Message });
+    }
+
+    private void TrackAnalysisProgress(string content, string type, string idKey)
+    {
+        if (!TryGetUserId(out var userId)) return;
+        var analysisId = ExtractInt(content, idKey);
+        if (analysisId.HasValue)
+            _progressTracker.Track(userId, type, analysisId.Value);
+    }
+
+    private bool TryGetUserId(out int userId)
+    {
+        userId = 0;
+        var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+        return int.TryParse(claim, out userId);
+    }
+
+    private static int? ExtractInt(string json, string key)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return null;
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            return doc.RootElement.TryGetProperty(key, out var prop) && prop.TryGetInt32(out var value)
+                ? value
+                : null;
+        }
+        catch
+        {
+            return null;
         }
     }
+}
     [HttpGet("get-by-clinic")]
     public async Task<IActionResult> GetByClinic(
         [FromQuery] int page = 1,
