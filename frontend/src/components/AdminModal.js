@@ -42,21 +42,24 @@ export default function AdminModal() {
       const userId = user?.id;
       const doctorId = user?.doctor?.id;
       const roleId = user?.roleId;
-  
-     
+
       const formattedPhone = formatPhoneNumber(values.phone);
-  
-      await send_doc_data({
-        id:doctorId,
-        userId,
-        roleId,
-        ...values,
-        phone: formattedPhone, 
-      });
-  
+
+      // [FromForm] DTO PascalCase field nomlarini talab qiladi
+      const formData = new FormData();
+      if (doctorId) formData.append('Id', doctorId);
+      formData.append('UserId', userId);
+      formData.append('RoleId', roleId);
+      formData.append('FirstName', values.firstname || '');
+      formData.append('LastName', values.lastname || '');
+      formData.append('SureName', values.surename || '');
+      formData.append('Phone', formattedPhone || '');
+      formData.append('Gender', values.gender ? 'true' : 'false');
+
+      await send_doc_data(formData);
+
       setopen_admin_modal(false)
       message.success(t("data_saved"))
-      console.log("Profil muvaffaqiyatli yangilandi!");
     } catch (e) {
       console.log("Xatolik:", e);
       message.error(t("server_error"))

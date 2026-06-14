@@ -1,9 +1,8 @@
 import { Avatar, Button, Table, Tooltip } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { IoAlertCircleSharp } from 'react-icons/io5'
-import { MoonLoader } from 'react-spinners'
 import { get_doctors_of_clinic } from '../../../../host/requests/DoctorRequest'
+import { imgApi } from '../../../../host/Host'
 import { formatPhoneNumberForForm } from '../../../../tools/formatters'
 import male from '../../../../images/avatars/male.jpg'
 import female from '../../../../images/avatars/female.jpg'
@@ -35,17 +34,20 @@ export default function Doctors() {
 //     width:60
 //   },
   {
+    title:'',
+    dataIndex: 'avatar',
+    key: 'avatar',
+    align:'center',
+    render:((item, record)=>(<Avatar size={50} src={item ? `${imgApi}${item}` : (record.gender ? male : female)} />)),
+    width:80
+  },
+  {
     title: t("FIO"),
     dataIndex: '',
     key: 'fio',
     render:((item, key)=>(item.lastName+" "+item.firstName+" "+item.sureName))
   },
   
-  {
-    title: t("username"),
-    dataIndex: 'username',
-    key: 'username',
-  },
   {
     title: t("password"),
     dataIndex: 'password',
@@ -83,9 +85,10 @@ export default function Doctors() {
              var res=await get_doctors_of_clinic({page:page})
              setdoctors(res.data.data)
              settotal(res.data.totalCount)
-             setloading(false)
           }catch(err){
-
+ 
+          }finally{
+            setloading(false)
           }
     }
   return (
@@ -104,6 +107,7 @@ export default function Doctors() {
                     current:page,
                     pageSize:10,
                     total:total,
+                    onChange:setpage
                    }} dataSource={doctors} columns={columns} />
                    </div>
                </div>

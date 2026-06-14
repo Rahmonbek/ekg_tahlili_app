@@ -239,6 +239,7 @@ export default function CreateConsultationPage() {
                                     getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
                                 >
                                     <DatePicker
+                                        placeholder={t("select_consultationDate")}
                                         style={{ width: '100%' }}
                                         format="DD.MM.YYYY"
                                         disabledDate={consultationDateDisabled}

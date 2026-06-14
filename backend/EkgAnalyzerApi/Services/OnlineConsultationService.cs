@@ -1285,7 +1285,7 @@ namespace EkgAnalyzerApi.Services
                 var adminDoctor = admin?.Doctor;
                 var adminFullName = adminDoctor != null
                     ? $"{adminDoctor.FirstName} {adminDoctor.LastName}".Trim()
-                    : admin?.Username ?? "";
+                    : "";
 
                 // Bemorning tahlillari (shifokor klinikaga tegishli — clinic consultantId orqali)
                 var analyses = await GetPatientAnalysesAsync(c.PatientId);

@@ -121,6 +121,18 @@ export default function LabAnalyzer() {
         return false;
     }, [patcient, getOldAnalyses, dispatch]);
 
+    // ─── Retry / Reset ───
+    const retryAnalyse = useCallback(() => {
+        resetPatient();
+        resetDoctorSelection();
+        setSelectedCategories([]);
+        setAnalysisDateValue(getTodayDateInputValue());
+        resetAll();
+        form.resetFields();
+        form1.resetFields();
+        form2.resetFields();
+    }, [resetPatient, resetDoctorSelection, resetAll, form, form1, form2]);
+
     // ─── Submit ───
     const handleSubmit = useCallback(() => {
         if (state.files.length === 0) return alert(t('select_file_error'));
@@ -146,18 +158,6 @@ export default function LabAnalyzer() {
         });
         retryAnalyse();
     }, [state, patcient, user, selectedCategories, selectedDoctors, runInBackground, t, retryAnalyse]);
-
-    // ─── Retry / Reset ───
-    const retryAnalyse = useCallback(() => {
-        resetPatient();
-        resetDoctorSelection();
-        setSelectedCategories([]);
-        setAnalysisDateValue(getTodayDateInputValue());
-        resetAll();
-        form.resetFields();
-        form1.resetFields();
-        form2.resetFields();
-    }, [resetPatient, resetDoctorSelection, resetAll, form, form1, form2]);
 
     const resetData = useCallback(() => {
         resetPatient();

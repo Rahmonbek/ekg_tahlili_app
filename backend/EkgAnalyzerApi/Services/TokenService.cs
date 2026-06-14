@@ -14,11 +14,12 @@ public class TokenService
 
     public string GenerateToken(User user)
     {
+        var displayName = user.Doctor?.Phone ?? user.Email ?? user.Id.ToString();
         var claims = new List<Claim>
     {
         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
         new Claim("roleId", user.RoleId.ToString()), // 🔥 MUHIM
-        new Claim("username", user.Username.ToString()), // 🔥 MUHIM
+        new Claim(ClaimTypes.Name, displayName),
         new Claim(ClaimTypes.Role, user.RoleId.ToString()) // (ixtiyoriy)
     };
 

@@ -41,7 +41,13 @@
       "Bash(node -e \"const m = require\\('d:/git/ekg_tahlili_app/frontend/node_modules/@livekit/components-react'\\); console.log\\(Object.keys\\(m\\).filter\\(k => k.includes\\('rack'\\) || k.includes\\('ocal'\\) || k.includes\\('Room'\\)\\).join\\('\\\\n'\\)\\)\")",
       "Bash(PGPASSWORD=123123 psql -h localhost -U postgres -d med_helper_data -c \"SELECT \\\\\"MigrationId\\\\\" FROM \\\\\"__EFMigrationsHistory\\\\\" WHERE \\\\\"MigrationId\\\\\" LIKE '%20260516%';\")",
       "Bash(PGPASSWORD=123123 psql -h localhost -U postgres -d med_helper_data -c \"\\\\d consultations\")",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(python -m py_compile lab_analyses_api.py)",
+      "Bash(python -m py_compile holter_analyses_api.py)",
+      "Bash(python -m py_compile smad_analyses_api.py)",
+      "Bash(python -m py_compile main.py)",
+      "Bash(python -c ' *)",
+      "Bash(python -m py_compile lab_analyses_api.py holter_analyses_api.py smad_analyses_api.py main.py)"
     ],
     "deny": [
       "Bash(rm -rf /)",

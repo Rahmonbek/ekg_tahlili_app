@@ -7,6 +7,7 @@ using System.Security.Claims;
 
 [ApiController]
 [Route("api/doctor")]
+[Authorize]
 public class DoctorController : ControllerBase
 {
     private readonly DoctorService _doctorService;
@@ -18,7 +19,7 @@ public class DoctorController : ControllerBase
 
 
     [HttpPost("save-doctor-data")]
-    public async Task<IActionResult> SaveDoctorData([FromBody] DoctorDTORequest data)
+    public async Task<IActionResult> SaveDoctorData([FromForm] DoctorDTORequest data)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
@@ -36,22 +37,6 @@ public class DoctorController : ControllerBase
 
         return Ok(clinic);
     }
-
-    [HttpGet("get-default-username")]
-    public async Task<IActionResult> GetDefaultUserName()
-    {
-        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
-            return Unauthorized(new { message = "Token invalid" });
-
-        var userId = int.Parse(userIdClaim.Value);
-        
-
-        var result = await _doctorService.GetDefaultUserName(userId);
-
-        return Ok(new { username = result });
-    }
-
     [HttpGet("get-doctors-of-clinic")]
     public async Task<IActionResult> GetDoctors([FromQuery] int page = 1)
     {

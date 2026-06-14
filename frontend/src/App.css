@@ -44,7 +44,17 @@
   border: none;
   font-family: 'Open Sans', sans-serif;
 }
-
+.mini_title{
+  font-size: var(--small_size);
+  padding: 0px 10%;
+  margin-bottom: 20px;
+  font-size: 500;
+  color: var(--text_second_color);
+  text-align: center;
+}
+.register_page .register_section_title{
+  text-align: center;
+}
 /* WCAG 2.4.7 — Focus Visible: keyboard navigation uchun focus ring */
 *:focus-visible {
   outline: 2px solid #4FD1C5;
@@ -85,6 +95,28 @@ body {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.register_admin_notice {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border: 1px solid #d6e4ff;
+  border-radius: 14px;
+  background: #f5f9ff;
+}
+
+.register_admin_notice strong {
+  display: block;
+  color: var(--text_color);
+  font-size: var(--small_size);
+  margin-bottom: 4px;
+}
+
+.register_admin_notice p {
+  margin: 0;
+  color: var(--text_second_color);
+  font-size: var(--mini_size);
+  line-height: 1.5;
 }
 
 .login_img,
@@ -616,6 +648,79 @@ input:-webkit-autofill:active {
   z-index: 344;
   gap: 12px;
   flex-shrink: 0;
+  position: relative;
+}
+
+/* ── Klinika faollashtirilmagan xabar (header markazi) ── */
+.clinic_inactive_notice {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: linear-gradient(135deg, #fffbe6 0%, #fff7d4 100%);
+  border: 1.5px solid #f0c040;
+  border-radius: 22px;
+  padding: 6px 16px 6px 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(240, 160, 0, 0.12);
+  z-index: 1;
+}
+
+.clinic_inactive_pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #fa8c16;
+  flex-shrink: 0;
+  animation: clinic_pulse 2s ease-in-out infinite;
+}
+
+@keyframes clinic_pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(250, 140, 22, 0.5);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.15);
+    box-shadow: 0 0 0 5px rgba(250, 140, 22, 0);
+  }
+}
+
+.clinic_inactive_icon {
+  color: #d48806;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.clinic_inactive_text {
+  color: #7c4a00;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* Mobil: faqat icon + pulse, text yashiriladi */
+@media (max-width: 768px) {
+  .clinic_inactive_notice {
+    padding: 6px 10px;
+    gap: 5px;
+  }
+  .clinic_inactive_text {
+    display: none;
+  }
+}
+
+/* Juda kichik ekranda notice butunlay yashiriladi */
+@media (max-width: 480px) {
+  .clinic_inactive_notice {
+    display: none;
+  }
 }
 
 .header_breadcrumb {
@@ -874,6 +979,25 @@ input:-webkit-autofill:active {
   padding: var(--main_mini_padding);
 }
 
+.doctor-avatar-upload {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+  padding: 8px 4px 16px;
+}
+
+.doctor-avatar-upload .ant-avatar {
+  flex-shrink: 0;
+  border: 1px solid var(--border_color);
+}
+
+.doctor-avatar-upload-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .input_img_box {
   width: 10vw;
   cursor: pointer;
@@ -1047,11 +1171,13 @@ input:-webkit-autofill:active {
   cursor: pointer;
   padding: 0px 35px 0px 30px;
 }
+.head_img{width: 45px; 
+  margin-right: 10px;height: 45px; overflow: hidden; border-radius: 12px; display: flex; align-items: center; justify-content: center;}
 
 .exit_icon img {
-  width: 45px;
-  border-radius: 12px;
-  margin-right: 10px;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .exit_icon h1 {
@@ -1466,6 +1592,7 @@ input::placeholder,
 
 .filter_form_box .filter_label {
   margin-bottom: 5px !important;
+  display: block;
 }
 
 th,
@@ -1480,7 +1607,12 @@ td {
 .ant-upload input {
   display: none !important;
 }
-
+.ant-select-selection-item {
+  padding:3px 10px !important;}
+  .ant-select-selection-overflow{position: relative; top:-2px; display: flex !important; overflow: hidden !important; flex-wrap: nowrap !important;}
+.sidebar_menu_item{position: relative;}
+  .sidebar_menu_item .ant-badge{position: absolute; right:0px}
+    .sidebar_menu_item .ant-scroll-number{font-size: 11px;}
 @media (max-width:1700px) {
   .login_img img {
     width: 100%;

@@ -30,6 +30,9 @@ namespace EkgAnalyzerApi.Models
         [Column("phone")]
         public string? Phone { get; set; }
 
+        [Column("avatar")]
+        public string? Avatar { get; set; }
+
         [Column("average_rating")]
         public decimal AverageRating { get; set; } = 0;
 

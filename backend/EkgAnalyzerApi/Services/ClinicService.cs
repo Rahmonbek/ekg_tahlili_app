@@ -55,13 +55,36 @@ namespace EkgAnalyzerApi.Services
                 detail = await _context.ClinicDetails
                     .FirstOrDefaultAsync(x => x.Id == dto.Id)
                     ?? throw new Exception("Clinic detail topilmadi");
+                if (dto.BankAccaunt != null)
+                {
+                    detail.BankAccaunt = dto.BankAccaunt;
+                }
+                if (dto.MFO != null)
+                {
+                    detail.MFO = dto.MFO;
+                }
 
-                detail.BankAccaunt = dto.BankAccaunt;
-                detail.MFO = dto.MFO;
-                detail.BankName = dto.BankName;
-                detail.INN = dto.INN;
-                detail.DistrictId = dto.DistrictId;
-                detail.Address = dto.Address;
+                if (dto.BankName != null)
+                {
+                    detail.BankName = dto.BankName;
+                }
+                if (dto.INN != null)
+                {
+                    detail.INN = dto.INN;
+                }
+
+                if (dto.DistrictId != null)
+                {
+                    detail.DistrictId = dto.DistrictId;
+                }
+
+                if (dto.Address != null)
+                {
+                    detail.Address = dto.Address;
+                }
+
+
+              
                 detail.UpdatedAt = DateTime.UtcNow;
 
                 if (dto.LicenseFile != null)

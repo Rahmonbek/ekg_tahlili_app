@@ -18,7 +18,7 @@ public class AuthController : ControllerBase
 
     // ========================= REGISTER =========================
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+    public async Task<IActionResult> Register([FromForm] RegisterDto dto)
     {
         var isValid = await IsReCaptchaValid(dto.RecaptchaToken);
         if (!isValid)
@@ -34,21 +34,6 @@ public class AuthController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
-    }
-
-    [HttpGet("check-username")]
-    public async Task<IActionResult> CheckUsername([FromQuery] string username, int? user_id, string? email)
-    {
-        if (string.IsNullOrWhiteSpace(username))
-            return BadRequest(new { message = "username_required" });
-
-        var exists = await _authService.CheckUsernameAsync(username, user_id, email);
-
-        return Ok(new
-        {
-            exists = exists,
-            message = exists ? "username_already_exists" : "username_available"
-        });
     }
 
     [HttpGet("check-phone")]

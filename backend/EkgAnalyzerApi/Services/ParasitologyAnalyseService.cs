@@ -13,17 +13,20 @@ namespace EkgAnalyzerApi.Services
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<ParasitologyAnalyseService> _logger;
         private readonly IWebHostEnvironment _env;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         public ParasitologyAnalyseService(
             MedDataDB context,
             IHttpClientFactory httpClientFactory,
             ILogger<ParasitologyAnalyseService> logger,
-            IWebHostEnvironment env)
+            IWebHostEnvironment env,
+            IServiceScopeFactory scopeFactory)
         {
             _context = context;
             _httpClientFactory = httpClientFactory;
             _logger = logger;
             _env = env;
+            _scopeFactory = scopeFactory;
         }
 
         public async Task<ParasitologyAnalyseDTO> SaveAndAnalyzeAsync(
@@ -66,9 +69,73 @@ namespace EkgAnalyzerApi.Services
                 await _context.SaveChangesAsync();
             }
 
-            await RunAiAndSaveAsync(analysis, file, dto, jwtToken);
+            // Fayl baytlarini request tugashidan oldin o'qib olamiz
+            byte[] fileBytes;
+            using (var ms = new MemoryStream())
+            {
+                await file.CopyToAsync(ms);
+                fileBytes = ms.ToArray();
+            }
+            var fileName = file.FileName;
 
-            return await GetByIdAsync(analysis.Id);
+            // Bemor ma'lumotlari (request davomida)
+            var patcient = await _context.Patcients.FindAsync(dto.PatcientId);
+            var age = patcient != null
+                ? (int)((DateTime.UtcNow - patcient.BirthDate.ToDateTime(TimeOnly.MinValue)).TotalDays / 365.25)
+                : 0;
+            var gender = patcient?.Gender == true ? "erkak" : "ayol";
+            var analysisId = analysis.Id;
+
+            // ── Fon rejimida AI ishga tushirish (browser yopilsa ham davom etadi) ──
+            _ = Task.Run(async () =>
+            {
+                await using var scope = _scopeFactory.CreateAsyncScope();
+                var context = scope.ServiceProvider.GetRequiredService<MedDataDB>();
+                var httpClientFactory = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>();
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<ParasitologyAnalyseService>>();
+                var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+
+                try
+                {
+                    await RunAiWithBytesDirectAsync(
+                        context, httpClientFactory, logger, env,
+                        analysisId, fileBytes, fileName, dto, age, gender, jwtToken
+                    );
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Parasitology AI fon xatolik analyse_id={Id}", analysisId);
+                    try
+                    {
+                        var a = await context.ParasitologyAnalyses.FindAsync(analysisId);
+                        if (a != null)
+                        {
+                            a.AnalysisStatus = "failed";
+                            await context.SaveChangesAsync();
+                        }
+                    }
+                    catch (Exception innerEx)
+                    {
+                        logger.LogError(innerEx, "Parasitology status='failed' yozishda xatolik");
+                    }
+                }
+            });
+
+            // Darhol basic DTO qaytaramiz — AI fonda ishlamoqda
+            return new ParasitologyAnalyseDTO
+            {
+                Id = analysis.Id,
+                AnalysisStatus = "pending",
+                PatcientId = analysis.PatcientId,
+                ClinicId = analysis.ClinicId,
+                CreatedDoctorId = analysis.CreatedDoctorId,
+                CreatedAt = analysis.CreatedAt,
+                AnalysisDate = analysis.AnalysisDate,
+                FilePath = analysis.FilePath,
+                Lang = analysis.Lang,
+                Magnification = analysis.Magnification,
+                MicroscopyMethod = analysis.MicroscopyMethod,
+            };
         }
 
         public async Task<ParasitologyAnalyseDTO?> SendToAiAsync(int id, string jwtToken)
@@ -664,6 +731,132 @@ namespace EkgAnalyzerApi.Services
                 analysis.AnalysisStatus = "failed";
                 analysis.AiResponse = ex.Message;
                 await _context.SaveChangesAsync();
+            }
+        }
+
+        /// <summary>
+        /// Fon task uchun: tashqi context, httpClientFactory va logger qabul qiladi.
+        /// (SaveAndAnalyzeAsync ichidagi Task.Run() ishlatadi)
+        /// </summary>
+        private static async Task RunAiWithBytesDirectAsync(
+            MedDataDB context,
+            IHttpClientFactory httpClientFactory,
+            ILogger logger,
+            IWebHostEnvironment env,
+            int analysisId,
+            byte[] fileBytes,
+            string fileName,
+            ParasitologyAnalyseCreateDto dto,
+            int age,
+            string gender,
+            string jwtToken)
+        {
+            var analysis = await context.ParasitologyAnalyses.FindAsync(analysisId);
+            if (analysis == null)
+            {
+                logger.LogWarning("Parasitology fon: analysis_id={Id} topilmadi", analysisId);
+                return;
+            }
+
+            try
+            {
+                var client = httpClientFactory.CreateClient("PythonApi");
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", jwtToken);
+
+                using var form = new MultipartFormDataContent();
+                var fileContent = new ByteArrayContent(fileBytes);
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue(
+                    fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ? "image/png" : "image/jpeg");
+                form.Add(fileContent, "file", fileName);
+                form.Add(new StringContent(dto.MicroscopyMethod ?? "direct_smear"), "microscopy_method");
+                form.Add(new StringContent(dto.Magnification ?? "400x"), "magnification");
+                form.Add(new StringContent(gender), "gender");
+                form.Add(new StringContent(age.ToString()), "age");
+                form.Add(new StringContent((dto.EggCountPerField ?? 0).ToString()), "egg_count_per_field");
+                form.Add(new StringContent(dto.Lang), "lang");
+
+                var response = await client.PostAsync("/analyze-parasitology", form);
+                var content = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    logger.LogWarning("Python API xatolik {StatusCode}: {Content}", response.StatusCode, content);
+                    analysis.AnalysisStatus = "failed";
+                    analysis.AiResponse = content;
+                    await context.SaveChangesAsync();
+                    return;
+                }
+
+                using var doc = JsonDocument.Parse(content);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("xato", out _))
+                {
+                    analysis.AnalysisStatus = "failed";
+                    analysis.AiResponse = content;
+                    await context.SaveChangesAsync();
+                    return;
+                }
+
+                if (!root.TryGetProperty("ai_response", out var aiResponseEl))
+                {
+                    analysis.AnalysisStatus = "failed";
+                    analysis.AiResponse = content;
+                    await context.SaveChangesAsync();
+                    return;
+                }
+
+                analysis.AiResponse = aiResponseEl.GetRawText();
+                analysis.AnalysisStatus = "analyzed";
+
+                if (aiResponseEl.TryGetProperty("jami_jiddiylik", out var jiddiylik))
+                    analysis.JiddiylikDarajasi = jiddiylik.TryGetInt32(out var j) ? j : null;
+
+                await context.SaveChangesAsync();
+
+                if (aiResponseEl.TryGetProperty("aniqlangan_turlar", out var turlar) &&
+                    turlar.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var tur in turlar.EnumerateArray())
+                    {
+                        var result = new ParasitologyResults
+                        {
+                            ParasitologyAnalysisId = analysis.Id,
+                            HelminthType = tur.TryGetProperty("lotin_nomi", out var ln) ? ln.GetString() : null,
+                            HelminthNameUz = tur.TryGetProperty("uz_nomi", out var uz) ? uz.GetString() : null,
+                            HelminthNameRu = tur.TryGetProperty("ru_nomi", out var ru) ? ru.GetString() : null,
+                            HelminthNameEn = tur.TryGetProperty("en_nomi", out var en) ? en.GetString() : null,
+                            Confidence = tur.TryGetProperty("ishonch_darajasi", out var conf)
+                                && conf.TryGetDecimal(out var cd) ? cd : null,
+                            InfectionLevel = tur.TryGetProperty("infektsiya_darajasi", out var il) ? il.GetString() : null,
+                            AnalysisDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                            PatientGender = gender == "erkak",
+                        };
+
+                        var patcient = await context.Patcients.FindAsync(analysis.PatcientId);
+                        if (patcient != null)
+                        {
+                            var ageYears = (int)((DateTime.UtcNow - patcient.BirthDate.ToDateTime(TimeOnly.MinValue)).TotalDays / 365.25);
+                            result.PatientAgeGroup = ageYears <= 5 ? "0-5"
+                                : ageYears <= 14 ? "6-14"
+                                : ageYears <= 60 ? "15-60"
+                                : "60+";
+                        }
+
+                        context.ParasitologyResults.Add(result);
+                    }
+                    await context.SaveChangesAsync();
+                }
+
+                logger.LogInformation("Parasitology AI muvaffaqiyatli: analysis_id={Id}", analysisId);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Parazitologiya AI tahlil fon xatolik, analysis_id={Id}", analysisId);
+                analysis.AnalysisStatus = "failed";
+                analysis.AiResponse = ex.Message;
+                await context.SaveChangesAsync();
             }
         }
 

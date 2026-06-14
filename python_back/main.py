@@ -83,7 +83,7 @@ def get_unique_filename(directory: Path, filename: str) -> str:
     if not filepath.exists():
         return safe_name
     
-    # Fayl mavjud bo‘lsa, index qo‘shib unik nom yaratish
+    # Fayl mavjud bo'lsa, index qo'shib unik nom yaratish
     name, ext = os.path.splitext(safe_name)
     counter = 1
     while True:
@@ -120,6 +120,11 @@ def save_generated_short_file(file_bytes: bytes, filename: str) -> str:
     with open(filepath, "wb") as f:
         f.write(file_bytes)
     return f"/uploads/ecg_generated_short_files/{safe_name}"
+
+import asyncio as _asyncio
+import logging as _logging
+_logger = _logging.getLogger(__name__)
+_bg_tasks: set = set()
 
 # ---------------- FastAPI app init ----------------
 app = FastAPI(title="AI EKG Analyzer")
@@ -304,7 +309,7 @@ def openai_upload_file(api_key: str, file_bytes: bytes, filename: str = "ecg.png
     try:
         fobj = io.BytesIO(file_bytes)
         fobj.name = filename
-        resp = client.files.create(file=fobj, purpose="vision")  # purpose="answers" PNG uchun to‘g‘ri
+        resp = client.files.create(file=fobj, purpose="vision")  # purpose="answers" PNG uchun to'g'ri
         return resp.id
     except Exception as e:
         raise RuntimeError(f"OpenAI file upload failed: {e}")
@@ -359,26 +364,26 @@ yuboriladi.
 
 Vazifa:
 EKG grafiklarini, bemor shikoyatlarini, bemor ma'lumotlarini va berilgan raqamli EKG parametrlarini birgalikda tahlil qiling.
-Grafikdagi vizual (paralogik) o‘zgarishlarni ham inobatga oling. 
+Grafikdagi vizual (paralogik) o'zgarishlarni ham inobatga oling. 
 Tahlilda bemorning ma'lumotlari va shikoyatlarini ham inobatga oling.
 
 Vazifa:
 - Kardiolog va aritmolog shifokorlar ishlatadigan PROFESSIONAL tibbiy terminlar bilan yozing
 - Tashxisni aniq, qisqa va klinik asoslangan qilib yozing
 - Agar xavfli holat aniqlansa, alohida qayd eting
-- Tashxisdan so‘ng qisqa "Xulosa" bo‘limini yozing
+- Tashxisdan so'ng qisqa "Xulosa" bo'limini yozing
 
 ❗️JAVOB QOIDALARI:
-- Javob FAQAT quyida berilgan JSON formatida bo‘lsin
-- JSON dan tashqarida hech qanday izoh, sharh yoki qo‘shimcha matn YOZILMASIN
+- Javob FAQAT quyida berilgan JSON formatida bo'lsin
+- JSON dan tashqarida hech qanday izoh, sharh yoki qo'shimcha matn YOZILMASIN
 - Javobni {language} tilida taqdim et
-- Agar EKG rasmi sifati yetarli bo‘lmasa yoki aniq o‘lchash imkoni bo‘lmasa, mos maydonda:
-  "o‘lchab bo‘lmaydi"
+- Agar EKG rasmi sifati yetarli bo'lmasa yoki aniq o'lchash imkoni bo'lmasa, mos maydonda:
+  "o'lchab bo'lmaydi"
   deb yozilsin
 
 ---
 
-### JSON SHABLONI (QAT’IY SAQLANSIN):
+### JSON SHABLONI (QAT'IY SAQLANSIN):
 
 {"""{
   "digital_measurements": {
@@ -387,28 +392,28 @@ Vazifa:
     "QRS_duration": "QRS davomiyligi (ms), raqamli qiymat + izoh",
     "QT_interval": "QT interval (ms), raqamli qiymat + izoh",
     "QTc_Bazett": "QTc (Bazett) (ms), raqamli qiymat + izoh",
-    "QRS_axis": "QRS o‘qi (gradus), raqamli qiymat + izoh",
-    "P_wave_duration": "P to‘lqin davomiyligi (ms), raqamli qiymat + izoh",
-    "P_wave_amplitude": "P to‘lqin amplitudasi (mV), raqamli qiymat + izoh",
-    "R_wave_amplitude": "R to‘lqin amplitudasi (mV), raqamli qiymat + izoh",
-    "S_wave_amplitude": "S to‘lqin amplitudasi (mV), raqamli qiymat + izoh",
-    "T_wave_amplitude": "T to‘lqin amplitudasi (mV), raqamli qiymat + izoh",
+    "QRS_axis": "QRS o'qi (gradus), raqamli qiymat + izoh",
+    "P_wave_duration": "P to'lqin davomiyligi (ms), raqamli qiymat + izoh",
+    "P_wave_amplitude": "P to'lqin amplitudasi (mV), raqamli qiymat + izoh",
+    "R_wave_amplitude": "R to'lqin amplitudasi (mV), raqamli qiymat + izoh",
+    "S_wave_amplitude": "S to'lqin amplitudasi (mV), raqamli qiymat + izoh",
+    "T_wave_amplitude": "T to'lqin amplitudasi (mV), raqamli qiymat + izoh",
     "PR_segment": "PR segment (ms), raqamli qiymat + izoh",
-    "ST_segment_elevation": "ST segment ko‘tarilishi/tushishi (mV), raqamli qiymat + izoh",
+    "ST_segment_elevation": "ST segment ko'tarilishi/tushishi (mV), raqamli qiymat + izoh",
     "RR_interval": "RR interval (ms), raqamli qiymat + izoh",
     "heart_rate_variability": "HRV (ms), raqamli qiymat + izoh",
-    "P_QRS_T_morphology": "P, QRS va T to‘lqin shakllari haqida qisqa tavsif"
+    "P_QRS_T_morphology": "P, QRS va T to'lqin shakllari haqida qisqa tavsif"
   },
 
   "automatic_analysis": "EKG, bemor ma'lumotlari, bemor shikoyatlari va raqamli parametrlar asosida ANIQLANGAN kasalliklarni yoki patologik holatlarni yoz.",
 
-  "automatic_analysis_bool": "Holat jiddiyligi darajasi: 1 = yengil, 2 = o‘rtacha, 3 = og‘ir",
+  "automatic_analysis_bool": "Holat jiddiyligi darajasi: 1 = yengil, 2 = o'rtacha, 3 = og'ir",
 
   "AI_recommendations": "Oddiy tilda bemor uchun tavsiya:
-— qo‘shimcha tekshiruv zarurati
-— jismoniy faollik bo‘yicha tavsiya
+— qo'shimcha tekshiruv zarurati
+— jismoniy faollik bo'yicha tavsiya
 — shifokorga murojaat qilish zarurati
-Agar kasallik aniqlansa, umumiy davolash yo‘nalishini qisqacha yoz.",
+Agar kasallik aniqlansa, umumiy davolash yo'nalishini qisqacha yoz.",
 
   "final_summary": "Tibbiy asoslangan yakuniy xulosa:
 asosiy EKG topilmalar va umumiy klinik baho."
@@ -416,21 +421,21 @@ asosiy EKG topilmalar va umumiy klinik baho."
 
 ---
 
-### QO‘SHIMCHA TALABLAR:
+### QO'SHIMCHA TALABLAR:
 - bemorga tashxis qo'yishda bemor ma'lumotlarini, EKG parametrlarini va EKG rasmdagi grafikni birinchi o'ringa qo'y, undan kn bemor shikoyatlarini ham inobatga ol
-- "automatic_analysis" bo‘limida faqat BOR patologiyalar yozilsin va yo'qlari haqida ma'lumot shart emas
+- "automatic_analysis" bo'limida faqat BOR patologiyalar yozilsin va yo'qlari haqida ma'lumot shart emas
 - "automatic_analysis_bool" bo'limida faqat 1 yoki 2 yoki 3 sonlari bo'lsin ortiqcha narsa kerak emas 
 - "digital_measurements" bo'limida aniqlash imkoni yo'q parametrlarga null qiymat ber 
-- Agar patologiya yo‘q bo‘lsa, nima sababdan yo‘qligi aniq tushuntirilsin
-- EKG apparatida yo‘q bo‘lgan parametrlar grafikdan o‘lchab chiqilsin
-- Har bir raqam yonida birliklar (bpm, ms, mV, gradus) bo‘lsin
+- Agar patologiya yo'q bo'lsa, nima sababdan yo'qligi aniq tushuntirilsin
+- EKG apparatida yo'q bo'lgan parametrlar grafikdan o'lchab chiqilsin
+- Har bir raqam yonida birliklar (bpm, ms, mV, gradus) bo'lsin
 - Raqam + tibbiy baho (normal/patologik) birga yozilsin
 - Elektrolit, ishemiya, perikardit yoki aritmiya aniqlansa:
   — sababi
   — EKG belgisi
   — klinik ahamiyati qisqacha tushuntirilsin
 
-❗️Javob FAQAT JSON bo‘lsin va {language} tilida bo'lsin
+❗️Javob FAQAT JSON bo'lsin va {language} tilida bo'lsin
     """
     return prompt_header
 
@@ -458,7 +463,7 @@ def compose_prompt_for_openai_for_img(age, gender, complaint, lang) -> str:
     
     prompt_header += f"""
     Siz tajribali kardiolog va aritmolog shifokorsiz. Yuborilgan EKG rasmni tahlil qiling. Javob quyidagi JSON shaklida taqdim eting ortiqcha belgilarni yozmang.
-    Hech qaysi parametr qiymatini taxmin qilma. Faqat aniq aniqlash imkoni bor parametrlardan foydalan. Tahlilda grafikdagi vizual (paralogik) o‘zgarishlarni ham inobatga oling.
+    Hech qaysi parametr qiymatini taxmin qilma. Faqat aniq aniqlash imkoni bor parametrlardan foydalan. Tahlilda grafikdagi vizual (paralogik) o'zgarishlarni ham inobatga oling.
     {
  """{ "digital_measurements": {
     "HR": "Yurak urish tezligi (bpm), raqamli qiymat + tibbiy baho (normal/patologik)",
@@ -466,36 +471,36 @@ def compose_prompt_for_openai_for_img(age, gender, complaint, lang) -> str:
     "QRS_duration": "QRS davomiyligi (ms), raqamli qiymat + izoh",
     "QT_interval": "QT interval (ms), raqamli qiymat + izoh",
     "QTc_Bazett": "QTc (Bazett) (ms), raqamli qiymat + izoh",
-    "QRS_axis": "QRS o‘qi (gradus), raqamli qiymat + izoh",
-    "P_wave_duration": "P to‘lqin davomiyligi (ms), raqamli qiymat + izoh",
-    "P_wave_amplitude": "P to‘lqin amplitudasi (mV), raqamli qiymat + izoh",
-    "R_wave_amplitude": "R to‘lqin amplitudasi (mV), raqamli qiymat + izoh",
-    "S_wave_amplitude": "S to‘lqin amplitudasi (mV), raqamli qiymat + izoh",
-    "T_wave_amplitude": "T to‘lqin amplitudasi (mV), raqamli qiymat + izoh",
+    "QRS_axis": "QRS o'qi (gradus), raqamli qiymat + izoh",
+    "P_wave_duration": "P to'lqin davomiyligi (ms), raqamli qiymat + izoh",
+    "P_wave_amplitude": "P to'lqin amplitudasi (mV), raqamli qiymat + izoh",
+    "R_wave_amplitude": "R to'lqin amplitudasi (mV), raqamli qiymat + izoh",
+    "S_wave_amplitude": "S to'lqin amplitudasi (mV), raqamli qiymat + izoh",
+    "T_wave_amplitude": "T to'lqin amplitudasi (mV), raqamli qiymat + izoh",
     "PR_segment": "PR segment (ms), raqamli qiymat + izoh",
-    "ST_segment_elevation": "ST segment ko‘tarilishi yoki tushishi (mV), raqamli qiymat + izoh",
+    "ST_segment_elevation": "ST segment ko'tarilishi yoki tushishi (mV), raqamli qiymat + izoh",
     "RR_interval": "RR interval (ms), raqamli qiymat + izoh",
     "heart_rate_variability": "HRV (ms), raqamli qiymat + izoh",
-    "P_QRS_T_morphology": "P, QRS va T to‘lqin shakllarining qisqa professional tavsifi"
+    "P_QRS_T_morphology": "P, QRS va T to'lqin shakllarining qisqa professional tavsifi"
   },
 
-  "automatic_analysis": "EKG, bemor ma’lumotlari va bemor shikoyatlari asosida ANIQLANGAN patologik holatlar yoki kasalliklar.",
+  "automatic_analysis": "EKG, bemor ma'lumotlari va bemor shikoyatlari asosida ANIQLANGAN patologik holatlar yoki kasalliklar.",
   
-  "automatic_analysis_bool": "Holat jiddiyligi: 1 = yengil, 2 = o‘rtacha, 3 = og‘ir",
+  "automatic_analysis_bool": "Holat jiddiyligi: 1 = yengil, 2 = o'rtacha, 3 = og'ir",
 
   "AI_recommendations": "Oddiy tilda bemor uchun tavsiyalar:
-— qo‘shimcha tekshiruv zarurati
+— qo'shimcha tekshiruv zarurati
 - "digital_measurements" bo'limida aniqlash imkoni yo'q parametrlarga null qiymat ber 
 - rasmda ekg aparat aniqlagan qiymatlar mavjud bo'lsa shulardan foydalan yo'qlarini o'zing aniqlashga urinib ko'r
-— jismoniy faollik bo‘yicha ko‘rsatma
+— jismoniy faollik bo'yicha ko'rsatma
 — shifokorga murojaat qilish zarurati
-Agar kasallik aniqlansa, umumiy davolash yo‘nalishi qisqacha yozilsin.",
+Agar kasallik aniqlansa, umumiy davolash yo'nalishi qisqacha yozilsin.",
 "final_summary": "Tibbiy asoslangan yakuniy xulosa:
 asosiy EKG topilmalar va umumiy klinik baho."
 }"""}
 
 
-❗️Javob FAQAT JSON bo‘lsin va {language} tilida bo‘lsin.
+❗️Javob FAQAT JSON bo'lsin va {language} tilida bo'lsin.
     """
     return prompt_header
 
@@ -527,7 +532,7 @@ def render_12_lead_png(leads: dict, fs: float = 500.0) -> bytes:
     for ax in axes.flatten():
         ax.set_facecolor("none")
 
-        # --- BORDERNI YO‘QOTISH ---
+        # --- BORDERNI YO'QOTISH ---
         for side in ["top", "bottom", "left", "right"]:
             ax.spines[side].set_visible(False)
 
@@ -553,7 +558,7 @@ def render_12_lead_png(leads: dict, fs: float = 500.0) -> bytes:
             x_min, x_max = 0, len(y) - 0.5
             ax.set_xticks([x_min, x_max])
             ax.set_xticklabels([], fontsize=0)
-    # --- Gridni o‘rnatish ---
+    # --- Gridni o'rnatish ---
     for ax in axes.flatten():
         ax.set_xticks(np.arange(0, len(y)/2, BIG))
         ax.set_xticks(np.arange(0, len(y)/2, SMALL), minor=True)
@@ -1045,6 +1050,141 @@ def jpg_bytes_to_png_bytes(file_bytes: bytes) -> bytes:
     return buf.read()
     
 from fastapi import Form
+from database import SessionLocal as _SessionLocal
+
+
+# ─── EKG: sinxron qayta ishlash + OpenAI (thread pool da) ────────────────────
+def _sync_ecg_process_and_ai(
+    ecg_id: int,
+    content: bytes,
+    fname: str,
+    is_image: bool,
+    age: int,
+    gender: str,
+    complaint: list | None,
+    lang: str
+) -> dict:
+    """
+    EKG faylini qayta ishlash va OpenAI ga yuborish — sinxron.
+    asyncio.to_thread() orqali chaqiriladi.
+    """
+    from database import SessionLocal as _SL
+    db = _SL()
+    try:
+        # 1. PNG render
+        if not is_image:
+            leads: dict = {}
+            fs = None
+            try:
+                if fname.endswith(('.csv', '.txt', '.tsv')):
+                    leads, fs = parse_table_bytes(content)
+                elif fname.endswith('.xml'):
+                    leads, fs = parse_xml_bytes(content)
+                elif fname.endswith('.pdf'):
+                    if convert_from_bytes is None:
+                        raise RuntimeError("pdf2image not installed")
+                    pages = convert_from_bytes(content, first_page=1, last_page=1)
+                    img_bytes = io.BytesIO()
+                    pages[0].save(img_bytes, format='PNG')
+                    img_bytes.seek(0)
+                    leads, fs = extract_image_bytes_as_signal(img_bytes.read())
+                else:
+                    try:
+                        leads, fs = parse_table_bytes(content)
+                    except Exception:
+                        leads, fs = parse_xml_bytes(content)
+            except Exception as e:
+                raise RuntimeError(f"Fayl parse xatolik: {e}")
+
+            mapping = map_leads(list(leads.keys()))
+            mapped = {mapping.get(orig) or orig: arr for orig, arr in leads.items()}
+            leads = mapped
+
+            expected_samples = int(fs * 10)
+            for ln in CANONICAL_LEADS:
+                if ln not in leads:
+                    leads[ln] = np.zeros(expected_samples, dtype=float)
+
+            png_bytes = render_12_lead_png(leads, fs)
+            digitals = compute_full_ecg_v3(leads, fs)
+            prompt = compose_prompt_for_openai(digitals, age, gender, complaint, lang)
+        else:
+            png_bytes = jpg_bytes_to_png_bytes(content)
+            digitals = None
+            prompt = compose_prompt_for_openai_for_img(age, gender, complaint, lang)
+
+        png_short_bytes = compress_image_bytes(png_bytes)
+        fname1 = f"ecg_{ecg_id}.png"
+        generated_file_link = save_generated_file(png_bytes, fname1)
+        generated_short_file_link = save_generated_short_file(png_short_bytes, fname1)
+
+        # 2. DB: status=1 (PNG tayyor)
+        update_ecg_analyse(
+            session=db,
+            status=1,
+            ecg_id=ecg_id,
+            generated_file_link=generated_file_link,
+            generated_short_file_link=generated_short_file_link
+        )
+
+        # 3. OpenAI upload + call
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        fobj = io.BytesIO(png_bytes)
+        fobj.name = fname1
+        uploaded = client.files.create(file=fobj, purpose="vision")
+        file_id = uploaded.id
+
+        resp = client.responses.create(
+            model="gpt-5.2",
+            input=[{
+                "role": "user",
+                "content": [
+                    {"type": "input_text", "text": prompt},
+                    {"type": "input_image", "file_id": file_id}
+                ]
+            }]
+        )
+        content_out = resp.output_text
+
+        # 4. DB: status=2 (AI tayyor)
+        update_ecg_analyse(session=db, ecg_id=ecg_id, status=2, ai_answer_data=content_out)
+        _logger.info("EKG AI muvaffaqiyatli: ecg_id=%d", ecg_id)
+
+        return {
+            "ecg_png_base64": generated_file_link,
+            "ecg_png_base64_short": generated_short_file_link
+        }
+
+    except Exception as exc:
+        _logger.error("EKG AI fon xatolik ecg_id=%d: %s", ecg_id, exc)
+        try:
+            update_ecg_analyse(session=db, ecg_id=ecg_id, status=-1, ai_answer_data=str(exc))
+        except Exception:
+            pass
+        raise
+    finally:
+        db.close()
+
+
+async def _ecg_ai_background(
+    ecg_id: int,
+    content: bytes,
+    fname: str,
+    is_image: bool,
+    age: int,
+    gender: str,
+    complaint: list | None,
+    lang: str
+) -> None:
+    """Browser yopilsa ham davom etadigan EKG tahlil."""
+    try:
+        await _asyncio.to_thread(
+            _sync_ecg_process_and_ai,
+            ecg_id, content, fname, is_image, age, gender, complaint, lang
+        )
+    except Exception:
+        pass  # Xatolik allaqachon _sync_ecg_process_and_ai ichida loglangan
+
 
 # ---------------- FastAPI endpoint: analyze ----------------
 @app.post("/api/analyze")
@@ -1063,18 +1203,18 @@ async def analyze(
     age: int = Form(...),
     analysis_date: str | None = Form(None)
 ):
-   
     if OPENAI_API_KEY is None:
         raise HTTPException(status_code=400, detail="Provide OpenAI API key in environment variable 'OPENAI_API_KEY'")
+
     first_file: UploadFile = file[0]
     content = await first_file.read()
     fname = (first_file.filename or "upload").lower()
 
-    # Fayl turi tekshiruvi (MIME type)
     if not validate_file_type(fname, content):
         raise HTTPException(status_code=400, detail=f"Ruxsat etilmagan fayl turi: {fname}")
 
     analyse_file_path = save_analyse_file(content, fname)
+
     ecg_analyse = create_ecg_analyse(
         session=db,
         patient_id=patcient_id,
@@ -1084,144 +1224,37 @@ async def analyze(
         analyse_file_link=analyse_file_path,
         analysis_date=datetime.datetime.fromisoformat(analysis_date.replace("Z", "+00:00")) if analysis_date else None
     )
+
     if doctor_id:
         for d_id in doctor_id:
-            await create_ecg_analyse_doctor(
-                session=db,
-                ecg_analyse_id=ecg_analyse.id,
-                doctor_id=d_id
-            )
+            await create_ecg_analyse_doctor(session=db, ecg_analyse_id=ecg_analyse.id, doctor_id=d_id)
 
-    # --- ECGAnalyseComplaints yozish ---
     if complaint_id:
         for c_id in complaint_id:
-            await create_ecg_analyse_complaint(
-                session=db,
-                ecg_analyse_id=ecg_analyse.id,
-                complaint_id=c_id
-            )
+            await create_ecg_analyse_complaint(session=db, ecg_analyse_id=ecg_analyse.id, complaint_id=c_id)
 
-    is_image = fname.endswith(('.png','.jpg','.jpeg'))
+    is_image = fname.endswith(('.png', '.jpg', '.jpeg'))
 
-    if not is_image:
-        leads = {}
-        fs = None
-        # --- Parse file according to extension ---
-        try:
-            if fname.endswith(('.csv','.txt','.tsv')):
-                leads, fs = parse_table_bytes(content)
-            elif fname.endswith('.xml'):
-                leads, fs = parse_xml_bytes(content)
-            elif fname.endswith('.pdf'):
-                if convert_from_bytes is None:
-                    raise HTTPException(status_code=500, detail="pdf2image not installed or poppler missing")
-                pages = convert_from_bytes(content, first_page=1, last_page=1)
-                pil = pages[0]
-                img_bytes = io.BytesIO()
-                pil.save(img_bytes, format='PNG')
-                img_bytes.seek(0)
-                leads, fs = extract_image_bytes_as_signal(img_bytes.read())
-            else:
-                try:
-                    leads, fs = parse_table_bytes(content)
-                except Exception:
-                    leads, fs = parse_xml_bytes(content)
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Could not parse file: {e}")
-
-        # --- Map fuzzy lead names to canonical leads ---
-        mapped = {}
-        mapping = map_leads(list(leads.keys()))
-        for orig, arr in leads.items():
-            name = mapping.get(orig) or orig
-            mapped[name] = arr
-        leads = mapped
-
-        # --- Fill missing leads with zeros ---
-        expected_seconds = 10
-        expected_samples = int(fs * expected_seconds)
-        for ln in CANONICAL_LEADS:
-            if ln not in leads:
-                leads[ln] = np.zeros(expected_samples, dtype=float)
-        # --- Generate PNG from leads ---
-        png_bytes = render_12_lead_png(leads, fs)
-        digitals = compute_full_ecg_v3(leads, fs)
-        prompt = compose_prompt_for_openai(digitals, age, gender, complaint, lang)
-    else:
-        png_bytes = jpg_bytes_to_png_bytes(content)
-        digitals=None
-        prompt = compose_prompt_for_openai_for_img(age, gender, complaint, lang)
-    png_short_bytes=compress_image_bytes(png_bytes)
-    fname1 = f"ecg_{ecg_analyse.id}.png"
-    generated_file_link = save_generated_file(png_bytes, fname1)
-    generated_short_file_link = save_generated_short_file(png_short_bytes, fname1)
-    ecg_analyse = update_ecg_analyse(
-        session=db,
-        status=1,
-        ecg_id=ecg_analyse.id,
-        generated_file_link=generated_file_link,
-        generated_short_file_link=generated_short_file_link
-    )
-    
-    print(OPENAI_API_KEY)
-    try:
-        file_id = openai_upload_file(
-            OPENAI_API_KEY,
-            png_bytes,
-            filename=fname1 if fname1.endswith('.png') else 'ecg.png'
+    # ── Fon rejimida EKG qayta ishlash + AI (browser yopilsa ham davom etadi) ──
+    task = _asyncio.create_task(
+        _ecg_ai_background(
+            ecg_id=ecg_analyse.id,
+            content=content,
+            fname=fname,
+            is_image=is_image,
+            age=age,
+            gender=gender,
+            complaint=complaint,
+            lang=lang
         )
-    except Exception as e:
-        b64 = base64.b64encode(png_bytes).decode('ascii')
-        return JSONResponse(content={
-            "error": f"OpenAI upload failed: {e}",
-            "png_base64": b64
-        })
-   
-    ai_error = False
-    try:
-        client = OpenAI(api_key=OPENAI_API_KEY)
-        resp = client.responses.create(
-            model="gpt-5.2",
-            input=[{
-                "role": "user",
-                "content": [
-                    {"type": "input_text", "text": prompt},
-                    {"type": "input_image", "file_id": file_id}
-                ]
-            }]
-        )
-        content_out = resp.output_text
-        try:
-            parsed = json.loads(content_out)
-        except Exception:
-            parsed = {"raw": content_out}
-    
-        # --- Matnni bevosita bazaga saqlash ---
-        ai_answer_text = content_out
-        status_to_save = 2
-    
-    except Exception as e:
-        parsed = {"error": str(e)}
-        ai_answer_text = None
-        status_to_save = -1
-        ai_error = True
-    
-    # --- ECGAnalyse yangilash AI natija bilan ---
-    ecg_analyse = update_ecg_analyse(
-        session=db,
-        ecg_id=ecg_analyse.id,
-        status=status_to_save,
-        ai_answer_data=ai_answer_text  # Fayl yo‘li o‘rniga matnni uzatamiz
     )
-
-    
+    _bg_tasks.add(task)
+    task.add_done_callback(_bg_tasks.discard)
 
     return JSONResponse(content={
         "ecg_id": ecg_analyse.id,
-        "ecg_png_base64": generated_file_link,
-        "ecg_png_base64_short": generated_short_file_link,
-        "ai_response": parsed,
-        "ai_error": ai_error
+        "status": "processing",
+        "analyse_file_path": analyse_file_path
     })
 
 @app.post("/api/analyze-save")
@@ -1461,7 +1494,6 @@ async def analyze_retry(
             raise HTTPException(status_code=404, detail="Generate file topilmadi")
     else:
         raise HTTPException(status_code=404, detail="Generate file link mavjud emas")
-    print(OPENAI_API_KEY)
     try:
         file_id = openai_upload_file(
             OPENAI_API_KEY,
@@ -1474,7 +1506,7 @@ async def analyze_retry(
             "error": f"OpenAI upload failed: {e}",
             "png_base64": b64
         })
-   
+
     ai_error = False
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)
@@ -1493,25 +1525,22 @@ async def analyze_retry(
             parsed = json.loads(content_out)
         except Exception:
             parsed = {"raw": content_out}
-    
-        # --- Matnni bevosita bazaga saqlash ---
+
         ai_answer_text = content_out
         status_to_save = 2
-    
+
     except Exception as e:
         parsed = {"error": str(e)}
         ai_answer_text = None
         status_to_save = -1
         ai_error = True
-    
+
     analyse_data = update_ecg_analyse(
         session=db,
         ecg_id=analyse_data.id,
         status=status_to_save,
-        ai_answer_data=ai_answer_text  
+        ai_answer_data=ai_answer_text
     )
-
-    
 
     return JSONResponse(content={
         "ecg_id": analyse_data.id,

@@ -10,14 +10,16 @@ namespace EkgAnalyzerApi.Services
     public class DoctorService
     {
         private readonly MedDataDB _context;
+        private readonly IWebHostEnvironment _env;
         private readonly int _adminRoleId = RoleConstants.Admin;
         private readonly int _directorRoleId = RoleConstants.Director;
         private readonly int _doctorRoleId = RoleConstants.Doctor;
         private readonly int _superAdminRoleId = RoleConstants.SuperAdmin;
 
-        public DoctorService(MedDataDB context)
+        public DoctorService(MedDataDB context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         private static string NormalizePhone(string? phone)
@@ -26,22 +28,37 @@ namespace EkgAnalyzerApi.Services
             if (digits.Length == 9) digits = "998" + digits;
             return digits;
         }
-        public async Task<string> GetDefaultUserName(int user_id)
+        private static string BuildInternalEmail(string phone)
         {
-            var user = await _context.Users
-                .FirstOrDefaultAsync(x => x.Id == user_id);
-            var username = "";
-            string yil = DateTime.Now.Year.ToString();
-            var doctors_count = _context.Users.Where(u => u.ClinicId == user.ClinicId).OrderByDescending(u => u.Id).FirstOrDefault();
-            if (doctors_count != null) {
-                username = "dr" + user.ClinicId.ToString()+ yil +(doctors_count.Id+1).ToString();
-            }
-            else
-            {
-                username = "dr" + user.ClinicId.ToString()+ yil + "1";
-            }
+            return $"{phone}@phone.nmed.local";
+        }
 
-                return username;
+        private async Task<string> SaveAvatarAsync(IFormFile file)
+        {
+            var folder = Path.Combine(_env.WebRootPath, "doctor_avatars");
+
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var filePath = Path.Combine(folder, fileName);
+
+            await using var stream = new FileStream(filePath, FileMode.Create);
+            await file.CopyToAsync(stream);
+
+            return $"/doctor_avatars/{fileName}";
+        }
+
+        private void DeleteAvatar(string? avatarUrl)
+        {
+            if (string.IsNullOrWhiteSpace(avatarUrl))
+                return;
+
+            var fileName = Path.GetFileName(avatarUrl);
+            var filePath = Path.Combine(_env.WebRootPath, "doctor_avatars", fileName);
+
+            if (File.Exists(filePath))
+                File.Delete(filePath);
         }
         public async Task<DoctorListDTO> GetDoctorsAsync(int pageNumber, int user_id)
         {
@@ -73,13 +90,13 @@ namespace EkgAnalyzerApi.Services
                 .Select(u => new DoctorDTOResponseData
                 {
                     Id = u.Doctor.Id,
-                    Username = u.Username,
                     Password = u.PasswordPlain ?? "",
                     RoleId = u.RoleId,
                     FirstName = u.Doctor.FirstName,
                     LastName = u.Doctor.LastName,
                     SureName = u.Doctor.SureName,
                     Phone = u.Doctor.Phone,
+                    Avatar = u.Doctor.Avatar,
                     Gender = u.Doctor.Gender,
                     Role = new RolesDTO
                     {
@@ -176,13 +193,13 @@ namespace EkgAnalyzerApi.Services
                 {
                     Id = u.Doctor.Id,
                     UserId=u.Id,
-                    Username = u.Username,
                     Password = u.PasswordPlain ?? "",
                     RoleId = u.RoleId,
                     FirstName = u.Doctor.FirstName,
                     LastName = u.Doctor.LastName,
                     SureName = u.Doctor.SureName,
                     Phone = u.Doctor.Phone,
+                    Avatar = u.Doctor.Avatar,
                     Gender = u.Doctor.Gender,
                     Role = new RolesDTO
                     {
@@ -269,20 +286,11 @@ namespace EkgAnalyzerApi.Services
             // =========================
             if (dto.Id == null)
             {
-                if (string.IsNullOrWhiteSpace(dto.Username))
-                    return Fail("username_required");
-
-                var usernameExists = await _context.Users
-                    .AnyAsync(u => u.Username == dto.Username);
-
-                if (usernameExists)
-                    return Fail("username_already_exists");
-
                 var newUser = new User
                 {
-                    Username = dto.Username,
                     PasswordPlain = dto.Password ?? "000",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password ?? "000"),
+                    Email = BuildInternalEmail(dto.Phone),
                     Status = true,
                     RoleId = dto.RoleId,
                     ClinicId = currentUser.ClinicId
@@ -298,7 +306,8 @@ namespace EkgAnalyzerApi.Services
                     LastName = dto.LastName,
                     SureName = dto.SureName,
                     Gender = dto.Gender,
-                    Phone = dto.Phone
+                    Phone = dto.Phone,
+                    Avatar = dto.AvatarFile != null ? await SaveAvatarAsync(dto.AvatarFile) : null
                 };
 
                 _context.Doctors.Add(doctor);
@@ -334,17 +343,12 @@ namespace EkgAnalyzerApi.Services
                 doctor.SureName = dto.SureName;
                 doctor.Gender = dto.Gender;
                 doctor.Phone = dto.Phone;
-                
-                if (!string.IsNullOrWhiteSpace(dto.Username) &&
-                    doctor.User.Username != dto.Username)
+                doctor.User.Email = BuildInternalEmail(dto.Phone);
+
+                if (dto.AvatarFile != null)
                 {
-                    var usernameExists = await _context.Users
-                        .AnyAsync(u => u.Username == dto.Username && u.Id != doctor.UserId);
-
-                    if (usernameExists)
-                        return Fail("username_already_exists");
-
-                    doctor.User.Username = dto.Username;
+                    DeleteAvatar(doctor.Avatar);
+                    doctor.Avatar = await SaveAvatarAsync(dto.AvatarFile);
                 }
 
                 if (!string.IsNullOrWhiteSpace(dto.Password))
@@ -404,7 +408,7 @@ namespace EkgAnalyzerApi.Services
                     SureName = doctor.SureName,
                     Gender = doctor.Gender,
                     Phone = doctor.Phone,
-                    Username = doctor.User?.Username ?? "",
+                    Avatar = doctor.Avatar,
                     Password = doctor.User?.PasswordPlain ?? "",
                     Positions = positions
                 }

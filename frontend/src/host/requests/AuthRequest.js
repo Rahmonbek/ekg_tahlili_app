@@ -1,8 +1,8 @@
-import { httpGetRequest, httpPostRequest } from "../Host"
+import { httpGetRequest, httpPostRequest, httpPostFormRequest } from "../Host"
 
 
 export const registration=(data)=>{
-    return httpPostRequest("/auth/register/", data)
+    return httpPostFormRequest("/auth/register/", data)
 }
 
 export const login=(data)=>{
@@ -20,10 +20,6 @@ export const send_reset_code=(data)=>{
 export const change_password=(data)=>{
     return httpPostRequest("/auth/change-password/", data)
 }
-
-export const checkusername = (data) => {
-    return httpGetRequest("/auth/check-username", data);
-  };
 
 export const checkphone = (data) => {
     return httpGetRequest("/auth/check-phone", data);

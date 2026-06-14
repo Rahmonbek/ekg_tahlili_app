@@ -1,66 +1,79 @@
-import { Button, Col, Form, Input, message, Row, Tooltip } from 'antd';
+import { Button, Col, Form, Input, message, Row, Tooltip, Upload, Avatar } from 'antd';
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { Select } from 'antd';
 import { FaFemale, FaMale } from 'react-icons/fa';
 import { IoAlertCircleSharp, IoPerson } from 'react-icons/io5';
 import { useStore } from '../../../../../store/Store';
-import { change_doctor_data, get_default_username, get_doctor_by_id, get_params_for_add_staff } from '../../../../../host/requests/DoctorRequest';
+import { change_doctor_data, get_doctor_by_id, get_params_for_add_staff } from '../../../../../host/requests/DoctorRequest';
 import { FaUserDoctor } from 'react-icons/fa6';
-import { checkusername } from '../../../../../host/requests/AuthRequest';
+import { checkphone } from '../../../../../host/requests/AuthRequest';
 import { IoMdLock } from 'react-icons/io';
 import { formatPhoneNumber, formatPhoneNumberForForm } from '../../../../../tools/formatters';
 import { useNavigate, useParams } from 'react-router-dom';
 import PhoneInput from '../../../../../components/shared/PhoneInput';
+import { imgApi } from '../../../../../host/Host';
+import maleAvatar from '../../../../../images/avatars/male.jpg';
+import femaleAvatar from '../../../../../images/avatars/female.jpg';
 
 export default function CreateUpdateDoctor() {
     const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [gender, setGender] = useState(true);
-    const [doctor, setdoctor] = useState(null);
-    const [user_id, setuser_id] = useState(null);
-    const [role_id, setrole_id] = useState(null);
     const [position_ids, setposition_ids] = useState([]);
     const [position_datas, setposition_datas] = useState([]);
     const [form] = Form.useForm();
     const {roles, positions, setroles, setpositions, setloader}=useStore()
     const {id}=useParams()
     const navigate=useNavigate()
-      const [usernameError, setUsernameError] = useState(null);
+    const [phoneError, setPhoneError] = useState(null);
+    const [avatarFile, setAvatarFile] = useState(null);
+    const [avatarPreview, setAvatarPreview] = useState(null);
 
     useEffect(()=>{
-        setloader(true)
-       if(roles.length==0 || positions.length==0){
-           getParamsData()
-       }
-       if(id==null){
-          getUsername()
-       }else{
-        if(doctor==null){
-getDoctorData()
-        }
-         
-       }
-       if(role_id!=null){
-        changeRole(role_id)
-       }
-    }, [id, positions])
+        let isMounted = true;
+
+        const loadPageData = async () => {
+            setloader(true);
+            try {
+                let availablePositions = positions;
+
+                if (roles.length === 0 || positions.length === 0) {
+                    const params = await getParamsData();
+                    availablePositions = params ?? [];
+                }
+
+                if (id != null) {
+                    const doctorData = await getDoctorData();
+                    if (isMounted && doctorData?.roleId != null) {
+                        bindRolePositions(doctorData.roleId, availablePositions, doctorData.positions?.map(item => item.id) ?? []);
+                    }
+                }
+            } catch (err) {
+                message.error(t(err?.response?.data?.message || 'server_error'));
+            } finally {
+                if (isMounted) {
+                    setloader(false);
+                }
+            }
+        };
+
+        loadPageData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [id])
 
     const getDoctorData=async()=>{
 
           try{
       
             var res=await get_doctor_by_id({id:id})
-            
-             setloader(false)
              var val=res.data
-             setdoctor(val)
              var a=val.positions.map((item)=>(item.id))
-             console.log(a)
-             setuser_id(val.userId)
              form.setFieldsValue({
-              "username": val.username,
-  "password": val.password,
+  "password": val.password || "",
   "role": val.roleId,
   "firstname":  val.firstName,
   "lastname": val.lastName,
@@ -71,22 +84,12 @@ getDoctorData()
              })  
              
              setposition_ids([...a])
-             changeRoleFirst(val.roleId)
-             setrole_id(val.roleId)
-             
+             setGender(val.gender)
+             setAvatarPreview(val.avatar ? `${imgApi}${val.avatar}` : null)
+             return val;
         }catch(err){
          console.log(err)
-        }
-    }
-    const getUsername=async()=>{
-        try{
-             var res=await get_default_username()
-             console.log(res)
-             form.setFieldValue('username', res.data.username)
-             setloader(false)
-
-        }catch(err){
-
+         throw err
         }
     }
     const getParamsData=async()=>{
@@ -94,59 +97,66 @@ getDoctorData()
            var res=await get_params_for_add_staff()
            setpositions([...res.data.positions])
            setroles(res.data.roles)
-console.log(form.getFieldValue('role'))
-           
-           if(id!=null){
-changeRole(form.getFieldValue('role'))
-           }
-           
+           return res.data.positions
         }catch(err){
-
+           throw err
         }
+    }
+
+    const bindRolePositions=(roleIdValue, availablePositions = positions, selectedPositionIds = [])=>{
+        const filteredPositions = availablePositions.filter((item)=>(item.roleId === roleIdValue))
+        const nextPositionIds = selectedPositionIds.length > 0
+            ? selectedPositionIds
+            : filteredPositions.length === 1
+                ? [filteredPositions[0].id]
+                : [];
+
+        setposition_datas([...filteredPositions])
+        setposition_ids(nextPositionIds)
+        form.setFieldValue('positions', nextPositionIds)
     }
 
     const changeRole=(val)=>{
-      console.log(val, positions)
-        setposition_ids([])
-        form.setFieldValue('positions', [])
-        let a=positions.filter((item)=>(item.roleId==val))
-        if(a.length==1){
-            setposition_ids([a[0].id])
-            form.setFieldValue('positions', [a[0].id])
-        }
-        console.log(a)
-        setposition_datas([...a])
+        bindRolePositions(val)
     }
 
-     const changeRoleFirst=(val)=>{
-     
-        let a=positions.filter((item)=>(item.roleId==val))
-        if(a.length==1){
-            setposition_ids([a[0].id])
-            form.setFieldValue('positions', [a[0].id])
-        }
-        setposition_datas([...a])
-    }
+    const getAvatarFallback = () => avatarPreview || (gender ? maleAvatar : femaleAvatar);
+
+    const handleAvatarUpload = (file) => {
+        setAvatarFile(file);
+        setAvatarPreview(URL.createObjectURL(file));
+        return false;
+    };
 
     const saveData=async(val)=>{
           try{
              setLoading(true)
-             const checkRes = await checkusername({username:val.username, user_id:user_id});
+             const normalizedPhone = formatPhoneNumber(val.phone);
+             const checkRes = await checkphone({phone: normalizedPhone, doctorId: id});
              if(checkRes.data.exists === true){
-                setUsernameError(t(checkRes.data.message))
+                setPhoneError(t(checkRes.data.message))
                 message.error(t(checkRes.data.message))
              }else{
-                  var data={
-                    'id':id,
-  "username": val.username,
-  "password": val.password,
-  "roleId": val.role,
-  "firstName":  val.firstname,
-  "lastName": val.lastname,
-  "sureName": val.surename,
-  "phone": formatPhoneNumber(val.phone),
-  "gender": val.gender,
-  "positions": val.positions.map((item)=>({id:item}))}
+                  const data = new FormData();
+                  if (id != null) {
+                    data.append('Id', id);
+                  }
+                  data.append('Password', val.password || '');
+                  data.append('RoleId', String(val.role));
+                  data.append('FirstName', val.firstname);
+                  data.append('LastName', val.lastname);
+                  data.append('SureName', val.surename);
+                  data.append('Phone', normalizedPhone);
+                  data.append('Gender', String(val.gender));
+
+                  (val.positions || []).forEach((item, index) => {
+                    data.append(`Positions[${index}].Id`, String(item));
+                  });
+
+                  if (avatarFile) {
+                    data.append('AvatarFile', avatarFile);
+                  }
+
    var res=await change_doctor_data(data)
    message.success(t("data_saved"))
    navigate("/doctor")
@@ -175,28 +185,36 @@ changeRole(form.getFieldValue('role'))
                 onFinish={saveData}
               >
                 <Row>
+                    <Col className="main_col" span={24}>
+                      <div className="doctor-avatar-upload">
+                        <Avatar size={88} src={getAvatarFallback()} />
+                        <div className="doctor-avatar-upload-info">
+                          <Upload
+                            accept="image/*"
+                            maxCount={1}
+                            showUploadList={false}
+                            beforeUpload={handleAvatarUpload}
+                          >
+                            <Button>{t('add_image')}</Button>
+                          </Upload>
+                        </div>
+                      </div>
+                    </Col>
                     <Col className="main_col" lg={8} xs={24} sm={24} md={24} >
                     <Form.Item
-    name="username"
-    label={t("username")}
-    validateStatus={usernameError ? "error" : ""}
-    help={usernameError || ""}
+    name="phone"
+    label={t("phone_number")}
+    validateStatus={phoneError ? "error" : ""}
+    help={phoneError || ""}
     rules={[
       {
         required: true,
-        message: t("please_enter_username_staff"),
+        message: t("phone_required"),
       },
+      { len: 19, message: t("phone_number_invalid") }
     ]}
-    normalize={(value) => {
-      return value ? value.replace(/[.,!? ]/g, '') : '';
-    }}
   >
-    <Input
-      prefix={<IoPerson />}
-      autoComplete="new-password"
-      placeholder={t("enter_username_staff")}
-      onChange={() => setUsernameError("")} 
-    />
+    <PhoneInput autoComplete="tel" onChange={() => setPhoneError("")} />
   </Form.Item>
                     </Col>
                     <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
@@ -283,28 +301,20 @@ changeRole(form.getFieldValue('role'))
                   </Col>
 
                   <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
-                    <Form.Item
-                      label={t('phone_number')}
-                      name="phone"
-                      wrapperCol={{ span: 24 }}
-                      rules={[{ required: true, message: '' }, { len: 19, message: '' }]}
-                    >
-                      <PhoneInput />
-                    </Form.Item>
+                    
                   </Col>
                   <Col className="main_col" lg={8} xs={24} sm={24} md={24}></Col>
                      <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                      <Form.Item
                       name="role"
                       label={t('role')}
-                      value={role_id}
                       rules={[{ required: true, message: '' }]}
                     >
                       <Select
                         style={{ width: '100%' }}
                          
                         prefix={<FaUserDoctor />}
-                        onChange={(value) => {changeRole(value); setrole_id(value)}}
+                        onChange={changeRole}
                         placeholder={t('enter_role_staff')}
                          options={roles.map(role => ({
     value: role.id,
@@ -322,7 +332,7 @@ changeRole(form.getFieldValue('role'))
                     >
                      <Select
                    value={position_ids}
-                        onChange={(val)=>{setposition_ids(val); console.log(val)}}
+                        onChange={(val)=>{setposition_ids(val)}}
                         style={{ width: '100%' }}
                         mode="multiple"
                           showSearch

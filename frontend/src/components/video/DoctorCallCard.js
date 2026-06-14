@@ -19,7 +19,7 @@ export default function DoctorCallCard({ doctor }) {
         const roomName = `nmed-room-${user.id}-${doctor.userId}-${Date.now()}`;
         const myName = user?.doctor
             ? `${user.doctor.firstName ?? ''} ${user.doctor.lastName ?? ''}`.trim()
-            : user?.username ?? 'Admin';
+            : 'Admin';
 
         try {
             setCalling(true);

@@ -1,6 +1,7 @@
 ﻿using EkgAnalyzerApi.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace EkgAnalyzerApi.DTOs;
 
@@ -57,20 +58,22 @@ public class ClinicDetailDTO
 
     public string? BankAccaunt { get; set; }
 
+    // System.Text.Json camelCase: MFO → "mFO", INN → "iNN" bo'ladi.
+    // Frontend "mfo" va "inn" kutadi — override qilish kerak.
+    [JsonPropertyName("mfo")]
     public string? MFO { get; set; }
 
     public string? BankName { get; set; }
 
+    [JsonPropertyName("inn")]
     public string? INN { get; set; }
 
     public string? License { get; set; }
 
     public string? Address { get; set; }
-    
+
     public Districts? District { get; set; }
     public Regions? Region { get; set; }
-
-
 }
 
 public class ClinicPhoneNumberDTO

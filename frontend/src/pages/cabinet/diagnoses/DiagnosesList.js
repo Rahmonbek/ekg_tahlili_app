@@ -222,13 +222,11 @@ export default function DiagnosesList() {
                                 </div>
                             </Col>
                             <Col xs={24} sm={24} md={8}>
-                                <div style={{ display: 'flex', gap: 8, height: '48px' }}>
+                                <div style={{ display: 'flex', gap: 8, height: '48px', alignItems:'flex-end' }}>
                                     <button onClick={handleSearch} className="btn_form" style={{ flex: 1, margin: 0, height: '48px' }}>
                                         {t('search_patcient')}
                                     </button>
-                                    <button onClick={() => navigate('/diagnoses-create')} className="btn_form" style={{ width: '48px', flexShrink: 0, margin: 0, height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <FaPlus />
-                                    </button>
+                                   
                                 </div>
                                 {hasActiveFilters && (
                                     <button onClick={handleClearFilters} style={{ marginTop: 6, background: 'none', color: '#94a3b8', fontSize: 13, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>

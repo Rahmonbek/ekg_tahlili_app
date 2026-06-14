@@ -7,6 +7,7 @@ using System.Security.Claims;
 
 [ApiController]
 [Route("api/complaints")]
+[Authorize]
 public class ComplaintsController : ControllerBase
 {
     private readonly MedDataDB _context;

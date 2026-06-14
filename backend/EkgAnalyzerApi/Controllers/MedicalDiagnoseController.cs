@@ -25,7 +25,9 @@ public class MedicalDiagnoseController : ControllerBase
     }
 
 
-    [HttpGet("get-diognose-by-patcient-id")]
+    // Frontend chaqiradigan to'g'ri nom (eski "diognose" — imlo xatosi edi)
+    [HttpGet("get-medical-diagnose-by-patcient-id")]
+    [HttpGet("get-diognose-by-patcient-id")]  // Backward compatibility
     public async Task<IActionResult> GetECGAnalysesByPatientId(int id, int page = 1)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
@@ -85,7 +87,7 @@ public class MedicalDiagnoseController : ControllerBase
         return Ok(results);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
         var result = await _diagnoseService.GetMedicalDiagnoseByIdAsync(id);

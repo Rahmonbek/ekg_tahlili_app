@@ -45,6 +45,7 @@ namespace EkgAnalyzerApi.Services
                     Id = user.Doctor.Id,
                     Gender=user.Doctor.Gender,
                     Phone=user.Doctor.Phone,
+                    Avatar = user.Doctor.Avatar,
                     SureName=user.Doctor.SureName,
                     FirstName = user.Doctor.FirstName,
                     LastName = user.Doctor.LastName,
@@ -80,7 +81,6 @@ namespace EkgAnalyzerApi.Services
                 Id = user.Id,
                 RoleId= user.RoleId,
                 Email = user.Email,
-                Username = user.Username,
                 Role=new RolesDTO
                 {
                     Id=user.Role.Id,

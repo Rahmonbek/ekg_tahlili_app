@@ -11,16 +11,19 @@ public class AuthService
     private readonly ISmsService _smsService;
     private readonly TokenService _tokenService;
     private readonly ILogger<AuthService> _logger;
+    private readonly IWebHostEnvironment _env;
 
     public AuthService(
         MedDataDB context,
         ISmsService smsService,
         TokenService tokenService,
+        IWebHostEnvironment env,
         ILogger<AuthService> logger)
     {
         _context = context;
         _smsService = smsService;
         _tokenService = tokenService;
+        _env = env;
         _logger = logger;
     }
 
@@ -47,6 +50,34 @@ public class AuthService
         return string.IsNullOrWhiteSpace(normalized) ? null : normalized;
     }
 
+    private async Task<string> SaveLicenseAsync(IFormFile file)
+    {
+        var folder = Path.Combine(_env.WebRootPath, "clinic_licenses");
+
+        if (!Directory.Exists(folder))
+            Directory.CreateDirectory(folder);
+
+        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+        var filePath = Path.Combine(folder, fileName);
+
+        await using var stream = new FileStream(filePath, FileMode.Create);
+        await file.CopyToAsync(stream);
+
+        return $"/clinic_licenses/{fileName}";
+    }
+
+    private void DeleteOldLicense(string? licenseUrl)
+    {
+        if (string.IsNullOrWhiteSpace(licenseUrl))
+            return;
+
+        var fileName = Path.GetFileName(licenseUrl);
+        var filePath = Path.Combine(_env.WebRootPath, "clinic_licenses", fileName);
+
+        if (File.Exists(filePath))
+            File.Delete(filePath);
+    }
+
     private static string GetDtoPhoneNumber(string? phoneNumber, string? legacyPhone = null)
     {
         return !string.IsNullOrWhiteSpace(phoneNumber) ? phoneNumber : legacyPhone ?? "";
@@ -63,14 +94,6 @@ public class AuthService
             .Where(x => x.UserId == userId && x.PhoneNumber == phoneNumber && !x.IsUsed)
             .OrderByDescending(x => x.Id)
             .FirstOrDefaultAsync();
-    }
-
-    public async Task<bool> CheckUsernameAsync(string username, int? user_id, string? email)
-    {
-        return await _context.Users
-            .AnyAsync(x => x.Username.ToLower() == username.ToLower() &&
-                           ((user_id != null && x.Id != user_id) || user_id == null) &&
-                           ((email != null && x.Email != email) || email == null));
     }
 
     public async Task<bool> CheckPhoneAsync(string phone, int? doctorId = null)
@@ -141,16 +164,17 @@ public class AuthService
 
     public async Task RegisterAsync(RegisterDto dto)
     {
-        var phone = NormalizePhone(GetDtoPhoneNumber(dto.PhoneNumber, dto.Phone));
-        var clinicInn = NormalizeInn(dto.ClinicInn);
-        var clinicName = NormalizeText(dto.ClinicName);
-        var address = NormalizeText(dto.Address);
+        // ── 1. Input normalizatsiya ──────────────────────────────────────────
+        var phone       = NormalizePhone(GetDtoPhoneNumber(dto.PhoneNumber, dto.Phone));
+        var clinicInn   = NormalizeInn(dto.ClinicInn);
+        var clinicName  = NormalizeText(dto.ClinicName);
+        var address     = NormalizeText(dto.Address);
         var bankAccaunt = NormalizeText(dto.BankAccaunt);
-        var mfo = NormalizeText(dto.MFO);
-        var bankName = NormalizeText(dto.BankName);
-        var license = NormalizeText(dto.License);
+        var mfo         = NormalizeText(dto.MFO);
+        var bankName    = NormalizeText(dto.BankName);
         var internalEmail = InternalPhoneEmail(phone);
 
+        // ── 2. Asosiy validatsiyalar ─────────────────────────────────────────
         if (phone.Length != 12)
             throw new Exception("phone_number_invalid");
 
@@ -160,16 +184,15 @@ public class AuthService
         if (string.IsNullOrWhiteSpace(clinicInn))
             throw new Exception("clinic_inn_required");
 
-        if (dto.DistrictId == null || dto.DistrictId <= 0)
-            throw new Exception("district_required");
+        if (dto.LicenseFile == null)
+            throw new Exception("license_file_required");
 
-        if (string.IsNullOrWhiteSpace(address))
-            throw new Exception("address_required");
-
+        // ── 3. Mavjud telefon/INN tekshiruvi (transaction TASHQARISIDA) ──────
         var existingDoctor = await _context.Doctors
             .Include(x => x.User)
                 .ThenInclude(x => x.Clinic)
                     .ThenInclude(x => x.ClinicDetail)
+            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Phone == phone);
 
         if (existingDoctor?.User?.Status == true)
@@ -177,89 +200,165 @@ public class AuthService
 
         var existingClinicInn = await _context.ClinicDetails
             .AnyAsync(x => x.INN == clinicInn &&
-                           (existingDoctor == null || x.ClinicId != existingDoctor.User.ClinicId));
+                           (existingDoctor == null || x.ClinicId != existingDoctor.User!.ClinicId));
 
         if (existingClinicInn)
             throw new Exception("clinic_already_registered");
 
+        // ── 4. License faylni saqlash ────────────────────────────────────────
+        var savedLicense = await SaveLicenseAsync(dto.LicenseFile);
+
+        // ── 5. Transaction ichida DB saqlash ─────────────────────────────────
         using var transaction = await _context.Database.BeginTransactionAsync();
         var committed = false;
 
         try
         {
-            User user;
+            User   user;
             Doctor doctor;
 
+            // ── 5a. Qayta ro'yhatdan o'tish (telefon bor, lekin tasdiqlanmagan) ──
             if (existingDoctor?.User != null && existingDoctor.User.Status == false)
             {
-                user = existingDoctor.User;
-                doctor = existingDoctor;
+                // AsNoTracking ishlatildi, shuning uchun qayta yuklaymiz (tracked)
+                user = await _context.Users
+                    .Include(u => u.Clinic)
+                        .ThenInclude(c => c.ClinicDetail)
+                    .FirstAsync(u => u.Id == existingDoctor.User.Id);
 
-                user.Username = phone;
-                user.Email = internalEmail;
+                doctor = await _context.Doctors.FirstAsync(d => d.Id == existingDoctor.Id);
+
+                user.Email        = internalEmail;
                 user.PasswordPlain = dto.Password;
-                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-                user.RoleId = RoleConstants.Admin;
+                user.PasswordHash  = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+                user.RoleId        = RoleConstants.Admin;
+                doctor.Phone       = phone;
 
                 if (user.Clinic == null)
                 {
-                    user.Clinic = new Clinic { ClinicName = clinicName };
-                }
+                    // Klinika yo'q — yangisini yaratamiz
+                    var newClinic = new Clinic
+                    {
+                        ClinicName = clinicName,
+                        IsActive   = false
+                    };
+                    _context.Clinics.Add(newClinic);
+                    await _context.SaveChangesAsync(); // Id olish uchun
 
-                user.Clinic.ClinicName = clinicName;
-                user.Clinic.ClinicDetail ??= new ClinicDetail();
-                user.Clinic.ClinicDetail.INN = clinicInn;
-                user.Clinic.ClinicDetail.DistrictId = dto.DistrictId;
-                user.Clinic.ClinicDetail.Address = address;
-                user.Clinic.ClinicDetail.BankAccaunt = bankAccaunt;
-                user.Clinic.ClinicDetail.MFO = mfo;
-                user.Clinic.ClinicDetail.BankName = bankName;
-                user.Clinic.ClinicDetail.License = license;
-                user.Clinic.ClinicDetail.UpdatedAt = DateTime.UtcNow;
-                doctor.Phone = phone;
+                    user.ClinicId  = newClinic.Id;
+                    user.Clinic    = newClinic;
+
+                    var newDetail = new ClinicDetail
+                    {
+                        ClinicId    = newClinic.Id,
+                        INN         = clinicInn,
+                        DistrictId  = dto.DistrictId,
+                        Address     = address,
+                        BankAccaunt = bankAccaunt,
+                        MFO         = mfo,
+                        BankName    = bankName,
+                        License     = savedLicense,
+                        CreatedAt   = DateTime.UtcNow,
+                        UpdatedAt   = DateTime.UtcNow
+                    };
+                    _context.ClinicDetails.Add(newDetail);
+                }
+                else
+                {
+                    user.Clinic.ClinicName = clinicName;
+
+                    if (user.Clinic.ClinicDetail == null)
+                    {
+                        var newDetail = new ClinicDetail
+                        {
+                            ClinicId    = user.Clinic.Id,
+                            INN         = clinicInn,
+                            DistrictId  = dto.DistrictId,
+                            Address     = address,
+                            BankAccaunt = bankAccaunt,
+                            MFO         = mfo,
+                            BankName    = bankName,
+                            License     = savedLicense,
+                            CreatedAt   = DateTime.UtcNow,
+                            UpdatedAt   = DateTime.UtcNow
+                        };
+                        _context.ClinicDetails.Add(newDetail);
+                    }
+                    else
+                    {
+                        DeleteOldLicense(user.Clinic.ClinicDetail.License);
+                        user.Clinic.ClinicDetail.INN         = clinicInn;
+                        user.Clinic.ClinicDetail.DistrictId  = dto.DistrictId;
+                        user.Clinic.ClinicDetail.Address     = address;
+                        user.Clinic.ClinicDetail.BankAccaunt = bankAccaunt;
+                        user.Clinic.ClinicDetail.MFO         = mfo;
+                        user.Clinic.ClinicDetail.BankName    = bankName;
+                        user.Clinic.ClinicDetail.License     = savedLicense;
+                        user.Clinic.ClinicDetail.UpdatedAt   = DateTime.UtcNow;
+                    }
+                }
             }
+            // ── 5b. Yangi foydalanuvchi ───────────────────────────────────────
             else
             {
+                // Clinic yaratamiz. ClinicDetail = null — chunki Clinic modelida
+                // "= new()" property initializer bor: EF Core uni bo'sh ClinicDetail
+                // sifatida ham INSERT qilishga urinadi → UNIQUE constraint xatosi.
+                // Shuning uchun ClinicDetail ni alohida, ClinicId bilan qo'shamiz.
                 var clinic = new Clinic
                 {
-                    ClinicName = clinicName,
-                    ClinicDetail = new ClinicDetail
-                    {
-                        INN = clinicInn,
-                        DistrictId = dto.DistrictId,
-                        Address = address,
-                        BankAccaunt = bankAccaunt,
-                        MFO = mfo,
-                        BankName = bankName,
-                        License = license
-                    }
+                    ClinicName    = clinicName,
+                    IsActive      = false,
+                    CreatedAt     = DateTime.UtcNow,
+                    UpdatedAt     = DateTime.UtcNow,
+                    ClinicDetail  = null  // property initializer = new() ni bekor qilamiz
                 };
+                _context.Clinics.Add(clinic);
+                await _context.SaveChangesAsync(); // clinic.Id olish uchun
+
+                var clinicDetail = new ClinicDetail
+                {
+                    ClinicId    = clinic.Id,
+                    INN         = clinicInn,
+                    DistrictId  = dto.DistrictId,
+                    Address     = address,
+                    BankAccaunt = bankAccaunt,
+                    MFO         = mfo,
+                    BankName    = bankName,
+                    License     = savedLicense,
+                    CreatedAt   = DateTime.UtcNow,
+                    UpdatedAt   = DateTime.UtcNow
+                };
+                _context.ClinicDetails.Add(clinicDetail);
 
                 user = new User
                 {
-                    Username = phone,
-                    Email = internalEmail,
+                    Email         = internalEmail,
                     PasswordPlain = dto.Password,
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                    Status = false,
-                    RoleId = RoleConstants.Admin,
-                    Clinic = clinic
+                    PasswordHash  = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                    Status        = false,
+                    RoleId        = RoleConstants.Admin,
+                    ClinicId      = clinic.Id,
+                    CreatedAt     = DateTime.UtcNow,
+                    UpdatedAt     = DateTime.UtcNow
                 };
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync(); // user.Id olish uchun
 
                 doctor = new Doctor
                 {
-                    User = user,
-                    Gender = true,
-                    Phone = phone
+                    UserId    = user.Id,
+                    Gender    = true,
+                    Phone     = phone,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
                 };
-
-                _context.Clinics.Add(clinic);
-                _context.Users.Add(user);
                 _context.Doctors.Add(doctor);
             }
 
             await _context.SaveChangesAsync();
 
+            // ── 6. Default pozitsiya ─────────────────────────────────────────
             var hasPosition = await _context.DoctorPositions
                 .AnyAsync(x => x.DoctorId == doctor.Id);
 
@@ -267,18 +366,28 @@ public class AuthService
             {
                 _context.DoctorPositions.Add(new DoctorPosition
                 {
-                    DoctorId = doctor.Id,
+                    DoctorId   = doctor.Id,
                     PositionId = 77
                 });
-
                 await _context.SaveChangesAsync();
             }
 
-            var sms = await AddVerificationCodeAsync(user);
+            // ── 7. SMS kodi — phone'ni to'g'ridan-to'g'ri uzatamiz ───────────
+            var code = GenerateCode();
+            _context.VerificationCodes.Add(new VerificationCode
+            {
+                UserId      = user.Id,
+                PhoneNumber = phone,
+                Code        = code,
+                ExpiresAt   = DateTime.UtcNow.AddMinutes(10),
+                IsUsed      = false
+            });
+            await _context.SaveChangesAsync();
 
             await transaction.CommitAsync();
             committed = true;
-            SendSmsInBackground(sms.Phone, sms.Code);
+
+            SendSmsInBackground(phone, code);
         }
         catch
         {

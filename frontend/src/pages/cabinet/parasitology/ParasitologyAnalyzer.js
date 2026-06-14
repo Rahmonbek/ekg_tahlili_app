@@ -85,6 +85,17 @@ export default function ParasitologyAnalyzer() {
 
     const canSubmit = state.files.length > 0 && !!analysisDateValue && selectedDoctors.length > 0;
 
+    // ─── Retry / Reset — handleSubmit DAN OLDIN e'lon qilinishi SHART ───
+    const retryAnalyse = useCallback(() => {
+        resetPatient();
+        resetDoctorSelection();
+        setAnalysisDateValue(getTodayDateInputValue());
+        resetAll();
+        form.resetFields();
+        form1.resetFields();
+        form2.resetFields();
+    }, [resetPatient, resetDoctorSelection, resetAll, form, form1, form2]);
+
     const handleSubmit = useCallback(async () => {
         if (state.files.length === 0) return dangerAlert(t('select_file_error'));
 
@@ -114,16 +125,6 @@ export default function ParasitologyAnalyzer() {
         });
         retryAnalyse();
     }, [state, patcient, user, selectedDoctors, runInBackground, form2, t, retryAnalyse]);
-
-    const retryAnalyse = useCallback(() => {
-        resetPatient();
-        resetDoctorSelection();
-        setAnalysisDateValue(getTodayDateInputValue());
-        resetAll();
-        form.resetFields();
-        form1.resetFields();
-        form2.resetFields();
-    }, [resetPatient, resetDoctorSelection, resetAll, form, form1, form2]);
 
     const resetData = useCallback(() => {
         resetPatient();

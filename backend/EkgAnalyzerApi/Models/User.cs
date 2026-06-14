@@ -11,9 +11,6 @@ public class User
     public int Id { get; set; }
         [Column("email")]
         public string? Email { get; set; } = default!;
-
-        [Column("username")]
-        public string Username { get; set; } = default!;
         [Column("password_hash")]
     public string PasswordHash { get; set; } = default!;
     [Column("password_plain")]

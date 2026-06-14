@@ -6,6 +6,7 @@ using System.Security.Claims;
 
 [ApiController]
 [Route("api/lab-values")]
+[Authorize]
 public class LabValuesController : ControllerBase
 {
     private readonly MedDataDB _context;

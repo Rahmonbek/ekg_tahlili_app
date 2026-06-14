@@ -189,9 +189,8 @@ export default function Login() {
                 rules={[
                   { required: true, message: t("please_enter_password") },
                   {
-                    min: 8,
-                    pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/,
-                    message: t("password_complexity_error")
+                    min: 6,
+                    message: t("password_too_short")
                   }
                 ]}
               >

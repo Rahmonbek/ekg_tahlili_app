@@ -6,6 +6,7 @@ using System.Security.Claims;
 
 [ApiController]
 [Route("api/clinic")]
+[Authorize]
 public class ClinicController : ControllerBase
 {
     private readonly ClinicService _clinicService;
@@ -18,39 +19,59 @@ public class ClinicController : ControllerBase
     [HttpPost("update-clinic-data")]
     public async Task<IActionResult> UpdateClinicData([FromForm] ClinicUpsertDto dto)
     {
-        var clinic = await _clinicService.UpsertAsync(dto);
-
-        return Ok(new
+        try
         {
-            clinic.Id,
-            clinic.ClinicName,
-            clinic.ClinicLogo
-        });
+            var clinic = await _clinicService.UpsertAsync(dto);
+            return Ok(new
+            {
+                clinic.Id,
+                clinic.ClinicName,
+                clinic.ClinicLogo
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("update-clinic-phone")]
     public async Task<IActionResult> UpdateClinicPhoneData([FromBody] ClinicPhoneUpsertDto dto)
     {
-        await _clinicService.UpsertClinicPhonesAsync(dto);
-        return Ok(true);
+        try
+        {
+            await _clinicService.UpsertClinicPhonesAsync(dto);
+            return Ok(true);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
+
     [HttpPost("create-update-clinic-detail")]
     public async Task<IActionResult> Upsert([FromForm] ClinicDetailUpsertDto dto)
     {
-        var detail = await _clinicService.CreateUpdateClinicDetail(dto);
-
-        return Ok(new
+        try
         {
-            detail.Id,
-            detail.ClinicId,
-            detail.BankAccaunt,
-            detail.DistrictId,
-            detail.MFO,
-            detail.BankName,
-            detail.INN,
-            detail.Address,
-            detail.License
-        });
+            var detail = await _clinicService.CreateUpdateClinicDetail(dto);
+            return Ok(new
+            {
+                detail.Id,
+                detail.ClinicId,
+                detail.BankAccaunt,
+                detail.DistrictId,
+                detail.MFO,
+                detail.BankName,
+                detail.INN,
+                detail.Address,
+                detail.License
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
     [HttpGet("get-clinic-by-id")]
     public async Task<IActionResult> GetClinicById([FromQuery] int id)

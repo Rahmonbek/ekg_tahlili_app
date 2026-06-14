@@ -636,6 +636,10 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("average_rating");
 
+                    b.Property<string>("Avatar")
+                        .HasColumnType("text")
+                        .HasColumnName("avatar");
+
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -1914,11 +1918,6 @@ namespace EkgAnalyzerApi.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("username");
 
                     b.HasKey("Id");
 

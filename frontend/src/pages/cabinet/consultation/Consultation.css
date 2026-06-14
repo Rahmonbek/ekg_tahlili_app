@@ -150,7 +150,7 @@
 .consultation-page .ant-input,
 .consultation-page .ant-select-selector,
 .consultation-page .ant-picker {
-    min-height: 52px !important;
+   
     border-radius: 12px !important;
     font-size: var(--small_size);
 }

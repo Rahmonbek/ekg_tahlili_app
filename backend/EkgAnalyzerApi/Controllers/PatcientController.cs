@@ -2,6 +2,7 @@ using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
 using EkgAnalyzerApi.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -9,6 +10,7 @@ using System.Text.RegularExpressions;
 
 [ApiController]
 [Route("api/patcient")]
+[Authorize]
 public class PatcientController : ControllerBase
 {
     private readonly MedDataDB _context;

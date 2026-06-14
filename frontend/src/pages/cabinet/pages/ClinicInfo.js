@@ -6,7 +6,6 @@ import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import InputMask from 'react-input-mask';
 import { AiOutlineFieldNumber } from 'react-icons/ai';
 import { BsBank2 } from 'react-icons/bs';
-import Cleave from 'cleave.js/react';
 import { LiaDownloadSolid } from 'react-icons/lia';
 import i18n from '../../../locale/i18next';
 import { useStore } from '../../../store/Store';
@@ -15,13 +14,6 @@ import { get_districts_data, get_region_data } from '../../../host/requests/Regi
 import { api, imgApi } from '../../../host/Host';
 import { dangerAlert, successAlert } from '../../../tools/Alerts';
 import { formatPhoneNumber, formatPhoneNumberForForm } from '../../../tools/formatters';
-
-const phoneOptions = {
-  prefix: '+998',
-  delimiters: [' (', ') ', '-', '-'],
-  blocks: [4, 2, 3, 2, 2],
-  numericOnly: true,
-};
 
 const formatBankAccount = (value) => (value ? value.replace(/(.{4})/g, '$1 ').trim() : '');
 
@@ -90,7 +82,7 @@ export default function ClinicInfo() {
             phoneNumber: formatPhoneNumberForForm(item.phoneNumber),
           }))
         : [{ id: null, phoneNumber: '' }];
-
+console.log(phones)
       phoneForm.setFieldsValue({ phone_numbers: phones });
 
       let districtValue;
@@ -215,11 +207,11 @@ export default function ClinicInfo() {
       const formData = new FormData();
       formData.append('Id', clinic?.clinicDetail?.id || 0);
       formData.append('ClinicId', clinic.id);
-      formData.append('Inn', (values.inn || '').replace(/\D/g, ''));
+      formData.append('INN', (values.inn || '').replace(/\D/g, ''));
       formData.append('BankAccaunt', (values.bankAccount || '').replace(/\s/g, ''));
-      formData.append('Mfo', (values.mfo || '').replace(/\D/g, ''));
+      formData.append('MFO', (values.mfo || '').replace(/\D/g, ''));
       formData.append('BankName', values.bankName?.trim() || '');
-      formData.append('DistrictId', values.districtId?.value || values.districtId);
+      formData.append('DistrictId', values.districtId?.value ?? values.districtId ?? 0);
       formData.append('Address', values.address?.trim() || '');
       formData.append('License', values.license?.trim() || '');
 
@@ -340,12 +332,15 @@ export default function ClinicInfo() {
                             rules={[{ required: true, message: '' }, { len: 19, message: '' }]}
                             style={{ width: '95%' }}
                           >
-                            <Cleave
-                              options={phoneOptions}
-                              className="ant-input claveInput"
-                              style={{ width: '100%' }}
-                              placeholder="+998 (__) ___-__-__"
-                            />
+                            <InputMask mask="+\9\9\8 (99) 999-99-99" maskChar={null}>
+                              {(props) => (
+                                <Input
+                                  {...props}
+                                  className="login_input"
+                                  placeholder="+998 (__) ___-__-__"
+                                />
+                              )}
+                            </InputMask>
                           </Form.Item>
 
                           <MinusCircleOutlined

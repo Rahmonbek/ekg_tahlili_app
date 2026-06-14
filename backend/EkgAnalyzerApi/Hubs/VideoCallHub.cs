@@ -117,7 +117,7 @@ namespace EkgAnalyzerApi.Hubs
 
             var callerName = caller?.Doctor != null
                 ? $"{caller.Doctor.FirstName} {caller.Doctor.LastName}".Trim()
-                : caller?.Username ?? "Admin";
+                : "Admin";
 
             var session = new VideoCallSession
             {
@@ -168,7 +168,7 @@ namespace EkgAnalyzerApi.Hubs
 
             var callerName = caller?.Doctor != null
                 ? $"{caller.Doctor.FirstName} {caller.Doctor.LastName}".Trim()
-                : caller?.Username ?? "Admin";
+                : "Admin";
 
             var session = new VideoCallSession
             {
@@ -213,7 +213,7 @@ namespace EkgAnalyzerApi.Hubs
 
             var recipientName = recipient?.Doctor != null
                 ? $"{recipient.Doctor.FirstName} {recipient.Doctor.LastName}".Trim()
-                : recipient?.Username ?? "Shifokor";
+                : "Shifokor";
 
             var initiatorConns = _connections.GetConnectionIds(session.InitiatorId).ToList();
             if (initiatorConns.Any())

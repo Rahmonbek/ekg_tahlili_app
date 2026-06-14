@@ -1,19 +1,23 @@
+import asyncio
+import logging
 import os
 import io
 import json
-import base64
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from holter_analyse_doctors import create_holter_analyse_doctor
-from database import get_db
+from database import get_db, SessionLocal
 from holter_analyse import create_holter_analyse, update_holter_analyse
 
 from openai import OpenAI
-from config import OPENAI_API_KEY, OPENAI_MODEL
+from config import OPENAI_API_KEY
 from auth_middleware import verify_token
 from file_validator import validate_file_type
+
+logger = logging.getLogger(__name__)
+_bg_tasks: set = set()
 BASE_DIR = Path(__file__).parent  # Loyihangiz papkasi
 
 
@@ -80,27 +84,94 @@ def compose_prompt_for_openai(age, gender,  lang) -> str:
     Sizga bemorda olingan va shifokor tomonidan tayyorlangan holter natijasi fayli va bemor ma'lumotlari berildi. 
     
 ❗️JAVOB QOIDALARI:
-- Javob FAQAT quyida berilgan JSON formatida bo‘lsin
-- JSON dan tashqarida hech qanday izoh, sharh yoki qo‘shimcha matn YOZILMASIN
+- Javob FAQAT quyida berilgan JSON formatida bo'lsin
+- JSON dan tashqarida hech qanday izoh, sharh yoki qo'shimcha matn YOZILMASIN
 - Javobni {language} tilida taqdim et
-- Holter natijasini tahlil qiling va quyidagi bo‘limlarni to‘ldiring:
+- Holter natijasini tahlil qiling va quyidagi bo'limlarni to'ldiring:
 
-### JSON SHABLONI (QAT’IY SAQLANSIN):
+### JSON SHABLONI (QAT'IY SAQLANSIN):
 
 {"""{
   "automatic_analysis": "Holter natijasi faylining tahlili",
-   "automatic_analysis_bool": "Holat jiddiyligi darajasi: 1 = yengil, 2 = o‘rtacha, 3 = og‘ir",
+   "automatic_analysis_bool": "Holat jiddiyligi darajasi: 1 = yengil, 2 = o'rtacha, 3 = og'ir",
    "final_summary": "Tibbiy asoslangan yakuniy xulosa"
 }"""}
 
 ---
 
-### QO‘SHIMCHA TALABLAR:
+### QO'SHIMCHA TALABLAR:
 - "automatic_analysis_bool" bo'limida faqat 1 yoki 2 yoki 3 sonlari bo'lsin ortiqcha narsa kerak emas 
 
-❗️Javob FAQAT JSON bo‘lsin va {language} tilida bo'lsin
+❗️Javob FAQAT JSON bo'lsin va {language} tilida bo'lsin
     """
     return prompt_header
+
+# ─── Sinxron OpenAI chaqiruvi ────────────────────────────────────────────────
+def _sync_holter_openai(content: bytes, fname: str, age: int, gender: str, lang: str) -> dict:
+    client = OpenAI(api_key=OPENAI_API_KEY)
+    fobj = io.BytesIO(content)
+    fobj.name = fname
+    uploaded = client.files.create(file=fobj, purpose="user_data")
+    file_id = uploaded.id
+
+    is_image = fname.endswith(('.png', '.jpg', '.jpeg'))
+    ai_type = "input_image" if is_image else "input_file"
+    prompt = compose_prompt_for_openai(age, gender, lang)
+
+    resp = client.responses.create(
+        model="gpt-5.2",
+        input=[{
+            "role": "user",
+            "content": [
+                {"type": "input_text", "text": prompt},
+                {"type": ai_type, "file_id": file_id}
+            ]
+        }]
+    )
+    try:
+        return json.loads(resp.output_text)
+    except Exception:
+        return {"raw": resp.output_text}
+
+
+# ─── Fon rejimidagi AI tahlil ─────────────────────────────────────────────────
+async def _holter_ai_background(
+    analyse_id: int,
+    content: bytes,
+    fname: str,
+    age: int,
+    gender: str,
+    lang: str
+) -> None:
+    db = SessionLocal()
+    try:
+        parsed = await asyncio.to_thread(_sync_holter_openai, content, fname, age, gender, lang)
+
+        automatic_analysis_text = parsed.get("automatic_analysis", "") if isinstance(parsed, dict) else ""
+        final_summary = parsed.get("final_summary", "") if isinstance(parsed, dict) else ""
+        try:
+            automatic_analysis_bool = int(parsed.get("automatic_analysis_bool", 0)) if isinstance(parsed, dict) else 0
+        except (ValueError, TypeError):
+            automatic_analysis_bool = 0
+
+        ai_data_str = json.dumps({
+            "automatic_analysis": automatic_analysis_text,
+            "final_summary": final_summary,
+            "automatic_analysis_bool": automatic_analysis_bool
+        }, ensure_ascii=False)
+
+        update_holter_analyse(session=db, analyse_id=analyse_id, status=2, ai_answer_data=ai_data_str)
+        logger.info("Holter AI muvaffaqiyatli: analyse_id=%d", analyse_id)
+
+    except Exception as exc:
+        logger.error("Holter AI fon xatolik analyse_id=%d: %s", analyse_id, exc)
+        try:
+            update_holter_analyse(session=db, analyse_id=analyse_id, status=-1, ai_answer_data=str(exc))
+        except Exception:
+            pass
+    finally:
+        db.close()
+
 
 @router.post("/analyze")
 async def analyze(
@@ -124,14 +195,12 @@ async def analyze(
     content = await first_file.read()
     fname = (first_file.filename or "upload").lower()
 
-    # Fayl turi tekshiruvi
     if not validate_file_type(fname, content):
         raise HTTPException(status_code=400, detail=f"Ruxsat etilmagan fayl turi: {fname}")
 
-    is_image = fname.endswith(('.png','.jpg','.jpeg'))
     analyse_file_path = save_analyse_file(content, fname)
 
-    # Lab analyse yozuvini yaratish
+    import datetime
     holter_analyse = create_holter_analyse(
         session=db,
         patient_id=patcient_id,
@@ -140,90 +209,22 @@ async def analyze(
         clinic_id=clinic_id,
         status=0,
         analyse_file_link=analyse_file_path,
-        analysis_date=__import__("datetime").datetime.fromisoformat(analysis_date.replace("Z", "+00:00")) if analysis_date else None
+        analysis_date=datetime.datetime.fromisoformat(analysis_date.replace("Z", "+00:00")) if analysis_date else None
     )
+
     if doctor_id:
         for d_id in doctor_id:
-            await create_holter_analyse_doctor(
-                session=db,
-                holter_analyse_id=holter_analyse.id,
-                doctor_id=d_id
-            )
+            await create_holter_analyse_doctor(session=db, holter_analyse_id=holter_analyse.id, doctor_id=d_id)
 
-    # OpenAI file upload
-    try:
-        file_id = openai_upload_file(OPENAI_API_KEY, content, filename=fname)
-    except Exception as e:
-        return JSONResponse(content={"error": f"OpenAI upload failed: {e}"})
-
-    prompt = compose_prompt_for_openai(age, gender, lang)
-    ai_error = False
-    parsed = {}
-
-    try:
-        client = OpenAI(api_key=OPENAI_API_KEY)
-        ai_type="input_image"
-        if not is_image:
-            ai_type="input_file"
-        resp = client.responses.create(
-            model="gpt-5.2",
-            input=[{
-                "role": "user",
-                "content": [
-                    {"type": "input_text", "text": prompt},
-                    {"type": ai_type, "file_id": file_id}
-                ]
-            }]
-        )
-        content_out = resp.output_text
-        try:
-            parsed = json.loads(content_out)
-        except Exception:
-            parsed = {"raw": content_out}
-
-        status_to_save = 2
-        print(parsed)
-        automatic_analysis_text = None
-        automatic_analysis_bool = None
-        final_summary = None
-
-        if isinstance(parsed, dict):    
-            automatic_analysis_text = parsed.get("automatic_analysis", "")
-            final_summary = parsed.get("final_summary", "")
-            try:
-                automatic_analysis_bool = int(parsed.get("automatic_analysis_bool", 0))
-            except (ValueError, TypeError):
-                automatic_analysis_bool = 0
-        
-        ai_data_to_save = {
-            "automatic_analysis": automatic_analysis_text,
-            "final_summary": final_summary,
-            "automatic_analysis_bool": automatic_analysis_bool
-        }
-        ai_answer_data_str = json.dumps(ai_data_to_save, ensure_ascii=False)
-        
-        # Bazaga yozish
-        update_holter_analyse(
-            session=db,
-            analyse_id=holter_analyse.id,
-            status=status_to_save,
-            ai_answer_data=ai_answer_data_str,  # endi faqat AI tahlil matni
-            
-        )
-
-    except Exception as e:
-        ai_error = True
-        status_to_save = -1
-        update_holter_analyse(
-            session=db,
-            analyse_id=holter_analyse.id,
-            status=status_to_save,
-            ai_answer_data=str(e)
-        )
+    # ── Fon rejimida AI ──────────────────────────────────────────────────────
+    task = asyncio.create_task(
+        _holter_ai_background(holter_analyse.id, content, fname, age, gender, lang)
+    )
+    _bg_tasks.add(task)
+    task.add_done_callback(_bg_tasks.discard)
 
     return JSONResponse(content={
         "holter_id": holter_analyse.id,
-        "ai_response": parsed,
-        "ai_error": ai_error,
+        "status": "processing",
         "analyse_file_path": analyse_file_path
     })

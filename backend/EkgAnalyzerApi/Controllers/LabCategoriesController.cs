@@ -8,6 +8,7 @@ using System.Security.Claims;
 
 [ApiController]
 [Route("api/lac-categories")]
+[Authorize]
 public class LabCategoriesController : ControllerBase
 {
     private readonly MedDataDB _context;

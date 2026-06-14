@@ -21,7 +21,7 @@ export const acceptIncomingVideoCall = async ({ incomingCall, activeRoom, user, 
 
     const myName = user?.doctor
         ? `${user.doctor.firstName ?? ''} ${user.doctor.lastName ?? ''}`.trim()
-        : user?.username ?? 'User';
+        : 'User';
 
     const res = await getVideoToken(incomingCall.roomName, myName);
     const { token, liveKitUrl } = res.data;

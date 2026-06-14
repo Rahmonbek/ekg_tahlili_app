@@ -26,6 +26,18 @@ axiosInstance.interceptors.request.use(
             config.headers.Authorization = `Bearer ${token}`;
         }
 
+        // FormData uchun Content-Type'ni o'chirish:
+        // Browser o'zi 'multipart/form-data; boundary=...' bilan to'g'ri o'rnatadi.
+        // Agar Axios Content-Type: application/json qoldirilsa — server parse qila olmaydi.
+        if (config.data instanceof FormData) {
+            // Axios v1.x AxiosHeaders → .delete() metodi ishlatiladi
+            if (typeof config.headers?.delete === "function") {
+                config.headers.delete("Content-Type");
+            } else {
+                delete config.headers["Content-Type"];
+            }
+        }
+
         return config;
     },
     (error) => Promise.reject(error)

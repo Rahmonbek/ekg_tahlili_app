@@ -404,7 +404,7 @@ public class PdfReportService
         AddLabeledText(doc, fonts, "Davolash yo'riqnomasi", row.Conclusion.Treatment);
 
         ComposeConsultationQrVerification(doc, fonts, docNum, verifyUrl, row.Conclusion.CreatedAt);
-        ComposeDisclaimer(doc, tr, fonts);
+        
 
         doc.Close();
         return ms.ToArray();
@@ -2009,7 +2009,7 @@ public class PdfReportService
     {
         if (user?.Doctor != null)
             return $"{user.Doctor.LastName} {user.Doctor.FirstName} {user.Doctor.SureName}".Trim();
-        return user?.Username ?? "—";
+        return "—";
     }
 
     private static string ConditionLabel(string? value) =>

@@ -5,7 +5,7 @@ export const api = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 export const imgApi = process.env.REACT_APP_IMG_URL || "http://localhost:5000";
 // Python API — faqat ichki (server tomonida .NET proxy orqali)
 // export const apiEcg = process.env.REACT_APP_ECG_URL || "http://127.0.0.1:8000";
-export const apiEcg = "https://analyse.nmed.uz";
+export const apiEcg = "http://127.0.0.1:8000";
 
 export const getTokenAccess = () => {
     var token = Cookies.get("NMED_token")
@@ -17,6 +17,12 @@ export const deleteTokenAccess = () => {
 }
 
 export const httpPostRequest = async (url, data) => {
+    return await axiosInstance.post(url, data);
+};
+
+export const httpPostFormRequest = async (url, data) => {
+    // Content-Type qo'yilmaydi — Api.js interceptori FormData uchun
+    // uni o'chirib, browser o'zi boundary bilan to'g'ri o'rnatadi
     return await axiosInstance.post(url, data);
 };
 

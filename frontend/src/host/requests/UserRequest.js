@@ -1,4 +1,4 @@
-import { httpGetRequest, httpPostRequest } from "../Host"
+import { httpGetRequest, httpPostRequest, httpPostFormRequest } from "../Host"
 
 
 export const get_user_data=(data)=>{
@@ -10,5 +10,5 @@ export const get_onboarding_status=()=>{
 }
 
 export const send_doc_data=(data)=>{
-    return httpPostRequest("/doctor/save-doctor-data", data)
+    return httpPostFormRequest("/doctor/save-doctor-data", data)
 }

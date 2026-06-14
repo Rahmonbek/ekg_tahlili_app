@@ -112,7 +112,7 @@ public class VideoCallController : ControllerBase
             var pos = posObj?.NameUz ?? posObj?.NameRu ?? "";
             var fullName = u.Doctor != null
                 ? $"{u.Doctor.FirstName} {u.Doctor.LastName}".Trim()
-                : u.Username;
+                : "Shifokor";
 
             return new DoctorOnlineStatusDto
             {
@@ -566,7 +566,7 @@ public class VideoCallController : ControllerBase
 
     private static string BuildUserFullName(User? user, string fallback)
     {
-        if (user?.Doctor == null) return user?.Username ?? fallback;
+        if (user?.Doctor == null) return fallback;
         var fullName = $"{user.Doctor.LastName} {user.Doctor.FirstName} {user.Doctor.SureName}".Trim();
         return string.IsNullOrWhiteSpace(fullName) ? fallback : fullName;
     }

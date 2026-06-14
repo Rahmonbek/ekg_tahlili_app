@@ -96,6 +96,18 @@ export default function HolterAnalyzer() {
         return false;
     }, [patcient, getOldAnalyses, dispatch]);
 
+    // ─── Retry / Reset ───
+    const retryAnalyse = useCallback(() => {
+        resetPatient();
+        resetDoctorSelection();
+        setSelectedMainDoctor(null);
+        setAnalysisDateValue(getTodayDateInputValue());
+        resetAll();
+        form.resetFields();
+        form1.resetFields();
+        form2.resetFields();
+    }, [resetPatient, resetDoctorSelection, resetAll, form, form1, form2]);
+
     // ─── Submit ───
     const handleSubmit = useCallback(() => {
         if (state.files.length === 0) return alert(t('select_file_error'));
@@ -120,19 +132,7 @@ export default function HolterAnalyzer() {
             analyzePromise: analyzeHolterFile(formData),
         });
         retryAnalyse();
-    }, [state, patcient, user, selectedDoctors, selectedMainDoctor, runInBackground, t]);
-
-    // ─── Retry / Reset ───
-    const retryAnalyse = useCallback(() => {
-        resetPatient();
-        resetDoctorSelection();
-        setSelectedMainDoctor(null);
-        setAnalysisDateValue(getTodayDateInputValue());
-        resetAll();
-        form.resetFields();
-        form1.resetFields();
-        form2.resetFields();
-    }, [resetPatient, resetDoctorSelection, resetAll, form, form1, form2]);
+    }, [state, patcient, user, selectedDoctors, selectedMainDoctor, runInBackground, t, retryAnalyse]);
 
     const resetData = useCallback(() => {
         resetPatient();

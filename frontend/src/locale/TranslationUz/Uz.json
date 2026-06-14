@@ -150,6 +150,7 @@
   "enter_role_staff": "Xodimning lavozimini tanlang",
   "enter_position_staff": "Xodimning mutaxassislikini tanlang",
   "position": "Mutaxassislik",
+  "add_image": "Rasm yuklash",
   "enter_new_password_staff": "Xodim uchun parol yarating",
   "enter_username_staff": "Xodim uchun login yarating",
   "edit": "O'zgartirish",
@@ -314,6 +315,10 @@
   "page_locked": "Sahifa yopiq",
   "page_locked_reason": "Klinikangiz faollashtirilgandan so'ng bu sahifa ochiladi.",
   "clinic_name_label": "Klinika nomi",
+  "clinic_admin_register_title": "Klinika adminini ro'yxatdan o'tkazish",
+  "clinic_admin_register_desc": "Bu forma orqali faqat klinika administratori ro'yxatdan o'tadi. Klinikaga tegishli INN, guvohnoma va aloqa ma'lumotlarini kiriting.",
+  "license_file_required": "Guvohnoma faylini yuklang",
+  "select_license_file": "Guvohnoma faylini tanlang",
   "clinic_address_label": "Manzil",
   "select_region": "Viloyatni tanlang",
   "select_district": "Tumanni tanlang",
@@ -493,5 +498,10 @@
   "data_found": "Ma'lumot topildi",
   "consultation_price": "Konsultatsiya narxi",
   "treatment": "Davolash yo'riqnomasi",
-  "confirm_reject": "Rad etishni tasdiqlaysizmi?"
+  "confirm_reject": "Rad etishni tasdiqlaysizmi?",
+  "bankName_required":"Bank nomini kiriting",
+  "mfo_required":"Bank MFO sini kiriting",
+  "bank_account_required":"Hisob raqam kiriting",
+  "admin_info":"Admin ma'lumotlari",
+  "select_consultationDate":"Konsultatsiya sanasini tanlang"
 }
