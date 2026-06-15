@@ -51,8 +51,7 @@ public class MedicalDiagnoseController : ControllerBase
         try
         {
             var response = await _proxyService.ProxyMultipartAsync("/api/med-diagnoses-save", Request, token);
-            var content = await response.Content.ReadAsStringAsync();
-            return Content(content, "application/json");
+            return await ProxyHttpResponseMapper.ToContentResultAsync(response);
         }
         catch (Exception ex)
         {

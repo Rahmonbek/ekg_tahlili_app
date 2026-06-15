@@ -13,7 +13,7 @@ from smad_analyse import create_smad_analyse, update_smad_analyse
 from openai import OpenAI
 from config import OPENAI_API_KEY
 from auth_middleware import verify_token
-from file_validator import validate_file_type
+from file_validator import prepare_upload_filename, validate_file_type
 
 logger = logging.getLogger(__name__)
 _bg_tasks: set = set()
@@ -108,6 +108,7 @@ def compose_prompt_for_openai(age, gender,  lang) -> str:
 # ─── Sinxron OpenAI chaqiruvi ────────────────────────────────────────────────
 def _sync_smad_openai(content: bytes, fname: str, age: int, gender: str, lang: str) -> dict:
     client = OpenAI(api_key=OPENAI_API_KEY)
+    fname = prepare_upload_filename(fname, content, default_stem="smad_upload").lower()
     fobj = io.BytesIO(content)
     fobj.name = fname
     uploaded = client.files.create(file=fobj, purpose="user_data")
@@ -192,7 +193,7 @@ async def analyze(
 
     first_file: UploadFile = file[0]
     content = await first_file.read()
-    fname = (first_file.filename or "upload").lower()
+    fname = prepare_upload_filename(first_file.filename or "upload", content, default_stem="smad_upload").lower()
 
     if not validate_file_type(fname, content):
         raise HTTPException(status_code=400, detail=f"Ruxsat etilmagan fayl turi: {fname}")

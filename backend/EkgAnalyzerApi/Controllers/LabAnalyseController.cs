@@ -52,9 +52,10 @@ public class LabAnalyseController : ControllerBase
         try
         {
             var response = await _proxyService.ProxyMultipartAsync("/lab/analyze", Request, token);
-            var content = await response.Content.ReadAsStringAsync();
-            TrackAnalysisProgress(content, "lab", "lab_id");
-            return Content(content, "application/json");
+            var result = await ProxyHttpResponseMapper.ToContentResultAsync(response);
+            if (response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(result.Content))
+                TrackAnalysisProgress(result.Content, "lab", "lab_id");
+            return result;
         }
         catch (Exception ex)
         {

@@ -1722,29 +1722,60 @@ public class PdfReportService
         foreach (var diag in diagnoses)
         {
             var doctorName = $"{diag.Doctor?.LastName ?? ""} {diag.Doctor?.FirstName ?? ""}".Trim();
+            if (string.IsNullOrWhiteSpace(doctorName))
+                doctorName = tr["no_info"];
 
-            // Tashxis matni
-            var diagCell = new PdfPCell(new Phrase(diag.DiagnosisText, fonts["td9"]))
+            var metaTable = new PdfPTable(2) { WidthPercentage = 100 };
+            metaTable.SetWidths(new[] { 64f, 36f });
+
+            metaTable.AddCell(new PdfPCell(new Phrase($"{tr["diagnosed_by"]}: {doctorName}", fonts["th9_inv"]))
+            {
+                BackgroundColor = CL_DarkBlue,
+                Border = Rectangle.NO_BORDER,
+                PaddingLeft = 8,
+                PaddingRight = 8,
+                PaddingTop = 7,
+                PaddingBottom = 7,
+                VerticalAlignment = Element.ALIGN_MIDDLE
+            });
+
+            metaTable.AddCell(new PdfPCell(new Phrase(
+                $"{tr["diagnosed_at"]}: {(diag.CreatedAt.HasValue ? diag.CreatedAt.Value.ToString("dd.MM.yyyy HH:mm") : tr["no_info"])}",
+                fonts["th9_inv"]))
+            {
+                BackgroundColor = CL_DarkBlue,
+                Border = Rectangle.NO_BORDER,
+                PaddingLeft = 8,
+                PaddingRight = 8,
+                PaddingTop = 7,
+                PaddingBottom = 7,
+                HorizontalAlignment = Element.ALIGN_RIGHT,
+                VerticalAlignment = Element.ALIGN_MIDDLE
+            });
+
+            var diagnosisText = string.IsNullOrWhiteSpace(diag.DiagnosisText) ? tr["no_info"] : diag.DiagnosisText.Trim();
+            var bodyCell = new PdfPCell(new Phrase(diagnosisText, fonts["td9"]))
             {
                 BackgroundColor = CL_White,
-                Border          = Rectangle.BOX,
-                BorderColor     = CL_Border,
-                BorderWidth     = 0.5f,
-                Padding         = 6,
+                Border = Rectangle.BOX,
+                BorderColor = CL_Border,
+                BorderWidth = 0.5f,
+                PaddingLeft = 8,
+                PaddingRight = 8,
+                PaddingTop = 8,
+                PaddingBottom = 8,
             };
-            var diagTbl = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 4 };
-            diagTbl.AddCell(diagCell);
-            doc.Add(diagTbl);
 
-            // Shifokor nomi va sana
-            var metaPhrase = new Phrase();
-            metaPhrase.Add(new Chunk($"{tr["diagnosed_by"]}: {doctorName}", fonts["p8gray"]));
-            if (diag.CreatedAt.HasValue)
-                metaPhrase.Add(new Chunk(
-                    $"   |   {tr["diagnosed_at"]}: {diag.CreatedAt.Value:dd.MM.yyyy HH:mm}",
-                    fonts["p8gray"]));
-
-            doc.Add(new Paragraph(metaPhrase) { SpacingAfter = 4 });
+            var wrapper = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 5, SpacingAfter = 6 };
+            wrapper.AddCell(new PdfPCell(metaTable)
+            {
+                Border = Rectangle.BOX,
+                BorderColor = CL_DarkBlue,
+                BorderWidth = 0.5f,
+                Padding = 0
+            });
+            wrapper.AddCell(bodyCell);
+            doc.Add(wrapper);
         }
     }
 

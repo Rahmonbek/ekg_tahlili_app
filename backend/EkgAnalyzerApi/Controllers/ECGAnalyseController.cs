@@ -165,9 +165,10 @@ public class ECGAnalyseController : ControllerBase
         try
         {
             var response = await _proxyService.ProxyMultipartAsync("/api/analyze", Request, token);
-            var content = await response.Content.ReadAsStringAsync();
-            TrackAnalysisProgress(content, "ecg", "ecg_id");
-            return Content(content, "application/json");
+            var result = await ProxyHttpResponseMapper.ToContentResultAsync(response);
+            if (response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(result.Content))
+                TrackAnalysisProgress(result.Content, "ecg", "ecg_id");
+            return result;
         }
         catch (Exception ex)
         {
@@ -187,8 +188,7 @@ public class ECGAnalyseController : ControllerBase
         try
         {
             var response = await _proxyService.ProxyMultipartAsync("/api/analyze-save", Request, token);
-            var content = await response.Content.ReadAsStringAsync();
-            return Content(content, "application/json");
+            return await ProxyHttpResponseMapper.ToContentResultAsync(response);
         }
         catch (Exception ex)
         {
@@ -208,9 +208,10 @@ public class ECGAnalyseController : ControllerBase
         try
         {
             var response = await _proxyService.ProxyMultipartAsync("/api/analyze-retry", Request, token);
-            var content = await response.Content.ReadAsStringAsync();
-            TrackAnalysisProgress(content, "ecg", "ecg_id");
-            return Content(content, "application/json");
+            var result = await ProxyHttpResponseMapper.ToContentResultAsync(response);
+            if (response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(result.Content))
+                TrackAnalysisProgress(result.Content, "ecg", "ecg_id");
+            return result;
         }
         catch (Exception ex)
         {

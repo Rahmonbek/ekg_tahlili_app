@@ -52,9 +52,10 @@ public class HolterAnalyseController : ControllerBase
         try
         {
             var response = await _proxyService.ProxyMultipartAsync("/holter/analyze", Request, token);
-            var content = await response.Content.ReadAsStringAsync();
-            TrackAnalysisProgress(content, "holter", "holter_id");
-            return Content(content, "application/json");
+            var result = await ProxyHttpResponseMapper.ToContentResultAsync(response);
+            if (response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(result.Content))
+                TrackAnalysisProgress(result.Content, "holter", "holter_id");
+            return result;
         }
         catch (Exception ex)
         {

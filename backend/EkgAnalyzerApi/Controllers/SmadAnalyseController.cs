@@ -52,9 +52,10 @@ public class SmadAnalyseController : ControllerBase
         try
         {
             var response = await _proxyService.ProxyMultipartAsync("/smad/analyze", Request, token);
-            var content = await response.Content.ReadAsStringAsync();
-            TrackAnalysisProgress(content, "smad", "smad_id");
-            return Content(content, "application/json");
+            var result = await ProxyHttpResponseMapper.ToContentResultAsync(response);
+            if (response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(result.Content))
+                TrackAnalysisProgress(result.Content, "smad", "smad_id");
+            return result;
         }
         catch (Exception ex)
         {

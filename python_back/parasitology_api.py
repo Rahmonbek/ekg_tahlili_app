@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 
 from auth_middleware import verify_token
 from config import OPENAI_API_KEY
+from file_validator import prepare_upload_filename
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +92,8 @@ async def analyze_parasitology(
     if not OPENAI_API_KEY:
         raise HTTPException(status_code=400, detail="OPENAI_API_KEY mavjud emas")
 
-    fname = (file.filename or "upload.jpg").lower()
+    content = await file.read()
+    fname = prepare_upload_filename(file.filename or "upload.jpg", content, default_stem="parasitology_upload").lower()
     ext = "." + fname.rsplit(".", 1)[-1] if "." in fname else ""
 
     if ext not in ALLOWED_EXTENSIONS:
@@ -102,8 +104,6 @@ async def analyze_parasitology(
             },
             status_code=400
         )
-
-    content = await file.read()
 
     if not content:
         return JSONResponse(

@@ -33,7 +33,7 @@ from medical_diagnoses import create_medical_diagnose
 from ecg_analyse import get_ecg_analyse_by_id
 from ecg_analyse import update_ecg_analyse
 from auth_middleware import verify_token
-from file_validator import validate_file_type
+from file_validator import prepare_upload_filename, validate_file_type
 from fastapi.staticfiles import StaticFiles
 from ecg_analyse_doctors import create_ecg_analyse_doctor
 from ecg_analyse_complaints import create_ecg_analyse_complaint
@@ -1208,7 +1208,7 @@ async def analyze(
 
     first_file: UploadFile = file[0]
     content = await first_file.read()
-    fname = (first_file.filename or "upload").lower()
+    fname = prepare_upload_filename(first_file.filename or "upload", content, default_stem="ecg_upload").lower()
 
     if not validate_file_type(fname, content):
         raise HTTPException(status_code=400, detail=f"Ruxsat etilmagan fayl turi: {fname}")
@@ -1278,7 +1278,7 @@ async def analyze_save(
         raise HTTPException(status_code=400, detail="Provide OpenAI API key in environment variable 'OPENAI_API_KEY'")
     first_file: UploadFile = file[0]
     content = await first_file.read()
-    fname = (first_file.filename or "upload").lower()
+    fname = prepare_upload_filename(first_file.filename or "upload", content, default_stem="ecg_upload").lower()
     analyse_file_path = save_analyse_file(content, fname)
     ecg_analyse = create_ecg_analyse(
         session=db,
@@ -1563,7 +1563,7 @@ async def diagnose_save(
    
     first_file: UploadFile = file[0]
     content = await first_file.read()
-    fname = (first_file.filename or "upload").lower()
+    fname = prepare_upload_filename(first_file.filename or "upload", content, default_stem="diagnose_upload").lower()
     analyse_file_path = save_diagnose_file(content, fname)
     ecg_analyse = create_medical_diagnose(
         session=db,

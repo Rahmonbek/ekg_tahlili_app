@@ -14,7 +14,7 @@ from lab_analyse_doctors import create_lab_analyse_doctor
 from openai import OpenAI
 from config import OPENAI_API_KEY
 from auth_middleware import verify_token
-from file_validator import validate_file_type
+from file_validator import prepare_upload_filename, validate_file_type
 
 logger = logging.getLogger(__name__)
 
@@ -163,6 +163,7 @@ daily_sodium - 24 soatlik natriy (mmol/24h)
 def _sync_lab_openai(content: bytes, fname: str, age: int, gender: str, lang: str) -> dict:
     """OpenAI ga sinxron so'rov — asyncio.to_thread() orqali chaqiriladi."""
     client = OpenAI(api_key=OPENAI_API_KEY)
+    fname = prepare_upload_filename(fname, content, default_stem="lab_upload").lower()
 
     # 1. Faylni OpenAI ga yuklash
     fobj = io.BytesIO(content)
@@ -263,7 +264,7 @@ async def analyze(
 
     first_file: UploadFile = file[0]
     content = await first_file.read()
-    fname = (first_file.filename or "upload").lower()
+    fname = prepare_upload_filename(first_file.filename or "upload", content, default_stem="lab_upload").lower()
 
     # Fayl turi tekshiruvi
     if not validate_file_type(fname, content):
