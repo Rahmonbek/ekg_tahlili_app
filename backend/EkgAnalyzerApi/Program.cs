@@ -127,7 +127,20 @@ builder.Services.AddCors(options =>
             builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
             ?? builder.Configuration["Cors:AllowedOrigins"]?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             ?? builder.Configuration["AllowedOrigins"]?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            ?? new[] { "http://localhost:3000", "https://nmed.uz" };
+            ?? Array.Empty<string>();
+
+        allowedOrigins = allowedOrigins
+            .Concat(new[]
+            {
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
+                "https://nmed.uz",
+                "https://www.nmed.uz"
+            })
+            .Select(origin => origin.Trim().TrimEnd('/'))
+            .Where(origin => !string.IsNullOrWhiteSpace(origin))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
 
         policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()

@@ -3,9 +3,12 @@ import Cookies from "js-cookie";
 
 export const api = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 export const imgApi = process.env.REACT_APP_IMG_URL || "http://localhost:5000";
-// Python API — faqat ichki (server tomonida .NET proxy orqali)
-// export const apiEcg = process.env.REACT_APP_ECG_URL || "http://127.0.0.1:8000";
-export const apiEcg = process.env.REACT_APP_MEDIA_URL || `${api}/files`;
+// EKG/Lab/Holter/SMAD fayllari Python backend uploads papkasidan beriladi.
+// Dev: http://127.0.0.1:8000/uploads/...
+// Prod: https://analyse.nmed.uz/uploads/...
+export const apiEcg = process.env.REACT_APP_MEDIA_URL
+    || process.env.REACT_APP_ECG_URL
+    || 'http://127.0.0.1:8000';
 
 export const getTokenAccess = () => {
     var token = Cookies.get("NMED_token")

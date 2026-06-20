@@ -10,28 +10,18 @@ namespace EkgAnalyzerApi.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<int>(
-                name: "patient_id",
-                table: "consultations",
-                type: "integer",
-                nullable: true,
-                oldClrType: typeof(int),
-                oldType: "integer");
+            migrationBuilder.Sql(
+                "ALTER TABLE consultations ALTER COLUMN patient_id DROP NOT NULL;");
 
-            migrationBuilder.AddColumn<bool>(
-                name: "is_link_request",
-                table: "consultations",
-                type: "boolean",
-                nullable: false,
-                defaultValue: false);
+            migrationBuilder.Sql(
+                "ALTER TABLE consultations ADD COLUMN IF NOT EXISTS is_link_request boolean NOT NULL DEFAULT FALSE;");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "is_link_request",
-                table: "consultations");
+            migrationBuilder.Sql(
+                "ALTER TABLE consultations DROP COLUMN IF EXISTS is_link_request;");
 
             migrationBuilder.AlterColumn<int>(
                 name: "patient_id",

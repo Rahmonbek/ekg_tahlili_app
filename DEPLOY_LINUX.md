@@ -94,7 +94,7 @@ cd /var/www/nmed/source
 ```env
 REACT_APP_API_URL=https://api.nmed.uz/api
 REACT_APP_IMG_URL=https://api.nmed.uz
-REACT_APP_MEDIA_URL=https://api.nmed.uz/api/files
+REACT_APP_MEDIA_URL=https://analyse.nmed.uz
 ```
 
 ### .NET backend

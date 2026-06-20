@@ -8,16 +8,21 @@ const axiosInstance = axios.create({
     baseURL: api,
 });
 
+const isPublicRoute = (path) => {
+    const publicPaths = ["/", "/login", "/register"];
+    return publicPaths.includes(path)
+        || path.startsWith("/consultation/verify/")
+        || path.startsWith("/analysis/verify/");
+};
+
 // 🔐 REQUEST INTERCEPTOR (token tekshirish)
 axiosInstance.interceptors.request.use(
     (config) => {
         const token = Cookies.get("NMED_token");
 
-        // Login va register sahifalarini tekshirish
-        const publicPaths = ["/", "/login", "/register"];
         const currentPath = window.location.pathname;
 
-        if (!token && !publicPaths.includes(currentPath)) {
+        if (!token && !isPublicRoute(currentPath)) {
             window.location.href = "/";
             return Promise.reject("No token");
         }
@@ -56,10 +61,9 @@ axiosInstance.interceptors.response.use(
         if (error.response && error.response.status === 401) {
             Cookies.remove("NMED_token");
 
-            const publicPaths = ["/", "/login", "/register"];
             const currentPath = window.location.pathname;
 
-            if (!publicPaths.includes(currentPath)) {
+            if (!isPublicRoute(currentPath)) {
                 window.location.href = "/";
             }
         }
