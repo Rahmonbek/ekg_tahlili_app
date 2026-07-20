@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "/33xg1Oglok=",
+  "dgSpecHash": "c2YmVLIM5qc=",
   "success": true,
   "projectFilePath": "D:\\git\\ekg_tahlili_app\\backend\\EkgAnalyzerApi\\EkgAnalyzerApi.csproj",
   "expectedPackageFiles": [
@@ -54,10 +54,7 @@
     "C:\\Users\\HP\\.nuget\\packages\\system.identitymodel.tokens.jwt\\8.14.0\\system.identitymodel.tokens.jwt.8.14.0.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\system.security.cryptography.pkcs\\8.0.1\\system.security.cryptography.pkcs.8.0.1.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\system.text.encodings.web\\7.0.0\\system.text.encodings.web.7.0.0.nupkg.sha512",
-    "C:\\Users\\HP\\.nuget\\packages\\system.text.json\\7.0.0\\system.text.json.7.0.0.nupkg.sha512",
-    "C:\\Users\\HP\\.nuget\\packages\\microsoft.netcore.app.runtime.linux-x64\\8.0.13\\microsoft.netcore.app.runtime.linux-x64.8.0.13.nupkg.sha512",
-    "C:\\Users\\HP\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.linux-x64\\8.0.13\\microsoft.aspnetcore.app.runtime.linux-x64.8.0.13.nupkg.sha512",
-    "C:\\Users\\HP\\.nuget\\packages\\microsoft.netcore.app.host.linux-x64\\8.0.13\\microsoft.netcore.app.host.linux-x64.8.0.13.nupkg.sha512"
+    "C:\\Users\\HP\\.nuget\\packages\\system.text.json\\7.0.0\\system.text.json.7.0.0.nupkg.sha512"
   ],
   "logs": []
 }

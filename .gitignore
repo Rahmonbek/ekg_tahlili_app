@@ -44,7 +44,11 @@ runs/
 /dataset_app/balanced_dataset
 /dataset_app/__pycache__
 
-
+/python_back/*
+.agents
+.claude
+.codex
+.specify
 
 # Build artifacts
 /backend/EkgAnalyzerApi/bin/
