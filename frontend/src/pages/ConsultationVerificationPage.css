@@ -36,11 +36,11 @@
     place-items: center;
     color: #fff;
     font-size: 28px;
-    background: linear-gradient(135deg, #42c8bd 0%, #1d9e75 100%);
+    background: linear-gradient(135deg, #2DD4BF 0%, #00B39A 100%);
 }
 
 .cons-verify-success-icon {
-    color: #1d9e75 !important;
+    color: #009E88 !important;
 }
 
 @media (max-width: 560px) {

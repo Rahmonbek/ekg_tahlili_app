@@ -6,6 +6,7 @@ import { ArrowLeftOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@an
 import dayjs from 'dayjs';
 import { getClinicHistory } from '../../../host/requests/ConsultationRequest';
 import './Consultation.css';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 
 const { Title, Text } = Typography;
 
@@ -18,6 +19,7 @@ const STATUS_COLORS = {
 
 export default function DoctorClinicHistoryPage() {
     const { t } = useTranslation();
+    useDocumentTitle(t('doctor_clinic_history', { defaultValue: "Klinika tarixi" }));
     const navigate = useNavigate();
     const { id } = useParams();
 

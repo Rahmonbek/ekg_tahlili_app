@@ -1,7 +1,7 @@
 import { Button, Col, Form, Input, message, Row, Tooltip, Upload, Avatar } from 'antd';
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next';
-import { Select } from 'antd';
+import { Modal, Select } from 'antd';
 import { FaFemale, FaMale } from 'react-icons/fa';
 import { IoAlertCircleSharp, IoPerson } from 'react-icons/io5';
 import { useStore } from '../../../../../store/Store';
@@ -15,12 +15,15 @@ import PhoneInput from '../../../../../components/shared/PhoneInput';
 import { imgApi } from '../../../../../host/Host';
 import maleAvatar from '../../../../../images/avatars/male.jpg';
 import femaleAvatar from '../../../../../images/avatars/female.jpg';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
+import PasswordField, { passwordRule } from '../../../../../components/shared/PasswordField';
 
 export default function CreateUpdateDoctor() {
     const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [gender, setGender] = useState(true);
     const [position_ids, setposition_ids] = useState([]);
+    const [roleHint, setRoleHint] = useState('');
     const [position_datas, setposition_datas] = useState([]);
     const [form] = Form.useForm();
     const {roles, positions, setroles, setpositions, setloader}=useStore()
@@ -71,7 +74,7 @@ export default function CreateUpdateDoctor() {
       
             var res=await get_doctor_by_id({id:id})
              var val=res.data
-             var a=val.positions.map((item)=>(item.id))
+             var a=(val.positions ?? []).map((item)=>(item.id))
              form.setFieldsValue({
   "password": val.password || "",
   "role": val.roleId,
@@ -88,7 +91,6 @@ export default function CreateUpdateDoctor() {
              setAvatarPreview(val.avatar ? `${imgApi}${val.avatar}` : null)
              return val;
         }catch(err){
-         console.log(err)
          throw err
         }
     }
@@ -116,9 +118,38 @@ export default function CreateUpdateDoctor() {
         form.setFieldValue('positions', nextPositionIds)
     }
 
-    const changeRole=(val)=>{
-        bindRolePositions(val)
-    }
+    /** Rol -> nima qila oladi. Kalitlar `RoleConstants` bilan bir xil. */
+    const ROLE_HINTS = {
+        2: 'role_hint_admin',
+        3: 'role_hint_director',
+        4: 'role_hint_doctor',
+        5: 'role_hint_nurse',
+    };
+
+    /** Klinikadagi hamma narsani ko'radigan va xodimlarni boshqaradigan rollar */
+    const ELEVATED_ROLES = [2, 3];
+
+    const changeRole = (val) => {
+        bindRolePositions(val);
+        setRoleHint(ROLE_HINTS[val] ? t(ROLE_HINTS[val]) : '');
+
+        // Boshqaruv huquqi bexosdan berilib qolmasligi uchun tasdiq
+        if (ELEVATED_ROLES.includes(val)) {
+            Modal.confirm({
+                title: t('role_elevated_title'),
+                icon: <ExclamationCircleOutlined style={{ color: '#D97706' }} />,
+                content: t('role_elevated_body'),
+                okText: t('confirm'),
+                cancelText: t('cancel', { defaultValue: 'Bekor qilish' }),
+                okButtonProps: { danger: true },
+                onCancel: () => {
+                    form.setFieldValue('role', undefined);
+                    setRoleHint('');
+                    bindRolePositions(undefined);
+                },
+            });
+        }
+    };
 
     const getAvatarFallback = () => avatarPreview || (gender ? maleAvatar : femaleAvatar);
 
@@ -160,7 +191,6 @@ export default function CreateUpdateDoctor() {
    var res=await change_doctor_data(data)
    message.success(t("data_saved"))
    navigate("/doctor")
-             console.log(res)
              }
             
           }catch(err){
@@ -172,7 +202,7 @@ export default function CreateUpdateDoctor() {
   return (
     <div>
          <div className="main_card">
-        <h1>{t('add_new_staff')} <Tooltip placement="bottomRight" title={t("alert_staff_change")}>
+        <h1>{t(id ? 'edit_staff' : 'add_new_staff')} <Tooltip placement="bottomRight" title={t("alert_staff_change")}>
                 <span className='alert_icon'><IoAlertCircleSharp /></span>
             </Tooltip></h1>
         <div className="main_card_content  create_doctor_box">
@@ -223,15 +253,24 @@ export default function CreateUpdateDoctor() {
       label={t("new_password")}
       rules={[
         {
-          required: true,
-          message: "",
+          // Parol faqat YANGI xodim uchun majburiy. Tahrirlashda u
+          // ixtiyoriy — backend ham shunday ishlaydi (bo'sh bo'lsa
+          // eski parol o'zgarmaydi). Ilgari bu yerda shartsiz
+          // `required: true` turardi va shu sababli mavjud xodimning
+          // ismini o'zgartirish ham imkonsiz edi.
+          required: !id,
+          message: t('field_required'),
         },
+        passwordRule(t),
       ]}
       normalize={(value) => {
         return value ? value.replace(/[.,!? ]/g, '') : '';
       }}
     >
-      <Input prefix={<IoMdLock />} className='login_input'  placeholder={t("enter_new_password_staff")} autoComplete="new-password"/>
+      {/* Ilgari bu yerda oddiy `<Input>` turardi — parol yozilayotganda
+          ekranda ochiq ko'rinardi. Endi yopiq, "ko'rsatish" tugmasi bilan,
+          va talablar yozish davomida chiqadi (T-022). */}
+      <PasswordField className='login_input' placeholder={t("enter_new_password_staff")} autoComplete="new-password"/>
     </Form.Item>
                     </Col>
                     <Col className="main_col" lg={8} xs={24} sm={24} md={24}></Col>
@@ -240,7 +279,7 @@ export default function CreateUpdateDoctor() {
                       name="lastname"
                       label={t('lastname')}
                       normalize={(value) => value?.toUpperCase()}
-                      rules={[{ required: true, message: '' }]}
+                      rules={[{ required: true, message: t('field_required') }]}
                     >
                       <Input
                         prefix={<IoPerson />}
@@ -255,7 +294,7 @@ export default function CreateUpdateDoctor() {
                       name="firstname"
                       label={t('firstname')}
                       normalize={(value) => value?.toUpperCase()}
-                      rules={[{ required: true, message: '' }]}
+                      rules={[{ required: true, message: t('field_required') }]}
                     >
                       <Input
                         prefix={<IoPerson />}
@@ -270,7 +309,7 @@ export default function CreateUpdateDoctor() {
                       name="surename"
                       label={t('surename')}
                       normalize={(value) => value?.toUpperCase()}
-                      rules={[{ required: true, message: '' }]}
+                      rules={[{ required: true, message: t('field_required') }]}
                     >
                       <Input
                         prefix={<IoPerson />}
@@ -284,7 +323,7 @@ export default function CreateUpdateDoctor() {
                     <Form.Item
                       name="gender"
                       label={t('gender')}
-                      rules={[{ required: true, message: '' }]}
+                      rules={[{ required: true, message: t('field_required') }]}
                     >
                       <Select
                         style={{ width: '100%' }}
@@ -308,37 +347,48 @@ export default function CreateUpdateDoctor() {
                      <Form.Item
                       name="role"
                       label={t('role')}
-                      rules={[{ required: true, message: '' }]}
+                      rules={[{ required: true, message: t('field_required') }]}
                     >
                       <Select
                         style={{ width: '100%' }}
-                         
                         prefix={<FaUserDoctor />}
                         onChange={changeRole}
                         placeholder={t('enter_role_staff')}
-                         options={roles.map(role => ({
-    value: role.id,
-    label: role.nameUz,
-  }))}
-                        
+                        // Ro'yxat formadan tashqariga chiqib ketmasin
+                        getPopupContainer={(trigger) => trigger.parentElement}
+                        options={roles.map(role => ({
+                          value: role.id,
+                          label: role.nameUz,
+                        }))}
                       />
                     </Form.Item>
+                    {/* Rol xodimning butun kirish huquqini belgilaydi, lekin
+                        formada bu hech qayerda aytilmagandi — admin uni
+                        oddiy ma'lumot deb o'ylashi mumkin edi (T-021) */}
+                    {roleHint ? (
+                      <p className="role-hint">{roleHint}</p>
+                    ) : null}
                      </Col>
                      <Col className="main_col" lg={16} xs={24} sm={24} md={24}>
                      <Form.Item
                       name="positions"
                       label={t('position')}
-                      rules={[{ required: true, message: '' }]}
+                      rules={[{ required: true, message: t('field_required') }]}
                     >
                      <Select
                    value={position_ids}
                         onChange={(val)=>{setposition_ids(val)}}
                         style={{ width: '100%' }}
                         mode="multiple"
-                          showSearch
+                        showSearch
                         optionFilterProp="label"
                         prefix={<FaUserDoctor />}
                         placeholder={t('enter_position_staff')}
+                        // Ko'p tanlovli ro'yxat pastga ochilib "Saqlash"
+                        // tugmasini to'liq to'sib qo'yardi: foydalanuvchi
+                        // avval bo'sh joyga bosib uni yopishi kerak edi
+                        getPopupContainer={(trigger) => trigger.parentElement}
+                        maxTagCount="responsive"
                        options={position_datas.map(role => ({
     value: role.id,
     label: role.nameUz,

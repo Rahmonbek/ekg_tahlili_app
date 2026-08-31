@@ -5,7 +5,7 @@ import { MdOutlineMedicalInformation } from "react-icons/md";
 import { GiTestTubes } from "react-icons/gi";
 import { RiPulseLine } from 'react-icons/ri';
 import { GiMicroscope } from 'react-icons/gi';
-import { VideoCameraOutlined, TeamOutlined, MedicineBoxOutlined } from '@ant-design/icons';
+import { VideoCameraOutlined, TeamOutlined, MedicineBoxOutlined, SafetyCertificateOutlined, DashboardOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 export const routers = [
     {
         path: '/doctor',
@@ -71,14 +71,17 @@ export const routers = [
     //     unread_key: null,
     //     requires_active: true
     // },
-    //  {
-    //     path:'/patcients',
-    //     icon:<FaPeopleGroup />,
-    //     title:"patcients",
-    //     tools:"patcients",
-    //     role_id:[],
-    //     requires_active: true
-    // },
+    {
+        // Bemorlar ro'yxati: shifokor/hamshira uchun ham kerak — tahlil
+        // yaratishdan oldin bemor allaqachon bazada bor-yo'qligini ko'rish uchun.
+        path: '/patcients',
+        icon: <FaPeopleGroup />,
+        title: "patcients",
+        tools: "patcients",
+        role_id: [],
+        unread_key: null,
+        requires_active: true
+    },
     // {
     //     path:'/billings',
     //     icon:<IoIosCard />,
@@ -147,4 +150,37 @@ export const routers = [
         requires_active: false   // Admin doim kira oladi
     },
 
+    // ── Yangi bo'limlar (T-062) ───────────────────────────────────────────
+    {
+        // Audit jurnali — O'z DSt 2814:2014 C2 talabi:
+        // "Admin uchun loglarni ko'rish interfeysi"
+        // Faqat SuperAdmin: bu platforma darajasidagi vosita, klinika
+        // administratori uchun kundalik ishda kerak emas
+        path: '/audit-logs',
+        icon: <SafetyCertificateOutlined />,
+        title: "audit_log",
+        tools: "audit-logs",
+        role_id: [1],
+        unread_key: null,
+        requires_active: false
+    },
+    {
+        // Faqat SuperAdmin: xizmatlar holati platforma darajasidagi ma'lumot
+        path: '/system-status',
+        icon: <DashboardOutlined />,
+        title: "system_status",
+        tools: "system-status",
+        role_id: [1],
+        unread_key: null,
+        requires_active: false
+    },
+    {
+        path: '/help',
+        icon: <QuestionCircleOutlined />,
+        title: "help",
+        tools: "help",
+        role_id: [],
+        unread_key: null,
+        requires_active: false
+    }
 ]

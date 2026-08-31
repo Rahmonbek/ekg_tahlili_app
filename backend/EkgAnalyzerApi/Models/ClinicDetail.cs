@@ -13,7 +13,7 @@ public class ClinicDetail
         [Column("clinic_id")]
         public int ClinicId{ get; set; }
 
-        [Column("bank_accaunt")]
+        [Column("bank_account")]
         public string? BankAccaunt { get; set; }
 
 

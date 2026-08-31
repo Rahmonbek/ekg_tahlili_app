@@ -14,11 +14,13 @@ import {
     updateConsultantPrice
 } from '../../../host/requests/ConsultationRequest';
 import './Consultation.css';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 
 const { Title, Text } = Typography;
 
 export default function ConsultantsPage() {
     const { t } = useTranslation();
+    useDocumentTitle(t('consultants', { defaultValue: "Konsultantlar" }));
     const navigate = useNavigate();
 
     const [consultants, setConsultants] = useState([]);
@@ -111,7 +113,7 @@ export default function ConsultantsPage() {
         setDeletingInvitationId(record.id);
         try {
             await deleteInvitation(record.id);
-            message.success(t('data_deleted') || "O'chirildi");
+            message.success(t('data_deleted', { defaultValue: "O'chirildi" }));
             loadSentInvitations();
         } catch {
             message.error(t('error'));
@@ -149,7 +151,8 @@ export default function ConsultantsPage() {
             key: 'currentPrice',
             render: (v, record) => (
                 <Space size={6}>
-                    <Text strong>{v != null ? `${Number(v).toLocaleString()} UZS` : '-'}</Text>
+                    {/* nowrap — tor ustunda narx ikki qatorga bo'linib ketardi */}
+                    <Text strong style={{ whiteSpace: 'nowrap' }}>{v != null ? `${Number(v).toLocaleString()} UZS` : '-'}</Text>
                     <Button
                         size="small"
                         className="table_view_btn"
@@ -239,8 +242,8 @@ export default function ConsultantsPage() {
             key: 'actions',
             render: (_, record) => record.status !== 'accepted' ? (
                 <Popconfirm
-                    title={t('confirm_delete') || "O'chirishni tasdiqlaysizmi?"}
-                    okText={t('yes') || 'Ha'}
+                    title={t('confirm_delete', { defaultValue: "O'chirishni tasdiqlaysizmi?" })}
+                    okText={t('yes', { defaultValue: 'Ha' })}
                     cancelText={t('cancel')}
                     onConfirm={() => handleDeleteInvitation(record)}
                 >
@@ -250,7 +253,7 @@ export default function ConsultantsPage() {
                         icon={<DeleteOutlined />}
                         loading={deletingInvitationId === record.id}
                     >
-                        {t('delete') || "O'chirish"}
+                        {t('delete', { defaultValue: "O'chirish" })}
                     </Button>
                 </Popconfirm>
             ) : null,

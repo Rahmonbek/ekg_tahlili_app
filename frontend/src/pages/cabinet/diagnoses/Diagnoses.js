@@ -17,10 +17,12 @@ import { get_doctor_by_clinic_id } from '../../../host/requests/DoctorRequest';
 import { useStore } from '../../../store/Store';
 import { get_med_diagnoses_by_patcient_id } from '../../../host/requests/DiagnoseRequest';
 import { LiaDownloadSolid } from 'react-icons/lia';
-import { apiEcg } from '../../../host/Host';
+import { buildFileUrl } from '../../../host/Host';
 import { AiFillHome } from 'react-icons/ai';
 import i18n from '../../../locale/i18next';
 import { get_districts_data, get_region_data } from '../../../host/requests/RegionRequest';
+import DateField from '../../../components/shared/DateField';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 export default function Diagnoses() {
   const [loading, setLoading] = useState(false);
   const [old_loading, setold_loading] = useState(false);
@@ -32,6 +34,10 @@ export default function Diagnoses() {
     const [show_btn, setshow_btn] = useState(true);
     const [selected_doctor, setselected_doctor] = useState(null);
   const { t } = useTranslation();
+    // `new_diagnosis` forma yorlig'i sifatida ishlatiladi va oxirida
+    // ikki nuqta bor ("Yangi tashxis:") — yorliq sarlavhasi uchun
+    // alohida kalit.
+    useDocumentTitle(t('diagnose_create_title', { defaultValue: 'Yangi tashxis' }));
   const [gender, setGender] = useState(true);
   const [old_anylyses, setold_anylyses] = useState([]);
   const [patcient, setPatcient] = useState(null);
@@ -91,7 +97,6 @@ export default function Diagnoses() {
       setBirthdate(val.birthdate);
 
       const res = await get_patcient_by_passport(val);
-      console.log(res);
 
       setPatcient(res.data);
       let new_data={
@@ -175,7 +180,6 @@ if (res.data?.district?.region) {
 
 
  const handleSubmit = async () => {
-    console.log(files.length)
     if (files.length === 0) return alert(t("select_file_error"));
     
       warningAlert(t("please_wait_save"))
@@ -200,7 +204,6 @@ if (res.data?.district?.region) {
       retryAnalyse()
     
     } catch (err) {
-        console.log(err)
     } finally {
       setLoading3(false);
     }
@@ -269,7 +272,7 @@ const columns = [
     key: 'file',
     render: (link) =>
       link ? (
-        <a className='see_diagnoses' href={`${apiEcg}${link}`} target="_blank" rel="noreferrer">
+        <a className='see_diagnoses' href={buildFileUrl(link)} target="_blank" rel="noreferrer">
           <FaDownload />
         </a>
       ) : "",
@@ -286,10 +289,8 @@ const columns = [
 const getRegions = async () => {
   try {
     const res = await get_region_data()
-    console.log(res.data)
     setRegion(res.data)
   } catch (err) {
-    console.log(err)
   }
 }
 
@@ -298,12 +299,10 @@ const getDistricts = async (id) => {
   try {
     const res = await get_districts_data({ region_id: id }); 
     
-    console.log("Tumanlar kelyapti:", res.data); 
     if (res.data) {
       setDistricts(res.data); 
     }
   } catch (err) {
-    console.log("Tumanlarni yuklashda xatolik:", err);
   }
 };
 
@@ -334,7 +333,7 @@ const getDistricts = async (id) => {
                 name="passport"
                 label={t('passport_seria')}
                 rules={[
-                  { required: true, message: '' },
+                  { required: true, message: t('field_required') },
                   
                 ]}
               >
@@ -368,9 +367,13 @@ const getDistricts = async (id) => {
               <Form.Item
                 name="birthdate"
                 label={t('birthdate')}
-                rules={[{ required: true, message: '' }]}
+                rules={[{ required: true, message: t('field_required') }]}
               >
-                <input className="input_date" type="date" />
+                {/* Tug'ma `<input type="date">` brauzer tiliga bo'ysunardi:
+                    interfeys o'zbekcha bo'lsa ham ruscha `дд.мм.гггг`
+                    chiqardi. Loyihaning qolgan olti sahifasi allaqachon
+                    `DateField` ga o'tkazilgan edi — bu fayl chetda qolgan. */}
+                <DateField />
               </Form.Item>
             </Col>
 
@@ -404,7 +407,7 @@ const getDistricts = async (id) => {
                     name="lastname"
                     label={t('lastname')}
                     normalize={(value) => value?.toUpperCase()}
-                    rules={[{ required: true, message: '' }]}
+                    rules={[{ required: true, message: t('field_required') }]}
                   >
                     <Input
                       prefix={<IoPerson />}
@@ -419,7 +422,7 @@ const getDistricts = async (id) => {
                     name="firstname"
                     label={t('firstname')}
                     normalize={(value) => value?.toUpperCase()}
-                    rules={[{ required: true, message: '' }]}
+                    rules={[{ required: true, message: t('field_required') }]}
                   >
                     <Input
                       prefix={<IoPerson />}
@@ -434,7 +437,7 @@ const getDistricts = async (id) => {
                     name="surename"
                     label={t('surename')}
                     normalize={(value) => value?.toUpperCase()}
-                    rules={[{ required: true, message: '' }]}
+                    rules={[{ required: true, message: t('field_required') }]}
                   >
                     <Input
                       prefix={<IoPerson />}
@@ -448,7 +451,7 @@ const getDistricts = async (id) => {
                   <Form.Item
                     name="gender"
                     label={t('gender')}
-                    rules={[{ required: true, message: '' }]}
+                    rules={[{ required: true, message: t('field_required') }]}
                   >
                     <Select
                       style={{ width: '100%' }}
@@ -469,7 +472,7 @@ const getDistricts = async (id) => {
                     label={t('phone_number')}
                     name="phone"
                     wrapperCol={{ span: 24 }}
-                    rules={[{ required: true, message: '' }, { len: 19, message: '' }]}
+                    rules={[{ required: true, message: t('field_required') }, { len: 19, message: t('phone_incomplete', { defaultValue: "Telefon raqamni to'liq kiriting" }) }]}
                   >
                     <Cleave
                      value={phoneValue}
@@ -491,7 +494,7 @@ const getDistricts = async (id) => {
                    <Form.Item
   name="regioname"
   label={t('region')}
-  rules={[{ required: true, message: '' }]}
+  rules={[{ required: true, message: t('field_required') }]}
 >
   <Select
     style={{ width: '100%' }}
@@ -521,7 +524,7 @@ onChange={(value) => {
   <Form.Item  
     name="districtname"
     label={t('district')}
-    rules={[{ required: true, message: '' }]}
+    rules={[{ required: true, message: t('field_required') }]}
   >
     <Select
       style={{ width: '100%' }}
@@ -541,7 +544,7 @@ onChange={(value) => {
   name="address"
   label={t('addres')}
   normalize={(value) => value?.toUpperCase()}
-  rules={[{ required: true, message: '' }]}
+  rules={[{ required: true, message: t('field_required') }]}
 >
   <Input
     prefix={<AiFillHome />}
@@ -586,7 +589,7 @@ onChange={(value) => {
                    <Form.Item
 name="select_ecg_file"
 label={t('select_diagnosis_file')}
-rules={[{ required: true, message: '' }]}
+rules={[{ required: true, message: t('field_required') }]}
 >
 <div>
   <input
@@ -613,7 +616,7 @@ rules={[{ required: true, message: '' }]}
                                       rules={[
         {
           required: true,
-          message: "",
+          message: t('field_required'),
         },
       ]}
                                     >
@@ -667,6 +670,7 @@ rules={[{ required: true, message: '' }]}
           <div className=' diagnoses_table'>
 {old_anylyses.length > 0 && (
 <Table
+      scroll={{ x: "max-content" }}
   dataSource={old_anylyses}
   rowKey="id"
   columns={columns}

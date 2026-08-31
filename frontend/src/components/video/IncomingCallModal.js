@@ -148,13 +148,13 @@ export default function IncomingCallModal() {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            backgroundColor: '#52c41a',
-                            borderColor: '#52c41a',
+                            backgroundColor: '#16A34A',
+                            borderColor: '#16A34A',
                             color: '#fff',
                             boxShadow: '0 4px 12px rgba(82,196,26,0.35)',
                         }}
                     />
-                    <Text style={{ display: 'block', fontSize: 12, color: '#52c41a', marginTop: 8 }}>
+                    <Text style={{ display: 'block', fontSize: 12, color: '#16A34A', marginTop: 8 }}>
                         {t('accept_call')}
                     </Text>
                 </div>

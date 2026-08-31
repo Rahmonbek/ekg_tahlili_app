@@ -63,7 +63,7 @@ export default function PatientInfoForm({
                             name="lastname"
                             label={t('lastname')}
                             normalize={(value) => value?.toUpperCase()}
-                            rules={[{ required: true, message: '' }]}
+                            rules={[{ required: true, message: t('field_required') }]}
                         >
                             <Input
                                 prefix={<IoPerson />}
@@ -78,7 +78,7 @@ export default function PatientInfoForm({
                             name="firstname"
                             label={t('firstname')}
                             normalize={(value) => value?.toUpperCase()}
-                            rules={[{ required: true, message: '' }]}
+                            rules={[{ required: true, message: t('field_required') }]}
                         >
                             <Input
                                 prefix={<IoPerson />}
@@ -93,7 +93,7 @@ export default function PatientInfoForm({
                             name="surename"
                             label={t('surename')}
                             normalize={(value) => value?.toUpperCase()}
-                            rules={[{ required: true, message: '' }]}
+                            rules={[{ required: true, message: t('field_required') }]}
                         >
                             <Input
                                 prefix={<IoPerson />}
@@ -107,7 +107,7 @@ export default function PatientInfoForm({
                         <Form.Item
                             name="gender"
                             label={t('gender')}
-                            rules={[{ required: true, message: '' }]}
+                            rules={[{ required: true, message: t('field_required') }]}
                         >
                             <Select
                                 style={{ width: '100%' }}
@@ -128,7 +128,7 @@ export default function PatientInfoForm({
                             label={t('phone_number')}
                             name="phone"
                             wrapperCol={{ span: 24 }}
-                            rules={[{ required: true, message: '' }, { len: 19, message: '' }]}
+                            rules={[{ required: true, message: t('field_required') }, { len: 19, message: t('phone_incomplete', { defaultValue: "Telefon raqamni to'liq kiriting" }) }]}
                         >
                             <Cleave
                                 value={phoneValue}
@@ -150,7 +150,7 @@ export default function PatientInfoForm({
                         <Form.Item
                             name="regioname"
                             label={t('region')}
-                            rules={[{ required: true, message: '' }]}
+                            rules={[{ required: true, message: t('field_required') }]}
                         >
                             <Select
                                 style={{ width: '100%' }}
@@ -174,7 +174,7 @@ export default function PatientInfoForm({
                         <Form.Item
                             name="districtname"
                             label={t('district')}
-                            rules={[{ required: true, message: '' }]}
+                            rules={[{ required: true, message: t('field_required') }]}
                         >
                             <Select
                                 style={{ width: '100%' }}
@@ -195,7 +195,7 @@ export default function PatientInfoForm({
                             name="address"
                             label={t('addres')}
                             normalize={(value) => value?.toUpperCase()}
-                            rules={[{ required: true, message: '' }]}
+                            rules={[{ required: true, message: t('field_required') }]}
                         >
                             <Input
                                 prefix={<AiFillHome />}

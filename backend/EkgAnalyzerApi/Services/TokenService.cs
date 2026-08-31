@@ -1,4 +1,5 @@
-﻿using EkgAnalyzerApi.Models;
+﻿using EkgAnalyzerApi.Constants;
+using EkgAnalyzerApi.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -18,14 +19,24 @@ public class TokenService
         var claims = new List<Claim>
     {
         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        new Claim("roleId", user.RoleId.ToString()), // 🔥 MUHIM
+        // Raqamli rol — siyosatlar (policy) va kod ichidagi tekshiruvlar shunga tayanadi
+        new Claim("roleId", user.RoleId.ToString()),
         new Claim(ClaimTypes.Name, displayName),
-        new Claim(ClaimTypes.Role, user.RoleId.ToString()) // (ixtiyoriy)
+        // Matnli rol nomi — [Authorize(Roles = "SuperAdmin")] atributlari uchun.
+        // Ilgari bu yerga raqam yozilardi va shu sababli Roles= atributlari
+        // hech qachon ishlamasdi (hatto to'g'ri rol uchun ham 403 qaytarardi).
+        new Claim(ClaimTypes.Role, RoleConstants.Name(user.RoleId))
     };
 
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])
-        );
+        // Ishga tushish tekshiruvi bor, lekin konfiguratsiya ish
+        // vaqtida qayta yuklanishi mumkin. Kalitsiz `GetBytes` sababi
+        // ko'rinmaydigan `ArgumentNullException` berardi (T-009).
+        var jwtKey = _configuration["Jwt:Key"];
+        if (string.IsNullOrWhiteSpace(jwtKey))
+            throw new InvalidOperationException(
+                "Jwt:Key sozlanmagan — token imzolab bo'lmaydi");
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
 
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

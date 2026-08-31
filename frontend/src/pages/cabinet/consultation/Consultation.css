@@ -42,8 +42,8 @@
     justify-content: center;
     gap: 6px;
     min-width: 0;
-    height: 42px;
-    border-radius: 12px !important;
+    height: 40px;
+    border-radius: 10px !important;
     font-size: var(--small_size);
     font-weight: 600;
     box-shadow: none;
@@ -74,17 +74,20 @@
     color: var(--back_hover_color) !important;
 }
 
+/* Xavfli amal (o'chirish) tugmasi QIZIL bo'lishi shart — ilgari ko'k
+   gradient bilan bo'yalgan edi va foydalanuvchi uni oddiy tugma deb o'ylardi */
 .consultation-page .ant-btn-dangerous,
 .consultation-modal .ant-btn-dangerous {
-    background: linear-gradient(var(--cancel_color), var(--cancel_hover_color)) !important;
-    border: none !important;
-    color: #fff !important;
+    background: #fff !important;
+    border: 1px solid #DC2626 !important;
+    color: #DC2626 !important;
 }
 
 .consultation-page .ant-btn-dangerous:hover,
 .consultation-modal .ant-btn-dangerous:hover {
-    background: linear-gradient(var(--cancel_hover_color), var(--cancel_hover_color)) !important;
-    color: #fff !important;
+    background: #FEF0EE !important;
+    border-color: #B91C1C !important;
+    color: #B91C1C !important;
 }
 
 .consultation-page .ant-btn-text {
@@ -293,14 +296,15 @@
     position: relative !important;
     inset: auto !important;
     z-index: auto !important;
-    height: 540px !important;
-    min-height: 540px !important;
-    max-height: 70vh !important;
+    /* min-height max-height'dan ustun turadi — shuning uchun min() bilan
+       kichik ekranlarda ham 70vh chegarasi haqiqatan ishlaydi */
+    height: min(540px, 70vh) !important;
+    min-height: min(540px, 70vh) !important;
     border-radius: 0 !important;
 }
 
 .cons-video-section .nmed-tg-root {
-    min-height: 540px;
+    min-height: min(540px, 70vh);
 }
 
 /* ── Tahlil kartasi ── */

@@ -1,4 +1,4 @@
-using EkgAnalyzerApi.Data;
+﻿using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
 using iTextSharp.text;
@@ -8,6 +8,7 @@ using QRCoder;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using EkgAnalyzerApi.Helpers;
 
 namespace EkgAnalyzerApi.Services;
 
@@ -21,8 +22,10 @@ public class PdfReportService
 {
     private readonly MedDataDB          _context;
     private readonly EncryptionService  _encryption;
+    private readonly DocumentVerificationService _verification;
     private readonly IWebHostEnvironment _env;
     private readonly IConfiguration _config;
+    private readonly IFileStorage _storage;
     private readonly ILogger<PdfReportService> _logger;
 
     // ── Sahifa geometriyasi (mm → pt: 1 mm = 2.8346 pt) ────────────────
@@ -51,14 +54,18 @@ public class PdfReportService
     public PdfReportService(
         MedDataDB context,
         EncryptionService encryption,
+        DocumentVerificationService verification,
         IWebHostEnvironment env,
         IConfiguration config,
+        IFileStorage storage,
         ILogger<PdfReportService> logger)
     {
         _context    = context;
         _encryption = encryption;
+        _verification = verification;
         _env        = env;
         _config     = config;
+        _storage    = storage;
         _logger     = logger;
     }
 
@@ -83,7 +90,7 @@ public class PdfReportService
         var aiData = ParseAi(row.AIAnswerData);
 
         return Build(tr, docNum, row.CreatedAt, row.Clinic, row.Patcient,
-            tr["ecg_title"], row.AnalysisDate ?? row.CreatedAt,
+            tr["ecg_title"], row.AnalysisDate,
             GetAnalysisTypeName(tr, "ecg"),
             row.CreatedDoctor,
             DoctorNames(row.Doctors?.Select(d => d.Doctor).ToList()),
@@ -116,7 +123,7 @@ public class PdfReportService
         var aiData = ParseAi(row.AIAnswerData);
 
         return Build(tr, docNum, row.CreatedAt, row.Clinic, row.Patcient,
-            tr["smad_title"], row.AnalysisDate ?? row.CreatedAt,
+            tr["smad_title"], row.AnalysisDate,
             GetAnalysisTypeName(tr, "smad"),
             row.CreatedDoctor,
             DoctorNames(row.Doctors?.Select(d => d.Doctor).ToList()),
@@ -145,7 +152,7 @@ public class PdfReportService
         var aiData = ParseAi(row.AIAnswerData);
 
         return Build(tr, docNum, row.CreatedAt, row.Clinic, row.Patcient,
-            tr["holter_title"], row.AnalysisDate ?? row.CreatedAt,
+            tr["holter_title"], row.AnalysisDate,
             GetAnalysisTypeName(tr, "holter"),
             row.CreatedDoctor,
             DoctorNames(row.Doctors?.Select(d => d.Doctor).ToList()),
@@ -174,7 +181,7 @@ public class PdfReportService
         var aiData = ParseAi(row.AIAnswerData);
 
         return Build(tr, docNum, row.CreatedAt, row.Clinic, row.Patcient,
-            tr["lab_title"], row.AnalysisDate ?? row.CreatedAt,
+            tr["lab_title"], row.AnalysisDate,
             GetAnalysisTypeName(tr, "lab"),
             row.CreatedDoctor,
             DoctorNames(row.Doctors?.Select(d => d.Doctor).ToList()),
@@ -192,8 +199,8 @@ public class PdfReportService
         var tr  = PdfTranslations.Get(lang);
         var row = await _context.ParasitologyAnalyses
             .Include(e => e.Patcient)
-            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail).ThenInclude(d => d!.District).ThenInclude(d => d!.Region)
-            .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
+            .Include(e => e.Clinic!).ThenInclude(c => c.ClinicDetail!).ThenInclude(d => d!.District).ThenInclude(d => d!.Region)
+            .Include(e => e.Clinic!).ThenInclude(c => c.ClinicPhoneNumber!)
             .Include(e => e.CreatedDoctor)
             .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
             .Include(e => e.Results)
@@ -203,7 +210,7 @@ public class PdfReportService
         var docNum = row.DocumentNumber ?? DocNum("PARA", row.CreatedAt, id);
 
         return Build(tr, docNum, row.CreatedAt, row.Clinic, row.Patcient,
-            tr["parasitology_title"], row.AnalysisDate ?? row.CreatedAt,
+            tr["parasitology_title"], row.AnalysisDate,
             GetAnalysisTypeName(tr, "para"),
             row.CreatedDoctor,
             DoctorNames(row.Doctors?.Select(d => d.Doctor).ToList()),
@@ -259,14 +266,14 @@ public class PdfReportService
 
         var paraList = await _context.ParasitologyAnalyses
             .Where(e => e.PatcientId == patientId && e.AnalysisStatus == "analyzed")
-            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
-            .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
+            .Include(e => e.Clinic!).ThenInclude(c => c.ClinicDetail!)
+            .Include(e => e.Clinic!).ThenInclude(c => c.ClinicPhoneNumber!)
             .Include(e => e.CreatedDoctor)
             .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
             .Include(e => e.Results)
             .OrderByDescending(e => e.CreatedAt).ToListAsync();
 
-        var docNum  = DocNum("COMB", DateTime.UtcNow, patientId);
+        var docNum  = DocNum("COMB", AppTime.LocalNow(_config), patientId);
         var clinic  = ecgList.FirstOrDefault()?.Clinic
             ?? smadList.FirstOrDefault()?.Clinic
             ?? holterList.FirstOrDefault()?.Clinic
@@ -280,9 +287,9 @@ public class PdfReportService
         writer.PageEvent = new FooterEvent(fonts, tr, docNum);
         doc.Open();
 
-        ComposeHeader(doc, tr, fonts, clinic, docNum, DateTime.UtcNow,
+        ComposeHeader(doc, tr, fonts, clinic, docNum, AppTime.LocalNow(_config),
             tr["combined_title"], tr["combined_title"]);
-        ComposePatientBlock(doc, tr, fonts, patient, DateTime.UtcNow);
+        ComposePatientBlock(doc, tr, fonts, patient, AppTime.LocalNow(_config));
 
         void Divider(string title)
         {
@@ -295,8 +302,8 @@ public class PdfReportService
         foreach (var ecg in ecgList)
         {
             var ai = ParseAi(ecg.AIAnswerData);
-            Divider($"{tr["ecg_title"]}  —  {(ecg.AnalysisDate ?? ecg.CreatedAt):dd.MM.yyyy HH:mm}");
-             ComposeAnalysisBlock(doc, tr, fonts, (ecg.AnalysisDate ?? ecg.CreatedAt),
+            Divider($"{tr["ecg_title"]}  —  {AppTime.ToLocal(ecg.AnalysisDate ?? ecg.CreatedAt, _config):dd.MM.yyyy HH:mm}");
+             ComposeAnalysisBlock(doc, tr, fonts, AppTime.ToLocal(ecg.AnalysisDate ?? ecg.CreatedAt, _config),
                  GetAnalysisTypeName(tr, "ecg"), ecg.CreatedDoctor,
                  DoctorNames(ecg.Doctors?.Select(d => d.Doctor).ToList()),
                  ComplaintNames(ecg.Complaints));
@@ -308,8 +315,8 @@ public class PdfReportService
         foreach (var smad in smadList)
         {
             var ai = ParseAi(smad.AIAnswerData);
-            Divider($"{tr["smad_title"]}  —  {(smad.AnalysisDate ?? smad.CreatedAt):dd.MM.yyyy HH:mm}");
-            ComposeAnalysisBlock(doc, tr, fonts, (smad.AnalysisDate ?? smad.CreatedAt),
+            Divider($"{tr["smad_title"]}  —  {AppTime.ToLocal(smad.AnalysisDate ?? smad.CreatedAt, _config):dd.MM.yyyy HH:mm}");
+            ComposeAnalysisBlock(doc, tr, fonts, AppTime.ToLocal(smad.AnalysisDate ?? smad.CreatedAt, _config),
                 GetAnalysisTypeName(tr, "smad"), smad.CreatedDoctor,
                 DoctorNames(smad.Doctors?.Select(d => d.Doctor).ToList()), null);
             AddSmadTable(doc, tr, ai);
@@ -319,8 +326,8 @@ public class PdfReportService
         foreach (var h in holterList)
         {
             var ai = ParseAi(h.AIAnswerData);
-            Divider($"{tr["holter_title"]}  —  {(h.AnalysisDate ?? h.CreatedAt):dd.MM.yyyy HH:mm}");
-            ComposeAnalysisBlock(doc, tr, fonts, (h.AnalysisDate ?? h.CreatedAt),
+            Divider($"{tr["holter_title"]}  —  {AppTime.ToLocal(h.AnalysisDate ?? h.CreatedAt, _config):dd.MM.yyyy HH:mm}");
+            ComposeAnalysisBlock(doc, tr, fonts, AppTime.ToLocal(h.AnalysisDate ?? h.CreatedAt, _config),
                 GetAnalysisTypeName(tr, "holter"), h.CreatedDoctor,
                 DoctorNames(h.Doctors?.Select(d => d.Doctor).ToList()), null);
             AddHolterResults(doc, tr, ai);
@@ -330,8 +337,8 @@ public class PdfReportService
         foreach (var lab in labList)
         {
             var ai = ParseAi(lab.AIAnswerData);
-            Divider($"{tr["lab_title"]}  —  {(lab.AnalysisDate ?? lab.CreatedAt):dd.MM.yyyy HH:mm}");
-            ComposeAnalysisBlock(doc, tr, fonts, (lab.AnalysisDate ?? lab.CreatedAt),
+            Divider($"{tr["lab_title"]}  —  {AppTime.ToLocal(lab.AnalysisDate ?? lab.CreatedAt, _config):dd.MM.yyyy HH:mm}");
+            ComposeAnalysisBlock(doc, tr, fonts, AppTime.ToLocal(lab.AnalysisDate ?? lab.CreatedAt, _config),
                 GetAnalysisTypeName(tr, "lab"), lab.CreatedDoctor,
                 DoctorNames(lab.Doctors?.Select(d => d.Doctor).ToList()), null);
             AddLabTable(doc, tr, lab);
@@ -340,15 +347,15 @@ public class PdfReportService
 
         foreach (var para in paraList)
         {
-            Divider($"{tr["parasitology_title"]}  —  {(para.AnalysisDate ?? para.CreatedAt):dd.MM.yyyy HH:mm}");
-            ComposeAnalysisBlock(doc, tr, fonts, (para.AnalysisDate ?? para.CreatedAt),
+            Divider($"{tr["parasitology_title"]}  —  {AppTime.ToLocal(para.AnalysisDate ?? para.CreatedAt, _config):dd.MM.yyyy HH:mm}");
+            ComposeAnalysisBlock(doc, tr, fonts, AppTime.ToLocal(para.AnalysisDate ?? para.CreatedAt, _config),
                 GetAnalysisTypeName(tr, "para"), para.CreatedDoctor,
                 DoctorNames(para.Doctors?.Select(d => d.Doctor).ToList()), null);
             AddParaResults(doc, tr, para, lang);
             AddParaAiBlock(doc, tr, para, lang);
         }
 
-        ComposeNmedVerification(doc, tr, fonts, docNum, DateTime.UtcNow, null);
+        ComposeNmedVerification(doc, tr, fonts, docNum, AppTime.LocalNow(_config), null);
         ComposeDisclaimer(doc, tr, fonts);
         doc.Close();
         return ms.ToArray();
@@ -384,7 +391,7 @@ public class PdfReportService
         writer.PageEvent = new FooterEvent(fonts, tr, docNum);
         doc.Open();
 
-        ComposeHeader(doc, tr, fonts, row.Clinic, docNum, row.Conclusion.CreatedAt,
+        ComposeHeader(doc, tr, fonts, row.Clinic, docNum, AppTime.ToLocal(row.Conclusion.CreatedAt, _config),
             "Online konsultatsiya xulosasi", "NMED konsultatsiya hujjati");
 
         if (row.Patient != null)
@@ -437,10 +444,18 @@ public class PdfReportService
         writer.PageEvent = new FooterEvent(fonts, tr, docNum);
         doc.Open();
 
-        ComposeHeader(doc, tr, fonts, clinic, docNum, createdAt,
+        // Bazadagi vaqtlar UTC da saqlanadi. Hisobotda ular klinika
+        // mintaqasida ko'rsatilishi kerak — aks holda ekranda `10:41`,
+        // hisobotda `05:41` bo'lib chiqadi va ikki hujjat bir-biriga zid
+        // ma'lumot beradi (T-089).
+        var localCreatedAt = AppTime.ToLocal(createdAt, _config);
+        var localAnalysisDate = AppTime.ToLocal(analysisDate, _config);
+
+        ComposeHeader(doc, tr, fonts, clinic, docNum, localCreatedAt,
             analysisTitle, tr["doc_title"]);
-        ComposePatientBlock(doc, tr, fonts, patient, analysisDate);
-        ComposeAnalysisBlock(doc, tr, fonts, analysisDate, analysisTypeName,
+        // Yosh hisoblash uchun mos sana: tahlil sanasi bo'lmasa hujjat sanasi
+        ComposePatientBlock(doc, tr, fonts, patient, localAnalysisDate ?? localCreatedAt);
+        ComposeAnalysisBlock(doc, tr, fonts, localAnalysisDate, analysisTypeName,
             createdDoctor, treatingDoctors, complaints);
 
         beforeResultsContent?.Invoke(doc);
@@ -455,7 +470,7 @@ public class PdfReportService
         var verifyUrl = analysisType != null && analysisId.HasValue
             ? BuildAnalysisVerifyUrl(analysisType, analysisId.Value)
             : null;
-        ComposeNmedVerification(doc, tr, fonts, docNum, createdAt ?? DateTime.UtcNow, verifyUrl);
+        ComposeNmedVerification(doc, tr, fonts, docNum, localCreatedAt ?? AppTime.LocalNow(_config), verifyUrl);
         ComposeDisclaimer(doc, tr, fonts);
 
         doc.Close();
@@ -584,8 +599,11 @@ public class PdfReportService
         rightPhrase.Add(new Chunk(
             $"\n{tr["doc_number_prefix"]}: {docNum}",
             fonts["p9bold"]));
+        // Sarlavhadagi sana — yozuv tizimga kiritilgan vaqt (`created_at`).
+        // Ilgari u ham "Tahlil sanasi" deb nomlanardi va "TAHLIL MA'LUMOTLARI"
+        // bo'limidagi haqiqiy tahlil sanasi bilan chalkashardi.
         rightPhrase.Add(new Chunk(
-            $"\n{tr["analysis_date"]}: {date:dd.MM.yyyy}  {date:HH:mm}",
+            $"\n{tr["document_date"]}: {date:dd.MM.yyyy}  {date:HH:mm}",
             fonts["p9gray"]));
 
         rightCell.AddElement(new Paragraph(rightPhrase) { Alignment = Element.ALIGN_RIGHT, Leading = 13f });
@@ -628,10 +646,12 @@ public class PdfReportService
 
         var tbl = InfoTable();
 
-        var fio = $"{patient.LastName?.ToUpper()} {patient.FirstName} {patient.SureName}".Trim();
+        // Sharif chiqarilmaydi — platformadagi barcha ko'rsatish joylari
+        // bilan bir xil qoida
+        var fio = $"{patient.LastName?.ToUpper()} {patient.FirstName}".Trim();
         InfoRow(tbl, tr["fio"] + ":", fio, fonts, 0);
 
-        var age = Age(patient.BirthDate, refDate ?? DateTime.Now);
+        var age = Age(patient.BirthDate, refDate ?? AppTime.LocalNow(_config));
         InfoRow(tbl, tr["birth_date"] + ":",
             $"{patient.BirthDate:dd.MM.yyyy}  ({age} {tr["age_suffix"]})", fonts, 1);
 
@@ -669,8 +689,14 @@ public class PdfReportService
         var tbl = InfoTable();
         int row = 0;
 
-        InfoRow(tbl, tr["analysis_date"] + ":",
-            $"{date:dd.MM.yyyy}  {date:HH:mm}", fonts, row++);
+        // Tahlil aslida o'tkazilgan sana. Agar kiritilmagan bo'lsa ATAYLAB
+        // `created_at` o'rniga qo'yilmaydi — noto'g'ri sana yozilgan hujjat
+        // sud-tibbiy yoki sug'urta masalasida yaroqsiz bo'lib qoladi.
+        InfoRow(tbl, tr["analysis_performed_date"] + ":",
+            date.HasValue
+                ? $"{date:dd.MM.yyyy}  {date:HH:mm}"
+                : tr["date_not_specified"],
+            fonts, row++);
 
         InfoRow(tbl, tr["analysis_type"] + ":", typeName, fonts, row++);
 
@@ -836,11 +862,21 @@ public class PdfReportService
 
     private static readonly (string dmKey, string label, string normal)[] SmadRows =
     {
-        ("day_systolic",   "Kunduzi sistolik",  "< 135 mmHg"),
-        ("day_diastolic",  "Kunduzi diastolik", "< 85 mmHg"),
-        ("night_systolic", "Tunda sistolik",    "< 120 mmHg"),
-        ("night_diastolic","Tunda diastolik",   "< 75 mmHg"),
-        ("pulse_pressure", "Impuls bosimi",     "40–60 mmHg"),
+        // Kalitlar `python_back/ai_schema.py` dagi SMAD_MEASUREMENTS bilan
+        // bir xil bo'lishi SHART — aks holda jadval bo'sh chiqadi
+        ("SBP_24h_avg",    "Sutkalik o'rtacha sistolik",  "< 130 mmHg"),
+        ("DBP_24h_avg",    "Sutkalik o'rtacha diastolik", "< 80 mmHg"),
+        ("SBP_day_avg",    "Kunduzi sistolik",            "< 135 mmHg"),
+        ("DBP_day_avg",    "Kunduzi diastolik",           "< 85 mmHg"),
+        ("SBP_night_avg",  "Tunda sistolik",              "< 120 mmHg"),
+        ("DBP_night_avg",  "Tunda diastolik",             "< 75 mmHg"),
+        ("max_bp",         "Maksimal bosim",              "—"),
+        ("min_bp",         "Minimal bosim",               "—"),
+        ("load_index_sbp", "Sistolik yuk indeksi",        "< 25 %"),
+        ("load_index_dbp", "Diastolik yuk indeksi",       "< 25 %"),
+        ("circadian_index","Tungi pasayish",              "10–20 %"),
+        ("dipping_status", "Tungi profil",                "dipper"),
+        ("heart_rate_avg", "O'rtacha puls",               "60–80 /min"),
     };
 
     private void AddSmadTable(Document doc, Dictionary<string, string> tr, AIAnswerDataDTO? ai)
@@ -855,8 +891,11 @@ public class PdfReportService
         int rowIdx = 0;
         foreach (var (dmKey, label, normal) in SmadRows)
         {
-            var val = FindDmValue(ai.DigitalMeasurements, dmKey, out var v)
-                ? v?.ToString() ?? "—" : "—";
+            if (!FindDmValue(ai.DigitalMeasurements, dmKey, out var v) || v is null)
+                continue;
+            var val = v.ToString();
+            if (string.IsNullOrWhiteSpace(val)) continue;
+
             var bg = rowIdx++ % 2 == 0 ? CL_White : CL_RowAlt;
             TblCell(tbl, label,  fonts["td9"],     bg, Element.ALIGN_LEFT);
             TblCell(tbl, val,    fonts["td9bold"], bg, Element.ALIGN_CENTER);
@@ -880,18 +919,25 @@ public class PdfReportService
         // ── Asosiy ko'rsatkichlar: 2 ustunli mini-jadval ─────────────
         var mainKeys = new[]
         {
-            ("monitoring_duration", "Monitoring davomiyligi"),
-            ("total_complexes",     "Jami komplekslar"),
-            ("mean_hr",             "O'rtacha ChSS"),
-            ("max_min_hr",          "Maks/Min ChSS"),
-            ("sve",                 "SVE / NJES"),
-            ("ve",                  "VE / JES"),
-            ("st_changes",          "ST siljishi"),
-            ("qtc_mean",            "QTc o'rtacha"),
+            // Kalitlar `python_back/ai_schema.py` dagi HOLTER_MEASUREMENTS
+            // bilan bir xil bo'lishi SHART
+            ("HR_avg",                        "O'rtacha ChSS"),
+            ("HR_min",                        "Eng past ChSS"),
+            ("HR_max",                        "Eng yuqori ChSS"),
+            ("total_beats",                   "Jami komplekslar"),
+            ("supraventricular_extrasystoles","SVE / NJES"),
+            ("ventricular_extrasystoles",     "VE / JES"),
+            ("pauses_count",                  "Pauzalar (>2 s)"),
+            ("max_pause",                     "Eng uzun pauza"),
+            ("st_deviation",                  "ST siljishi"),
+            ("QTc",                           "QTc"),
         };
 
-        var left  = mainKeys.Take(4).ToArray();
-        var right = mainKeys.Skip(4).ToArray();
+        // Qatorlar ikkiga teng bo'linadi — ro'yxat uzunligi o'zgarsa ham
+        // ustunlar muvozanatda qoladi
+        var half  = (mainKeys.Length + 1) / 2;
+        var left  = mainKeys.Take(half).ToArray();
+        var right = mainKeys.Skip(half).ToArray();
 
         var tbl2 = new PdfPTable(2) { WidthPercentage = 100, SpacingBefore = 6, SpacingAfter = 4 };
         tbl2.SetWidths(new[] { 50f, 50f });
@@ -920,9 +966,14 @@ public class PdfReportService
         int i = 0;
         foreach (var (key, label) in rows)
         {
-            var val = FindDmValue(dm, key, out var v) ? v?.ToString() ?? "—" : "—";
-            var bg  = i++ % 2 == 0 ? CL_White : CL_RowAlt;
+            // AI aniqlay olmagan ko'rsatkich uchun qator umuman chizilmaydi:
+            // "—" bilan to'ldirilgan jadval o'lchov o'tkazilgandek taassurot
+            // qoldiradi, holbuki qiymat shunchaki topilmagan
+            if (!FindDmValue(dm, key, out var v) || v is null) continue;
+            var val = v.ToString();
+            if (string.IsNullOrWhiteSpace(val)) continue;
 
+            var bg  = i++ % 2 == 0 ? CL_White : CL_RowAlt;
             TblCell(tbl, label, fonts["td9"],     bg, Element.ALIGN_LEFT);
             TblCell(tbl, val,   fonts["td9bold"], bg, Element.ALIGN_CENTER);
         }
@@ -2049,41 +2100,25 @@ public class PdfReportService
         catch { return null; }
     }
 
-    private string PhysicalPath(string rel)
-    {
-        if (Uri.TryCreate(rel, UriKind.Absolute, out var uri))
-            rel = uri.AbsolutePath;
+    /// <summary>
+    /// Bazadagi havolani diskdagi yo'lga aylantiradi.
+    ///
+    /// Ilgari bu metod fayl ildizini O'ZI hisoblardi va `Storage:UploadsRoot`
+    /// sozlamasini umuman o'qimasdi. Natijada faqat shu kalit sozlangan
+    /// o'rnatmada fayllarni yuklab olish ishlardi, PDF hisobotga esa rasm
+    /// tushmasdi — hisobot jimgina rasmsiz chiqardi. Endi ildiz bitta
+    /// joydan (`IFileStorage`) olinadi.
+    /// </summary>
+    private string PhysicalPath(string rel) =>
+        _storage.ResolveStoredLink(rel) ?? string.Empty;
 
-        const string filesPrefix = "/api/files/";
-        if (rel.StartsWith(filesPrefix, StringComparison.OrdinalIgnoreCase))
-            rel = rel[("/api/files").Length..];
-
-        var normalized = rel.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-        if (normalized.StartsWith("uploads" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-        {
-            var withoutUploads = normalized[("uploads" + Path.DirectorySeparatorChar).Length..];
-            var pythonRoot = _config["Python:UploadsRoot"] ?? _config["Uploads:PythonRoot"];
-            var uploadsRoot = !string.IsNullOrWhiteSpace(pythonRoot)
-                ? pythonRoot
-                : Path.Combine(_env.ContentRootPath, "..", "..", "python_back", "uploads");
-            var pythonPath = Path.GetFullPath(Path.Combine(uploadsRoot, withoutUploads));
-            if (File.Exists(pythonPath))
-                return pythonPath;
-        }
-
-        return Path.Combine(_env.WebRootPath ?? "", normalized);
-    }
-
-    private string MaskPassport(string? raw)
-    {
-        if (string.IsNullOrWhiteSpace(raw)) return "—";
-        try
-        {
-            var d = _encryption.Decrypt(raw);
-            return d.Length >= 4 ? $"** ****{d[^4..]}" : "**";
-        }
-        catch { return "**"; }
-    }
+    /// <summary>
+    /// Hisobotdagi passport. Maskalash loyiha egasining qarori bo'yicha
+    /// o'chirilgan — qiymat to'liq chiqadi
+    /// (<see cref="EkgAnalyzerApi.Helpers.PatientPrivacy.MaskingEnabled"/>).
+    /// </summary>
+    private string MaskPassport(string? raw) =>
+        EkgAnalyzerApi.Helpers.PatientPrivacy.MaskPassport(_encryption, raw) ?? "—";
 
     private static int Age(DateOnly bd, DateTime now)
     {
@@ -2095,13 +2130,13 @@ public class PdfReportService
     private static string DoctorFullName(Doctor? d)
     {
         if (d == null) return "—";
-        return $"{d.LastName} {d.FirstName} {d.SureName}".Trim();
+        return PersonNameHelper.Display(d.LastName, d.FirstName);
     }
 
     private static string BuildUserFullName(User? user)
     {
         if (user?.Doctor != null)
-            return $"{user.Doctor.LastName} {user.Doctor.FirstName} {user.Doctor.SureName}".Trim();
+            return PersonNameHelper.Display(user.Doctor.LastName, user.Doctor.FirstName);
         return "—";
     }
 
@@ -2116,12 +2151,12 @@ public class PdfReportService
 
     private string BuildConsultationVerifyUrl(int id)
     {
-        return $"{BuildPublicFrontendUrl()}/consultation/verify/{id}";
+        return $"{BuildPublicFrontendUrl()}/verify/{_verification.CreateToken("consultation", id)}";
     }
 
     private string BuildAnalysisVerifyUrl(string type, int id)
     {
-        return $"{BuildPublicFrontendUrl()}/analysis/verify/{type}/{id}";
+        return $"{BuildPublicFrontendUrl()}/verify/{_verification.CreateToken(type, id)}";
     }
 
     private string BuildPublicFrontendUrl()
@@ -2161,18 +2196,8 @@ public class PdfReportService
         wrapper.AddCell(formattedCell);
         doc.Add(wrapper);
         return;
-        var phrase = new Phrase();
-        phrase.Add(new Chunk($"{label}:\n", fonts["th9"]));
-        phrase.Add(new Chunk(string.IsNullOrWhiteSpace(text) ? "—" : text.Trim(), fonts["td9"]));
-
-        wrapper.AddCell(new PdfPCell(phrase)
-        {
-            Border = Rectangle.BOX,
-            BorderColor = CL_Border,
-            BackgroundColor = new BaseColor(252, 253, 253),
-            Padding = 7,
-        });
-        doc.Add(wrapper);
+        // Bu yerda `return;` dan keyin eski chizish usulidan
+        // qolgan va hech qachon bajarilmagan kod bor edi (T-009).
     }
 
     private static string? DoctorNames(IEnumerable<Doctor?>? list)
@@ -2184,7 +2209,9 @@ public class PdfReportService
         if (doctors.Count == 0) return null;
 
         return string.Join(", ", doctors
-            .Select(d => $"{d!.LastName} {d.FirstName?[..1]}. {d.SureName?[..1]}."));
+            // Sharif bosh harfi ham chiqarilmaydi: "AMRULLAYEV A." ko'rinishi
+            // platformadagi qolgan barcha joylar bilan izchil
+            .Select(d => $"{d!.LastName} {d.FirstName?[..1]}."));
     }
 
     private static string? ComplaintNames(IEnumerable<ECGAnalyseComplaints>? list)
@@ -2198,8 +2225,12 @@ public class PdfReportService
         return names.Count > 0 ? string.Join(", ", names) : null;
     }
 
+    // Statik metod — `_config` mavjud emas. Hujjat raqamida faqat yil-oy
+    // ishlatiladi, mintaqa farqi esa besh soat: u oy chegarasida hujjat
+    // raqamini bir oyga surib yuborishi mumkin, shuning uchun bu yerda ham
+    // mahalliy vaqt olinadi (sozlamasiz — standart mintaqa bilan).
     private static string DocNum(string prefix, DateTime? dt, int id) =>
-        $"{prefix}-{dt ?? DateTime.UtcNow:yyyyMM}-{id:D4}";
+        $"{prefix}-{dt ?? AppTime.LocalNow():yyyyMM}-{id:D4}";
 
     private static string GetAnalysisTypeName(Dictionary<string, string> tr, string key) =>
         key switch
@@ -2617,8 +2648,17 @@ public class PdfReportService
             cb.Stroke();
 
             // ── CHAP: platforma nomi ──────────────────────────────────
+            // Uzun nom markazdagi hujjat raqamiga tegib ketardi ("...nmed.uzHujjat
+            // raqami: ..."), shuning uchun joyiga sig'masa qisqartiriladi.
+            var leftText = $"{_tr["footer_platform"]} | nmed.uz";
+            var maxLeft = ps.Width / 2
+                - _f["p8gray"].BaseFont.GetWidthPoint($"{_tr["doc_number_prefix"]}: {_docNum}", 8) / 2
+                - document.LeftMargin - 10;
+            if (_f["p8gray"].BaseFont.GetWidthPoint(leftText, 8) > maxLeft)
+                leftText = "NMED | nmed.uz";
+
             ColumnText.ShowTextAligned(cb, Element.ALIGN_LEFT,
-                new Phrase($"{_tr["footer_platform"]} | nmed.uz", _f["p8gray"]),
+                new Phrase(leftText, _f["p8gray"]),
                 document.LeftMargin, y, 0);
 
             // ── MARKAZDA: hujjat raqami ───────────────────────────────
@@ -2645,7 +2685,11 @@ public class PdfReportService
             _totalPages.BeginText();
             _totalPages.SetFontAndSize(_f["p8gray"].BaseFont, 8);
             _totalPages.SetColorFill(new BaseColor(136, 136, 136)); // #888
-            _totalPages.ShowText(writer.PageNumber.ToString());
+            // `writer.PageNumber` hujjat yopilganda KEYINGI sahifa raqamini
+            // qaytaradi, ya'ni 2 sahifali hujjatda 3 bo'ladi. Shu sababli
+            // kolontitulda "Sahifa 1 / 3" deb yozilardi va hujjatni qabul
+            // qiluvchi "uchinchi sahifa yo'qolgan" deb hisoblardi.
+            _totalPages.ShowText((writer.PageNumber - 1).ToString());
             _totalPages.EndText();
         }
     }

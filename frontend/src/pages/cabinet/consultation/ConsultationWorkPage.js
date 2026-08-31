@@ -18,6 +18,7 @@ import { initiateConsultationCall } from '../../../hooks/videoSignalRService';
 import LiveKitRoomView from '../../../components/video/LiveKitRoom';
 import dayjs from 'dayjs';
 import './Consultation.css';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -64,7 +65,7 @@ function AnalysisCard({ item, navigate, t, compact = false }) {
                         icon={<EyeOutlined />}
                         onClick={() => navigate(`${route}/${item.analysisId}`)}
                     >
-                        {t('view') || "Ko'rish"}
+                        {t('view', { defaultValue: "Ko'rish" })}
                     </Button>
                 )}
             </div>
@@ -92,6 +93,7 @@ function AnalysisCard({ item, navigate, t, compact = false }) {
 // ── Asosiy sahifa ─────────────────────────────────────────────────────────────
 export default function ConsultationWorkPage() {
     const { t }    = useTranslation();
+    useDocumentTitle(t('consultation_work', { defaultValue: "Konsultatsiya o'tkazish" }));
     const navigate = useNavigate();
     const { id }   = useParams();
     const { videoCall, setVideoCall } = useStore();

@@ -18,13 +18,13 @@ namespace EkgAnalyzerApi.Models
         public Regions Region { get; set; } = null!;
 
         [Column("name_uz")]
-        public string NameUz { get; set; }
+        public string NameUz { get; set; } = string.Empty;
 
         [Column("name_ru")]
-        public string NameRu { get; set; }
+        public string NameRu { get; set; } = string.Empty;
         
         [Column("name_en")]
-        public string NameEn { get; set; }
+        public string NameEn { get; set; } = string.Empty;
 
 
     }

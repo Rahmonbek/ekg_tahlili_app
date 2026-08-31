@@ -83,11 +83,15 @@ Qidiruv in-memory: barcha passportlar `EncryptionService.Decrypt()` → keyin ta
 | C1 — Proxy arxitektura | ✅ |
 | C2 — Audit log (`AuditMiddleware.cs`) | ✅ |
 | C3 — Rate limiting (strict/ai-analysis/general) | ✅ |
-| C4 — AES-256 (passport ✅, birthdate ⚠️, fayl yo'llari ⚠️) | QISMAN |
+| C4 — AES-256 (passport ❌, birthdate ⚠️, fayl yo'llari ⚠️) | QISMAN |
 | C5 — JWT startup validation | ✅ |
 | C6 — HTTPS (production) | ✅ |
 
-**Ochiq**: C4-GAP-1 (birthdate), C4-GAP-2 (fayl yo'llari)
+**Ochiq**: C4-GAP-1 (birthdate), C4-GAP-2 (fayl yo'llari),
+**C4-GAP-3 (passport ochiq matnda)** — `EncryptionService.Encrypt`
+faqat `OnlineConsultationService` da chaqiriladi; bemorni odatiy
+yo'l bilan yaratganda passport shifrlanmaydi (2026-08-30 da bazada
+tekshirildi).
 
 ---
 

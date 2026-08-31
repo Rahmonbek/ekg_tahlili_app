@@ -35,5 +35,7 @@ export const downloadReport = async (type, id, lang = "uz") => {
     setTimeout(() => URL.revokeObjectURL(url), 5000);
 };
 
-export const getAnalysisVerification = (type, id) =>
-    httpGetRequest(`/report/verify/${type}/${id}`);
+// Hujjat haqiqiyligini QR token orqali tekshirish (autentifikatsiyasiz).
+// Ilgari (type, id) juftligi ishlatilardi — ketma-ket ID sanab chiqish mumkin edi.
+export const getDocumentVerification = (token) =>
+    httpGetRequest(`/report/verify/${token}`);

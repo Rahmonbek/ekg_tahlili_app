@@ -66,7 +66,20 @@ namespace EkgAnalyzerApi.Controllers
                     return BadRequest(new { error = "Fayl yuklashda xato", raw = uploadText });
 
                 using var uploadDoc = JsonDocument.Parse(uploadText);
-                fileId = uploadDoc.RootElement.GetProperty("id").GetString();
+                // `GetProperty` kalit yo'q bo'lsa `KeyNotFoundException`
+                // beradi — tashqi API kutilmagan javob qaytarsa mijoz
+                // tushunarsiz 500 olardi (T-009).
+                if (!uploadDoc.RootElement.TryGetProperty("id", out var idProp)
+                    || idProp.GetString() is not { Length: > 0 } uploadedId)
+                {
+                    return BadRequest(new
+                    {
+                        error = "Fayl yuklandi, lekin javobda `id` yo'q",
+                        raw = uploadText
+                    });
+                }
+
+                fileId = uploadedId;
             
            
 
@@ -124,22 +137,55 @@ Qo‘shimcha talablar:
                 return BadRequest(new { error = "OpenAI API xatosi", raw = respText });
 
             using var docResp = JsonDocument.Parse(respText);
-            var output = docResp.RootElement
-                .GetProperty("output")[0]
-                .GetProperty("content")[0]
-                .GetProperty("text")
-                .GetString();
+
+            // Ilgari bu zanjir `try` blokidan TASHQARIDA edi: OpenAI
+            // kutilgan shakldan farqli javob qaytarsa (masalan rad javobi
+            // yoki `output` bo'sh massiv) `KeyNotFoundException` yoki
+            // `IndexOutOfRangeException` chiqib, mijoz sababi
+            // ko'rinmaydigan 500 olardi (T-009).
+            var output = ExtractResponseText(docResp.RootElement);
+            if (output is null)
+            {
+                return BadRequest(new
+                {
+                    error = "OpenAI javobi kutilgan shaklda emas",
+                    raw = respText
+                });
+            }
 
             try
             {
                 var parsed = JsonDocument.Parse(output);
                 return Ok(parsed.RootElement);
             }
-            catch
+            catch (JsonException)
             {
-                // Agar AI noto‘g‘ri formatda JSON qaytarsa
+                // AI JSON emas, oddiy matn qaytardi — bu kutilgan holat
                 return Ok(new { raw_result = output });
             }
+        }
+
+        /// <summary>
+        /// OpenAI `responses` javobidan matnni xavfsiz ajratib oladi.
+        /// Kutilgan shakl: `output[0].content[0].text`. Har bir bosqichda
+        /// kalit yoki element yo'qligi mumkin — shunda `null` qaytadi.
+        /// </summary>
+        private static string? ExtractResponseText(JsonElement root)
+        {
+            if (!root.TryGetProperty("output", out var output)
+                || output.ValueKind != JsonValueKind.Array
+                || output.GetArrayLength() == 0)
+                return null;
+
+            if (!output[0].TryGetProperty("content", out var content)
+                || content.ValueKind != JsonValueKind.Array
+                || content.GetArrayLength() == 0)
+                return null;
+
+            if (!content[0].TryGetProperty("text", out var text))
+                return null;
+
+            return text.GetString();
         }
     }
 }

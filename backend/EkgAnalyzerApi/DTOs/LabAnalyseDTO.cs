@@ -8,6 +8,12 @@ namespace EkgAnalyzerApi.DTOs;
 
 public class LabAnalyseDTO
 {
+    /// <summary>Hujjat raqami (masalan NMED-EKG-00000096).</summary>
+    public string? DocumentNumber { get; set; }
+
+    /// <summary>Tahlil aslida o'tkazilgan sana (yozuv yaratilgan sana emas).</summary>
+    public DateTime? AnalysisDate { get; set; }
+
     public int Id { get; set; }
 
     public int CreatedDoctorId { get; set; }

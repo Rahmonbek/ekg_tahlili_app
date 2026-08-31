@@ -8,6 +8,7 @@ import { PlusOutlined, ReloadOutlined, CheckCircleOutlined, CloseCircleOutlined 
 import dayjs from 'dayjs';
 import { getConsultationList } from '../../../host/requests/ConsultationRequest';
 import './Consultation.css';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -21,6 +22,7 @@ const STATUS_COLORS = {
 
 export default function ConsultationsPage() {
     const { t } = useTranslation();
+    useDocumentTitle(t('consultations', { defaultValue: "Konsultatsiya" }));
     const navigate = useNavigate();
 
     const [consultations, setConsultations] = useState([]);

@@ -12,7 +12,7 @@ import { get_smad_analyse_by_id } from '../../../host/requests/SmadAnalyseReques
 import { get_holter_analyse_by_id } from '../../../host/requests/HolterAnalyseRequest';
 import { get_lab_analyse_by_id } from '../../../host/requests/LabAnalyseRequest';
 import { get_parasitology_analyse_by_id } from '../../../host/requests/ParasitologyRequest';
-import { apiEcg, imgApi } from '../../../host/Host';
+import { buildFileUrl, imgApi } from '../../../host/Host';
 
 const { Text } = Typography;
 
@@ -67,20 +67,20 @@ function AnalysisFiles({ type, data, t }) {
     const files = [];
 
     if (type === 'EKG') {
-        if (data?.analyseFileLink) files.push({ label: t('analysis_file') || 'Tahlil fayli', url: joinUrl(apiEcg, data.analyseFileLink) });
-        if (data?.generatedFileLink) files.push({ label: t('ecg-image') || 'EKG rasmi', url: joinUrl(apiEcg, data.generatedFileLink), image: true });
-        if (data?.generatedShortFileLink) files.push({ label: t('short_image') || 'Qisqa rasm', url: joinUrl(apiEcg, data.generatedShortFileLink), image: true });
+        if (data?.analyseFileLink) files.push({ label: t('analysis_file', { defaultValue: 'Tahlil fayli' }), url: buildFileUrl(data.analyseFileLink) });
+        if (data?.generatedFileLink) files.push({ label: t('ecg-image', { defaultValue: 'EKG rasmi' }), url: buildFileUrl(data.generatedFileLink), image: true });
+        if (data?.generatedShortFileLink) files.push({ label: t('short_image', { defaultValue: 'Qisqa rasm' }), url: buildFileUrl(data.generatedShortFileLink), image: true });
     } else if (type === 'Parasit') {
-        if (data?.filePath) files.push({ label: t('analysis_file') || 'Tahlil fayli', url: joinUrl(imgApi, data.filePath), image: true });
+        if (data?.filePath) files.push({ label: t('analysis_file', { defaultValue: 'Tahlil fayli' }), url: joinUrl(imgApi, data.filePath), image: true });
     } else if (data?.analyseFileLink) {
-        files.push({ label: t('analysis_file') || 'Tahlil fayli', url: joinUrl(apiEcg, data.analyseFileLink) });
+        files.push({ label: t('analysis_file', { defaultValue: 'Tahlil fayli' }), url: buildFileUrl(data.analyseFileLink) });
     }
 
     if (files.length === 0) return null;
 
     return (
         <div className="cons-analysis-files">
-            <Text strong>{t('analysis_files') || 'Tahlil fayllari'}</Text>
+            <Text strong>{t('analysis_files', { defaultValue: 'Tahlil fayllari' })}</Text>
             <Space wrap style={{ marginTop: 8 }}>
                 {files.map((file) => (
                     file.image ? (
@@ -147,7 +147,7 @@ export default function ConsultationAnalysisInlineView({ analysis }) {
             <Alert
                 type="warning"
                 showIcon
-                message={t('analysis_type_not_supported') || 'Bu tahlil turi hozircha ko\'rsatilmaydi'}
+                message={t('analysis_type_not_supported', { defaultValue: 'Bu tahlil turi hozircha ko\'rsatilmaydi' })}
             />
         );
     }
@@ -157,7 +157,7 @@ export default function ConsultationAnalysisInlineView({ analysis }) {
             <div className="cons-analysis-inline-toolbar">
                 <Text strong>{config.label} #{analysis?.id}</Text>
                 <Button size="small" icon={<ReloadOutlined />} onClick={loadAnalysis} loading={loading}>
-                    {t('refresh') || 'Yangilash'}
+                    {t('refresh', { defaultValue: 'Yangilash' })}
                 </Button>
             </div>
 
@@ -171,8 +171,8 @@ export default function ConsultationAnalysisInlineView({ analysis }) {
                 <Alert
                     type="error"
                     showIcon
-                    message={t('error') || 'Xatolik'}
-                    description={t('analysis_load_error') || 'Tahlil ma\'lumotlarini yuklab bo\'lmadi'}
+                    message={t('error', { defaultValue: 'Xatolik' })}
+                    description={t('analysis_load_error', { defaultValue: 'Tahlil ma\'lumotlarini yuklab bo\'lmadi' })}
                 />
             )}
 

@@ -1,114 +1,191 @@
-import { Avatar, Button, Table, Tooltip } from 'antd'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
+import { Input, Table, Tag, Tooltip, Typography } from 'antd'
 import { useTranslation } from 'react-i18next'
-import { IoAlertCircleSharp } from 'react-icons/io5'
-import { MoonLoader } from 'react-spinners'
-import { get_doctors_of_clinic } from '../../../../host/requests/DoctorRequest'
-import { formatPhoneNumberForForm } from '../../../../tools/formatters'
-import male from '../../../../images/avatars/male.jpg'
-import female from '../../../../images/avatars/female.jpg'
-import { Link } from 'react-router-dom'
-import { FaPencil } from 'react-icons/fa6'
+import { useNavigate } from 'react-router-dom'
+import { FaUserInjured } from 'react-icons/fa'
+import { get_patcients_of_clinic } from '../../../../host/requests/PatcientRequest'
+import { formatPhoneNumberForForm, formatDate, calculateAge , rowNumber } from '../../../../tools/formatters'
+import EmptyState from '../../../../components/shared/EmptyState'
+import { patientsTour } from '../../../../tools/tourSteps'
+import { usePageTour } from '../../../../components/shared/TourProvider';
+import useDocumentTitle from '../../../../tools/useDocumentTitle';
 
+const { Text } = Typography
+const PAGE_SIZE = 10
 
-
+/**
+ * Klinika bemorlari ro'yxati.
+ *
+ * Bu fayl ilgari Xodimlar sahifasidan nusxa ko'chirilgan edi: "Bemorlar"
+ * sarlavhasi ostida `get_doctors_of_clinic()` chaqirilib XODIMLAR ro'yxati
+ * ko'rsatilardi, "Yangi xodim qo'shish" tugmasi va `role` ustuni bilan birga.
+ * Endi sahifa haqiqiy bemorlar bilan ishlaydi.
+ *
+ * Maxfiylik: passport seriyasi serverda maskalanadi (`passportMasked`) —
+ * to'liq seriya brauzerga umuman yuborilmaydi.
+ */
 export default function Patcients() {
-    const {t}=useTranslation()
-    const [doctors, setdoctors]=useState([])
-    const [loading, setloading]=useState(true)
-    const [page, setpage]=useState(1)
-    const [total, settotal]=useState(0)
+    // Qo'llanma qadamlari ro'yxatdan o'tkaziladi; tugma header'da
+    usePageTour(patientsTour);
+    const { t } = useTranslation()
+    useDocumentTitle(t('patcients', { defaultValue: "Bemorlar" }))
+    const navigate = useNavigate()
+
+    const [patients, setPatients] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [page, setPage] = useState(1)
+    const [total, setTotal] = useState(0)
+    const [search, setSearch] = useState('')
+
+    const lang = t('data_lang') === 'Ru' ? 'ru' : t('data_lang') === 'En' ? 'en' : 'uz'
+
+    const fetchData = useCallback(async (currentPage, query) => {
+        setLoading(true)
+        try {
+            const params = { page: currentPage, lang }
+            if (query) params.search = query
+            const res = await get_patcients_of_clinic(params)
+            setPatients(res?.data?.data ?? [])
+            setTotal(res?.data?.totalCount ?? 0)
+        } catch (err) {
+            setPatients([])
+            setTotal(0)
+        } finally {
+            setLoading(false)
+        }
+    }, [lang])
+
+    useEffect(() => {
+        fetchData(page, search)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page, lang])
+
+    const handleSearch = (value) => {
+        setSearch(value)
+        setPage(1)
+        fetchData(1, value)
+    }
 
     const columns = [
-  {
-    title: '#',
-    dataIndex: 'id',
-    key: 'T/r',
-    align:'center',
-    render:(item, data, key)=>(key+1)
-  },
-//   {
-//     title:'',
-//     dataIndex: 'gender',
-//     key: 'gender',
-//     render:((item, key)=>( <Avatar size={50} src={item?male:female} />)),
-//     width:60
-//   },
-  {
-    title: t("FIO"),
-    dataIndex: '',
-    key: 'fio',
-    render:((item, key)=>(item.lastName+" "+item.firstName+" "+item.sureName))
-  },
-  
-  {
-    title: t("username"),
-    dataIndex: 'username',
-    key: 'username',
-  },
-  {
-    title: t("password"),
-    dataIndex: 'password',
-    key: 'password',
-  },
-  {
-    title: t("phone_number"),
-    dataIndex: 'phone',
-    key: 'phone',
-     align:'center',
-    render:((item, key)=>(formatPhoneNumberForForm(item)))
-  },
-  {
-    title: t("role"),
-    dataIndex: 'role',
-    key: 'role',
-    render:((item, key)=>(item?item[`name${t("data_lang")}`]:''))
-  },
-  {
-    title: "",
-    dataIndex: 'id',
-    key: 'edit',
-    align:'center',
-    render:((item, key)=>(<Tooltip title={t("edit")}>
-            <Link to={'/doctor/create/'+item}><Button type="primary" style={{background:'#fbb510'}} shape="square" icon={<FaPencil />} /></Link>
-          </Tooltip>))
-  }
-];
+        {
+            title: '#',
+            key: 'index',
+            align: 'center',
+            width: 60,
+            render: rowNumber(page, PAGE_SIZE),
+        },
+        {
+            title: t('FIO'),
+            key: 'fio',
+            render: (_, row) => (
+                <div>
+                    <Text strong>
+                        {[row.lastName, row.firstName].filter(Boolean).join(' ')}
+                    </Text>
+                    <div>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                            {row.birthDate ? `${calculateAge(row.birthDate)} ${t('age', { defaultValue: 'yosh' })}` : ''}
+                            {` · ${row.gender
+                                ? t('male', { defaultValue: 'Erkak' })
+                                : t('female', { defaultValue: 'Ayol' })}`}
+                        </Text>
+                    </div>
+                </div>
+            ),
+        },
+        {
+            title: t('passport', { defaultValue: 'Passport' }),
+            dataIndex: 'passportMasked',
+            key: 'passport',
+            align: 'center',
+            render: (value) => (
+                <Tooltip title={t('passport_masked_hint', { defaultValue: 'Maxfiylik uchun to\'liq ko\'rsatilmaydi' })}>
+                    <Text type="secondary">{value || '—'}</Text>
+                </Tooltip>
+            ),
+        },
+        {
+            title: t('birth_date', { defaultValue: 'Tug\'ilgan sana' }),
+            dataIndex: 'birthDate',
+            key: 'birthDate',
+            align: 'center',
+            render: (value) => (value ? formatDate(value) : '—'),
+        },
+        {
+            title: t('phone_number'),
+            dataIndex: 'phone',
+            key: 'phone',
+            align: 'center',
+            render: (value) => (value ? formatPhoneNumberForForm(value) : '—'),
+        },
+        {
+            title: t('addres', { defaultValue: 'Manzil' }),
+            key: 'address',
+            ellipsis: true,
+            render: (_, row) => {
+                const parts = [row.regionName, row.districtName, row.address].filter(Boolean)
+                return parts.length ? parts.join(', ') : '—'
+            },
+        },
+        {
+            title: t('analyses', { defaultValue: 'Tahlillar' }),
+            key: 'analyses',
+            align: 'center',
+            width: 120,
+            render: (_, row) =>
+                row.analysesCount > 0
+                    ? <Tag color="blue">{row.analysesCount}</Tag>
+                    : <Text type="secondary">—</Text>,
+        },
+    ]
 
-    useEffect(()=>{
-       getDoctors()
-    }, [page])
-    const getDoctors=async()=>{
-          try{
-             var res=await get_doctors_of_clinic({page:page})
-             console.log(res)
-             setdoctors(res.data.data)
-             settotal(res.data.totalCount)
-             setloading(false)
-          }catch(err){
-
-          }
-    }
-  return (
-    <div>
-        
-        <div className="main_card">
-            
-               <div className="main_card_content big_card_content">
-                <div className='main_card_btn'>
-            <Link to={"/doctor/create"} className='btn_form'>{t("add_new_staff")}</Link>
-        </div>
-        <div className='doctors_table'>
-                   <Table
-                   loading={loading}
-                   pagination={{
-                    current:page,
-                    pageSize:10,
-                    total:total,
-                   }} dataSource={doctors} columns={columns} />
-                   </div>
-               </div>
+    return (
+        <div>
+            <div className="main_card">
+                <h1>
+                    <span>{t('patcients', { defaultValue: 'Bemorlar' })}</span>
+                </h1>
+                <div className="main_card_content big_card_content">
+                    <div data-tour="patients-search" style={{ marginBottom: 16 }}>
+                        <Input.Search
+                            allowClear
+                            placeholder={t('search_patient_placeholder', { defaultValue: 'Ism, familiya yoki telefon bo\'yicha qidirish' })}
+                            onSearch={handleSearch}
+                            // Boshqa ro'yxat sahifalaridagi kabi yozuvli tugma
+                            enterButton={t('search', { defaultValue: 'Qidirish' })}
+                            style={{ maxWidth: 460 }}
+                        />
+                    </div>
+                    <div className="doctors_table" data-tour="patients-table">
+                        <Table
+                            scroll={{ x: 'max-content' }}
+                            rowKey="id"
+                            loading={loading}
+                            dataSource={patients}
+                            columns={columns}
+                            onRow={(row) => ({
+                                onClick: () => navigate(`/patcients/${row.id}`),
+                                style: { cursor: 'pointer' },
+                            })}
+                            locale={{
+                                emptyText: (
+                                    <EmptyState
+                                        icon={<FaUserInjured />}
+                                        message={t('no_patients', { defaultValue: 'Hech qanday bemor topilmadi' })}
+                                    />
+                                ),
+                            }}
+                            pagination={{
+                                current: page,
+                                pageSize: PAGE_SIZE,
+                                total: total,
+                                showSizeChanger: false,
+                                onChange: setPage,
+                            }}
+                        />
+                    </div>
+                </div>
             </div>
-    </div>
-  )
+        </div>
+    )
 }

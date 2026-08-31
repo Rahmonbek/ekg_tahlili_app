@@ -8,7 +8,8 @@ return phone.replaceAll("+", '').replaceAll("(", '').replaceAll(")", '').replace
 }
 
 export const formatHeaderLastname=(lastname)=>{
-         if(lastname!=null){
+         // Bo'sh satr ham tekshiriladi: ilgari `""` uchun `undefined.` qaytarardi
+         if(lastname != null && String(lastname).trim() !== ""){
           let prefix = "";
 
 
@@ -119,3 +120,75 @@ export function formatDate(isoString) {
 
   return `${day}.${month}.${year}`;
 }
+/**
+ * Foydalanuvchi/shifokor ismini xavfsiz ko'rsatish.
+ *
+ * Ilgari sarlavhada `formatHeaderLastname(lastName) + firstName` ishlatilardi.
+ * Yangi ro'yxatdan o'tgan foydalanuvchida ikkala maydon ham bo'sh bo'ladi va
+ * JS `"" + null` ni `"null"` ga aylantirardi — foydalanuvchi platformadagi
+ * BIRINCHI ekranida o'z ismi o'rniga `null` so'zini ko'rardi.
+ *
+ * @param {object} person `{ firstName, lastName, phone }`
+ * @param {object} [opts]
+ * @param {'full'|'short'} [opts.style='full'] `short` — "I. RAHMONJON"
+ * @param {string} [opts.fallback] ism bo'lmasa ko'rsatiladigan matn
+ */
+export const displayName = (person, opts = {}) => {
+    const { style = 'full', fallback = '' } = opts;
+    if (!person) return fallback;
+
+    const last = (person.lastName || '').trim();
+    const first = (person.firstName || '').trim();
+
+    if (!last && !first) {
+        // Ism hali to'ldirilmagan — telefon raqami eng foydali muqobil
+        return (person.phone || '').trim() || fallback;
+    }
+
+    if (style === 'short') {
+        const prefix = formatHeaderLastname(last);
+        return `${prefix}${first}`.trim();
+    }
+
+    // Sharif (otasining ismi) ATAYIN chiqarilmaydi — platformada
+    // foydalanuvchi ma'lumotlari faqat familiya va ism bilan ko'rsatiladi.
+    // U bazada saqlanadi va formalarda tahrirlanadi, faqat ekranga
+    // chiqmaydi: qatorlar qisqaradi va ustunlarga joy chiqadi.
+    return [last, first].filter(Boolean).join(' ');
+};
+
+/**
+ * Familiya va ism — sharifsiz. Ro'yxatlar, kartochkalar, sarlavhalar va
+ * qidiruv natijalarida ishlatiladi.
+ *
+ * `displayName` bilan farqi shundaki, bu yerda `person` xohlagan
+ * shakldagi obyekt bo'lishi mumkin (bemor, shifokor, xodim) — kerak
+ * bo'lgani faqat `firstName` va `lastName`.
+ *
+ * @param {object} person `{ firstName, lastName }`
+ * @param {string} [fallback] ikkala maydon ham bo'sh bo'lsa
+ */
+export const personName = (person, fallback = '') => {
+    if (!person) return fallback;
+    const name = [person.lastName, person.firstName]
+        .map((part) => (part || '').trim())
+        .filter(Boolean)
+        .join(' ');
+    return name || fallback;
+};
+
+/**
+ * Jadvaldagi `#` ustuni uchun tartib raqami.
+ *
+ * Ilgari har xil sahifada har xil edi: ba'zilarida sahifadagi tartib raqami,
+ * "Shifokor xulosasi" sahifasida esa bazadagi `id` ko'rsatilardi — ro'yxatda
+ * bitta yozuv bo'lsa ham `16` deb yozilardi va foydalanuvchi "16 ta yozuv
+ * bormi?" deb o'ylardi. Xodimlar sahifasida esa sahifa siljishi hisobga
+ * olinmasdi: 2-sahifada raqamlar yana 1 dan boshlanardi.
+ *
+ * @param {number} page     joriy sahifa (1 dan)
+ * @param {number} pageSize sahifadagi yozuvlar soni
+ * @returns {(value:any, row:any, index:number) => number} antd `render` funksiyasi
+ */
+export const rowNumber = (page, pageSize) =>
+    (_value, _row, index) => (Math.max(page, 1) - 1) * pageSize + index + 1

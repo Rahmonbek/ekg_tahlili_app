@@ -48,6 +48,7 @@ namespace EkgAnalyzerApi.Services
                 }
 
                 // Fayllarni ko'chirish
+                var originalNameSent = form.ContainsKey("original_filename");
                 foreach (var file in form.Files)
                 {
                     var stream = file.OpenReadStream();
@@ -55,6 +56,20 @@ namespace EkgAnalyzerApi.Services
                     fileContent.Headers.ContentType = new MediaTypeHeaderValue(
                         file.ContentType ?? "application/octet-stream");
                     formContent.Add(fileContent, file.Name, NormalizeFileName(file.FileName, file.ContentType));
+
+                    // `NormalizeFileName` ASCII bo'lmagan belgilarni olib
+                    // tashlaydi — diskdagi nom uchun bu to'g'ri, lekin shu
+                    // bilan asl nom butunlay yo'qolardi:
+                    //   "Бемор_Тестов_СМАД_2026.pdf" -> "2026.pdf"
+                    // Asl nom alohida maydonda yuboriladi va Python uni
+                    // `original_filename` ustuniga yozadi (T-101).
+                    if (!originalNameSent && !string.IsNullOrWhiteSpace(file.FileName))
+                    {
+                        var original = file.FileName.Trim();
+                        if (original.Length > 255) original = original[..255];
+                        formContent.Add(new StringContent(original), "original_filename");
+                        originalNameSent = true;
+                    }
                 }
             }
 

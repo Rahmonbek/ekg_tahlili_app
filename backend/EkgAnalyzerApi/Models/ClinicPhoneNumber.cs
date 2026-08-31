@@ -14,7 +14,7 @@ public class ClinicPhoneNumber
         public int ClinicId { get; set; }
 
         [Column("phone_number")]
-        public string PhoneNumber{ get; set; }
+        public string PhoneNumber{ get; set; } = string.Empty;
 
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;

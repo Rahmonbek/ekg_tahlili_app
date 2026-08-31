@@ -1,0 +1,70 @@
+# NMED AI xizmati — bog'liqliklar.
+#
+# Versiyalar ATAYIN qotirilgan (T-010). Ilgari bu yerda faqat paket
+# nomlari turardi va har bir `pip install -r` boshqa versiyalarni tortib
+# kelardi. Amaliy xavf: `openai` paketining major versiyasi o'zgarganda
+# `client.responses.create(...)` API si yo'qoladi va **barcha tahlillar
+# jimgina ishlamay qoladi** — bugun ishlagan deploy ertaga xuddi shu
+# buyruq bilan buziladi.
+#
+# `==` bilan yozilganlar — ishlab turgan muhitdan olingan haqiqiy
+# versiyalar (2026-08-30). `>=` bilan yozilganlar — bu muhitda
+# o'rnatilmagan, lekin ishlab chiqarishda kerak bo'ladigan paketlar:
+# ular uchun taxminiy aniq versiya yozish noto'g'ri bo'lardi, shuning
+# uchun quyi chegara qo'yilgan va ishlab chiqarish muhitida
+# `pip freeze` bilan qotirilishi kerak.
+#
+# Yangilash tartibi: versiyani qo'lda ko'tarib, tahlilni jonli sinab
+# ko'ring (EKG, Holter, SMAD, Laboratoriya), keyin commit qiling.
+
+# ─── Web framework va server ───────────────────────────────────────────
+fastapi==0.121.3
+uvicorn[standard]==0.38.0
+python-multipart==0.0.20
+pydantic==2.12.4
+
+# Ishlab chiqarishda systemd `gunicorn` ni uvicorn worker bilan ishga
+# tushiradi (DEPLOY_LINUX.md). Ishlab chiqish mashinasida kerak emas.
+gunicorn>=21.2.0
+
+# ─── Ma'lumotlar bazasi ────────────────────────────────────────────────
+sqlalchemy==2.0.45
+# Diqqat: bu muhitda `psycopg2` (manbadan yig'ilgan) o'rnatilgan.
+# Linux serverda kompilyatorsiz o'rnatish uchun `-binary` variantidan
+# foydalaning — API si bir xil.
+psycopg2-binary>=2.9.9
+
+# ─── Ma'lumotlar tahlili va matematika ─────────────────────────────────
+numpy==2.3.5
+pandas==2.3.3
+scipy==1.16.3
+neurokit2==0.2.12
+matplotlib==3.10.7
+
+# ─── Tasvirlar va PDF ──────────────────────────────────────────────────
+Pillow==12.0.0
+pypdf==6.16.2
+# PDF ni rasmga o'girish uchun. Tizimda `poppler-utils` ham bo'lishi
+# shart — busiz kod uni import qila olmaydi va PDF yuklash rad etiladi
+# (`main.py` bu holatni ushlab, aniq xabar beradi).
+pdf2image>=1.17.0
+
+# ─── AI va API klientlar ───────────────────────────────────────────────
+# `openai` — eng sezgir bog'liqlik: `responses.create` va Structured
+# Outputs (`text.format`) aynan shu API oilasiga tayanadi.
+openai==2.8.1
+anthropic==0.97.0
+requests==2.32.5
+
+# ─── Matn va qidiruv ───────────────────────────────────────────────────
+fuzzywuzzy==0.18.0
+# Busiz `fuzzywuzzy` sekin, sof Python taqqoslashga o'tadi va har ishga
+# tushishda ogohlantirish yozadi. Bu muhitda o'rnatilmagan — shuning
+# uchun jurnalda o'sha ogohlantirish ko'rinadi.
+python-Levenshtein>=0.25.0
+
+# ─── Autentifikatsiya ──────────────────────────────────────────────────
+PyJWT==2.12.1
+
+# ─── Boshqalar ─────────────────────────────────────────────────────────
+python-dotenv==1.2.1

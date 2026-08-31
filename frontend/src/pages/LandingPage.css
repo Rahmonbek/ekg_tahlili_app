@@ -179,7 +179,7 @@
   align-items: center;
 }
 .landing-card small{
-   color: #119488fa;
+   color: #119488;
   font-size: 2.6rem;
   font-weight: 800;
   letter-spacing: -0.05em;
@@ -1406,7 +1406,7 @@
 }
 
 .landing-timeline-head strong {
-  color: #119488fa;
+  color: #119488;
   font-size: 2.6rem;
   font-weight: 800;
   letter-spacing: -0.05em;
@@ -1589,6 +1589,8 @@
 
 .landing-testimonial-card {
   width: 360px;
+  /* 375px ekranda 360px karta gorizontal toshib ketmasligi uchun */
+  max-width: calc(100vw - 48px);
   flex-shrink: 0;
   padding: 28px;
   overflow: hidden;
@@ -1874,7 +1876,8 @@
 
 .landing-cta-content .landing-btn {
   margin-top: 34px;
-  min-width: 280px;
+  /* 320px ekranda ham padding bilan sig'ishi uchun min() */
+  min-width: min(280px, 100%);
   background: #ffffff;
   color: var(--teal-deep);
   border-color: rgba(255, 255, 255, 0.9);

@@ -7,6 +7,7 @@ import { getConsultationList } from '../../../host/requests/ConsultationRequest'
 import { useStore } from '../../../store/Store';
 import dayjs from 'dayjs';
 import './Consultation.css';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -23,6 +24,7 @@ const STATUS_COLORS = {
 
 export default function ConsultationListPage() {
     const { t } = useTranslation();
+    useDocumentTitle(t('consultations', { defaultValue: "Konsultatsiya" }));
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { setConsultationBadge } = useStore();
@@ -188,7 +190,7 @@ export default function ConsultationListPage() {
                                 style={{ width: 280 }}
                                 onChange={(v) => setDateRange(v)}
                             />
-                            <Button onClick={fetchList}>{t('refresh') || 'Yangilash'}</Button>
+                            <Button onClick={fetchList}>{t('refresh', { defaultValue: 'Yangilash' })}</Button>
                         </div>
                     </div>
                     <Table

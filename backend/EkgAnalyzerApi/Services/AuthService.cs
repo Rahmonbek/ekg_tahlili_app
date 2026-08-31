@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
@@ -12,18 +12,21 @@ public class AuthService
     private readonly TokenService _tokenService;
     private readonly ILogger<AuthService> _logger;
     private readonly IWebHostEnvironment _env;
+    private readonly IEmailService _emailService;
 
     public AuthService(
         MedDataDB context,
         ISmsService smsService,
         TokenService tokenService,
         IWebHostEnvironment env,
+        IEmailService emailService,
         ILogger<AuthService> logger)
     {
         _context = context;
         _smsService = smsService;
         _tokenService = tokenService;
         _env = env;
+        _emailService = emailService;
         _logger = logger;
     }
 
@@ -141,6 +144,26 @@ public class AuthService
         return (phone, code);
     }
 
+    /// <summary>
+    /// Platforma administratoriga xabarni fonda yuboradi: SMTP sekin yoki
+    /// ishlamay qolsa ham ro'yxatdan o'tish jarayoni to'xtamasligi kerak.
+    /// </summary>
+    private void NotifyAdminInBackground(int clinicId, string clinicName, string? inn, string? adminEmail)
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _emailService.SendClinicRegisteredToAdminAsync(clinicId, clinicName, inn, adminEmail);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Klinika #{ClinicId} ro'yxatdan o'tgani haqida xabar yuborilmadi", clinicId);
+            }
+        });
+    }
+
     private void SendSmsInBackground(string phone, string code)
     {
         _ = Task.Run(async () =>
@@ -164,6 +187,11 @@ public class AuthService
 
     public async Task RegisterAsync(RegisterDto dto)
     {
+        // Parol siyosati — barcha tarmoqlardan oldin (T-022).
+        // Auditda bazada `1` parolli xodimlar topilgan edi.
+        if (!PasswordPolicy.IsValid(dto.Password, out var passwordError))
+            throw new Exception(passwordError);
+
         // ── 1. Input normalizatsiya ──────────────────────────────────────────
         var phone       = NormalizePhone(GetDtoPhoneNumber(dto.PhoneNumber, dto.Phone));
         var clinicInn   = NormalizeInn(dto.ClinicInn);
@@ -172,7 +200,13 @@ public class AuthService
         var bankAccaunt = NormalizeText(dto.BankAccaunt);
         var mfo         = NormalizeText(dto.MFO);
         var bankName    = NormalizeText(dto.BankName);
-        var internalEmail = InternalPhoneEmail(phone);
+        // Foydalanuvchi haqiqiy pochta bergan bo'lsa o'shani ishlatamiz.
+        // Sun'iy `...@phone.nmed.local` manzili faqat zaxira: unga hech
+        // narsa yetib bormaydi (T-073).
+        var realEmail = NormalizeText(dto.Email);
+        var internalEmail = string.IsNullOrWhiteSpace(realEmail)
+            ? InternalPhoneEmail(phone)
+            : realEmail.ToLowerInvariant();
 
         // ── 2. Asosiy validatsiyalar ─────────────────────────────────────────
         if (phone.Length != 12)
@@ -190,8 +224,8 @@ public class AuthService
         // ── 3. Mavjud telefon/INN tekshiruvi (transaction TASHQARISIDA) ──────
         var existingDoctor = await _context.Doctors
             .Include(x => x.User)
-                .ThenInclude(x => x.Clinic)
-                    .ThenInclude(x => x.ClinicDetail)
+                .ThenInclude(x => x.Clinic!)
+                    .ThenInclude(x => x.ClinicDetail!)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Phone == phone);
 
@@ -223,13 +257,12 @@ public class AuthService
                 // AsNoTracking ishlatildi, shuning uchun qayta yuklaymiz (tracked)
                 user = await _context.Users
                     .Include(u => u.Clinic)
-                        .ThenInclude(c => c.ClinicDetail)
+                        .ThenInclude(c => c.ClinicDetail!)
                     .FirstAsync(u => u.Id == existingDoctor.User.Id);
 
                 doctor = await _context.Doctors.FirstAsync(d => d.Id == existingDoctor.Id);
 
                 user.Email        = internalEmail;
-                user.PasswordPlain = dto.Password;
                 user.PasswordHash  = BCrypt.Net.BCrypt.HashPassword(dto.Password);
                 user.RoleId        = RoleConstants.Admin;
                 doctor.Phone       = phone;
@@ -334,7 +367,6 @@ public class AuthService
                 user = new User
                 {
                     Email         = internalEmail,
-                    PasswordPlain = dto.Password,
                     PasswordHash  = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                     Status        = false,
                     RoleId        = RoleConstants.Admin,
@@ -388,6 +420,12 @@ public class AuthService
             committed = true;
 
             SendSmsInBackground(phone, code);
+
+            // Platforma administratoriga xabar: yangi klinika tekshiruvni kutmoqda.
+            // Busiz SuperAdmin bazani qo'lda kuzatishi kerak edi va ariza bir necha
+            // kun e'tibordan chetda qolishi mumkin edi (T-069).
+            if (user.ClinicId.HasValue)
+                NotifyAdminInBackground(user.ClinicId.Value, clinicName, clinicInn, user.Email);
         }
         catch
         {
@@ -425,6 +463,7 @@ public class AuthService
             UserId = user.Id,
             Success = true,
             Message = "success_register",
+            MustChangePassword = user.MustChangePassword,
             Token = _tokenService.GenerateToken(user)
         };
     }
@@ -459,6 +498,7 @@ public class AuthService
             UserId = user.Id,
             Success = true,
             Message = "success_login",
+            MustChangePassword = user.MustChangePassword,
             Token = _tokenService.GenerateToken(user)
         };
     }
@@ -493,8 +533,15 @@ public class AuthService
             code.ExpiresAt < DateTime.UtcNow)
             throw new Exception("invalid_or_expired_code");
 
+        // Parolni tiklashda ham siyosat qo'llanadi — aks holda foydalanuvchi
+        // ro'yxatdan o'tishda kuchli parol qo'yib, keyin uni `1` ga
+        // almashtira olardi (T-022)
+        if (!PasswordPolicy.IsValid(dto.NewPassword, out var newPasswordError))
+            throw new Exception(newPasswordError);
+
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
-        user.PasswordPlain = dto.NewPassword;
+        // Vaqtinchalik parol almashtirildi — endi majburlash kerak emas
+        user.MustChangePassword = false;
         code.IsUsed = true;
 
         await _context.SaveChangesAsync();

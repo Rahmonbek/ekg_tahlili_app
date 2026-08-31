@@ -16,6 +16,7 @@ import {
 } from '../../../host/requests/ConsultationRequest';
 import { useStore } from '../../../store/Store';
 import './Consultation.css';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 
 const { Title, Text } = Typography;
 
@@ -27,6 +28,7 @@ const INV_STATUS_COLORS = {
 
 export default function DoctorClinicsPage() {
     const { t } = useTranslation();
+    useDocumentTitle(t('doctor_clinics', { defaultValue: "Klinikalar" }));
     const navigate = useNavigate();
     const { setConsultationBadge } = useStore();
 

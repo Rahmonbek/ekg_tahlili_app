@@ -1,4 +1,5 @@
 ﻿using EkgAnalyzerApi.Data;
+using EkgAnalyzerApi.Constants;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -9,21 +10,19 @@ namespace EkgAnalyzerApi.Services
     public class ClinicService
     {
         private readonly MedDataDB _context;
-        private int _adminRoleId;
-        private int _directorRoleId;
-        private int _superAdminRoleId;
         private readonly IWebHostEnvironment _env;
         private readonly IHttpContextAccessor _http;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<ClinicService> _logger;
 
         public ClinicService(MedDataDB context, IWebHostEnvironment env,
-        IHttpContextAccessor http)
+        IHttpContextAccessor http, IEmailService emailService, ILogger<ClinicService> logger)
         {
             _context = context;
             _env = env;
             _http = http;
-            _adminRoleId = 2;
-            _directorRoleId = 3;
-            _superAdminRoleId = 1;
+            _emailService = emailService;
+            _logger = logger;
         }
         public async Task<ClinicDetail> CreateUpdateClinicDetail(ClinicDetailUpsertDto dto)
         {
@@ -73,7 +72,9 @@ namespace EkgAnalyzerApi.Services
                     detail.INN = dto.INN;
                 }
 
-                if (dto.DistrictId != null)
+                // `dto.DistrictId` — `int`, ya'ni `!= null` HAR DOIM rost
+                // edi: tuman tanlanmaganda ham `0` yozilardi (T-009).
+                if (dto.DistrictId > 0)
                 {
                     detail.DistrictId = dto.DistrictId;
                 }
@@ -258,10 +259,10 @@ namespace EkgAnalyzerApi.Services
             if (user == null)
                 return new ClinicDTO();
 
-            if (user.RoleId != _adminRoleId && user.RoleId != _directorRoleId)
+            if (user.RoleId != RoleConstants.Admin && user.RoleId != RoleConstants.Director)
                 return new ClinicDTO();
 
-            var clinic = await _context.Clinics.Include(c => c.ClinicDetail).ThenInclude(x=>x.District).ThenInclude(r => r.Region)
+            var clinic = await _context.Clinics.Include(c => c.ClinicDetail!).ThenInclude(x=>x.District!).ThenInclude(r => r.Region!)
     .Where(c => c.Id == id)
     .Select(c => new ClinicDTO
     {
@@ -308,10 +309,50 @@ namespace EkgAnalyzerApi.Services
                 .FirstOrDefaultAsync(c => c.Id == clinicId)
                 ?? throw new Exception($"Klinika topilmadi (id={clinicId})");
 
+            var wasActive = clinic.IsActive;
+
             clinic.IsActive = isActive;
             clinic.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+
+            // Faol emasdan faolga o'tganda klinika adminiga xabar beramiz.
+            // Ilgari klinika har kuni kirib tekshirib ko'rishi kerak edi (T-069).
+            if (!wasActive && isActive)
+                await NotifyClinicActivatedAsync(clinic);
+
             return clinic.IsActive;
+        }
+
+        /// <summary>
+        /// Klinika adminining emailiga faollashtirish xabarini yuboradi.
+        /// Xato yuz bersa faollashtirishning o'zi bekor qilinmaydi — xabar
+        /// yordamchi, asosiy amal emas.
+        /// </summary>
+        private async Task NotifyClinicActivatedAsync(Clinic clinic)
+        {
+            try
+            {
+                var adminEmail = await _context.Users
+                    .Where(u => u.ClinicId == clinic.Id
+                             && (u.RoleId == RoleConstants.Admin || u.RoleId == RoleConstants.Director))
+                    .OrderBy(u => u.Id)
+                    .Select(u => u.Email)
+                    .FirstOrDefaultAsync();
+
+                if (string.IsNullOrWhiteSpace(adminEmail) || !adminEmail.Contains('@'))
+                {
+                    _logger.LogWarning(
+                        "Klinika #{ClinicId} faollashtirildi, lekin admin emaili topilmadi", clinic.Id);
+                    return;
+                }
+
+                await _emailService.SendClinicActivatedAsync(adminEmail, clinic.Id, clinic.ClinicName ?? "");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Klinika #{ClinicId} faollashtirish xabari yuborilmadi", clinic.Id);
+            }
         }
         }
 }

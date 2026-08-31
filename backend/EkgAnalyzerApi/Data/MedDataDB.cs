@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -90,6 +90,29 @@ namespace EkgAnalyzerApi.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // ── Yumshoq o'chirish (T-027) ────────────────────────────────────
+            // Global filtr: o'chirilgan tahlillar HAR QANDAY so'rovdan avtomatik
+            // chiqarib tashlanadi. Shu tufayli o'nlab mavjud so'rovlarga qo'lda
+            // `Where(x => x.DeletedAt == null)` qo'shish shart emas va yangi
+            // so'rov yozganda uni unutib qo'yish xavfi yo'q.
+            //
+            // O'chirilganlarni ko'rish kerak bo'lsa — `.IgnoreQueryFilters()`.
+            modelBuilder.Entity<ECGAnalyses>().HasQueryFilter(x => x.DeletedAt == null);
+            modelBuilder.Entity<LabAnalyses>().HasQueryFilter(x => x.DeletedAt == null);
+            modelBuilder.Entity<HolterAnalyses>().HasQueryFilter(x => x.DeletedAt == null);
+            modelBuilder.Entity<SmadAnalyses>().HasQueryFilter(x => x.DeletedAt == null);
+            modelBuilder.Entity<MedicalDiagnoses>().HasQueryFilter(x => x.DeletedAt == null);
+
+            // Bog'lovchi jadvallar ham asosiy yozuv bilan birga yashirilishi kerak,
+            // aks holda EF ogohlantirish beradi va o'chirilgan tahlilning
+            // shifokorlari alohida so'rovlarda ko'rinib qolishi mumkin.
+            modelBuilder.Entity<ECGAnalyseDoctors>().HasQueryFilter(x => x.ECGAnalyse.DeletedAt == null);
+            modelBuilder.Entity<LabAnalyseDoctors>().HasQueryFilter(x => x.LabAnalyse.DeletedAt == null);
+            modelBuilder.Entity<HolterAnalyseDoctors>().HasQueryFilter(x => x.HolterAnalyse.DeletedAt == null);
+            modelBuilder.Entity<SmadAnalyseDoctors>().HasQueryFilter(x => x.SmadAnalyse.DeletedAt == null);
+            modelBuilder.Entity<ECGAnalyseComplaints>().HasQueryFilter(x => x.ECGAnalyse.DeletedAt == null);
+            modelBuilder.Entity<LabAnalyseCategories>().HasQueryFilter(x => x.LabAnalyse.DeletedAt == null);
 
             // User - Doctor (1:1)
             modelBuilder.Entity<User>()

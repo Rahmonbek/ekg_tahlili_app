@@ -25,7 +25,7 @@ namespace EkgAnalyzerApi.Models
         [ForeignKey(nameof(MainDoctorId))]
         public Doctor MainDoctor { get; set; } = null!;
 
-        [Column("patcient_id")]
+        [Column("patient_id")]
         public int PatcientId { get; set; }
         [ForeignKey(nameof(PatcientId))]
         public Patcient Patcient { get; set; } = null!;
@@ -43,5 +43,29 @@ namespace EkgAnalyzerApi.Models
         public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
 
         
+
+        // ── Yumshoq o'chirish (T-027) ──────────────────────────────────────
+        // Tibbiy yozuv fizik o'chirilmaydi: kim, qachon va nima sababdan
+        // o'chirgani auditda saqlanishi shart. `deleted_at IS NULL` bo'lgan
+        // yozuvlar faol hisoblanadi (global query filter — `MedDataDB`).
+
+        [Column("deleted_at")]
+        public DateTime? DeletedAt { get; set; }
+
+        [Column("deleted_by_user_id")]
+        public int? DeletedByUserId { get; set; }
+
+        [Column("delete_reason")]
+        public string? DeleteReason { get; set; }
+
+
+        // Yuklangan faylning ASL nomi (T-101). Diskdagi nom UUID — asl nom
+        // yo'lga tushmaydi, chunki u bemor familiyasini yoki qanday tahlil
+        // topshirilganini oshkor qilishi mumkin. Yuklab olishda esa
+        // foydalanuvchiga aynan shu nom bilan beriladi.
+
+        [Column("original_filename")]
+        public string? OriginalFilename { get; set; }
+
     }
 }

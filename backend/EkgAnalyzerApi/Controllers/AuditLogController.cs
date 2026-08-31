@@ -1,10 +1,9 @@
-using EkgAnalyzerApi.Constants;
+﻿using EkgAnalyzerApi.Constants;
 using EkgAnalyzerApi.Data;
-using EkgAnalyzerApi.Models;
+using EkgAnalyzerApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 [ApiController]
 [Route("api/audit-logs")]
@@ -12,15 +11,23 @@ using System.Security.Claims;
 public class AuditLogController : ControllerBase
 {
     private readonly MedDataDB _context;
+    private readonly ICurrentUser _currentUser;
 
-    public AuditLogController(MedDataDB context)
+    public AuditLogController(MedDataDB context, ICurrentUser currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     /// <summary>
-    /// Audit loglarni ko'rish (faqat Admin va SuperAdmin uchun)
-    /// GET api/audit-logs?page=1&action=LOGIN&userId=5
+    /// Audit jurnali. Admin/Direktor — faqat O'Z KLINIKASI xodimlarining
+    /// harakatlari; SuperAdmin — butun platforma bo'yicha.
+    ///
+    /// Ilgari so'rov klinika bo'yicha umuman filtrlanmasdi: bir klinikaning
+    /// admini boshqa klinikalarning foydalanuvchi nomlarini, IP manzillarini
+    /// va harakatlarini ko'ra olardi.
+    ///
+    /// GET api/audit-logs?page=1&amp;action=LOGIN&amp;userId=5
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetAuditLogs(
@@ -32,20 +39,36 @@ public class AuditLogController : ControllerBase
         DateTime? fromDate = null,
         DateTime? toDate = null)
     {
-        // Faqat admin va super admin ko'rishi mumkin
-        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var currentUserId))
+        var currentUserId = _currentUser.UserId;
+        if (currentUserId <= 0)
             return Unauthorized(new { message = "Token invalid" });
 
-        var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == currentUserId);
+        var currentUser = await _context.Users.AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == currentUserId);
         if (currentUser == null)
             return Unauthorized(new { message = "User not found" });
 
-        if (currentUser.RoleId != RoleConstants.Admin && currentUser.RoleId != RoleConstants.SuperAdmin)
+        // Audit jurnali — platforma darajasidagi vosita, faqat SuperAdmin
+        var isSuperAdmin = currentUser.RoleId == RoleConstants.SuperAdmin;
+        if (!isSuperAdmin)
             return Forbid();
 
-        // Query
-        var query = _context.AuditLogs.AsQueryable();
+        (page, pageSize) = Paging.Normalize(page, pageSize);
+
+        var query = _context.AuditLogs.AsNoTracking().AsQueryable();
+
+        // ── Ko'p ijarachilik: o'z klinikasi xodimlari bilan cheklaymiz ──
+        if (!isSuperAdmin)
+        {
+            if (currentUser.ClinicId == null)
+                return Unauthorized(new { message = "Klinika aniqlanmadi" });
+
+            var clinicUserIds = _context.Users
+                .Where(u => u.ClinicId == currentUser.ClinicId)
+                .Select(u => (int?)u.Id);
+
+            query = query.Where(l => l.UserId != null && clinicUserIds.Contains(l.UserId));
+        }
 
         if (!string.IsNullOrEmpty(action))
             query = query.Where(l => l.Action == action.ToUpper());
@@ -67,8 +90,7 @@ public class AuditLogController : ControllerBase
 
         var logs = await query
             .OrderByDescending(l => l.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .ApplyPaging(page, pageSize)
             .Select(l => new
             {
                 l.Id,
@@ -90,7 +112,45 @@ public class AuditLogController : ControllerBase
             data = logs,
             totalCount,
             totalPages,
-            currentPage = page
+            currentPage = page,
+            pageSize
         });
+    }
+
+    /// <summary>
+    /// Jurnalda uchraydigan amallar ro'yxati — filtr uchun.
+    /// Ular ham foydalanuvchi ko'ra oladigan doiradan olinadi.
+    /// </summary>
+    [HttpGet("actions")]
+    public async Task<IActionResult> GetActions()
+    {
+        var currentUserId = _currentUser.UserId;
+        if (currentUserId <= 0)
+            return Unauthorized(new { message = "Token invalid" });
+
+        var currentUser = await _context.Users.AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == currentUserId);
+        if (currentUser == null) return Unauthorized(new { message = "User not found" });
+
+        var isSuperAdmin = currentUser.RoleId == RoleConstants.SuperAdmin;
+        if (!isSuperAdmin)
+            return Forbid();
+
+        var query = _context.AuditLogs.AsNoTracking().AsQueryable();
+        if (!isSuperAdmin)
+        {
+            var clinicUserIds = _context.Users
+                .Where(u => u.ClinicId == currentUser.ClinicId)
+                .Select(u => (int?)u.Id);
+            query = query.Where(l => l.UserId != null && clinicUserIds.Contains(l.UserId));
+        }
+
+        var actions = await query
+            .Select(l => l.Action)
+            .Distinct()
+            .OrderBy(a => a)
+            .ToListAsync();
+
+        return Ok(actions);
     }
 }

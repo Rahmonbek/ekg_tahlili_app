@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace EkgAnalyzerApi.Models
 {
 
-    [Table("varification_codes")]
+    [Table("verification_codes")]
     public class VerificationCode
     {
         [Key]

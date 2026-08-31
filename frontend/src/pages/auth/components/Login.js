@@ -1,16 +1,18 @@
 import { Button, Form, Input, Modal } from 'antd'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next';
-import login_img from '../../../images/login1.png'
+import login_img from '../../../images/login1.jpg'
 import { IoMdLock } from 'react-icons/io';
 import { Link, useNavigate } from 'react-router-dom';
 import { change_password, login, send_reset_code } from '../../../host/requests/AuthRequest';
-import { dangerAlert, successAlert } from '../../../tools/Alerts';
+import { dangerAlert, successAlert, warningAlert } from '../../../tools/Alerts';
 import { useStore } from '../../../store/Store';
 import Cookies from "js-cookie";
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import PhoneInput from '../../../components/shared/PhoneInput';
 import { formatPhoneNumber } from '../../../tools/formatters';
+import ChangeLangs from '../../../components/ChangeLangs';
+import PasswordField, { passwordRule } from '../../../components/shared/PasswordField';
 
 export default function Login() {
   const [loading, setloading] = useState(false);
@@ -48,6 +50,18 @@ export default function Login() {
           sameSite: 'strict'
         });
         setuser_id(res.data.userId);
+
+        // Admin yaratgan vaqtinchalik parol hali almashtirilmagan bo'lsa,
+        // foydalanuvchi darhol parol almashtirish sahifasiga tushadi.
+        // Bunday parolni kamida ikki kishi biladi — admin va xodim (T-022).
+        if (res.data.mustChangePassword) {
+            warningAlert(t('must_change_password', {
+                defaultValue: "Xavfsizlik uchun vaqtinchalik parolni o'zingiznikiga almashtiring."
+            }));
+            navigate('/profile?changePassword=1');
+            return;
+        }
+
         navigate('/cabinet');
       }
     } catch (err) {
@@ -109,6 +123,12 @@ export default function Login() {
   return (
     <div className='login_box'>
       <div className='login_form_box'>
+        {/* Til almashtirgich: brauzeri boshqa tilda bo'lgan foydalanuvchi
+            kirishdan OLDIN tilni tanlay olishi kerak — ilgari u faqat
+            kabinet ichida bor edi */}
+        <div className='auth_lang'>
+          <ChangeLangs />
+        </div>
         <div className='login_form'>
           <h1>{t("ymed_login")}</h1>
           <div className='login_form_form'>
@@ -124,7 +144,7 @@ export default function Login() {
                 label={t("phone_number")}
                 rules={[{ required: true, message: t("phone_required") }, { len: 19, message: t("phone_number_invalid") }]}
               >
-                <PhoneInput autoComplete="tel" />
+                <PhoneInput autoComplete="tel" withIcon />
               </Form.Item>
 
               <Form.Item
@@ -166,6 +186,13 @@ export default function Login() {
 
       <Modal open={resetOpen} footer={null} centered onCancel={() => setResetOpen(false)} title={t("reset_password")}>
         <Form form={resetForm} layout="vertical" onFinish={resetPassword}>
+          {/* Foydalanuvchi nima bo'lishini oldindan bilishi kerak:
+              tugma bosilgach ko'rsatilgan raqamga SMS kod yuboriladi */}
+          <p className="reset_pass_hint">
+            {resetCodeSent
+              ? t("reset_code_sent_hint", { defaultValue: "Telefoningizga yuborilgan 4 xonali kodni va yangi parolni kiriting." })
+              : t("reset_code_hint", { defaultValue: "Telefon raqamingizni kiriting — unga tasdiqlash kodi SMS orqali yuboriladi." })}
+          </p>
           <Form.Item
             name="phone"
             label={t("phone_number")}
@@ -181,24 +208,45 @@ export default function Login() {
           ) : (
             <>
               <Form.Item name="code" label={t("verification_code")} rules={[{ required: true, message: t("not_empty") }]}>
-                <Input.OTP length={4} />
+                {/* Faqat raqam qabul qilinadi — "+" kabi belgilar kirib
+                    qolmasligi uchun; `one-time-code` esa SMS'dan avto-
+                    to'ldirishga imkon beradi */}
+                <Input.OTP
+                  length={4}
+                  formatter={(v) => v.replace(/\D/g, '')}
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
+                />
               </Form.Item>
               <Form.Item
                 name="newPassword"
                 label={t("new_password")}
                 rules={[
                   { required: true, message: t("please_enter_password") },
-                  {
-                    min: 6,
-                    message: t("password_too_short")
-                  }
+                  // Parolni tiklashda ham siyosat qo'llanadi — aks holda
+                  // foydalanuvchi kuchli parolni `1` ga almashtira olardi
+                  passwordRule(t),
                 ]}
               >
-                <Input.Password prefix={<IoMdLock />} placeholder={t("enter_new_password")} />
+                <PasswordField placeholder={t("enter_new_password")} />
               </Form.Item>
               <Button className="btn_form" loading={resetLoading} htmlType="submit" block>
                 {t("save")}
               </Button>
+              {/* Raqam noto'g'ri kiritilgan bo'lsa foydalanuvchi qaytib
+                  o'zgartira olishi kerak — ilgari maydon qulflanib,
+                  modalni yopishdan boshqa yo'l qolmasdi */}
+              <div className="reset_pass_text" style={{ textAlign: 'center', marginTop: 12 }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResetCodeSent(false);
+                    resetForm.setFieldsValue({ code: undefined, newPassword: undefined });
+                  }}
+                >
+                  {t("change_phone_number", { defaultValue: "Raqamni o'zgartirish" })}
+                </button>
+              </div>
             </>
           )}
         </Form>

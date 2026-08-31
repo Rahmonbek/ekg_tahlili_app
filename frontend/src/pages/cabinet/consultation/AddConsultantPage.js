@@ -16,11 +16,13 @@ import { get_region_data, get_districts_data } from '../../../host/requests/Regi
 import { useStore } from '../../../store/Store';
 import { formatPhoneNumber } from '../../../tools/formatters';
 import './Consultation.css';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 
 const { Title, Text } = Typography;
 
 export default function AddConsultantPage() {
     const { t } = useTranslation();
+    useDocumentTitle(t('add_consultant', { defaultValue: "Konsultant qo'shish" }));
     const navigate = useNavigate();
     const { setConsultationBadge } = useStore();
 

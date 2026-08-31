@@ -1,16 +1,21 @@
+import parseAiResult from '../../tools/aiResult';
+import AnalysisResultBody from './AnalysisResultBody';
 import { Button, Image } from 'antd'
 import { formatTimeStr } from 'antd/es/statistic/utils'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { calculateAge, formatDateTime } from '../../tools/formatters'
-import { IoIosArrowBack, IoIosArrowDown } from 'react-icons/io'
+import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io'
 import { dangerAlert, warningAlert } from '../../tools/Alerts'
 import { analyzeEkgFileRetry } from '../../host/EkgService'
 import { useStore } from '../../store/Store'
-import { apiEcg } from '../../host/Host'
+import { buildFileUrl } from '../../host/Host'
 import ClinicHeader from './ClinicHeader'
+import { severityClass, severityLabel, severityIcon } from '../../tools/severity';
 
-export default function EcgOldResult({ data, initialOpen = false }) {
+// `showMeta`: klinika va shifokor ma'lumotlari. Ko'rish sahifalarida
+// ular sahifa sarlavhasida chiqadi, shuning uchun u yerda o'chiriladi.
+export default function EcgOldResult({ data, initialOpen = false, showMeta = true }) {
   const [result, setresult] = useState(null)
   const [image, setimage] = useState(null)
   const [image_short, setimage_short] = useState(null)
@@ -18,38 +23,11 @@ export default function EcgOldResult({ data, initialOpen = false }) {
   const { t } = useTranslation()
   const { ecg_btn_loading, setecg_btn_loading } = useStore()
   useEffect(() => {
-    const parsedResult = safeJsonParse(data.aiAnswerData);
+    const parsedResult = parseAiResult(data.aiAnswerData);
     setimage(data.generatedFileLink)
     setimage_short(data.generatedShortFileLink)
-    console.log(parsedResult, data)
     setresult(parsedResult);
-  }, [])
-
-  function safeJsonParse(raw) {
-    if (!raw) return null;
-    if (typeof raw !== "string") return raw;
-
-    try {
-      // Agar boshida va oxirida bo‘sh joy bo‘lsa
-      let cleaned = raw.trim();
-      cleaned = cleaned
-        .replace(/\r\n/g, "\\n")
-        .replace(/\n/g, "\\n")
-        .replace(/\t/g, "\\t");
-      cleaned = cleaned.replaceAll("\\n", '')
-      // Agar string ` bilan o‘ralgan bo‘lsa
-      if (cleaned.startsWith("`") && cleaned.endsWith("`")) {
-        cleaned = cleaned.slice(1, -1);
-      }
-
-
-      console.log(cleaned, 'AAAAAAAAAAAA')
-      return JSON.parse(cleaned);
-    } catch (e) {
-      console.error("JSON parse error:", e);
-      return raw;
-    }
-  }
+  }, [data.aiAnswerData])
 
   const handleSubmit = async () => {
 
@@ -69,7 +47,6 @@ export default function EcgOldResult({ data, initialOpen = false }) {
       formData.append('id', data.id)
 
       var res = await analyzeEkgFileRetry(formData);
-      console.log(res)
       let parsedResult;
       try {
         // agar string bo'lsa JSON.parse qilamiz
@@ -79,50 +56,52 @@ export default function EcgOldResult({ data, initialOpen = false }) {
           ? JSON.parse(res.ai_response)
           : res.ai_response;
       } catch (e) {
-        console.log(e)
         parsedResult = res.ai_response;
       }
-      setimage(res.ecg_png_base64)
-      setimage_short(res.ecg_png_base64_short)
+      // `ecg_png_base64` nomi aldamchi — qiymat fayl yo'li. Server endi
+      // to'g'ri nomlangan maydonni ham qaytaradi (T-084).
+      setimage(res.ecg_image_url ?? res.ecg_png_base64)
+      setimage_short(res.ecg_thumbnail_url ?? res.ecg_png_base64_short)
       setresult(parsedResult);
 
     } catch (err) {
       dangerAlert(t("api_error"))
-      console.log(err)
     } finally {
       setecg_btn_loading(false);
     }
   };
   return (
-    data != null ? <div className={`old_analyse main_card ${open ? "opened_main_card" : "closed_main_card"} ${result != null ? String(result.automatic_analysis_bool).indexOf('1') != -1 ? "normal_analyse" : String(result.automatic_analysis_bool).indexOf('2') != -1 ? 'avarage_analyse' : String(result.automatic_analysis_bool).indexOf('3') != -1 ? "danger_analyse" : "unknown_analyse" : "unknown_analyse"}`}>
+    data != null ? <div className={`old_analyse main_card ${open ? "opened_main_card" : "closed_main_card"} ${result != null ? severityClass(result.automatic_analysis_bool) : 'unknown_analyse'}`}>
       <h1 onClick={() => { setopen(!open) }}><p>
 
         {data.analysisDate ? <span><b>{t('analysis_date')}:</b> {formatDateTime(data.analysisDate)}</span> : formatDateTime(data.createdAt)}  </p>
         <p>
-          {result != null ? String(result.automatic_analysis_bool).indexOf('1') != -1 ? t("normal") : String(result.automatic_analysis_bool).indexOf('2') != -1 ? t("avarage") : String(result.automatic_analysis_bool).indexOf('3') != -1 ? t("danger") : t('unknown') : t('not_analysed')}
-          <span>{open ? <IoIosArrowDown /> : <IoIosArrowBack />}</span>
+          {result != null ? severityLabel(result.automatic_analysis_bool, t) : t('not_analysed')}
+          <span>{open ? <IoIosArrowUp /> : <IoIosArrowDown />}</span>
         </p>
       </h1>
       {
         open ?
 
           <div className="main_card_content">
-            <ClinicHeader clinic={data.clinic} />
+            {showMeta && <ClinicHeader clinic={data.clinic} />}
 
 
             {/* Old clinic display removed as it's now in ClinicHeader */}
 
-            {data.createdDoctor != null ? <div>
+            {showMeta && data.createdDoctor != null ? <div>
               <p className='ecg_label'>{t("doctor_of_created")}</p>
               <div className="ekg-item-info-text">
                 <b>{data.createdDoctor.role != null ? data.createdDoctor.role[`name${t("data_lang")}`] + ":" : ''} </b>
                 <p>{data.createdDoctor.lastName} {data.createdDoctor.firstName} </p>
               </div></div> : <></>}
 
-            {data.doctors != null && data.doctors.length > 0 ? <div>
+            {showMeta && data.doctors != null && data.doctors.length > 0 ? <div>
               <p className='ecg_label'>{t("doctor_of_patcient")}</p>
-              {data.doctors.map((item, index) => (
-                <div className="ekg-item-info-text">
+              {data.doctors.map((item) => (
+                // `key` — shifokor id si: ro'yxat yangilanganda React qatorlarni
+                // to'g'ri farqlaydi va eski qiymat ekranda qolib ketmaydi (T-067)
+                <div className="ekg-item-info-text" key={item.id}>
                   <b>{item.role != null ? item.role[`name${t("data_lang")}`] + ":" : ''} </b>
                   <p>{item.lastName} {item.firstName} </p>
                 </div>
@@ -132,21 +111,28 @@ export default function EcgOldResult({ data, initialOpen = false }) {
 
             {data.complaints != null && data.complaints.length > 0 ? <div>
               <p className='ecg_label'>{t("complaints")}</p>
-              {data.complaints.map((item, index) => (
-                <div className="ekg-item-info-text complaint-item">
+              {data.complaints.map((item) => (
+                <div className="ekg-item-info-text complaint-item" key={item.id}>
                   <p>{item[`name${t("data_lang")}`]} </p>
                 </div>
               ))}
             </div> : <></>}
 
 
-            {image != null && image_short != null ? <>
+            {/* AI natijasi bo'lsa rasm `AnalysisResultBody` ichida chiqadi —
+                bu yerda ham ko'rsatish bir sahifada IKKI marta bir xil
+                rasmga olib kelardi. Faqat natija hali yo'q holatda chiqariladi. */}
+            {(result == null || typeof result === 'string') && image != null && image_short != null ? <>
               <p className='ecg_label'>{t("ecg-image")}</p>
               <div className="ekg-image"><Image style={{ width: '100%' }}
                 preview={{
-                  src: `${apiEcg}${image}`
+                  src: buildFileUrl(image)
                 }}
-                src={`${apiEcg}${image_short}`} /></div></>
+                src={buildFileUrl(image)}
+                placeholder={
+                  <Image preview={false} src={buildFileUrl(image_short)}
+                    style={{ width: '100%' }} />
+                } /></div></>
               : <></>}
 
             {!(data.aiAnswerData != null || result != null) ?
@@ -154,98 +140,13 @@ export default function EcgOldResult({ data, initialOpen = false }) {
                 {t("check_by_ai")}
               </Button>
               : <></>}
-            {result != null && (
-              <div className="ekg-result">
-                {result.digital_measurements ? (
-                  <>
-                    <div className="ekg-item-text"><b>⭐ Raqamli o‘lchovlar: </b></div>
-                    <ul>
-
-                      {result.digital_measurements.HR != null && (
-                        <li><b>Yurak urish ritmi (HR)</b><span> - {result.digital_measurements.HR}</span></li>
-                      )}
-
-                      {result.digital_measurements.PR_interval != null && (
-                        <li><b>PR interval</b><span> - {result.digital_measurements.PR_interval}</span></li>
-                      )}
-
-                      {result.digital_measurements.QRS_duration != null && (
-                        <li><b>QRS davomiyligi</b><span> - {result.digital_measurements.QRS_duration}</span></li>
-                      )}
-
-                      {result.digital_measurements.QT_interval != null && (
-                        <li><b>QT interval</b><span> - {result.digital_measurements.QT_interval}</span></li>
-                      )}
-
-                      {result.digital_measurements.QTc_Bazett != null && (
-                        <li><b>QTc (Bazett)</b><span> - {result.digital_measurements.QTc_Bazett}</span></li>
-                      )}
-
-                      {result.digital_measurements.QRS_axis != null && (
-                        <li><b>QRS elektr o‘qi</b><span> - {result.digital_measurements.QRS_axis}</span></li>
-                      )}
-
-                      {result.digital_measurements.P_wave_duration != null && (
-                        <li><b>P to‘lqini davomiyligi</b><span> - {result.digital_measurements.P_wave_duration}</span></li>
-                      )}
-
-                      {result.digital_measurements.P_wave_amplitude != null && (
-                        <li><b>P to‘lqini amplitudasi</b><span> - {result.digital_measurements.P_wave_amplitude}</span></li>
-                      )}
-
-                      {result.digital_measurements.R_wave_amplitude != null && (
-                        <li><b>R to‘lqini amplitudasi</b><span> - {result.digital_measurements.R_wave_amplitude}</span></li>
-                      )}
-
-                      {result.digital_measurements.S_wave_amplitude != null && (
-                        <li><b>S to‘lqini amplitudasi</b><span> - {result.digital_measurements.S_wave_amplitude}</span></li>
-                      )}
-
-                      {result.digital_measurements.T_wave_amplitude != null && (
-                        <li><b>T to‘lqini amplitudasi</b><span> - {result.digital_measurements.T_wave_amplitude}</span></li>
-                      )}
-
-                      {result.digital_measurements.PR_segment != null && (
-                        <li><b>PR segment</b><span> - {result.digital_measurements.PR_segment}</span></li>
-                      )}
-
-                      {result.digital_measurements.ST_segment_elevation != null && (
-                        <li><b>ST segment ko‘tarilishi/tushishi</b><span> - {result.digital_measurements.ST_segment_elevation}</span></li>
-                      )}
-
-                      {result.digital_measurements.RR_interval != null && (
-                        <li><b>RR interval</b><span> - {result.digital_measurements.RR_interval}</span></li>
-                      )}
-
-                      {result.digital_measurements.heart_rate_variability != null && (
-                        <li><b>Yurak ritmi variabelligi (HRV)</b><span> - {result.digital_measurements.heart_rate_variability}</span></li>
-                      )}
-
-                      {result.digital_measurements.P_QRS_T_morphology != null && (
-                        <li><b>P/QRS/T morfologiyasi</b><span> - {result.digital_measurements.P_QRS_T_morphology}</span></li>
-                      )}
-
-                    </ul>
-                  </>
-                ) : null}
-
-                {result.automatic_analysis ? (
-                  <>
-                    <div className="ekg-item-text"><b>{String(result.automatic_analysis_bool).indexOf('1') != -1 ? "✅" : String(result.automatic_analysis_bool).indexOf('2') != -1 ? '⚠️' : String(result.automatic_analysis_bool).indexOf('3') != -1 ? "❌" : "⭐"} Avtomatik tahlil (AI xulosasi): </b><span>{result.automatic_analysis}</span></div>
-                  </>
-                ) : null}
-                {result.AI_recommendations ? (
-                  <>
-                    <div className="ekg-item-text"><b>⭐ AI tavsiyasi: </b><span>{result.AI_recommendations}</span></div>
-                  </>
-                ) : null}
-                {result.final_summary ? (
-                  <>
-                    <div className="ekg-item-text"><b>⭐ Xulosa: </b><span>{result.final_summary}</span></div>
-                  </>
-                ) : null}
-              </div>
-            )}
+            {/* Natija tanasi barcha to'rt tur uchun bitta joyda (T-034) */}
+<AnalysisResultBody
+  kind="ecg"
+  result={result}
+  image={image}
+  imageShort={image_short}
+/>
           </div> : <></>}</div> : <></>
   )
 }

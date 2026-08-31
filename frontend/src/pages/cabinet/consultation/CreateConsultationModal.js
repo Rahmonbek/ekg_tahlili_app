@@ -128,7 +128,7 @@ export default function CreateConsultationModal({ open, onClose, doctor, onSucce
             title={`${t('send_request')}${doctor ? ` — ${doctor.fullName}` : ''}`}
             footer={null}
             width={600}
-            destroyOnClose
+            destroyOnHidden
             className="consultation-steps-modal"
         >
             <Steps current={step} size="small" style={{ marginBottom: 24 }}>

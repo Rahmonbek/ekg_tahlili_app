@@ -77,13 +77,22 @@ export default function SideBar() {
     };
 
   return (
+    <>
+    {/* Mobil: ochiq menyu ortidagi qoraytirilgan fon — bosilsa menyu yopiladi */}
+    {open_menu && typeof window !== 'undefined' && window.innerWidth <= 1024 && (
+        <div
+            className='sidebar_backdrop'
+            onClick={() => setopen_menu(false)}
+            aria-hidden="true"
+        />
+    )}
     <div className={`sidebar ${!open_menu?"closed_menu":''}`}>
         <Link to={'/'} className='sidebar_head'>
             <img src={logo} alt="logo"/>
             <h1>N MED AI</h1>
         </Link>
         <div className='sidebar_line'></div>
-        <div className='sidebar_menu'>
+        <div className='sidebar_menu' data-tour="dash-menu">
             {routers.map((item, index)=>{
                 const isDoctor = user && (user.roleId === 4 || user.roleId === 5)
                 // Konsultatsiya badge'lari barcha rollarda ko'rsatiladi
@@ -132,5 +141,6 @@ export default function SideBar() {
             })}
         </div>
     </div>
+    </>
   )
 }

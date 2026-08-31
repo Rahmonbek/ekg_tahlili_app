@@ -21,13 +21,14 @@
   --sidebar_text_color: #64748B;
   --text_color: #2a5267;
   --text_second_color: #416d83;
-  --back_color: #4FD1C5;
-  --back_hover_color: #38B2AC;
+  /* Brend ranglari — theme.js dagi colors bilan bir xil qiymatlar */
+  --back_color: #00B39A;
+  --back_hover_color: #009E88;
   --cancel_color: #5bb0df;
   --cancel_hover_color: #427c9b;
   --border_color: #E8ECF0;
-  --back_gradient_color: #2AA79B;
-  --back_second_color: #56f79e;
+  --back_gradient_color: #009E88;
+  --back_second_color: #2DD4BF;
 
   /* Sidebar */
   --sidebar_width: 260px;
@@ -48,7 +49,7 @@
   font-size: var(--small_size);
   padding: 0px 10%;
   margin-bottom: 20px;
-  font-size: 500;
+  font-weight: 500;
   color: var(--text_second_color);
   text-align: center;
 }
@@ -57,7 +58,7 @@
 }
 /* WCAG 2.4.7 — Focus Visible: keyboard navigation uchun focus ring */
 *:focus-visible {
-  outline: 2px solid #4FD1C5;
+  outline: 2px solid var(--back_color);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -70,9 +71,12 @@ body {
   padding-top: 0px;
   width: 100%;
   height: 100vh;
+  height: 100dvh;
   display: flex;
   justify-content: center;
   align-items: center;
+  /* Past bo'yli ekranlarda forma kesilib qolmasligi uchun */
+  overflow-y: auto;
 }
 
 .login_form {
@@ -144,12 +148,22 @@ body {
 }
 
 .login_bottom {
-  position: absolute;
-  bottom: 30px;
+  /* absolute+bottom formaning ustiga chiqib ketardi (past bo'yli ekranlar);
+     endi forma ostidan tabiiy oqimda joy oladi */
+  position: relative;
   width: 100%;
+  margin-top: 28px;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+}
+
+/* Parol tiklash modalidagi tushuntirish matni */
+.reset_pass_hint {
+  font-size: var(--small_size);
+  color: var(--text_second_color);
+  line-height: 1.55;
+  margin-bottom: 14px;
 }
 
 .login_bottom,
@@ -262,21 +276,37 @@ body {
   color: var(--text_color);
 }
 
-input,
+/* Ilgari bu qoida BARCHA `input` elementlariga `!important` bilan qo'llanardi.
+   Oqibatlari:
+     • `display: flex !important` yashirin inputlarni ham ko'rinadigan qilardi
+       (`hidden` atributi va inline `display:none` ishlamasdi);
+     • `height: 42px !important` checkbox va radio tugmalarga ham tegib,
+       ularni noto'g'ri o'lchamga keltirardi;
+     • `!important` kaskadni o'ldirib, har qanday moslashtirishni imkonsiz qilardi.
+
+   Endi qoida faqat matn kiritish maydonlariga va aniq belgilangan klasslarga
+   qo'llanadi. Umumiy o'lcham/radius esa `theme.js` dagi antd tokenlari orqali
+   beriladi. */
+.login_input,
+.form_input,
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="search"],
+input[type="date"],
 .ant-select-selection-item {
-  padding: 10px !important;
-  font-size: var(--small_size) !important;
-  height: 42px !important;
-  display: flex !important;
-  align-items: center;
-  border-radius: 12px !important;
-  color: var(--text_color) !important;
+  font-size: var(--small_size);
+  color: var(--text_color);
 }
 
 .ant-input-affix-wrapper {
   padding: 0px !important;
   padding-right: 15px !important;
-  border-radius: 12px !important;
+  /* 10px — `theme.js` dagi `borderRadius` bilan bir xil. Ilgari 12px edi
+     va ikonkali maydonlar oddiy maydonlardan boshqacha ko'rinardi. */
+  border-radius: 10px !important;
 }
 
 .ant-input-prefix,
@@ -289,9 +319,11 @@ input,
   color: var(--text_second_color) !important;
 }
 
+/* Select balandligi input (controlHeight: 40) bilan bir xil bo'lishi kerak,
+   aks holda filtr qatorlarida maydonlar tekislanmaydi */
 .ant-select-selector {
-  height: 42px !important;
-  border-radius: 12px !important;
+  height: 40px !important;
+  border-radius: 10px !important;
   padding-left: 0px !important;
 }
 
@@ -300,12 +332,19 @@ input,
   color: #ff4d4f !important;
 }
 
-label {
-  padding-left: 10px !important;
-  font-size: var(--small_size) !important;
+/* Faqat forma label'lari — ilgari yalang'och `label` selektori barcha
+   checkbox/radio/upload label'lariga ham 10px padding berib buzardi */
+.ant-form-item-label > label {
+  padding-left: 10px;
+  font-size: var(--small_size);
   font-weight: 500;
   height: max-content !important;
-  color: var(--text_second_color) !important;
+  color: var(--text_second_color);
+}
+label {
+  font-size: var(--small_size);
+  font-weight: 500;
+  color: var(--text_second_color);
 }
 
 .ant-col:has(.ant-form-item-required) {
@@ -316,8 +355,8 @@ label {
   font-size: var(--medium_size) !important;
 }
 
-:where(.css-dev-only-do-not-override-ac2jek).ant-input-outlined:focus,
-:where(.css-dev-only-do-not-override-ac2jek).ant-input-outlined:focus-within {
+.ant-input-outlined:focus,
+.ant-input-outlined:focus-within {
   border-color: var(--back_color) !important;
 }
 
@@ -325,7 +364,9 @@ label {
   width: 100%;
   background: linear-gradient(var(--back_color), var(--back_hover_color));
   color: white !important;
-  height: 42px !important;
+  /* 44px — mobil touch-target talabi (WCAG 2.5.8) bilan mos */
+  min-height: 44px;
+  height: auto !important;
   font-size: var(--small_size);
   border: none !important;
   border-radius: 12px !important;
@@ -440,7 +481,7 @@ label {
 }
 
 .opened_lang .selected_lang span {
-  transform: rotate(-90deg);
+  transform: rotate(180deg);
   color: var(--back_color);
 }
 
@@ -526,6 +567,8 @@ input:-webkit-autofill:active {
   background-color: #ffffff;
   border-right: 1px solid var(--border_color);
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar_head {
@@ -560,8 +603,9 @@ input:-webkit-autofill:active {
 
 .sidebar_menu {
   padding: var(--main_padding) 0;
-  
-  height:85vh;
+  /* 85vh o'rniga flex — past bo'yli ekranlarda menyu kesilmasligi uchun */
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
 }
 .sidebar_menu::-webkit-scrollbar{
@@ -728,7 +772,9 @@ input:-webkit-autofill:active {
   align-items: center;
   flex: 1;
   margin-left: 20px;
-  flex-wrap: wrap;
+  /* wrap emas — 64px balandlikdagi headerda 2-qator toshib ketardi */
+  flex-wrap: nowrap;
+  overflow: hidden;
   gap: 2px;
   min-width: 0;
 }
@@ -747,7 +793,7 @@ input:-webkit-autofill:active {
 }
 
 .breadcrumb_link {
-  color: #00b09b;
+  color: var(--back_color);
   font-size: var(--small_size);
   font-weight: 500;
   cursor: pointer;
@@ -769,8 +815,11 @@ input:-webkit-autofill:active {
   color: #555;
   font-size: var(--small_size);
   font-weight: 600;
+  /* inline span'da overflow ishlamaydi — inline-block shart */
+  display: inline-block;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
   max-width: 200px;
 }
 
@@ -782,14 +831,14 @@ input:-webkit-autofill:active {
   height: 32px;
   border-radius: 8px;
   background: #e8f9f7;
-  color: #00b09b;
+  color: var(--back_color);
   font-size: 1rem;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
 }
 
 .table_view_btn:hover {
-  background: #00b09b;
+  background: var(--back_color);
   color: #fff;
 }
 
@@ -825,7 +874,7 @@ input:-webkit-autofill:active {
 }
 
 .video-call-header-btn.is-ringing {
-  background: linear-gradient(135deg, #22c55e, #14b8a6);
+  background: linear-gradient(135deg, var(--back_second_color), var(--back_color));
   color: #ffffff;
   border-color: transparent;
   animation: video-call-ring 1.2s ease-in-out infinite;
@@ -867,7 +916,7 @@ input:-webkit-autofill:active {
 
 .video-call-header-kicker {
   margin-bottom: 4px;
-  color: #0f766e;
+  color: var(--back_hover_color);
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -922,7 +971,9 @@ input:-webkit-autofill:active {
 .content {
   width: 100%;
   padding: var(--main_padding);
+  /* dvh — mobil brauzerlarda URL-panel balandligi hisobga olinadi */
   height: calc(100vh - 64px);
+  height: calc(100dvh - 64px);
   overflow: auto;
 }
 
@@ -935,7 +986,11 @@ input:-webkit-autofill:active {
   margin-bottom: var(--big_main_padding);
   border-radius: 12px;
   box-shadow: rgba(0, 0, 0, 0.02) 0px 3.5px 5.5px;
-  overflow: hidden;
+  /* `overflow: hidden` ichkaridagi jadvalning gorizontal aylantirishini
+     bloklardi va ortiqcha ustunlar butunlay yetib bo'lmaydigan bo'lib qolardi.
+     Endi gorizontal aylantirishga ruxsat beriladi. */
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 .main_card h1 {
@@ -959,7 +1014,7 @@ input:-webkit-autofill:active {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--main_color);
+  background: var(--back_color);
   color: #fff;
   display: flex;
   align-items: center;
@@ -971,7 +1026,7 @@ input:-webkit-autofill:active {
 }
 
 .h1_add_btn:hover {
-  background: var(--main_color_dark, #38b2ac);
+  background: var(--back_hover_color);
   transform: scale(1.08);
 }
 
@@ -999,9 +1054,12 @@ input:-webkit-autofill:active {
 }
 
 .input_img_box {
-  width: 10vw;
+  /* Ilgari `10vw` edi: 375 px ekranda 37 px (ko'rinmaydigan va bosib
+     bo'lmaydigan), 2560 px ekranda 256 px bo'lardi. Endi o'lcham
+     ekranga mutanosib, lekin foydali chegaralar ichida. */
+  width: clamp(96px, 12vw, 160px);
   cursor: pointer;
-  height: 10vw;
+  height: clamp(96px, 12vw, 160px);
   background-color: white;
   border-radius: 12px;
   position: relative;
@@ -1045,10 +1103,81 @@ input:-webkit-autofill:active {
   padding-left: 5px !important;
 }
 
+/* Telefon raqam maydoni (Cleave.js).
+   Ilgari bu yerda faqat ramka va burchak radiusi bor edi — balandlik,
+   ichki bo'shliq va shrift o'lchami berilmagandi. Natijada telefon maydoni
+   21 px, yonidagi antd maydoni esa 42 px bo'lib, forma qiyshiq ko'rinardi.
+   Bu login, ro'yxatdan o'tish, bemor formasi va konsultant qo'shish
+   sahifalarining HAMMASIDA takrorlanardi. */
 .claveInput {
-  border: 1px solid #d9d9d9;
+  width: 100%;
+  height: 40px;
+  padding: 4px 11px;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
   outline: none;
-  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text_color);
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.claveInput::placeholder {
+  color: #bfbfbf;
+}
+
+.claveInput:hover {
+  border-color: #00B39A;
+}
+
+.claveInput:focus {
+  border-color: #00B39A;
+  box-shadow: 0 0 0 2px rgba(0, 179, 154, 0.12);
+}
+
+/* Barcha forma maydonlari bir xil balandlikda (antd `controlHeight: 40`).
+   Ilgari ular aralash edi: oddiy input 40 px, ikonkali (affix) maydon
+   44 px, telefon maydoni esa 21 px — forma qiyshiq ko'rinardi. */
+.ant-form-item .ant-input-affix-wrapper {
+  height: 40px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  padding-block: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.ant-form-item .ant-input-affix-wrapper > .ant-input {
+  height: auto;
+}
+
+/* Ikonkali maydonlarda matn va placeholder joylashuvi.
+   `.ant-input-affix-wrapper` ga `padding: 0 !important` qo'yilgani uchun
+   ichki inputda chap bo'shliq umuman yo'q edi: chapda ikonka bo'lmasa
+   (masalan "Guvohnoma" maydoni) matn ramkaga yopishib qolardi, oddiy
+   maydonlarda esa 11 px bo'shliq bor edi. */
+.ant-input-affix-wrapper > input.ant-input,
+.ant-input-affix-wrapper > textarea.ant-input {
+  padding-left: 11px;
+}
+
+/* Ikonka bilan qiymat orasidagi bo'shliq.
+
+   Ilgari bu yerda `padding-left: 0` turardi va izohda "bo'shliqni
+   ikonkaning o'zi beradi" deb yozilgandi. Bu noto'g'ri edi: yuqoridagi
+   `.ant-input-prefix` qoidasi ikonkaga faqat `padding-left: 10px`
+   beradi — ya'ni bo'shliq ikonkaning **chapida**, o'ngida esa yo'q.
+   Natijada qiymat ikonkaga yopishib turardi (o'lchandi: 0 px):
+
+       [👤]TESTBEMOROV        ← edi
+       [👤] TESTBEMOROV       ← bo'ldi
+
+   Bu butun platformadagi ikonkali maydonlarga tegishli edi — bemor
+   formasi, qidiruv, tashkilot rekvizitlari, xodim tahrirlash. */
+.ant-input-affix-wrapper > .ant-input-prefix + input.ant-input,
+.ant-input-affix-wrapper > .ant-input-prefix + textarea.ant-input {
+  padding-left: 8px;
 }
 
 .closed_menu {
@@ -1133,8 +1262,11 @@ input:-webkit-autofill:active {
 }
 
 .ekg-image {
-  max-width: 20vw;
-  max-height: 30vh;
+  /* Ilgari `max-width: 20vw` edi — EKG tasmasi 1440 px ekranda 288 px ga
+     siqilardi va to'lqinlarni o'qib bo'lmasdi. Bu sahifaning ASOSIY
+     kontenti, shuning uchun mavjud kenglikni to'liq egallashi kerak. */
+  max-width: 100%;
+  max-height: 60vh;
   margin: 20px auto;
   min-height: 190px;
   overflow: hidden;
@@ -1148,8 +1280,8 @@ input:-webkit-autofill:active {
   object-fit: cover;
 }
 
-:where(.css-dev-only-do-not-override-ac2jek) .ant-image-preview-operations,
-:where(.css-dev-only-do-not-override-ac2jek) .ant-image-preview-close {
+ .ant-image-preview-operations,
+ .ant-image-preview-close {
   background-color: var(--text_color);
 }
 
@@ -1184,6 +1316,8 @@ input:-webkit-autofill:active {
   color: var(--text_color);
   max-width: 160px;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--small_size);
   font-weight: 600;
 }
@@ -1221,21 +1355,21 @@ input:-webkit-autofill:active {
   min-height: 85vh;
 }
 
-:where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-cell,
-:where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-thead>tr>th,
-:where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-tbody>tr>th,
-:where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-tbody>tr>td,
-:where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper tfoot>tr>th,
-:where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper tfoot>tr>td {
+.ant-table-wrapper .ant-table-cell,
+.ant-table-wrapper .ant-table-thead>tr>th,
+.ant-table-wrapper .ant-table-tbody>tr>th,
+.ant-table-wrapper .ant-table-tbody>tr>td,
+.ant-table-wrapper tfoot>tr>th,
+.ant-table-wrapper tfoot>tr>td {
   padding: 10px !important;
 }
 
-:where(.css-dev-only-do-not-override-ac2jek).ant-modal-root .ant-modal-wrap {
+.ant-modal-root .ant-modal-wrap {
   padding: 20px;
 }
 
-:where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-thead>tr>th,
-:where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-thead>tr>td {
+.ant-table-wrapper .ant-table-thead>tr>th,
+.ant-table-wrapper .ant-table-thead>tr>td {
   background: #F7FAFC !important;
   padding: 12px 10px !important;
   color: #64748B !important;
@@ -1300,7 +1434,7 @@ input:-webkit-autofill:active {
   padding-left:10px !important;
 }
 .ant-select-multiple .ant-select-selection-wrap {
-  min-height: 42px !important;
+  min-height: 40px !important;
 }
 
 .ant-select-multiple .ant-select-selection-placeholder {
@@ -1314,19 +1448,19 @@ input::placeholder,
   font-family: 'Open Sans', sans-serif !important;
 }
 
-:where(.css-dev-only-do-not-override-ac2jek).ant-select-multiple .ant-select-selection-overflow .ant-select-selection-item {
+.ant-select-multiple .ant-select-selection-overflow .ant-select-selection-item {
   padding: 5px 10px !important;
   background-color: #F7FAFC;
 }
 
-:where(.css-dev-only-do-not-override-ac2jek).ant-select .ant-select-selection-wrap {
+.ant-select .ant-select-selection-wrap {
   padding-left: 8px !important;
   padding-right: 10px !important;
 }
 
 .ant-select-multiple .ant-select-selector {
   height: auto !important;
-  min-height: 42px !important;
+  min-height: 40px !important;
 }
 
 .ant-select input,
@@ -1335,8 +1469,8 @@ input::placeholder,
   height: 100% !important;
 }
 
-:where(.css-dev-only-do-not-override-ac2jek).ant-select-single {
-  height: 42px !important;
+.ant-select-single {
+  height: 40px !important;
 }
 
 .ant-select-multiple .ant-select-prefix {
@@ -1558,8 +1692,8 @@ input::placeholder,
 }
 
 .ant-picker {
-  height: 42px !important;
-  border-radius: 12px !important;
+  height: 40px !important;
+  border-radius: 10px !important;
   width: 100%;
 }
 
@@ -1610,9 +1744,19 @@ td {
 .ant-select-selection-item {
   padding:3px 10px !important;}
   .ant-select-selection-overflow{position: relative; top:-2px; display: flex !important; overflow: hidden !important; flex-wrap: nowrap !important;}
-.sidebar_menu_item{position: relative;}
-  .sidebar_menu_item .ant-badge{position: absolute; right:0px}
-    .sidebar_menu_item .ant-scroll-number{font-size: 11px;}
+.sidebar_menu_item {
+  position: relative;
+}
+
+/* Badge flex oqimida turadi (marginLeft: auto) — absolute joylashuv
+   matn ustiga chiqib ketishiga sabab bo'lardi */
+.sidebar_menu_item .ant-badge {
+  flex-shrink: 0;
+}
+
+.sidebar_menu_item .ant-scroll-number {
+  font-size: 11px;
+}
 @media (max-width:1700px) {
   .login_img img {
     width: 100%;
@@ -1651,23 +1795,29 @@ td {
   }
 
   .menu_close.open {
-    margin-left: 355px !important;
+    /* 2447-qatordagi qiymat bilan bir xil — ilgari 355px bo'lib nomuvofiq edi */
+    margin-left: min(83vw, 270px) !important;
+  }
+
+  /* Ochiq mobil menyu ortidagi qoraytirilgan fon — bosilsa menyu yopiladi */
+  .sidebar_backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    z-index: 999;
+    animation: sidebar_backdrop_fade 0.2s ease;
+  }
+
+  @keyframes sidebar_backdrop_fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   .main_card {
     margin-left: var(--main_padding);
   }
 
-  .input_img_box {
-    width: 15vw;
-    height: 15vw;
-  }
-
   .ant-form-item-label>label {
-    font-size: var(--small_size) !important;
-  }
-
-  .ant-input-affix-wrapper>input.ant-input {
     font-size: var(--small_size) !important;
   }
 
@@ -1682,12 +1832,10 @@ td {
     height: 13vw !important;
   }
 
+  /* 16px — iOS Safari kichikroq shriftli inputga fokus tushganda
+     sahifani avtomatik kattalashtirib yuborishining oldini oladi */
   .ant-input-affix-wrapper>input.ant-input {
     font-size: var(--center_size) !important;
-  }
-
-  .ant-form-item-label>label {
-    font-size: var(--medium_size) !important;
   }
 
   .create_doctor_box {
@@ -1736,13 +1884,6 @@ td {
   margin-bottom: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-}
-
-.stat_cards_grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
-  margin-bottom: 8px;
 }
 
 /* ─── Message va Notification — har doim yuqorida ─── */
@@ -1822,10 +1963,6 @@ td {
     padding: 0px 30px !important;
   }
 
-  .login_bottom {
-    bottom: 60px;
-  }
-
   .login_box {
     height: 95vh;
   }
@@ -1883,7 +2020,7 @@ td {
     padding-bottom: 2px !important;
   }
 
-  :where(.css-dev-only-do-not-override-ac2jek).ant-modal-root .ant-modal-wrap {
+  .ant-modal-root .ant-modal-wrap {
     padding: 0px !important;
   }
 
@@ -1926,8 +2063,17 @@ td {
 
 .stat_cards_grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  /* `auto-fill` emas, `auto-fit`: `auto-fill` mavjud kenglikka nechta
+     ustun sig'sa shuncha **bo'sh** yo'lak yaratadi. 1520 px ekranda u
+     oltita yo'lak beradi, kartochkalar esa beshta — natijada beshinchi
+     kartochkadan keyin tushuntirib bo'lmaydigan bo'shliq qoladi.
+     `auto-fit` ortiqcha yo'laklarni yig'ib tashlaydi va kartochkalar
+     butun kenglikka teng taqsimlanadi.
+
+     Xuddi shu sabab `.analysis-view-meta-grid` da ham hal qilingan. */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
+  margin-bottom: 8px;
 }
 
 .stat_card {
@@ -1967,9 +2113,14 @@ td {
   color: #64748b;
   font-weight: 500;
   margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Ilgari `nowrap` + `ellipsis` edi va "Laboratoriya tahlillari" kesilib
+     "Laboratoriya tahl..." bo'lib qolardi. Endi ikkinchi qatorga o'tadi;
+     kartochkalar balandligi bir xil bo'lishi uchun eng kam balandlik
+     ikki qatorga hisoblangan. */
+  line-height: 1.25;
+  min-height: 2.5em;
+  display: flex;
+  align-items: center;
 }
 
 .stat_card_value {
@@ -2128,7 +2279,10 @@ td {
 .analysis-view-meta-grid {
   margin-top: 12px;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* Qattiq 4 ustun edi: beshinchi kartochka ("Hujjat raqami" qo'shilgach)
+     pastda yolg'iz qolib, qator notekis ko'rinardi. `auto-fit` kartochkalarni
+     mavjud kenglikka teng taqsimlaydi. */
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 10px;
 }
 
@@ -2220,6 +2374,20 @@ td {
 
   .analysis-view-meta-grid {
     grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  /* `min-height: 88px` keng ekranda kartochkalarni bir tekisda ushlab
+     turadi. Mobilda esa ular bitta ustunda joylashadi — tekislash
+     ma'nosini yo'qotadi, balandlik esa qoladi: beshta qisqa ma'lumot
+     480 px egallaydi va tahlil natijasiga yetguncha ekran balandligidan
+     ko'proq aylantirish kerak bo'ladi.
+
+     `min-height` ni olib tashlash matnni kesmaydi — u faqat eng kam
+     balandlik, kartochka mazmuniga qarab baribir o'sadi. */
+  .analysis-view-meta-card {
+    min-height: 0;
+    padding: 8px 10px;
   }
 }
 
@@ -2358,7 +2526,6 @@ td {
   }
 
   .btn_form {
-    min-height: 40px !important;
     font-size: 0.8125rem;
   }
 
@@ -2378,16 +2545,15 @@ td {
 
   .main_card h1 {
     padding: 10px 12px;
-    font-size: 0.9375rem;
+    font-size: 1rem;
   }
 
   .main_card_content {
     padding: 10px;
   }
 
-  .stat_cards_grid {
-    grid-template-columns: 1fr;
-  }
+  /* .stat_cards_grid uchun yagona 576px qoidasi — fayl oxiridagi
+     "Asosiy panel kichik ekranda" blokida (2 ustun, T-060) */
 
   .quick_actions_grid {
     width: 100%;
@@ -2399,10 +2565,730 @@ td {
     justify-content: center;
   }
 
-  :where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-thead>tr>th,
-  :where(.css-dev-only-do-not-override-ac2jek).ant-table-wrapper .ant-table-tbody>tr>td {
+  .ant-table-wrapper .ant-table-thead>tr>th,
+  .ant-table-wrapper .ant-table-tbody>tr>td {
     padding: 8px !important;
     font-size: 0.75rem !important;
   }
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Moslashuvchanlik (responsive)
+   Uzilish nuqtalari `theme.js` dagi qiymatlar bilan bir xil.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Jadval har doim o'z konteyneri ichida aylantiriladi — sahifa gorizontal
+   siljimasin, lekin ustunlar ham yo'qolmasin. */
+.ant-table-wrapper,
+.ant-table-content,
+.doctors_table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Amallar ustuni aylantirilganda ham ko'rinib tursin */
+.ant-table-cell-fix-right {
+  z-index: 2;
+}
+
+@media (max-width: 1024px) {
+  .stat_cards_grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  /* Filtr paneli mobilda vertikal joylashadi va ixchamlashadi */
+  .main_card_btn {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .main_card_btn > * {
+    width: 100%;
+  }
+
+  .stat_cards_grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  /* Barmoq bilan bosish uchun minimal maydon */
+  .btn_form,
+  .ant-btn {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 576px) {
+  .main_card {
+    border-radius: 10px;
+  }
+}
+
+/* Statistika kartochkasidagi umumiy son (StatCard) */
+.stat_card_alltime {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--grey_text_color, #94a3b8);
+}
+
+.stat_card_disabled {
+  pointer-events: none;
+}
+
+/* Harakatni kamaytirish sozlamasi yoqilgan foydalanuvchilar uchun */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+/* ── Sahifa qo'llanmasi tugmasi (T-053) ──────────────────────────────────
+   Foydalanuvchi tugmani topa olishi uchun faqat ikonka emas, matn bilan
+   birga ko'rsatiladi. Tor ekranda matn yashiriladi, Tooltip qoladi. */
+.page_tour_btn {
+    color: #00B39A !important;
+    font-weight: 500;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px !important;
+    height: 34px !important;
+    font-size: 14px;
+}
+
+.page_tour_btn:hover {
+    background: #E6F7F4 !important;
+}
+
+.main_card h1 .page_tour_btn {
+    margin-left: 4px;
+}
+
+@media (max-width: 768px) {
+    .page_tour_btn_text {
+        display: none;
+    }
+
+    /* Matn yashiringach tugma 36 px ga qisqarardi — barmoq bilan bosish
+       uchun kamida 44x44 bo'lishi kerak. */
+    .page_tour_btn {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0 !important;
+        justify-content: center;
+    }
+}
+
+/* ── Xavfli (3-daraja) tahlil qatori (T-079) ─────────────────────────────
+   Shoshilinch e'tibor talab qiladigan natijalar ro'yxatda ko'zdan qochib
+   ketmasligi uchun chap chekkasida qizil chiziq bilan ajratiladi. */
+.table_row_danger > td:first-child {
+    box-shadow: inset 3px 0 0 #DC2626;
+}
+
+.table_row_danger:hover > td {
+    background: #FEF2F2 !important;
+}
+
+/* ── Saqlanmagan o'zgarishlar paneli (T-077) ─────────────────────────────
+   Tashkilot ma'lumotlari sahifasida uchta mustaqil forma bor; bu panel
+   qaysi bloklar saqlanmaganini aytadi va barchasini bir bosishda saqlaydi. */
+.unsaved_bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    padding: 12px 20px;
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-radius: 12px;
+    box-shadow: 0 -2px 12px rgba(15, 23, 42, 0.08);
+}
+
+.unsaved_bar_text {
+    color: #92400E;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+@media (max-width: 576px) {
+    .unsaved_bar {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MOSLASHUVCHANLIK — YAGONA QOIDALAR (T-061)
+
+   Uzilish nuqtalari `theme.js` dagi `breakpoints` bilan bir xil:
+     mobile 576 · tablet 768 · laptop 1024 · desktop 1280 · wide 1440
+
+   Bu blok mavjud media so'rovlarni almashtirmaydi — u butun platforma
+   uchun amal qiladigan umumiy qoidalarni belgilaydi. Ilgari har bir
+   sahifada o'z qoidalari bor edi (768, 760, 480, 1366, 1700 …) va yangi
+   sahifa qo'shilganda ular takrorlanmasdi.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Har qanday jadval kichik ekranda gorizontal aylanadi — ustunlar
+   kesilib qolmasligi kerak. `scroll={{ x: 'max-content' }}` bilan birga. */
+.ant-table-wrapper {
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    /* Ko'p ustunli formalar bir ustunga tushadi */
+    .main_col {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+    }
+
+    /* Barmoq bilan bosiladigan elementlar kamida 44 px balandlikda.
+       Oddiy `input` va telefon maydoni ham shu ro'yxatda — aks holda
+       mobilda ikonkali maydon 44 px, oddiysi 40 px bo'lib, forma
+       notekis ko'rinardi. */
+    .ant-btn,
+    .btn_form,
+    .ant-select-selector,
+    .ant-picker,
+    .ant-input-affix-wrapper,
+    .ant-form-item .ant-input-affix-wrapper,
+    .ant-form-item .ant-input,
+    .claveInput {
+        min-height: 44px;
+    }
+
+    .ant-form-item .ant-input-affix-wrapper {
+        height: 44px;
+    }
+
+    /* Faqat ikonkali tugmalar ham 44×44 dan kichik bo'lmasin */
+    .ant-btn-icon-only,
+    .table_view_btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    /* Sahifa sarlavhasi va yonidagi tugmalar ustma-ust joylashadi */
+    .main_card h1 {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* Kartochka ichidagi ortiqcha bo'shliq kichik ekranda joy yeydi */
+    .main_card_content {
+        padding: 12px !important;
+    }
+
+    /* Statistika kartochkalari ikkitadan */
+    .stat_cards_grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 576px) {
+    /* Filtr paneli tugmalari to'liq kenglikda */
+    .filter_form_box .btn_form {
+        width: 100% !important;
+    }
+
+    /* Modal oynalar ekranni to'liq egallaydi — kichik modal o'qib
+       bo'lmaydigan darajada siqilib qolardi */
+    .ant-modal {
+        max-width: calc(100vw - 16px) !important;
+        margin: 8px auto !important;
+    }
+}
+
+/* ── Header'dagi yagona qo'llanma tugmasi ────────────────────────────────
+   Ilgari har bir sahifa o'z tugmasini chizardi. Endi bitta tugma —
+   qaysi sahifada bo'lsangiz o'shanisining qo'llanmasini ishga tushiradi. */
+.header_tour_btn {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: #00B39A;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.header_tour_btn:hover:not(:disabled) {
+    background: #E6F7F4;
+}
+
+.header_tour_btn:disabled {
+    color: #CBD5E1;
+    cursor: default;
+}
+
+/* ── Jadval matni: biroz kichikroq (barcha sahifalarda) ──────────────────
+   Ustunlar ko'p bo'lgani uchun 14 px matn jadvalni keraksiz kengaytirardi. */
+.ant-table {
+    font-size: 13px;
+}
+
+.ant-table-thead > tr > th {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ant-table-tbody > tr > td {
+    padding-block: 10px !important;
+}
+
+/* ── Filtr panelidagi amal tugmalari ─────────────────────────────────────
+   "Qidirish" va "CSV ga yuklash" bir xil balandlikda, yonma-yon. */
+.filter_actions {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.filter_actions .btn_form {
+    flex: 1;
+    margin: 0;
+    height: 48px;
+    white-space: nowrap;
+}
+
+.filter_actions .ant-btn {
+    height: 48px;
+    white-space: nowrap;
+}
+
+/* Filtr paneli sarlavhalari — yig'ilgan qismda ham bir xil ko'rinish */
+.filter_form_box .filter_label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+/* Birinchi qatordagi qidiruv maydoni tugmalar bilan bir tekisda tursin */
+.filter_form_box .filter_item > .ant-input,
+.filter_form_box .filter_item > .ant-input-affix-wrapper {
+    height: 48px;
+}
+
+/* ── Telefon maydonidagi ikonka ──────────────────────────────────────────
+   Kirish sahifasida parol maydonida qulf ikonkasi bor edi, telefonda esa
+   yo'q — ikkita maydon bir-biriga o'xshamasdi. */
+.phone_input_wrap {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+.phone_input_icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 13px;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+}
+
+.claveInput.has_icon {
+    padding-left: 34px;
+}
+
+/* ── Auth sahifalaridagi til almashtirgich ───────────────────────────────
+   Brauzeri boshqa tilda bo'lgan foydalanuvchi kirishdan oldin tilni
+   tanlay olishi kerak. */
+.auth_lang {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    z-index: 5;
+}
+
+.auth_lang .langs_box {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+}
+
+@media (max-width: 768px) {
+    .auth_lang {
+        top: 12px;
+        right: 12px;
+    }
+}
+
+/* ── Asosiy panel kichik ekranda ─────────────────────────────────────
+   O'lchangan: 375 px ekranda beshta ko'rsatkich kartochkasi 666 px
+   egallardi, ya'ni beshta raqamni ko'rish uchun ekran balandligidan
+   ko'proq aylantirish kerak edi. Sabab — `minmax(200px, 1fr)`:
+   335 px konteynerda ikkita 200 px ustun sig'maydi, shuning uchun
+   grid bitta ustunga tushadi.
+
+   Kichik ekranda ikkita ustun va ixchamroq kartochka: ikona kichrayadi,
+   ichki bo'shliq kamayadi, sarlavha esa ikki qatorga o'tishda davom
+   etadi (u ataylab qisqartirilmaydi — T-060). */
+@media (max-width: 576px) {
+    .stat_cards_grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .stat_card {
+        padding: 12px;
+        gap: 10px;
+        /* Ikona yonida emas, ustida — 160 px kenglikda yonma-yon
+           joylashuvda matnga atigi 100 px qolardi */
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .stat_card_icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        font-size: 1rem;
+    }
+
+    .stat_card_title {
+        font-size: 0.7rem;
+        min-height: 2.4em;
+    }
+
+    .stat_card_value {
+        font-size: 1.5rem;
+    }
+
+    /* Bosilganda ko'tarilish effekti sensorli ekranda ma'nosiz:
+       hover holati barmoq olingandan keyin ham qolib ketadi */
+    .stat_card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+}
+
+/* ── Jadval gorizontal aylantirilishi ko'rinsin ──────────────────
+   375 px ekranda EKG ro'yxati jadvali 1461 px, konteyner esa 335 px —
+   ustunlarning to'rtdan uch qismi ko'rinmaydi. Aylantirish ishlaydi,
+   lekin ishora bo'lmasa foydalanuvchi jadval shu bilan tugaydi deb
+   o'ylaydi.
+
+   `has_scroll` klassini `TableScrollHint` komponenti qo'yadi. Sof CSS
+   yechimi (`background-attachment: local`) bu yerda ishlamadi: soya
+   konteynerning foni bo'ladi, jadval qatorlari esa uning ustida o'z
+   oq foni bilan chiziladi va soyani berkitadi. */
+.ant-table-wrapper {
+    position: relative;
+}
+
+.ant-table-wrapper.has_scroll::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 28px;
+    pointer-events: none;
+    background: linear-gradient(to left, rgba(15, 23, 42, 0.13), rgba(15, 23, 42, 0));
+    /* Aylantirish oxiriga yetilganda yashiriladi — aks holda soya
+       "yana kontent bor" deb yolg'on va'da bergan bo'lardi */
+    transition: opacity 0.2s;
+    opacity: 1;
+    z-index: 2;
+}
+
+.ant-table-wrapper.has_scroll.scrolled_end::after {
+    opacity: 0;
+}
+
+/* ── Jadval kataklarida matn kesilmasin ──────────────────────────────
+   Uzun qiymatlar (bemor ismi, manzil) ustunni cho'zib yuborardi.
+   Kichik ekranda so'z ichida ko'chirish kesilgan matndan yaxshiroq. */
+@media (max-width: 576px) {
+    .ant-table-tbody > tr > td {
+        word-break: break-word;
+    }
+}
+
+/* EKG tasmasini kattalashtirish ishorasi.
+   Faqat tor ekranda: kengroq ekranda tasma o'qish uchun yetarli va
+   antd kattalashtirish niqobini sichqoncha ustiga kelganda o'zi
+   ko'rsatadi. */
+.ekg-image-hint {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .ekg-image-hint {
+    display: block;
+    margin: -12px 0 12px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #94A3B8;
+  }
+}
+
+/* ── Ro'yxat sahifalarining yuqori qatori ─────────────────────────
+   Ilgari 24 ustunli panjara va har bir element `xl={4}` — kenglikning
+   oltidan biri. 1520 px ekranda barcha boshqaruvlar chap uchdan birga
+   tiqilib, o'ng tomonda yarim ekran bo'sh qolardi.
+
+   Endi flexbox: qidiruv bo'sh joyni egallaydi, "Filtrlar" uning
+   yonida (ikkalasi ham ro'yxatni toraytiradi), eksport esa o'ng
+   chekkada — u boshqa turdagi amal. */
+.filter_toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter_toolbar_search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 320px;
+  /* Cheksiz o'sish ham yomon: 1920 px ekranda qidiruv maydoni
+     ma'nosiz cho'zilib ketardi */
+  max-width: 600px;
+}
+
+/* Qidiruv maydoni guruh ichida bo'sh joyni oladi, tugma esa o'z
+   o'lchamida qoladi */
+.filter_toolbar_search .filter_item {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.filter_toolbar_search .filter_actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+}
+
+.filter_toolbar_search .filter_actions .btn_form {
+  width: auto;
+  padding: 0 20px;
+  margin-top: 0;
+}
+
+.filter_toolbar_btn {
+  height: 48px;
+}
+
+/* Eksport — o'ng chekkada: u ro'yxatni toraytirmaydi, chiqaradi */
+.filter_toolbar_actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+/* Tor ekranda o'ngga surish ma'nosini yo'qotadi — hamma narsa
+   ustma-ust joylashadi */
+@media (max-width: 768px) {
+  .filter_toolbar_search {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .filter_toolbar_actions {
+    margin-left: 0;
+  }
+}
+
+/* Auth sahifalaridan tashqarida reCAPTCHA belgisi ko'rinmasin (T-045) */
+body.hide_recaptcha_badge .grecaptcha-badge {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* ── EKG tasmasi mavjud kenglikni to'liq egallasin ───────────────────────
+   antd `Image` komponenti rasmni `.ant-image` o'ramiga joylaydi. `width: 100%`
+   uslubi faqat ichki `<img>` ga tushardi, o'ram esa o'z tabiiy o'lchamida
+   qolardi — natijada 1108 px konteynerda tasma atigi 500 px bo'lib
+   ko'rinardi va to'lqinlarni o'qish qiyin edi. */
+.ekg-image .ant-image {
+    width: 100%;
+}
+
+.ekg-image .ant-image img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+/* ── Header mobilda sig'sin (o'lchangan: 375 px ekranda 394 px edi) ──────
+   Hamburger + qo'llanma + til + avatar + ism bir qatorga sig'masdi va
+   foydalanuvchi ismi ekrandan chiqib ketardi. Kichik ekranda ism va rol
+   yashiriladi — avatarning o'zi menyuni ochish uchun yetarli. */
+@media (max-width: 576px) {
+    .exit_icon > div:not(.head_img) {
+        display: none;
+    }
+
+    .header_breadcrumb {
+        margin-left: 8px;
+    }
+
+    .lang_exit {
+        gap: 4px;
+    }
+
+    .header_tour_btn {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+}
+
+/* EKG tasmasi: balandlikni konteynerga berish foyda bermaydi, chunki
+   ichidagi `img` `width: 100%` bilan undan toshib chiqadi. Chegara
+   rasmning o'ziga qo'yiladi — telefonda olingan tik (4:3) surat butun
+   ekranni egallab ketmaydi, keng EKG lentasi esa o'z eni bo'yicha
+   to'liq ko'rinadi. Ustiga bosilganda to'liq o'lchamda ochiladi. */
+.ekg-image .ant-image {
+  width: 100%;
+}
+
+.ekg-image .ant-image-img {
+  /* `width: 100%` komponentda inline yozilgan; balandlik chegarasi
+     ishlashi uchun uni bosib o'tish kerak. `object-fit: contain` bu
+     yerda yaramaydi — u rasmni konteyner ichida markazlashtiradi va
+     yon tomonlarda bo'sh oq chiziq qoldiradi, tasvirning o'zi esa
+     kichrayadi. `width: auto` bilan rasm o'z nisbatini saqlab, faqat
+     balandligi bo'yicha cheklanadi. */
+  width: auto !important;
+  max-width: 100%;
+  max-height: 80vh;
+  cursor: zoom-in;
+  background: #fff;
+}
+
+.ekg-image {
+  text-align: center;
+}
+
+/* Sun'iy intellekt biror bo'limni to'ldirmagan bo'lsa — bo'lim
+   yashirilmaydi, matn kulrang va kursiv bo'lib ko'rinadi, shunda uni
+   haqiqiy xulosadan farqlash oson. */
+.ekg-item-empty {
+  color: #94A3B8;
+  font-style: italic;
+}
+
+/* ── Laboratoriya ko'rsatkichlari (T-035) ─────────────────────────────
+   Chegaradan chiqqan qiymat ikki usulda belgilanadi: rangli chap chiziq
+   VA matnli teg. Faqat rang yetarli emas — rang ko'rishi buzilgan
+   foydalanuvchi uchun ko'rsatkich butunlay bir xil ko'rinardi. */
+.lab-values {
+  list-style: none;
+  padding-left: 0;
+}
+
+.lab-values li {
+  padding: 6px 10px;
+  border-left: 3px solid transparent;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+
+.lab-values li.lab-normal {
+  border-left-color: #16A34A;
+}
+
+.lab-values li.lab-high {
+  border-left-color: #DC2626;
+  background: rgba(220, 38, 38, 0.05);
+}
+
+.lab-values li.lab-low {
+  border-left-color: #D97706;
+  background: rgba(217, 119, 6, 0.05);
+}
+
+/* Referens diapazoni — asosiy qiymatdan sezilarli darajada past
+   kontrastda: u ma'lumot, e'tibor markazi emas. */
+.lab-range {
+  color: #94A3B8;
+  font-size: 0.9em;
+  margin-left: 6px;
+}
+
+/* Ko'rsatkich dinamikasi grafigi (T-035) */
+.lab-dynamics-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+/* Grafik `maintainAspectRatio: false` bilan ishlaydi, ya'ni balandlikni
+   konteyner beradi. Aks holda u nolga siqilib, ko'rinmay qoladi. */
+.lab-dynamics canvas {
+  max-height: 320px;
+}
+
+/* Kiritilmagan maydon haqidagi izoh — oddiy izohdan ajralib tursin,
+   lekin xatolik kabi qizil bo'lmasin: bu xato emas, to'ldirilmagan maydon */
+.analysis-view-meta-missing {
+  color: #B45309;
+  font-style: italic;
+}
+
+/* Tanlangan rol nima qila olishini tushuntiruvchi matn. Rol xodimning
+   butun kirish huquqini belgilaydi, lekin formada bu hech qayerda
+   aytilmagandi (T-021). */
+.role-hint {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  background: #F1F5F9;
+  border-left: 3px solid var(--back_color);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #475569;
+}
+
+
+/* Ro'yxatdan o'tish formasi kirish formasidan ancha uzun: klinika
+   ma'lumotlari, bank rekvizitlari va admin ma'lumotlari. 50/50 bo'linishda
+   u 644 px ga siqilib, sahifa balandligi 1074 px ga chiqardi — ya'ni
+   foydalanuvchi butun formani ko'rish uchun ikki ekran aylantirishi
+   kerak edi.
+   Keng ekranlarda formaga ko'proq joy beriladi; rasm bezak sifatida
+   qoladi. `register_page ustunlari` (T-073). */
+@media (min-width: 1200px) {
+  .register_page .login_form_box {
+    width: 62%;
+  }
+
+  .register_page .login_img {
+    width: 38%;
+  }
+}

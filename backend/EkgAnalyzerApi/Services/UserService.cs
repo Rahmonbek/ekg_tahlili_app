@@ -20,7 +20,7 @@ namespace EkgAnalyzerApi.Services
     .Include(u => u.Role)
     .Include(u => u.Doctor)
     .Include(u => u.Clinic)
-        .ThenInclude(c => c.ClinicDetail)
+        .ThenInclude(c => c.ClinicDetail!)
     .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user == null) return null;
@@ -81,12 +81,16 @@ namespace EkgAnalyzerApi.Services
                 Id = user.Id,
                 RoleId= user.RoleId,
                 Email = user.Email,
-                Role=new RolesDTO
+                // `Doctor` va `Clinic` uchun `null` tekshiruvi bor edi,
+                // `Role` uchun yo'q: roli o'chirilgan foydalanuvchida bu
+                // qator `NullReferenceException` berardi va `/api/user/me`
+                // 500 qaytarardi, ya'ni kabinet umuman ochilmasdi (T-009).
+                Role = user.Role == null ? null : new RolesDTO
                 {
-                    Id=user.Role.Id,
-                    NameUz=user.Role.NameUz,
-                    NameRu=user.Role.NameRu,
-                    NameEn=user.Role.NameEn,
+                    Id = user.Role.Id,
+                    NameUz = user.Role.NameUz,
+                    NameRu = user.Role.NameRu,
+                    NameEn = user.Role.NameEn,
                 },
                 Doctor = doctorDto,
                 Clinic = clinicDto

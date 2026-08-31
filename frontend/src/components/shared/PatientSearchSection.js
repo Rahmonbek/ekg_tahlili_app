@@ -2,6 +2,7 @@ import React from 'react';
 import { Button, Col, Form, Input, Row } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { FaAddressCard } from 'react-icons/fa6';
+import DateField from './DateField';
 
 /**
  * Bemor qidirish formasi — passport + tug'ilgan sana.
@@ -15,11 +16,11 @@ import { FaAddressCard } from 'react-icons/fa6';
  */
 export default function PatientSearchSection({ form, onFinish, onReset, loading }) {
     const { t } = useTranslation();
-    const today = new Date().toISOString().split('T')[0];
 
     return (
         <Form
             form={form}
+            data-tour="analyzer-patient"
             onValuesChange={onReset}
             name="patientSearch"
             labelCol={{ span: 24 }}
@@ -33,7 +34,7 @@ export default function PatientSearchSection({ form, onFinish, onReset, loading 
                         name="passport"
                         label={t('passport_seria')}
                         rules={[
-                            { required: true, message: '' },
+                            { required: true, message: t('field_required') },
                             {
                                 validator: (_, value) => {
                                     const normalized = (value || '').replace(/[^0-9A-Za-zА-Яа-яЁё]/g, '');
@@ -65,9 +66,13 @@ export default function PatientSearchSection({ form, onFinish, onReset, loading 
                     <Form.Item
                         name="birthdate"
                         label={t('birthdate')}
-                        rules={[{ required: true, message: '' }]}
+                        rules={[{ required: true, message: t('field_required') }]}
                     >
-                        <input className="input_date" type="date" max={today} />
+                        {/* Tug'ma `<input type="date">` brauzer tiliga bo'ysunardi:
+                            interfeys o'zbekcha bo'lsa ham ruscha `дд.мм.гггг` chiqardi.
+                            DateField forma qiymatini `YYYY-MM-DD` satr holida saqlaydi,
+                            shuning uchun yuborish mantig'i o'zgarmaydi. */}
+                        <DateField />
                     </Form.Item>
                 </Col>
 

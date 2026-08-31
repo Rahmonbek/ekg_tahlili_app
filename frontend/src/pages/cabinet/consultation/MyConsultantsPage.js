@@ -13,6 +13,7 @@ import {
 } from '../../../host/requests/ConsultationRequest';
 import CreateConsultationModal from './CreateConsultationModal';
 import './Consultation.css';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -25,6 +26,7 @@ const STATUS_TAG = {
 
 export default function MyConsultantsPage() {
     const { t }    = useTranslation();
+    useDocumentTitle(t('my_consultants', { defaultValue: "Mening konsultantlarim" }));
     const navigate = useNavigate();
 
     const [activeTab, setActiveTab] = useState('my');
@@ -76,7 +78,7 @@ export default function MyConsultantsPage() {
         setAddingId(doctorId);
         try {
             await addConsultant({ consultantDoctorId: doctorId });
-            notification.success({ message: t('consultant_request_sent') || "So'rov yuborildi" });
+            notification.success({ message: t('consultant_request_sent', { defaultValue: "So'rov yuborildi" }) });
             loadCatalog();
             loadMyConsultants();
         } catch (e) {
@@ -166,14 +168,14 @@ export default function MyConsultantsPage() {
                                 setModalOpen(true);
                             }}
                         >
-                            {t('new_request') || "Yuborish"}
+                            {t('new_request', { defaultValue: "Yuborish" })}
                         </Button>
                         <Button
                             size="small"
                             icon={<HistoryOutlined />}
                             onClick={() => navigate(`/consultations?consultantDoctorId=${row.doctorId}`)}
                         >
-                            {t('consultation_history') || 'Tarix'}
+                            {t('consultation_history', { defaultValue: 'Tarix' })}
                         </Button>
                     </Space>
                 );
@@ -221,7 +223,7 @@ export default function MyConsultantsPage() {
             width: 180,
             render: (_, row) => {
                 if (row.isLinked) {
-                    return <Tag color="green">{t('linked_badge') || 'Biriktirilgan'} ✓</Tag>;
+                    return <Tag color="green">{t('linked_badge', { defaultValue: 'Biriktirilgan' })} ✓</Tag>;
                 }
                 if (row.linkRequestStatus === 'pending') {
                     return (
@@ -243,8 +245,8 @@ export default function MyConsultantsPage() {
                                 ? "So'rovni qayta yuborishni tasdiqlaysizmi?"
                                 : "Ushbu doktorni konsultant sifatida qo'shishni tasdiqlaysizmi?"}
                             onConfirm={() => handleAddConsultant(row.id)}
-                            okText={t('accept') || 'Ha'}
-                            cancelText={t('back') || "Yo'q"}
+                            okText={t('accept', { defaultValue: 'Ha' })}
+                            cancelText={t('back', { defaultValue: "Yo'q" })}
                         >
                             <Button
                                 type={isRejected ? 'default' : 'primary'}
@@ -252,7 +254,7 @@ export default function MyConsultantsPage() {
                                 icon={<UserAddOutlined />}
                                 loading={addingId === row.id}
                             >
-                                {isRejected ? 'Qayta yuborish' : (t('add_consultant') || "Qo'shish")}
+                                {isRejected ? 'Qayta yuborish' : (t('add_consultant', { defaultValue: "Qo'shish" }))}
                             </Button>
                         </Popconfirm>
                     </Space>
@@ -330,8 +332,8 @@ export default function MyConsultantsPage() {
                 <div className="consultation-body">
                     <div style={{ display: 'flex', borderBottom: '1px solid #f0f0f0', marginBottom: 16, gap: 0 }}>
                         {[
-                            { key: 'my', label: t('my_consultants') || 'Konsultantlarim' },
-                            { key: 'catalog', label: t('add_consultant') || "Konsultant qo'shish" },
+                            { key: 'my', label: t('my_consultants', { defaultValue: 'Konsultantlarim' }) },
+                            { key: 'catalog', label: t('add_consultant', { defaultValue: "Konsultant qo'shish" }) },
                         ].map(tab => (
                             <button
                                 key={tab.key}
@@ -356,13 +358,16 @@ export default function MyConsultantsPage() {
                     {activeTab === 'my' && (
                         <Card size="small" style={{ borderRadius: 8 }}>
                     <Table
+                        // Jadval keng bo'lsa gorizontal aylantirish — ilgari ortiqcha
+                        // ustunlar shunchaki kesilardi va ularga yetib bo'lmasdi
+                        scroll={{ x: "max-content" }}
                         rowKey={(row) => row.isLinkRequest ? `invite_${row.invitationId}` : `cc_${row.clinicConsultantId}`}
                         columns={myColumns}
                         dataSource={myList}
                         loading={myLoading}
                         size="small"
                         pagination={{ pageSize: 10, showSizeChanger: false }}
-                        locale={{ emptyText: t('no_consultants') || "Konsultantlar yo'q" }}
+                        locale={{ emptyText: t('no_consultants', { defaultValue: "Konsultantlar yo'q" }) }}
                     />
                         </Card>
                     )}
@@ -395,7 +400,7 @@ export default function MyConsultantsPage() {
                         loading={catLoading}
                         size="small"
                         pagination={{ pageSize: 10, showSizeChanger: false }}
-                        locale={{ emptyText: t('no_consultants') || 'Doktorlar topilmadi' }}
+                        locale={{ emptyText: t('no_consultants', { defaultValue: 'Doktorlar topilmadi' }) }}
                     />
                         </Card>
                     )}

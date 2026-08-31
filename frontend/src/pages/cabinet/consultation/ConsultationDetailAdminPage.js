@@ -2,8 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-    Button, Tag, message, Typography, Descriptions, Divider, Spin, Space
-} from 'antd';
+    Button, Tag, message, Typography, Descriptions, Divider, Spin, Space, Result} from 'antd';
 import { ArrowLeftOutlined, DownloadOutlined, EyeOutlined, VideoCameraOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { getConsultationDetailAdmin, getConsultationTokenAdmin } from '../../../host/requests/ConsultationRequest';
@@ -13,6 +12,8 @@ import LiveKitRoomView from '../../../components/video/LiveKitRoom';
 import { useStore } from '../../../store/Store';
 import ConsultationAnalysisInlineView, { normalizeAnalysisType } from './ConsultationAnalysisInlineView';
 import './Consultation.css';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
+import { formatPhoneNumberForForm } from '../../../tools/formatters';
 
 const { Title, Text } = Typography;
 
@@ -25,6 +26,7 @@ const STATUS_COLORS = {
 
 export default function ConsultationDetailAdminPage() {
     const { t } = useTranslation();
+    useDocumentTitle(t('consultation_detail', { defaultValue: "Konsultatsiya ma'lumotlari" }));
     const navigate = useNavigate();
     const { id } = useParams();
     const { videoCall, setVideoCall } = useStore();
@@ -104,7 +106,24 @@ export default function ConsultationDetailAdminPage() {
         );
     }
 
-    if (!detail) return null;
+    if (!detail) {
+        // Ilgari bu yerda `return null` turardi — mavjud bo'lmagan yoki
+        // ruxsat berilmagan ID da sahifa butunlay bo'sh qolardi: na
+        // xabar, na orqaga qaytish yo'li. Foydalanuvchi ilova buzilgan
+        // deb o'ylardi.
+        return (
+            <Result
+                status="404"
+                title={t('consultation_not_found', { defaultValue: 'Konsultatsiya topilmadi' })}
+                subTitle={t('consultation_not_found_hint', {
+                    defaultValue: "Bunday konsultatsiya mavjud emas yoki uni ko'rish huquqingiz yo'q",
+                })}
+                extra={<Button type="primary" onClick={() => navigate('/consultations')}>
+                    {t('back', { defaultValue: 'Orqaga' })}
+                </Button>}
+            />
+        );
+    }
 
     return (
         <div className="consultation-page">
@@ -166,7 +185,7 @@ export default function ConsultationDetailAdminPage() {
                         <Descriptions.Item label={t('gender')}>
                             {detail.gender === true ? t('male') : detail.gender === false ? t('female') : '-'}
                         </Descriptions.Item>
-                        <Descriptions.Item label={t('phone_number')}>{detail.phone}</Descriptions.Item>
+                        <Descriptions.Item label={t('phone_number')}>{formatPhoneNumberForForm(detail.phone)}</Descriptions.Item>
                         <Descriptions.Item label={t('address')}>{detail.address}</Descriptions.Item>
                     </Descriptions>
 
@@ -175,7 +194,7 @@ export default function ConsultationDetailAdminPage() {
                     <Descriptions bordered column={2} size="small">
                         <Descriptions.Item label={t('FIO')}>{detail.doctorFullName}</Descriptions.Item>
                         <Descriptions.Item label={t('position')}>{detail.doctorPosition}</Descriptions.Item>
-                        <Descriptions.Item label={t('phone_number')}>{detail.doctorPhone}</Descriptions.Item>
+                        <Descriptions.Item label={t('phone_number')}>{formatPhoneNumberForForm(detail.doctorPhone)}</Descriptions.Item>
                         <Descriptions.Item label={t('clinic_name')}>{detail.doctorClinicName}</Descriptions.Item>
                         <Descriptions.Item label="Status">
                             <Tag color={detail.doctorIsOnline ? 'green' : 'default'}>
@@ -247,7 +266,7 @@ export default function ConsultationDetailAdminPage() {
                                             icon={<EyeOutlined />}
                                             onClick={() => setExpandedAnalysisKey(isExpanded ? null : analysisKey)}
                                         >
-                                            {isExpanded ? (t('hide') || 'Yopish') : t('view_analyse')}
+                                            {isExpanded ? (t('hide', { defaultValue: 'Yopish' })) : t('view_analyse')}
                                         </Button>
                                     </div>
                                     {a.date && (

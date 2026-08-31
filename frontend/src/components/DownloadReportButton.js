@@ -49,8 +49,8 @@ const DownloadReportButton = ({ type, id, size = 'small', block = false, style =
                 loading={loading}
                 onClick={() => setModalOpen(true)}
                 style={{
-                    borderColor: '#1890ff',
-                    color: '#1890ff',
+                    borderColor: '#2563EB',
+                    color: '#2563EB',
                     ...style,
                 }}
             >
@@ -60,7 +60,7 @@ const DownloadReportButton = ({ type, id, size = 'small', block = false, style =
             <Modal
                 title={
                     <span>
-                        <FilePdfOutlined style={{ color: '#1890ff', marginRight: 8 }} />
+                        <FilePdfOutlined style={{ color: '#2563EB', marginRight: 8 }} />
                         {t('download_pdf_title')}
                     </span>
                 }
@@ -68,7 +68,7 @@ const DownloadReportButton = ({ type, id, size = 'small', block = false, style =
                 onCancel={() => setModalOpen(false)}
                 onOk={handleDownload}
                 okText={t('download_pdf')}
-                cancelText={t('cancel') || 'Bekor qilish'}
+                cancelText={t('cancel', { defaultValue: 'Bekor qilish' })}
                 okButtonProps={{ icon: <FilePdfOutlined />, loading }}
                 centered
                 width={320}

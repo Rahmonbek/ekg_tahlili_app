@@ -1,0 +1,66 @@
+# Ishlatilmaydigan paket va fayllarni kuzatadi (T-017).
+#
+# ATAYIN BLOKLAMAYDI. `continue-on-error: true` va `|| true` — bu ish
+# oqimi hech qachon PR ni to'sib qo'ymaydi, faqat hisobot beradi.
+#
+# Sabab: `depcheck` yolg'on signal beradigan holatlar ko'p (dinamik
+# `import()`, faqat konfiguratsiyada ishlatiladigan paketlar, CRA ning
+# o'z bog'liqliklari). Bunday vositani majburiy qilish tez orada
+# "hammasi qizil, e'tibor bermaymiz" holatiga olib keladi va shunda u
+# umuman foydasiz bo'lib qoladi.
+#
+# Majburiy qilish kerak bo'lsa — avval `.depcheckrc` da istisnolar
+# ro'yxatini to'ldirib, keyin `continue-on-error` ni olib tashlang.
+
+name: Dead code
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  depcheck:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Ishlatilmaydigan bog'liqliklar
+        working-directory: frontend
+        run: npx --yes depcheck --ignores="@babel/*,eslint*,web-vitals" || true
+
+      - name: Import qilinmagan komponentlar
+        working-directory: frontend/src
+        run: |
+          # Har bir komponent fayli o'z papkasidan tashqarida
+          # bironta joyda import qilinganmi?
+          echo "Hech qayerda import qilinmagan fayllar:"
+          find . -name '*.jsx' -o -name '*.js' | while read -r f; do
+            base=$(basename "$f" | sed 's/\.[^.]*$//')
+            case "$base" in index|setupTests|reportWebVitals) continue ;; esac
+            hits=$(grep -rl "/${base}'" . --include='*.js' --include='*.jsx' \
+                   | grep -v "^${f%/*}/" | wc -l)
+            [ "$hits" -eq 0 ] && echo "  $f"
+          done || true
+
+  constitution:
+    # Konstitutsiyada e'lon qilingan endpointlar kodda bormi (T-078).
+    # Bu bloklaydi: hujjatda mavjud bo'lmagan endpoint yozilishi
+    # yangi dasturchini to'g'ridan-to'g'ri chalg'itadi va uni topish
+    # arzon — marshrut atributlarini o'qish yetarli.
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Konstitutsiya va kod mosligi
+        run: python scripts/check_constitution.py --strict

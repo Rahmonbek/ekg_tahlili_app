@@ -1,27 +1,97 @@
 import React from 'react';
+import { Skeleton, Tooltip } from 'antd';
 import { useNavigate } from 'react-router-dom';
 
-export default function StatCard({ icon, title, value, subValue, subLabel, allTimeValue, allTimeLabel, color = '#00D1B2', path }) {
+/**
+ * Asosiy paneldagi statistika kartochkasi.
+ *
+ * Ilgari kartochka `allTimeValue` ni asosiy raqam sifatida ko'rsatardi,
+ * bo'lim sarlavhasi esa "BUGUNGI TAHLILLAR" edi. Ya'ni bugun bironta ham
+ * tahlil bo'lmasa-da ekranda umumiy son (masalan 10) turardi va klinika
+ * rahbari uni bugungi ish hajmi deb tushunardi.
+ *
+ * Endi: asosiy raqam — BUGUNGI son, umumiy son esa pastda kichik matnda.
+ *
+ * @param {number|null} value        bugungi son (null = yuklanmoqda)
+ * @param {number|null} allTimeValue umumiy son
+ * @param {number}      subValue     ko'rilmagan tahlillar soni (badge)
+ * @param {boolean}     disabled     klinika faollashtirilmagan bo'lsa bosilmaydi
+ */
+export default function StatCard({
+    icon,
+    title,
+    value,
+    allTimeValue,
+    allTimeLabel,
+    subValue,
+    subLabel,
+    color = '#00B39A',
+    path,
+    loading = false,
+    disabled = false,
+}) {
     const navigate = useNavigate();
-    return (
+    const clickable = Boolean(path) && !disabled && !loading;
+
+    const handleClick = () => {
+        if (clickable) navigate(path);
+    };
+
+    const card = (
         <div
-            className="stat_card"
-            onClick={() => path && navigate(path)}
-            style={{ cursor: path ? 'pointer' : 'default' }}
+            className={`stat_card${disabled ? ' stat_card_disabled' : ''}`}
+            onClick={handleClick}
+            onKeyDown={(e) => {
+                if (clickable && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    handleClick();
+                }
+            }}
+            role={clickable ? 'button' : undefined}
+            tabIndex={clickable ? 0 : undefined}
+            style={{
+                cursor: clickable ? 'pointer' : 'default',
+                opacity: disabled ? 0.55 : 1,
+            }}
         >
-            <div className="stat_card_icon" style={{ backgroundColor: color + '18', color }}>
+            <div
+                className="stat_card_icon"
+                style={{
+                    // `#RRGGBB18` alfa-suffiks faqat 6 xonali hex uchun to'g'ri
+                    backgroundColor: /^#[0-9a-fA-F]{6}$/.test(color) ? `${color}18` : undefined,
+                    color,
+                }}
+            >
                 {icon}
             </div>
+
             <div className="stat_card_body">
                 <p className="stat_card_title">{title}</p>
-                <h2 className="stat_card_value">{allTimeValue ?? '—'}</h2>
-                {subValue > 0 && (
+
+                {loading ? (
+                    // Yuklanish paytida "—" ko'rsatish "ma'lumot yo'q" degan
+                    // noto'g'ri signal berardi. Skeleton aniqroq.
+                    <Skeleton.Input active size="small" style={{ width: 56, height: 28 }} />
+                ) : (
+                    <h2 className="stat_card_value">{value ?? 0}</h2>
+                )}
+
+                {!loading && allTimeValue != null && (
+                    <span className="stat_card_alltime">
+                        {allTimeLabel || 'Jami'}: {allTimeValue}
+                    </span>
+                )}
+
+                {!loading && subValue > 0 && (
                     <span className="stat_card_sub" style={{ color }}>
                         {subValue} {subLabel}
                     </span>
                 )}
-               
             </div>
         </div>
     );
+
+    return disabled
+        ? <Tooltip title="Klinikangiz faollashtirilgandan so'ng ochiladi">{card}</Tooltip>
+        : card;
 }

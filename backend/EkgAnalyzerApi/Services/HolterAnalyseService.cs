@@ -1,7 +1,8 @@
-using EkgAnalyzerApi.Data;
+﻿using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
 using Microsoft.EntityFrameworkCore;
+using EkgAnalyzerApi.Helpers;
 
 namespace EkgAnalyzerApi.Services
 {
@@ -9,9 +10,13 @@ namespace EkgAnalyzerApi.Services
     {
         private readonly MedDataDB _context;
 
-        public HolterAnalyseService(MedDataDB context)
+        /// <summary>Passportni maskalashdan oldin ochish uchun (T-098).</summary>
+        private readonly EncryptionService _encryption;
+
+        public HolterAnalyseService(MedDataDB context, EncryptionService encryption)
         {
             _context = context;
+            _encryption = encryption;
         }
 
         public async Task<PagedResult<HolterAnalyseDTO>> GetHolterAnalysesByPatientIdAsync(
@@ -27,22 +32,23 @@ namespace EkgAnalyzerApi.Services
             var items = await baseQuery
                 .Include(e => e.Clinic)
                 .ThenInclude(c => c.ClinicDetail)
-                .ThenInclude(c => c.District)
-                .ThenInclude(c => c.Region)
+                .ThenInclude(c => c.District!)
+                .ThenInclude(c => c.Region!)
                 .Include(e => e.Clinic)
                 .ThenInclude(c => c.ClinicPhoneNumber)
                 .Include(e => e.Patcient)
-                .Include(e => e.CreatedDoctor).ThenInclude(c => c.User).ThenInclude(c => c.Role)
-                .Include(e => e.MainDoctor).ThenInclude(c => c.User).ThenInclude(c => c.Role)
-                .Include(e => e.Doctors).ThenInclude(c => c.Doctor).ThenInclude(c => c.User).ThenInclude(c => c.Role)
+                .Include(e => e.CreatedDoctor!).ThenInclude(c => c.User!).ThenInclude(c => c.Role!)
+                .Include(e => e.MainDoctor!).ThenInclude(c => c.User!).ThenInclude(c => c.Role!)
+                .Include(e => e.Doctors!).ThenInclude(c => c.Doctor!).ThenInclude(c => c.User!).ThenInclude(c => c.Role!)
                 .OrderByDescending(e => e.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .ApplyPaging(page, pageSize)
                 .Select(e => new HolterAnalyseDTO
                 {
                     Id = e.Id,
+                    DocumentNumber = e.DocumentNumber,
                     AIAnswerData = e.AIAnswerData,
                     UpdatedAt = e.UpdatedAt,
+                    AnalysisDate = e.AnalysisDate,
                     CreatedAt = e.CreatedAt,
                     AnalyseFileLink = e.AnalyseFileLink,
                     Status = e.Status,
@@ -77,10 +83,10 @@ namespace EkgAnalyzerApi.Services
                         Phone = e.CreatedDoctor.Phone,
                         Role = new RolesDTO
                         {
-                            Id = e.CreatedDoctor.User.Role.Id,
-                            NameUz = e.CreatedDoctor.User.Role.NameUz,
-                            NameEn = e.CreatedDoctor.User.Role.NameEn,
-                            NameRu = e.CreatedDoctor.User.Role.NameRu
+                            Id = e.CreatedDoctor.User!.Role!.Id,
+                            NameUz = e.CreatedDoctor.User!.Role!.NameUz,
+                            NameEn = e.CreatedDoctor.User!.Role!.NameEn,
+                            NameRu = e.CreatedDoctor.User!.Role!.NameRu
                         }
                     },
                     MainDoctor = new DoctorForECGData
@@ -92,10 +98,10 @@ namespace EkgAnalyzerApi.Services
                         Phone = e.MainDoctor.Phone,
                         Role = new RolesDTO
                         {
-                            Id = e.MainDoctor.User.Role.Id,
-                            NameUz = e.MainDoctor.User.Role.NameUz,
-                            NameEn = e.MainDoctor.User.Role.NameEn,
-                            NameRu = e.MainDoctor.User.Role.NameRu
+                            Id = e.MainDoctor.User!.Role!.Id,
+                            NameUz = e.MainDoctor.User!.Role!.NameUz,
+                            NameEn = e.MainDoctor.User!.Role!.NameEn,
+                            NameRu = e.MainDoctor.User!.Role!.NameRu
                         }
                     },
                     Doctors = e.Doctors.Select(c => new DoctorForECGData
@@ -107,10 +113,10 @@ namespace EkgAnalyzerApi.Services
                         Phone = c.Doctor.Phone,
                         Role = new RolesDTO
                         {
-                            Id = c.Doctor.User.Role.Id,
-                            NameUz = c.Doctor.User.Role.NameUz,
-                            NameEn = c.Doctor.User.Role.NameEn,
-                            NameRu = c.Doctor.User.Role.NameRu
+                            Id = c.Doctor.User!.Role!.Id,
+                            NameUz = c.Doctor.User!.Role!.NameUz,
+                            NameEn = c.Doctor.User!.Role!.NameEn,
+                            NameRu = c.Doctor.User!.Role!.NameRu
                         }
                     }).ToList()
                 })
@@ -208,11 +214,11 @@ namespace EkgAnalyzerApi.Services
 
             var items = await query
                 .OrderByDescending(e => e.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .ApplyPaging(page, pageSize)
                 .Select(e => new HolterAnalyseListDTO
                 {
                     Id = e.Id,
+                    DocumentNumber = e.DocumentNumber,
                     Status = e.Status,
                     CreatedAt = e.CreatedAt,
                     AnalysisDate = e.AnalysisDate,
@@ -233,13 +239,34 @@ namespace EkgAnalyzerApi.Services
                         LastName = e.CreatedDoctor.LastName,
                         SureName = e.CreatedDoctor.SureName
                     },
-                    AIStatus = e.AIAnswerData != null ? 
-                        (e.AIAnswerData.Contains("\"automatic_analysis_bool\": 1") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"1\"") ? 1 : 
-                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 2") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"2\"") ? 2 : 
-                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 3") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"3\"") ? 3 : null) : null,
+                    AIAnswerData = e.AIAnswerData,
                     HasDiagnosis = _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "holter" && d.AnalysisId == e.Id)
                 })
                 .ToListAsync();
+
+            // Jiddiylik darajasi JSON dan xavfsiz o'qiladi (matn qidiruvi emas):
+
+            // `"automatic_analysis_bool": 13` qiymati ilgari 1 (Normal) deb topilardi.
+
+            // Passport ro'yxatda TO'LIQ qaytarilardi (T-098). Ekranda
+            // doimiy ko'rinib turgan passport yelka orqali qaralishi va
+            // ekran suratiga tushishi mumkin. Oxirgi to'rtta belgi
+            // qoldiriladi — ikki bemorni ajratish uchun yetarli.
+            foreach (var item in items)
+                if (item.Patcient != null)
+                    item.Patcient.Passport =
+                        PatientPrivacy.MaskPassport(_encryption, item.Patcient.Passport);
+
+            foreach (var item in items)
+
+                item.AIStatus = AiSeverity.Parse(item.AIAnswerData);
+            foreach (var item in items)
+                item.AiSummary = AiSeverity.Summarize(item.AIAnswerData);
+            foreach (var item in items)
+                item.ErrorReason = item.Status == -1
+                    ? AiSeverity.ExtractErrorMessage(item.AIAnswerData)
+                    : null;
+
 
             return new PagedResult<HolterAnalyseListDTO>
             {
@@ -250,27 +277,31 @@ namespace EkgAnalyzerApi.Services
             };
         }
 
-        public async Task<HolterAnalyseDTO?> GetHolterAnalyseByIdAsync(int id)
+        public async Task<HolterAnalyseDTO?> GetHolterAnalyseByIdAsync(int id, int? clinicId = null)
         {
             var e = await _context.HolterAnalyses
                .Include(e => e.Clinic)
                    .ThenInclude(c => c.ClinicDetail)
-                       .ThenInclude(d => d.District)
+                       .ThenInclude(d => d.District!)
                .Include(e => e.Clinic)
                    .ThenInclude(c => c.ClinicPhoneNumber)
                .Include(e => e.Patcient)
-               .Include(e => e.CreatedDoctor).ThenInclude(d => d.User).ThenInclude(u => u.Role)
-               .Include(e => e.MainDoctor).ThenInclude(d => d.User).ThenInclude(u => u.Role)
-               .Include(e => e.Doctors).ThenInclude(d => d.Doctor).ThenInclude(d => d.User).ThenInclude(u => u.Role)
-               .FirstOrDefaultAsync(x => x.Id == id);
+               .Include(e => e.CreatedDoctor!).ThenInclude(d => d.User!).ThenInclude(u => u.Role!)
+               .Include(e => e.MainDoctor!).ThenInclude(d => d.User!).ThenInclude(u => u.Role!)
+               .Include(e => e.Doctors!).ThenInclude(d => d.Doctor!).ThenInclude(d => d.User!).ThenInclude(u => u.Role!)
+               .FirstOrDefaultAsync(x => x.Id == id
+                    // Klinika izolyatsiyasi: boshqa klinikaning tahlili qaytarilmaydi
+                    && (clinicId == null || x.ClinicId == clinicId));
 
             if (e == null) return null;
 
             return new HolterAnalyseDTO
             {
                 Id = e.Id,
+                DocumentNumber = e.DocumentNumber,
                 AIAnswerData = e.AIAnswerData,
                 UpdatedAt = e.UpdatedAt,
+                AnalysisDate = e.AnalysisDate,
                 CreatedAt = e.CreatedAt,
                 AnalyseFileLink = e.AnalyseFileLink,
                 Status = e.Status,
@@ -305,10 +336,10 @@ namespace EkgAnalyzerApi.Services
                     Phone = e.CreatedDoctor.Phone,
                     Role = e.CreatedDoctor.User.Role == null ? null : new RolesDTO
                     {
-                        Id = e.CreatedDoctor.User.Role.Id,
-                        NameUz = e.CreatedDoctor.User.Role.NameUz,
-                        NameEn = e.CreatedDoctor.User.Role.NameEn,
-                        NameRu = e.CreatedDoctor.User.Role.NameRu
+                        Id = e.CreatedDoctor.User!.Role!.Id,
+                        NameUz = e.CreatedDoctor.User!.Role!.NameUz,
+                        NameEn = e.CreatedDoctor.User!.Role!.NameEn,
+                        NameRu = e.CreatedDoctor.User!.Role!.NameRu
                     }
                 },
                 MainDoctor = e.MainDoctor == null ? null : new DoctorForECGData
@@ -320,10 +351,10 @@ namespace EkgAnalyzerApi.Services
                     Phone = e.MainDoctor.Phone,
                     Role = e.MainDoctor.User.Role == null ? null : new RolesDTO
                     {
-                        Id = e.MainDoctor.User.Role.Id,
-                        NameUz = e.MainDoctor.User.Role.NameUz,
-                        NameEn = e.MainDoctor.User.Role.NameEn,
-                        NameRu = e.MainDoctor.User.Role.NameRu
+                        Id = e.MainDoctor.User!.Role!.Id,
+                        NameUz = e.MainDoctor.User!.Role!.NameUz,
+                        NameEn = e.MainDoctor.User!.Role!.NameEn,
+                        NameRu = e.MainDoctor.User!.Role!.NameRu
                     }
                 },
                 Doctors = e.Doctors.Select(c => new DoctorForECGData
@@ -335,10 +366,10 @@ namespace EkgAnalyzerApi.Services
                     Phone = c.Doctor.Phone,
                     Role = new RolesDTO
                     {
-                        Id = c.Doctor.User.Role.Id,
-                        NameUz = c.Doctor.User.Role.NameUz,
-                        NameEn = c.Doctor.User.Role.NameEn,
-                        NameRu = c.Doctor.User.Role.NameRu
+                        Id = c.Doctor.User!.Role!.Id,
+                        NameUz = c.Doctor.User!.Role!.NameUz,
+                        NameEn = c.Doctor.User!.Role!.NameEn,
+                        NameRu = c.Doctor.User!.Role!.NameRu
                     }
                 }).ToList()
             };
@@ -380,12 +411,12 @@ namespace EkgAnalyzerApi.Services
 
             if (aiStatus.HasValue)
             {
-                var val = aiStatus.Value.ToString();
-                query = query.Where(e => e.AIAnswerData != null && (
-                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": {val}") ||
-                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":{val}") ||
-                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": \"{val}\"") ||
-                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":\"{val}\"")));
+                // Bazadagi hosila ustun: `ai_answer_data ->> 'automatic_analysis_bool'`.
+                // U `1` va `"1"` ni bir xil `'1'` matniga keltiradi, shuning
+                // uchun ilgari kerak bo'lgan sakkizta `LIKE '%…%'` sharti
+                // bitta aniq taqqoslashga aylandi va indeksdan foydalanadi (T-036).
+                var severity = aiStatus.Value.ToString();
+                query = query.Where(e => e.AiSeverityRaw == severity);
             }
 
             if (hasDiagnosis.HasValue)
@@ -419,11 +450,11 @@ namespace EkgAnalyzerApi.Services
 
             var items = await query
                 .OrderByDescending(e => e.Id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .ApplyPaging(page, pageSize)
                 .Select(e => new HolterAnalyseListDTO
                 {
                     Id        = e.Id,
+                    DocumentNumber = e.DocumentNumber,
                     Status    = e.Status,
                     CreatedAt = e.CreatedAt,
                     AnalysisDate = e.AnalysisDate,
@@ -445,13 +476,34 @@ namespace EkgAnalyzerApi.Services
                         LastName  = e.CreatedDoctor.LastName,
                         SureName  = e.CreatedDoctor.SureName
                     },
-                    AIStatus = e.AIAnswerData != null ?
-                        (e.AIAnswerData.Contains("\"automatic_analysis_bool\": 1") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"1\"") ? 1 :
-                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 2") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"2\"") ? 2 :
-                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 3") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"3\"") ? 3 : null) : null,
+                    AIAnswerData = e.AIAnswerData,
                     HasDiagnosis = _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "holter" && d.AnalysisId == e.Id)
                 })
                 .ToListAsync();
+
+            // Jiddiylik darajasi JSON dan xavfsiz o'qiladi (matn qidiruvi emas):
+
+            // `"automatic_analysis_bool": 13` qiymati ilgari 1 (Normal) deb topilardi.
+
+            // Passport ro'yxatda TO'LIQ qaytarilardi (T-098). Ekranda
+            // doimiy ko'rinib turgan passport yelka orqali qaralishi va
+            // ekran suratiga tushishi mumkin. Oxirgi to'rtta belgi
+            // qoldiriladi — ikki bemorni ajratish uchun yetarli.
+            foreach (var item in items)
+                if (item.Patcient != null)
+                    item.Patcient.Passport =
+                        PatientPrivacy.MaskPassport(_encryption, item.Patcient.Passport);
+
+            foreach (var item in items)
+
+                item.AIStatus = AiSeverity.Parse(item.AIAnswerData);
+            foreach (var item in items)
+                item.AiSummary = AiSeverity.Summarize(item.AIAnswerData);
+            foreach (var item in items)
+                item.ErrorReason = item.Status == -1
+                    ? AiSeverity.ExtractErrorMessage(item.AIAnswerData)
+                    : null;
+
 
             return new PagedResult<HolterAnalyseListDTO>
             {
@@ -514,12 +566,12 @@ namespace EkgAnalyzerApi.Services
 
             if (aiStatus.HasValue)
             {
-                var val = aiStatus.Value.ToString();
-                query = query.Where(e => e.AIAnswerData != null && (
-                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": {val}") ||
-                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":{val}") ||
-                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": \"{val}\"") ||
-                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":\"{val}\"")));
+                // Bazadagi hosila ustun: `ai_answer_data ->> 'automatic_analysis_bool'`.
+                // U `1` va `"1"` ni bir xil `'1'` matniga keltiradi, shuning
+                // uchun ilgari kerak bo'lgan sakkizta `LIKE '%…%'` sharti
+                // bitta aniq taqqoslashga aylandi va indeksdan foydalanadi (T-036).
+                var severity = aiStatus.Value.ToString();
+                query = query.Where(e => e.AiSeverityRaw == severity);
             }
 
             if (hasDiagnosis.HasValue)
@@ -553,11 +605,11 @@ namespace EkgAnalyzerApi.Services
 
             var items = await query
                 .OrderByDescending(e => e.Id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .ApplyPaging(page, pageSize)
                 .Select(e => new HolterAnalyseListDTO
                 {
                     Id        = e.Id,
+                    DocumentNumber = e.DocumentNumber,
                     Status    = e.Status,
                     CreatedAt = e.CreatedAt,
                     AnalysisDate = e.AnalysisDate,
@@ -579,13 +631,34 @@ namespace EkgAnalyzerApi.Services
                         LastName  = e.CreatedDoctor.LastName,
                         SureName  = e.CreatedDoctor.SureName
                     },
-                    AIStatus = e.AIAnswerData != null ?
-                        (e.AIAnswerData.Contains("\"automatic_analysis_bool\": 1") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"1\"") ? 1 :
-                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 2") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"2\"") ? 2 :
-                         e.AIAnswerData.Contains("\"automatic_analysis_bool\": 3") || e.AIAnswerData.Contains("\"automatic_analysis_bool\": \"3\"") ? 3 : null) : null,
+                    AIAnswerData = e.AIAnswerData,
                     HasDiagnosis = _context.AnalysisDiagnoses.Any(d => d.AnalysisType == "holter" && d.AnalysisId == e.Id)
                 })
                 .ToListAsync();
+
+            // Jiddiylik darajasi JSON dan xavfsiz o'qiladi (matn qidiruvi emas):
+
+            // `"automatic_analysis_bool": 13` qiymati ilgari 1 (Normal) deb topilardi.
+
+            // Passport ro'yxatda TO'LIQ qaytarilardi (T-098). Ekranda
+            // doimiy ko'rinib turgan passport yelka orqali qaralishi va
+            // ekran suratiga tushishi mumkin. Oxirgi to'rtta belgi
+            // qoldiriladi — ikki bemorni ajratish uchun yetarli.
+            foreach (var item in items)
+                if (item.Patcient != null)
+                    item.Patcient.Passport =
+                        PatientPrivacy.MaskPassport(_encryption, item.Patcient.Passport);
+
+            foreach (var item in items)
+
+                item.AIStatus = AiSeverity.Parse(item.AIAnswerData);
+            foreach (var item in items)
+                item.AiSummary = AiSeverity.Summarize(item.AIAnswerData);
+            foreach (var item in items)
+                item.ErrorReason = item.Status == -1
+                    ? AiSeverity.ExtractErrorMessage(item.AIAnswerData)
+                    : null;
+
 
             return new PagedResult<HolterAnalyseListDTO>
             {

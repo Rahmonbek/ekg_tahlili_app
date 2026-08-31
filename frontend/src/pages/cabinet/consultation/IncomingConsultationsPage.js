@@ -21,6 +21,7 @@ import {
 import { useStore } from '../../../store/Store';
 import dayjs from 'dayjs';
 import './Consultation.css';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -42,6 +43,7 @@ const TYPE_COLOR = {
 
 export default function IncomingConsultationsPage() {
     const { t } = useTranslation();
+    useDocumentTitle(t('incoming_consultations', { defaultValue: "Kelayotgan so'rovlar" }));
     const navigate = useNavigate();
     const { setConsultationBadge } = useStore();
 
@@ -493,7 +495,7 @@ export default function IncomingConsultationsPage() {
                                             type="primary"
                                             onClick={() => navigate(`${route}/${item.analysisId}`)}
                                         >
-                                            {t('view') || "Ko'rish"}
+                                            {t('view', { defaultValue: "Ko'rish" })}
                                         </Button>
                                     ] : []}
                                 >
@@ -556,7 +558,7 @@ export default function IncomingConsultationsPage() {
                                                 type="link"
                                                 onClick={() => navigate(`${route}/${item.analysisId}`)}
                                             >
-                                                {t('view') || "Ko'rish"}
+                                                {t('view', { defaultValue: "Ko'rish" })}
                                             </Button>
                                         ] : []}
                                     >

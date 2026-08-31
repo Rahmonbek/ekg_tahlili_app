@@ -1,4 +1,5 @@
-﻿using EkgAnalyzerApi.DTOs;
+using EkgAnalyzerApi.Constants;
+using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,13 +11,16 @@ using System.Security.Claims;
 public class ClinicController : ControllerBase
 {
     private readonly ClinicService _clinicService;
+    private readonly ICurrentUser _currentUser;
 
-    public ClinicController(ClinicService clinicService)
+    public ClinicController(ClinicService clinicService, ICurrentUser currentUser)
     {
         _clinicService = clinicService;
+        _currentUser = currentUser;
     }
 
     [HttpPost("update-clinic-data")]
+    [Authorize(Policy = RoleConstants.PolicyClinicManager)]
     public async Task<IActionResult> UpdateClinicData([FromForm] ClinicUpsertDto dto)
     {
         try
@@ -36,6 +40,7 @@ public class ClinicController : ControllerBase
     }
 
     [HttpPost("update-clinic-phone")]
+    [Authorize(Policy = RoleConstants.PolicyClinicManager)]
     public async Task<IActionResult> UpdateClinicPhoneData([FromBody] ClinicPhoneUpsertDto dto)
     {
         try
@@ -50,6 +55,7 @@ public class ClinicController : ControllerBase
     }
 
     [HttpPost("create-update-clinic-detail")]
+    [Authorize(Policy = RoleConstants.PolicyClinicManager)]
     public async Task<IActionResult> Upsert([FromForm] ClinicDetailUpsertDto dto)
     {
         try
@@ -73,19 +79,30 @@ public class ClinicController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+    /// <summary>
+    /// Klinika ma'lumotlari. Faqat foydalanuvchining O'Z klinikasi qaytariladi —
+    /// boshqa klinika ID si so'ralsa 403.
+    /// </summary>
     [HttpGet("get-clinic-by-id")]
+    [Authorize(Policy = RoleConstants.PolicyClinicManager)]
     public async Task<IActionResult> GetClinicById([FromQuery] int id)
     {
-        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
+        if (!_currentUser.IsAuthenticated)
             return Unauthorized(new { message = "Token invalid" });
 
-        var userId = int.Parse(userIdClaim.Value);
+        var myClinicId = await _currentUser.GetClinicIdAsync();
+        if (myClinicId == null)
+            return Unauthorized(new { message = "Klinika aniqlanmadi" });
 
-        var result = await _clinicService.GetClinicByIdAsync(userId, id);
+        // Klinika izolyatsiyasi: ilgari istalgan klinika ID sini so'rab, boshqa
+        // klinikaning nomi, INN va bank rekvizitlarini olish mumkin edi.
+        if (id != myClinicId.Value)
+            return Forbid();
+
+        var result = await _clinicService.GetClinicByIdAsync(_currentUser.UserId, id);
 
         if (result == null)
-            return NotFound(new { message = "Doctor not found or access denied" });
+            return NotFound(new { message = "Klinika topilmadi" });
 
         return Ok(result);
     }
@@ -111,14 +128,9 @@ public class ClinicController : ControllerBase
     /// PATCH /api/clinic/{id}/set-active?isActive=true
     /// </summary>
     [HttpPatch("{id}/set-active")]
-    [Authorize]
+    [Authorize(Policy = RoleConstants.PolicySuperAdmin)]
     public async Task<IActionResult> SetClinicActive(int id, [FromQuery] bool isActive)
     {
-        // Faqat SuperAdmin (roleId=1) uchun ruxsat
-        var roleClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role);
-        if (roleClaim == null || roleClaim.Value != "1")
-            return Forbid();
-
         try
         {
             var result = await _clinicService.SetClinicActiveAsync(id, isActive);

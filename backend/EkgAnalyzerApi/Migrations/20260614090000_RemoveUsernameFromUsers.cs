@@ -1,9 +1,25 @@
+using EkgAnalyzerApi.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace EkgAnalyzerApi.Migrations
 {
+    [DbContext(typeof(MedDataDB))]
+    [Migration("20260614090000_RemoveUsernameFromUsers")]
+    /// <summary>
+    /// `users.username` ustunini o'chiradi (T-008).
+    ///
+    /// Bu fayl allaqachon mavjud edi, lekin `[DbContext]` va `[Migration]`
+    /// atributlari yo'q edi — ularsiz EF Core migratsiyani umuman
+    /// ko'rmaydi. Natijada `__EFMigrationsHistory` da bu migratsiya yo'q
+    /// va ustun bazada qolib ketgan.
+    ///
+    /// Ustun xavfsiz o'chiriladi: `User` modelida bunday xossa yo'q va
+    /// bazada uni to'ldirilgan bironta yozuv ham topilmadi (0 ta).
+    /// </summary>
     public partial class RemoveUsernameFromUsers : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

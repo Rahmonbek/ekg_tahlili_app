@@ -1,4 +1,4 @@
-using EkgAnalyzerApi.Data;
+﻿using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,9 +28,16 @@ public class AnalysisDiagnosisController : ControllerBase
     // ── GET /api/analysis-diagnosis?type=ecg&analysisId=123 ──────────
     [HttpGet]
     public async Task<IActionResult> GetByAnalysis(
-        [FromQuery] string type, [FromQuery] int analysisId)
+        // Kanonik nom — `analysisType` (POST tanasi bilan bir xil).
+        // Eski `type` ham qabul qilinadi (T-084).
+        [FromQuery] string? type,
+        [FromQuery] string? analysisType,
+        [FromQuery] int analysisId)
     {
-        if (!ValidTypes.Contains(type))
+        type = !string.IsNullOrWhiteSpace(analysisType) ? analysisType : type;
+        // Ikkala parametr ham berilmasa `type` — `null`. Ilgari u shundayligicha
+        // `Contains` ga uzatilardi (T-009).
+        if (string.IsNullOrWhiteSpace(type) || !ValidTypes.Contains(type))
             return BadRequest(new { message = "Noto'g'ri tahlil turi" });
 
         var diagnoses = await _context.AnalysisDiagnoses
@@ -138,10 +145,21 @@ public class AnalysisDiagnosisController : ControllerBase
     /// <summary>Batch check — list sahifasi uchun tashxis bor/yo'qligini tekshirish</summary>
     [HttpGet("has-diagnosis")]
     public async Task<IActionResult> HasDiagnosis(
-        [FromQuery] string type, [FromQuery] string ids)
+        // `ids` — bir nechta tahlil identifikatori (vergul bilan).
+        // Kanonik nom `analysisIds`, eskisi ham ishlaydi (T-084).
+        [FromQuery] string? type,
+        [FromQuery] string? analysisType,
+        [FromQuery] string? ids,
+        [FromQuery] string? analysisIds)
     {
+        type = !string.IsNullOrWhiteSpace(analysisType) ? analysisType : type;
+        ids = !string.IsNullOrWhiteSpace(analysisIds) ? analysisIds : ids;
+
         if (!ValidTypes.Contains(type))
             return BadRequest(new { message = "Noto'g'ri tahlil turi" });
+
+        if (string.IsNullOrWhiteSpace(ids))
+            return Ok(Array.Empty<int>());
 
         var idList = ids.Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Select(s => int.TryParse(s.Trim(), out var v) ? v : 0)

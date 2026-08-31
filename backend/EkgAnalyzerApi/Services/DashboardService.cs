@@ -7,16 +7,20 @@ namespace EkgAnalyzerApi.Services
     public class DashboardService
     {
         private readonly MedDataDB _context;
+        private readonly IConfiguration _config;
 
-        public DashboardService(MedDataDB context)
+        public DashboardService(MedDataDB context, IConfiguration config)
         {
             _context = context;
+            _config = config;
         }
 
         public async Task<DashboardStatisticsDto> GetStatisticsAsync(int userId, int roleId)
         {
-            var from = DateTime.UtcNow.Date;
-            var to = from.AddDays(1);
+            // "Bugun" chegarasi MAHALLIY vaqt bo'yicha hisoblanadi (Asia/Tashkent, UTC+5),
+            // keyin UTC ga o'giriladi. Ilgari UTC bo'yicha olinardi va mahalliy vaqt bilan
+            // 00:00-05:00 orasidagi tahlillar bugungi statistikaga tushmasdi.
+            var (from, to) = AppTime.LocalDayBoundsUtc(_config);
 
             if (roleId == 1)
                 return new DashboardStatisticsDto

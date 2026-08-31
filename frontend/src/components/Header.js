@@ -8,14 +8,19 @@ import { deleteTokenAccess } from '../host/Host'
 import { useTranslation } from 'react-i18next'
 import maleStaff from '../images/avatars/male.jpg'
 import femaleStaff from '../images/avatars/female.jpg'
-import { formatHeaderLastname } from '../tools/formatters'
+import { formatHeaderLastname, displayName} from '../tools/formatters'
 import { FaHome } from 'react-icons/fa'
 import { MdChevronRight } from 'react-icons/md'
 import { buildCrumbs } from '../tools/breadcrumbs'
 import VideoCallHeaderIndicator from './video/VideoCallHeaderIndicator'
 import { imgApi } from '../host/Host'
+import { useTour } from './shared/TourProvider';
+import { Tooltip } from 'antd';
+import { QuestionCircleOutlined } from '@ant-design/icons';
 
 export default function Header() {
+  // Yagona qo'llanma tugmasi: joriy sahifaning turini ishga tushiradi
+  const tour = useTour();
   const { open_menu, setopen_menu, setuser_id, setuser, user, setopen_admin_modal } = useStore();
   const [isRightListOpen, setIsRightListOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -89,6 +94,21 @@ export default function Header() {
 
       <div className='lang_exit'>
         <VideoCallHeaderIndicator />
+        {/* Butun platforma uchun yagona qo'llanma tugmasi (T-053).
+            Ilgari har bir sahifa o'z tugmasini chizardi va tur birinchi
+            kirishda avtomatik ochilardi — endi faqat shu tugma orqali. */}
+        <Tooltip title={t('page_guide', { defaultValue: "Sahifa bo'yicha qo'llanma" })}>
+          <button
+            type="button"
+            className="header_tour_btn"
+            onClick={tour.start}
+            disabled={!tour.available}
+            aria-label={t('page_guide', { defaultValue: "Sahifa bo'yicha qo'llanma" })}
+          >
+            <QuestionCircleOutlined />
+          </button>
+        </Tooltip>
+
         <div className='header_others'>
           <ChangeLangs />
         </div>
@@ -97,7 +117,7 @@ export default function Header() {
             <div className="head_img"> <img src={headerAvatar} alt="Staff" /></div>
            
             <div>
-              <h1>{formatHeaderLastname(user?.doctor?.lastName) + user?.doctor?.firstName}</h1>
+              <h1>{displayName(user?.doctor, { style: 'short', fallback: t('user_no_name', { defaultValue: "Ismni to'ldiring" }) })}</h1>
               <p>{user.role[`name${t("data_lang")}`]}</p>
             </div>
           </div>

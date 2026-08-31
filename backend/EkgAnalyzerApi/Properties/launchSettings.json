@@ -1,5 +1,17 @@
-﻿{
+{
   "$schema": "https://json.schemastore.org/launchsettings.json",
+
+  "//": [
+    "Portlar Program.cs dagi ConfigureKestrel da majburiy belgilanadi: 5000 va 5001.",
+    "Ilgari birinchi profil (`http`) 5099 portini e'lon qilardi va `dotnet run`",
+    "standart holatda o'shani tanlardi — natijada e'lon qilingan port bilan haqiqiy",
+    "port bir-biriga mos kelmasdi va dasturchi qaysi biri ishlashini bilmasdi.",
+    "Endi ikkala profil ham Kestrel bilan bir xil portni ko'rsatadi.",
+    "",
+    "`launchBrowser` o'chirilgan: CI va server muhitida brauzer ochish ma'nosiz",
+    "va grafik muhitsiz mashinada ogohlantirish beradi."
+  ],
+
   "iisSettings": {
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
@@ -12,9 +24,9 @@
     "http": {
       "commandName": "Project",
       "dotnetRunMessages": true,
-      "launchBrowser": true,
+      "launchBrowser": false,
       "launchUrl": "swagger",
-      "applicationUrl": "http://localhost:5099",
+      "applicationUrl": "http://localhost:5000",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
@@ -22,7 +34,7 @@
     "https": {
       "commandName": "Project",
       "dotnetRunMessages": true,
-      "launchBrowser": true,
+      "launchBrowser": false,
       "launchUrl": "swagger",
       "applicationUrl": "http://0.0.0.0:5000;https://0.0.0.0:5001",
       "environmentVariables": {
@@ -31,7 +43,7 @@
     },
     "IIS Express": {
       "commandName": "IISExpress",
-      "launchBrowser": true,
+      "launchBrowser": false,
       "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"

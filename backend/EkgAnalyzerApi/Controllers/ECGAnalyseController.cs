@@ -1,3 +1,4 @@
+using EkgAnalyzerApi.Constants;
 using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
@@ -19,13 +20,15 @@ public class ECGAnalyseController : ControllerBase
     private readonly ECGAnalyseService _ecgService;
     private readonly PythonApiProxyService _proxyService;
     private readonly AnalysisProgressTracker _progressTracker;
+    private readonly ICurrentUser _currentUser;
 
-    public ECGAnalyseController(MedDataDB context, ECGAnalyseService ecgService, PythonApiProxyService proxyService, AnalysisProgressTracker progressTracker)
+    public ECGAnalyseController(MedDataDB context, ECGAnalyseService ecgService, PythonApiProxyService proxyService, AnalysisProgressTracker progressTracker, ICurrentUser currentUser)
     {
         _context = context;
         _ecgService = ecgService;
         _proxyService = proxyService;
         _progressTracker = progressTracker;
+        _currentUser = currentUser;
     }
 
 
@@ -34,6 +37,7 @@ public class ECGAnalyseController : ControllerBase
     /// GET api/ecg-analyses/get-by-clinic?page=1&pageSize=10&search=Ali&status=2
     /// </summary>
     [HttpGet("get-by-clinic")]
+    [Authorize(Policy = RoleConstants.PolicyClinicManager)]
     public async Task<IActionResult> GetByClinic(
         int page = 1,
         int pageSize = 10,
@@ -64,8 +68,12 @@ public class ECGAnalyseController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var result = await _ecgService.GetECGAnalyseByIdAsync(id);
-        if (result == null) return NotFound();
+        // Klinika izolyatsiyasi: foydalanuvchi faqat o'z klinikasining tahlilini ko'ra oladi
+        var clinicId = await _currentUser.GetClinicIdAsync();
+        if (clinicId == null) return Unauthorized(new { message = "Klinika aniqlanmadi" });
+
+        var result = await _ecgService.GetECGAnalyseByIdAsync(id, clinicId.Value);
+        if (result == null) return NotFound(new { message = "Tahlil topilmadi yoki ruxsat yo'q" });
         return Ok(result);
     }
 
@@ -84,6 +92,7 @@ public class ECGAnalyseController : ControllerBase
     // ── Shifokor bo'yicha endpointlar ─────────────────────────────────────────
 
     [HttpGet("get-by-doctor")]
+    [Authorize(Policy = RoleConstants.PolicyDoctorOnly)]
     public async Task<IActionResult> GetByDoctor(
         int page = 1, int pageSize = 10,
         string? search = null, int? status = null,
@@ -104,6 +113,7 @@ public class ECGAnalyseController : ControllerBase
     }
 
     [HttpGet("unviewed-count")]
+    [Authorize(Policy = RoleConstants.PolicyDoctorOnly)]
     public async Task<IActionResult> GetUnviewedCount()
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
@@ -118,6 +128,7 @@ public class ECGAnalyseController : ControllerBase
     }
 
     [HttpPut("mark-viewed")]
+    [Authorize(Policy = RoleConstants.PolicyDoctorOnly)]
     public async Task<IActionResult> MarkViewed()
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
@@ -134,6 +145,7 @@ public class ECGAnalyseController : ControllerBase
     // ── Hamshira bo'yicha endpointlar ─────────────────────────────────────────
 
     [HttpGet("get-by-nurse")]
+    [Authorize(Policy = RoleConstants.PolicyNurseOnly)]
     public async Task<IActionResult> GetByNurse(
         int page = 1, int pageSize = 10,
         string? search = null, int? status = null,
@@ -204,6 +216,19 @@ public class ECGAnalyseController : ControllerBase
     [EnableRateLimiting("ai-analysis")]
     public async Task<IActionResult> SendToAi()
     {
+        // Klinika izolyatsiyasi: ilgari boshqa klinikaning tahlilini qayta AI'ga
+        // yuborib, natijasini olish va mavjud xulosani qayta yozish mumkin edi.
+        if (!int.TryParse(Request.Form["id"].ToString(), out var analysisId))
+            return BadRequest(new { message = "id ko'rsatilmagan" });
+
+        var clinicId = await _currentUser.GetClinicIdAsync();
+        if (clinicId == null) return Unauthorized(new { message = "Klinika aniqlanmadi" });
+
+        var belongsToClinic = await _context.ECGAnalyse
+            .AnyAsync(a => a.Id == analysisId && a.ClinicId == clinicId);
+        if (!belongsToClinic)
+            return NotFound(new { message = "Tahlil topilmadi yoki ruxsat yo'q" });
+
         var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
         try
         {
@@ -249,4 +274,46 @@ public class ECGAnalyseController : ControllerBase
             return null;
         }
     }
+
+    /// <summary>
+    /// Noto'g'ri yuklangan faylni almashtirib, tahlilni qayta ishga tushirish.
+    /// POST api/ecg-analyses/replace-file   (multipart: id, file, age, gender, lang)
+    /// Yangi tahlil yaratilmaydi — mavjud yozuvning fayli almashtiriladi.
+    /// </summary>
+    [HttpPost("replace-file")]
+    [EnableRateLimiting("ai-analysis")]
+    public async Task<IActionResult> ReplaceFile()
+    {
+        var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+        // Klinika izolyatsiyasi: faqat o'z klinikasining tahlilini almashtirish mumkin
+        if (!int.TryParse(Request.Form["id"].ToString(), out var analysisId))
+            return BadRequest(new { message = "id ko'rsatilmagan" });
+
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null) return Unauthorized(new { message = "Token invalid" });
+
+        var userId = int.Parse(userIdClaim.Value);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user?.ClinicId == null) return Unauthorized(new { message = "Klinika aniqlanmadi" });
+
+        var belongsToClinic = await _context.ECGAnalyse
+            .AnyAsync(a => a.Id == analysisId && a.ClinicId == user.ClinicId);
+        if (!belongsToClinic)
+            return NotFound(new { message = "Tahlil topilmadi yoki ruxsat yo'q" });
+
+        try
+        {
+            var response = await _proxyService.ProxyMultipartAsync("/api/analyze-replace-file", Request, token);
+            var result = await ProxyHttpResponseMapper.ToContentResultAsync(response);
+            if (response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(result.Content))
+                TrackAnalysisProgress(result.Content, "ecg", "ecg_id");
+            return result;
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(502, new { message = "AI tahlil xizmati bilan bog'lanib bo'lmadi", error = ex.Message });
+        }
+    }
+
 }

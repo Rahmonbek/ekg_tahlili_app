@@ -11,8 +11,7 @@ const axiosInstance = axios.create({
 const isPublicRoute = (path) => {
     const publicPaths = ["/", "/login", "/register"];
     return publicPaths.includes(path)
-        || path.startsWith("/consultation/verify/")
-        || path.startsWith("/analysis/verify/");
+        || path.startsWith("/verify/");
 };
 
 // 🔐 REQUEST INTERCEPTOR (token tekshirish)
@@ -68,8 +67,17 @@ axiosInstance.interceptors.response.use(
             }
         }
 
-        // Foydalanuvchiga xatolik xabari ko'rsatish
-        handleApiError(error);
+        // Takroriy fayl — bu xatolik emas, savol. Uni chaqiruvchi kod
+        // alohida oyna bilan ko'rsatadi (T-096), shuning uchun bu yerda
+        // umumiy qizil xabar chiqarilmaydi.
+        const isDuplicate =
+            error.response?.status === 409 &&
+            error.response?.data?.detail?.code === 'DUPLICATE_FILE';
+
+        if (!isDuplicate) {
+            // Foydalanuvchiga xatolik xabari ko'rsatish
+            handleApiError(error);
+        }
 
         return Promise.reject(error);
     }

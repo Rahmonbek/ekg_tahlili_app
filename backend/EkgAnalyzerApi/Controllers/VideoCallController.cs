@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using EkgAnalyzerApi.Helpers;
 
 [ApiController]
 [Route("api/videocall")]
@@ -111,7 +112,7 @@ public class VideoCallController : ControllerBase
             var posObj = u.Doctor?.DoctorPositions?.FirstOrDefault()?.Position;
             var pos = posObj?.NameUz ?? posObj?.NameRu ?? "";
             var fullName = u.Doctor != null
-                ? $"{u.Doctor.FirstName} {u.Doctor.LastName}".Trim()
+                ? $"{u.Doctor.LastName} {u.Doctor.FirstName}".Trim()
                 : "Shifokor";
 
             return new DoctorOnlineStatusDto
@@ -153,11 +154,26 @@ public class VideoCallController : ControllerBase
         if (!patientExists)
             return NotFound(new { message = "patient_not_found" });
 
-        var allowedDoctorIds = await _db.ClinicConsultants.AsNoTracking()
+        // Ruxsat ikki manbadan (T-086).
+        //
+        // 1) Klinikaning O'Z shifokorlari. Ilgari ular ham rad etilardi:
+        //    o'z xodimi bilan video konsilium o'tkazish uchun avval uni
+        //    "tashqi konsultant" sifatida taklif qilib, narx belgilab,
+        //    taklifni qabul qildirish kerak edi — bu shartnoma jarayoni
+        //    tashqi mutaxassis uchun mo'ljallangan, o'z jamoasi uchun emas.
+        var ownDoctorIds = await _db.Doctors.AsNoTracking()
+            .Where(d => doctorIds.Contains(d.Id)
+                        && d.User != null && d.User.ClinicId == clinicId)
+            .Select(d => d.Id)
+            .ToListAsync();
+
+        // 2) Faol tashqi konsultantlar — avvalgidek.
+        var consultantIds = await _db.ClinicConsultants.AsNoTracking()
             .Where(cc => cc.ClinicId == clinicId && cc.Status == "active" && doctorIds.Contains(cc.DoctorId))
             .Select(cc => cc.DoctorId)
-            .Distinct()
             .ToListAsync();
+
+        var allowedDoctorIds = ownDoctorIds.Union(consultantIds).Distinct().ToList();
 
         if (allowedDoctorIds.Count != doctorIds.Count)
             return BadRequest(new { message = "consultant_not_linked" });
@@ -193,7 +209,11 @@ public class VideoCallController : ControllerBase
         var query = _db.VideoConferences.AsNoTracking()
             .Include(c => c.Patient)
             .Include(c => c.Clinic)
+            // `CreatedByAdmin` ning o'zi yetarli emas: ism `Doctor` yozuvida
+            // saqlanadi. Busiz ishtirokchilar ro'yxatida admin o'rniga
+            // "Admin" degan umumiy so'z chiqardi (T-090, T-085).
             .Include(c => c.CreatedByAdmin)
+                .ThenInclude(u => u!.Doctor)
             .Include(c => c.Participants)
                 .ThenInclude(p => p.Doctor)
             .AsQueryable();
@@ -391,7 +411,11 @@ public class VideoCallController : ControllerBase
         return await query
             .Include(c => c.Patient)
             .Include(c => c.Clinic)
+            // `CreatedByAdmin` ning o'zi yetarli emas: ism `Doctor` yozuvida
+            // saqlanadi. Busiz ishtirokchilar ro'yxatida admin o'rniga
+            // "Admin" degan umumiy so'z chiqardi (T-090, T-085).
             .Include(c => c.CreatedByAdmin)
+                .ThenInclude(u => u!.Doctor)
             .Include(c => c.Participants)
                 .ThenInclude(p => p.Doctor)
                     .ThenInclude(d => d!.User)
@@ -420,7 +444,7 @@ public class VideoCallController : ControllerBase
     {
         var patientName = c.Patient == null
             ? ""
-            : $"{c.Patient.LastName} {c.Patient.FirstName} {c.Patient.SureName}".Trim();
+            : PersonNameHelper.Display(c.Patient.LastName, c.Patient.FirstName);
 
         return new VideoConferenceListItemDto
         {
@@ -460,7 +484,7 @@ public class VideoCallController : ControllerBase
             Patient = patient == null ? new VideoConferencePatientDto() : new VideoConferencePatientDto
             {
                 Id = patient.Id,
-                FullName = $"{patient.LastName} {patient.FirstName} {patient.SureName}".Trim(),
+                FullName = PersonNameHelper.Display(patient.LastName, patient.FirstName),
                 PassportSeries = TryDecrypt(patient.Passport),
                 BirthDate = patient.BirthDate,
                 Gender = patient.Gender,
@@ -507,7 +531,7 @@ public class VideoCallController : ControllerBase
                 DoctorUserId = p.Doctor?.UserId,
                 UserId = p.Doctor?.UserId,
                 IsAdmin = false,
-                FullName = p.Doctor == null ? "" : $"{p.Doctor.LastName} {p.Doctor.FirstName} {p.Doctor.SureName}".Trim(),
+                FullName = p.Doctor == null ? "" : PersonNameHelper.Display(p.Doctor.LastName, p.Doctor.FirstName),
                 Position = position?.NameUz ?? position?.NameRu,
                 Phone = p.Doctor?.Phone,
                 Status = participantIsJoined ? "joined" : p.JoinedAt.HasValue ? "left" : "invited",
@@ -564,11 +588,28 @@ public class VideoCallController : ControllerBase
         catch { return value; }
     }
 
+    /// <summary>
+    /// Video qo'ng'iroq ishtirokchisining ko'rsatiladigan nomi.
+    /// </summary>
+    /// <remarks>
+    /// Sharif chiqarilmaydi — platformadagi qolgan barcha joylar bilan
+    /// bir xil qoida (`PersonNameHelper`).
+    ///
+    /// Ismi hali to'ldirilmagan foydalanuvchi uchun ilgari `"Admin"`
+    /// degan umumiy so'z ko'rsatilardi: qo'ng'iroqda ikkita shunday
+    /// ishtirokchi bo'lsa, ularni bir-biridan ajratib bo'lmasdi.
+    /// Endi telefon raqami ishlatiladi — frontenddagi `displayName` ham
+    /// aynan shunday qiladi.
+    /// </remarks>
     private static string BuildUserFullName(User? user, string fallback)
     {
         if (user?.Doctor == null) return fallback;
-        var fullName = $"{user.Doctor.LastName} {user.Doctor.FirstName} {user.Doctor.SureName}".Trim();
-        return string.IsNullOrWhiteSpace(fullName) ? fallback : fullName;
+
+        var fullName = PersonNameHelper.Display(user.Doctor.LastName, user.Doctor.FirstName);
+        if (!string.IsNullOrWhiteSpace(fullName)) return fullName;
+
+        var phone = user.Doctor.Phone?.Trim();
+        return string.IsNullOrWhiteSpace(phone) ? fallback : phone;
     }
 
     private async Task<List<PatientAnalysisItemDto>> GetPatientAnalysesAsync(int patientId)

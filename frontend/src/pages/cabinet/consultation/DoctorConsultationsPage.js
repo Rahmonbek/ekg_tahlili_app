@@ -11,6 +11,7 @@ import {
 } from '../../../host/requests/ConsultationRequest';
 import { useStore } from '../../../store/Store';
 import './Consultation.css';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -25,6 +26,7 @@ const STATUS_COLORS = {
 
 export default function DoctorConsultationsPage() {
     const { t } = useTranslation();
+    useDocumentTitle(t('my_consultations', { defaultValue: "Mening konsultatsiyalarim" }));
     const navigate = useNavigate();
     const { setConsultationBadge } = useStore();
 

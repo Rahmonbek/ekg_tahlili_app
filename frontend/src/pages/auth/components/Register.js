@@ -1,7 +1,7 @@
-import { Button, Col, Form, Input, Modal, Row } from 'antd';
+import { Checkbox, Button, Col, Form, Input, Modal, Row } from 'antd';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import register_img from '../../../images/register1.png';
+import register_img from '../../../images/register1.jpg';
 import { IoMdLock } from 'react-icons/io';
 import { LiaDownloadSolid } from 'react-icons/lia';
 import { Link, useNavigate } from 'react-router-dom';
@@ -12,6 +12,8 @@ import Cookies from 'js-cookie';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import PhoneInput from '../../../components/shared/PhoneInput';
 import { formatPhoneNumber } from '../../../tools/formatters';
+import ChangeLangs from '../../../components/ChangeLangs';
+import PasswordField, { passwordRule } from '../../../components/shared/PasswordField';
 
 export default function Register() {
   const { executeRecaptcha } = useGoogleReCaptcha();
@@ -72,6 +74,9 @@ export default function Register() {
       formData.append('phoneNumber', normalizedPhone);
       formData.append('clinicInn', normalizedInn);
       formData.append('bankAccaunt', values.bankAccaunt?.replace(/\s/g, '') || '');
+      // Haqiqiy email bo'lsa uni yuboramiz — busiz tizim
+      // `...@phone.nmed.local` sun'iy manzilini yaratadi
+      if (values.email) formData.append('email', values.email);
       formData.append('mfo', values.mfo?.trim() || '');
       formData.append('bankName', values.bankName?.trim() || '');
       formData.append('password', values.password);
@@ -95,6 +100,10 @@ export default function Register() {
   return (
     <div className='login_box register_page'>
       <div className='login_form_box'>
+        {/* Ro'yxatdan o'tishdan oldin ham til tanlanadi */}
+        <div className='auth_lang'>
+          <ChangeLangs />
+        </div>
         <div className='login_form'>
           <h1>{t('clinic_admin_register_title')}</h1>
           <p className='mini_title'>{t('clinic_admin_register_desc')}</p>
@@ -167,11 +176,13 @@ export default function Register() {
                   </Form.Item>
                 </Col>
 
-                <Col xs={24} md={12}>
+                {/* Uch bank maydoni keng ekranda bitta qatorga sig'adi —
+                    ilgari ular ikki qator egallab, formani uzaytirardi */}
+                <Col xs={24} md={8}>
                   <Form.Item
                     name='bankAccaunt'
                     label={t('bank_account')}
-                    rules={[{ required: true, message: t('bank_account_required') }]}
+                    // To'lov bosqichida kerak, ro'yxatdan o'tishda emas (T-073)
                     normalize={(value) => {
     if (!value) return '';
 
@@ -192,11 +203,11 @@ export default function Register() {
                   </Form.Item>
                 </Col>
 
-                <Col xs={24} md={12}>
+                <Col xs={24} md={8}>
                   <Form.Item
                     name='mfo'
                     label={t('mfo')}
-                    rules={[{ required: true, message: t('mfo_required') }]}
+                    // To'lov bosqichida kerak, ro'yxatdan o'tishda emas (T-073)
                     normalize={(value) => value ? value.replace(/\D/g, '') : ''}
                   >
                     <Input
@@ -208,8 +219,8 @@ export default function Register() {
                   </Form.Item>
                 </Col>
 
-                <Col span={24}>
-                  <Form.Item name='bankName' rules={[{ required: true, message: t('bankName_required') }]} label={t('bankName')}>
+                <Col xs={24} md={8}>
+                  <Form.Item name='bankName' label={t('bankName')}>
                     <Input className='login_input' placeholder={t('enter_bankName')} maxLength={200} />
                   </Form.Item>
                 </Col>
@@ -233,22 +244,78 @@ export default function Register() {
                     label={t('new_password')}
                     rules={[
                       { required: true, message: t('please_enter_password') },
-                      {
-                        min: 6,
-                        message: t('password_too_short')
-                      }
+                      // `min: 6` yetarli emas edi: `123456` ham o'tardi.
+                      // Qoida endi server siyosati bilan bir xil (T-022).
+                      passwordRule(t),
                     ]}
                   >
-                    <Input.Password
+                    <PasswordField
                       name='password'
                       autoComplete='new-password'
-                      prefix={<IoMdLock />}
                       className='login_input'
                       placeholder={t('enter_new_password')}
                     />
                   </Form.Item>
                 </Col>
+
+                <Col xs={24} md={12}>
+                  {/* Parol xato yozilsa, foydalanuvchi buni faqat keyingi
+                      kirishda bilardi (T-073) */}
+                  <Form.Item
+                    name='confirmPassword'
+                    label={t('confirm_password')}
+                    dependencies={['password']}
+                    rules={[
+                      { required: true, message: t('please_enter_password') },
+                      ({ getFieldValue }) => ({
+                        validator(_, value) {
+                          if (!value || getFieldValue('password') === value) return Promise.resolve();
+                          return Promise.reject(new Error(t('passwords_do_not_match')));
+                        },
+                      }),
+                    ]}
+                  >
+                    <Input.Password
+                      autoComplete='new-password'
+                      className='login_input'
+                      placeholder={t('confirm_password')}
+                    />
+                  </Form.Item>
+                </Col>
+
+                <Col xs={24} md={12}>
+                  {/* Email bo'lmasa: parolni tiklash faqat SMS orqali,
+                      hisobotlarni yuborish imkonsiz, muhim bildirishnomalar
+                      yetib bormaydi. Tizim `...@phone.nmed.local` ko'rinishida
+                      sun'iy manzil yaratadi (T-073) */}
+                  <Form.Item
+                    name='email'
+                    label={t('email')}
+                    rules={[{ type: 'email', message: t('email_invalid') }]}
+                  >
+                    <Input
+                      type='email'
+                      autoComplete='email'
+                      className='login_input'
+                      placeholder={t('enter_email')}
+                    />
+                  </Form.Item>
+                </Col>
               </Row>
+
+              {/* Tibbiy platforma uchun shaxsiy ma'lumotlarni qayta ishlashga
+                  rozilik huquqiy jihatdan zarur (T-073) */}
+              <Form.Item
+                name='agreement'
+                valuePropName='checked'
+                rules={[{
+                  validator: (_, value) => value
+                    ? Promise.resolve()
+                    : Promise.reject(new Error(t('agreement_required'))),
+                }]}
+              >
+                <Checkbox>{t('agreement_text')}</Checkbox>
+              </Form.Item>
 
               <Form.Item wrapperCol={{ span: 24 }}>
                 <Button className='btn_form' loading={loading} htmlType='submit'>

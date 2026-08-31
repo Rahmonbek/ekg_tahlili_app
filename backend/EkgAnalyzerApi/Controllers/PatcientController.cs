@@ -1,4 +1,4 @@
-using EkgAnalyzerApi.Data;
+﻿using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
 using EkgAnalyzerApi.Services;
@@ -16,36 +16,55 @@ public class PatcientController : ControllerBase
     private readonly MedDataDB _context;
     private readonly PatcientService _patcientService;
     private readonly EncryptionService _encryption;
+    private readonly ICurrentUser _currentUser;
 
-    public PatcientController(MedDataDB context, PatcientService patcientService, EncryptionService encryption)
+    public PatcientController(
+        MedDataDB context,
+        PatcientService patcientService,
+        EncryptionService encryption,
+        ICurrentUser currentUser)
     {
         _context = context;
         _patcientService = patcientService;
         _encryption = encryption;
+        _currentUser = currentUser;
     }
 
+    /// <summary>
+    /// Klinika bemorlari ro'yxati (sahifalangan, qidiruv bilan).
+    /// Passport javobda MASKALANGAN holda qaytadi.
+    /// </summary>
     [HttpGet("get-patcients-of-clinic")]
-    public async Task<IActionResult> GetDoctors([FromQuery] int page = 1)
+    public async Task<IActionResult> GetPatcientsOfClinic(
+        [FromQuery] int page = 1,
+        [FromQuery] string? search = null,
+        [FromQuery] string lang = "uz")
     {
-        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
+        var userId = _currentUser.UserId;
+        if (userId <= 0)
             return Unauthorized(new { message = "Token invalid" });
-
-        var userId = int.Parse(userIdClaim.Value);
 
         if (page < 1) page = 1;
 
-        var result = await _patcientService.GetPatcientsAsync(page, userId);
-
-        if (result?.data != null)
-        {
-            foreach (var p in result.data)
-            {
-                p.Passport = p.Passport;
-            }
-        }
-
+        var result = await _patcientService.GetPatcientsAsync(page, userId, search, lang);
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Bemor kartasi: shaxsiy ma'lumotlar + barcha tahlillar xronologik lentada.
+    /// </summary>
+    [HttpGet("get-patient-card/{id:int}")]
+    public async Task<IActionResult> GetPatientCard(int id, [FromQuery] string lang = "uz")
+    {
+        var userId = _currentUser.UserId;
+        if (userId <= 0)
+            return Unauthorized(new { message = "Token invalid" });
+
+        var card = await _patcientService.GetPatientCardAsync(id, userId, lang);
+        if (card == null)
+            return NotFound(new { message = "Bemor topilmadi" });
+
+        return Ok(card);
     }
 
     [HttpGet("get-patient-by-passport")]
@@ -61,7 +80,7 @@ public class PatcientController : ControllerBase
         var normalizedPassport = NormalizeDocumentSeries(passport);
 
         var patients = await _context.Patcients
-            .Include(x => x.District).ThenInclude(d => d.Region)
+            .Include(x => x.District!).ThenInclude(d => d.Region!)
             .Where(v => v.BirthDate == birthDate)
             .ToListAsync();
 
@@ -135,24 +154,40 @@ public class PatcientController : ControllerBase
         return Ok(newPatient);
     }
 
+    /// <summary>
+    /// Klinikaning bemorlari ro'yxati (sahifalangan).
+    ///
+    /// Ilgari bu endpoint <b>butun platformadagi barcha bemorlarni</b> qaytarardi —
+    /// istalgan klinika boshqa klinikalarning bemor bazasini ko'ra olardi.
+    /// Endi u klinika bo'yicha filtrlangan va sahifalangan ro'yxatni qaytaradi.
+    /// </summary>
+    /// <summary>
+    /// `get-patcients-of-clinic` bilan bir xil — eski nom bilan moslik uchun
+    /// saqlangan. Ikkalasi ham bitta servis metodini chaqiradi, shuning uchun
+    /// pagination, klinika filtri, passport maskalash va qidiruv bir xil.
+    ///
+    /// Ilgari bu endpoint har bir bemor uchun uning BARCHA EKG, laboratoriya
+    /// tahlillari va shifokor xulosalarini ichma-ich qaytarardi va
+    /// pagination yo'q edi — 10 000 bemorli klinikada bu o'nlab megabaytlik
+    /// javob demakdir (T-064).
+    /// </summary>
     [HttpGet("get-all-patients")]
-    public async Task<IActionResult> GetAllPatient()
+    public async Task<IActionResult> GetAllPatient(
+        [FromQuery] int page = 1,
+        [FromQuery] string? search = null,
+        [FromQuery] string lang = "uz")
     {
-        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
+        if (!_currentUser.IsAuthenticated)
             return Unauthorized(new { message = "Token invalid" });
 
-        var patients = await _context.Patcients.ToListAsync();
+        if (await _currentUser.GetClinicIdAsync() == null)
+            return Unauthorized(new { message = "Klinika aniqlanmadi" });
 
-        if (patients == null || !patients.Any())
-            return NotFound(new { message = "Patients not found" });
+        if (page < 1) page = 1;
 
-        foreach (var p in patients)
-        {
-            p.Passport = p.Passport;
-        }
-
-        return Ok(patients);
+        // Klinika bo'yicha filtrlash mantig'i PatcientService ichida
+        var result = await _patcientService.GetPatcientsAsync(page, _currentUser.UserId, search, lang);
+        return Ok(result);
     }
 
     private static string NormalizeDocumentSeries(string? value)

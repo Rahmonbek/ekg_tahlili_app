@@ -1,6 +1,6 @@
 import { Alert, Button, Checkbox, Col, Form, Radio, Row, Select, Tooltip, Upload } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef} from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { IoAlertCircleSharp } from 'react-icons/io5';
@@ -28,9 +28,21 @@ import { dangerAlert, successAlert, warningAlert } from '../../../tools/Alerts';
 // ─── Result Components ───
 import EcgResult from '../../../components/results/EcgResult';
 import EcgOldResult from '../../../components/results/EcgOldResult';
+import { analyzerTour } from '../../../tools/tourSteps';
+import { usePageTour } from '../../../components/shared/TourProvider';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
+import DateField from '../../../components/shared/DateField';
+import { askDuplicate, withForce, isDuplicateError } from '../../../components/shared/duplicateUpload';
+import useFileTypes from '../../../hooks/useFileTypes';
 
 export default function EcgAnalyzer() {
-    const { t } = useTranslation();
+    // Ruxsat etilgan formatlar serverdan olinadi — ilgari ular
+    // bu yerda qo'lda yozilgan va server ro'yxatidan farq qilardi (T-041)
+    const fileTypes = useFileTypes('ecg');
+    // Qo'llanma qadamlari ro'yxatdan o'tkaziladi; tugma header'da
+    usePageTour(analyzerTour, { keepMissing: true });
+    const { t } = useTranslation()
+    useDocumentTitle(t('create_new_ecg_analyse', { defaultValue: "Yangi EKG tahlil" }));
     const [form] = Form.useForm();
     const [form1] = Form.useForm();
     const [form2] = Form.useForm();
@@ -116,6 +128,14 @@ export default function EcgAnalyzer() {
         form2.resetFields();
     }, [resetPatient, resetDoctorSelection, resetAll, form, form1, form2]);
 
+
+    const uploadAbortRef = useRef(null);
+
+    /** Yuklashni bekor qilish (T-054). Fon panelидagi yozuv o'chiriladi. */
+    const cancelUpload = () => {
+        uploadAbortRef.current?.abort();
+    };
+
     const handleSubmit = useCallback(async () => {
         if (state.files.length === 0) return dangerAlert(t('select_file_error'));
 
@@ -134,31 +154,51 @@ export default function EcgAnalyzer() {
             formData.append('analysis_date', state.analysis_date);
         }
 
+        // Takroriy fayl aniqlansa server 409 qaytaradi va hech qanday
+        // yozuv yaratmaydi. Foydalanuvchi tasdiqlasa, aynan shu forma
+        // `force_duplicate` bayrog'i bilan qayta yuboriladi (T-096).
         if (checkAI) {
             // ─── AI rejimi: fon da ishlaydi, forma darhol tozalanadi ───
-            runInBackground({
+            const send = (data) => runInBackground({
                 type: 'ecg',
                 label: 'EKG AI tahlil',
                 listPath: '/ecg-analyses',
-                analyzePromise: analyzeEkgFile(formData),
+                makeRequest: (handlers) => analyzeEkgFile(data, {
+                    ...handlers,
+                    signal: (uploadAbortRef.current = new AbortController()).signal,
+                }),
+                onDuplicate: async (err) => {
+                    if (await askDuplicate(err, t)) send(withForce(data));
+                },
             });
+            send(formData);
             retryAnalyse();
         } else {
             // ─── Saqlash rejimi: tez, shu sahifada ───
-            warningAlert(t('please_wait_save'));
-            dispatch({ type: 'SUBMIT_START' });
-            try {
-                const res = await analyzeEkgFileSave(formData);
-                dispatch({
-                    type: 'SUBMIT_SUCCESS',
-                    image: res.ecg_png_base64,
-                    imageShort: res.ecg_png_base64_short,
-                });
-                successAlert(t('analyse_saved'));
-                retryAnalyse();
-            } catch (err) {
-                dispatch({ type: 'SUBMIT_ERROR', error: err.message });
-            }
+            const save = async (data) => {
+                warningAlert(t('please_wait_save'));
+                dispatch({ type: 'SUBMIT_START' });
+                try {
+                    const res = await analyzeEkgFileSave(data, {
+                        signal: (uploadAbortRef.current = new AbortController()).signal,
+                    });
+                    dispatch({
+                        type: 'SUBMIT_SUCCESS',
+                        image: res.ecg_image_url ?? res.ecg_png_base64,
+                        imageShort: res.ecg_thumbnail_url ?? res.ecg_png_base64_short,
+                    });
+                    successAlert(t('analyse_saved'));
+                    retryAnalyse();
+                } catch (err) {
+                    if (isDuplicateError(err)) {
+                        dispatch({ type: 'SUBMIT_ERROR', error: '' });
+                        if (await askDuplicate(err, t)) await save(withForce(data));
+                        return;
+                    }
+                    dispatch({ type: 'SUBMIT_ERROR', error: err.message });
+                }
+            };
+            await save(formData);
         }
     }, [state, patcient, user, selectedComplaints, selectedDoctors, runInBackground, dispatch, t, checkAI, retryAnalyse]);
 
@@ -233,9 +273,9 @@ export default function EcgAnalyzer() {
                         <Form form={form2} name="ecgUpload" labelCol={{ span: 24 }} wrapperCol={{ span: 24 }}>
                             <Row>
                                 <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
-                                    <Form.Item name="select_ecg_file" label={t('select_ecg_file')} rules={[{ required: true, message: '' }]}>
+                                    <Form.Item name="select_ecg_file" data-tour="analyzer-file" label={t('select_ecg_file')} rules={[{ required: true, message: t('field_required') }]}>
                                         <Upload.Dragger
-                                            accept=".xml,.jpg,.png"
+                                            accept={fileTypes.accept}
                                             beforeUpload={handleUploadFile}
                                             onRemove={() => dispatch({ type: 'SET_FILES', files: [], fileInput: '' })}
                                             maxCount={1}
@@ -245,9 +285,9 @@ export default function EcgAnalyzer() {
                                         >
                                             <p className="ant-upload-drag-icon"><InboxOutlined /></p>
                                             <p className="ant-upload-text" style={{ fontSize: 14 }}>
-                                                {t('click_or_drag_file') || 'Fayl tanlang yoki bu yerga tashlang'}
+                                                {t('click_or_drag_file', { defaultValue: 'Fayl tanlang yoki bu yerga tashlang' })}
                                             </p>
-                                            <p className="ant-upload-hint">{t('access_file_types')}: xml, jpg, png</p>
+                                            <p className="ant-upload-hint">{t('access_file_types')}: {fileTypes.label}</p>
                                         </Upload.Dragger>
                                     </Form.Item>
                                 </Col>
@@ -270,13 +310,18 @@ export default function EcgAnalyzer() {
                                 <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
                                     <div className="filter_item" style={{ paddingBottom: 8 }}>
                                         <label className="filter_label">{t('analysis_date')}</label>
-                                        <input
-                                            className="input_date login_input"
-                                            type="date"
+                                        {/* Tug'ma `<input type="date">` brauzer tiliga
+                                            bo'ysunardi (o'zbek interfeysda ruscha `дд.мм.гггг`)
+                                            va har bir brauzerda boshqacha ko'rinardi. */}
+                                        <DateField
                                             value={analysisDateValue}
-                                            onChange={(e) => {
-                                                setAnalysisDateValue(e.target.value);
-                                                dispatch({ type: 'SET_FIELD', field: 'analysis_date', value: e.target.value ? new Date(`${e.target.value}T00:00:00`).toISOString() : null });
+                                            onChange={(value) => {
+                                                setAnalysisDateValue(value || '');
+                                                dispatch({
+                                                    type: 'SET_FIELD',
+                                                    field: 'analysis_date',
+                                                    value: value ? new Date(`${value}T00:00:00`).toISOString() : null,
+                                                });
                                             }}
                                         />
                                     </div>
@@ -290,7 +335,7 @@ export default function EcgAnalyzer() {
                                     filterByPosition={filterByPosition}
                                 />
 
-                                <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
+                                <Col className="main_col" data-tour="analyzer-complaints" lg={24} xs={24} sm={24} md={24}>
                                     <p className="ecg_label">{t('patcient_complaint')}</p>
                                     <br />
                                     <Row>
@@ -311,7 +356,7 @@ export default function EcgAnalyzer() {
 
                                 <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
                                     <p className="ecg_label" style={{ marginBottom: 12 }}>
-                                        {t('select_analyse_mode') || 'Tahlil usulini tanlang'}
+                                        {t('select_analyse_mode', { defaultValue: 'Tahlil usulini tanlang' })}
                                     </p>
                                     <Radio.Group
                                         value={checkAI ? 'ai' : 'save'}
@@ -320,10 +365,10 @@ export default function EcgAnalyzer() {
                                         size="large"
                                     >
                                         <Radio.Button value="save">
-                                            💾 {t('save_only') || 'Faqat saqlash'}
+                                            💾 {t('save_only', { defaultValue: 'Faqat saqlash' })}
                                         </Radio.Button>
                                         <Radio.Button value="ai">
-                                            🤖 {t('ai_analyse') || 'AI bilan tahlil'}
+                                            🤖 {t('ai_analyse', { defaultValue: 'AI bilan tahlil' })}
                                         </Radio.Button>
                                     </Radio.Group>
                                 </Col>
@@ -334,13 +379,14 @@ export default function EcgAnalyzer() {
                                         <Col lg={6} xs={24} sm={24} md={24}>
                                             <Button
                                                 onClick={handleSubmit}
+                                                data-tour="analyzer-submit"
                                                 loading={state.loading3}
                                                 htmlType="button"
                                                 className="btn_form"
                                             >
                                                 {checkAI
-                                                    ? (t('ai_analyse') || 'AI bilan tahlil')
-                                                    : (t('save_only') || 'Faqat saqlash')
+                                                    ? (t('ai_analyse', { defaultValue: 'AI bilan tahlil' }))
+                                                    : (t('save_only', { defaultValue: 'Faqat saqlash' }))
                                                 }
                                             </Button>
                                         </Col>
@@ -359,7 +405,7 @@ export default function EcgAnalyzer() {
                     <h1>{t('ecg_last_result')}</h1>
                     <div className="main_card_content">
                         {state.loading3 ? (
-                            <div className="mini_loader"><MoonLoader size={50} color="#4FD1C5" /></div>
+                            <div className="mini_loader"><MoonLoader size={50} color="#00B39A" /></div>
                         ) : (
                             <>
                                 <EcgResult error={state.error} result={state.result} image={state.image} image_short={state.imageShort} clinic={user.clinic} />

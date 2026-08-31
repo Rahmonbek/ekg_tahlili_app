@@ -1,13 +1,28 @@
 import { useStore } from '../store/Store';
+import { isDuplicateError } from '../components/shared/duplicateUpload';
 
 export const useBackgroundAnalysis = () => {
     const { addPendingAnalysis, updatePendingAnalysis, removePendingAnalysis } = useStore();
 
-    const runInBackground = ({ type, label, listPath, analyzePromise, onSuccess }) => {
+    /**
+     * @param {function} [makeRequest] `(handlers) => Promise` — berilsa,
+     *        yuklash foizi shu yozuvda ko'rsatiladi (T-054). `analyzePromise`
+     *        eski chaqiruvlar bilan moslik uchun saqlangan.
+     */
+    const runInBackground = ({ type, label, listPath, analyzePromise, makeRequest, onSuccess, onDuplicate }) => {
         const key = `analysis-${Date.now()}`;
-        addPendingAnalysis({ key, type, label, listPath, status: 'loading' });
+        addPendingAnalysis({ key, type, label, listPath, status: 'loading', uploadPercent: null });
 
-        analyzePromise
+        // Ko'rsatkich aynan shu yerda: yuklash formasi `retryAnalyse()`
+        // bilan darhol tozalanadi va u yerdagi har qanday element DOM dan
+        // chiqib ketadi (T-054).
+        const promise = makeRequest
+            ? makeRequest({
+                onProgress: (percent) => updatePendingAnalysis(key, { uploadPercent: percent }),
+            })
+            : analyzePromise;
+
+        promise
             .then((result) => {
                 const data = result?.data || result || {};
                 const analysisId = extractAnalysisId(type, data);
@@ -20,6 +35,13 @@ export const useBackgroundAnalysis = () => {
                 if (onSuccess) onSuccess(result);
             })
             .catch((err) => {
+                // Takroriy fayl xatolik emas — foydalanuvchidan tasdiq
+                // so'raladi, shuning uchun qizil belgi chiqarilmaydi (T-096)
+                if (isDuplicateError(err) && onDuplicate) {
+                    removePendingAnalysis(key);
+                    onDuplicate(err);
+                    return;
+                }
                 const errorMsg = err?.response?.data?.message || err?.message || 'Xatolik yuz berdi';
                 updatePendingAnalysis(key, { status: 'error', errorMsg });
                 setTimeout(() => removePendingAnalysis(key), 8000);

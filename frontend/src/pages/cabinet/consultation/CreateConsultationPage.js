@@ -18,11 +18,14 @@ import { useRegionDistrict } from '../../../hooks/useRegionDistrict';
 import PatientSearchSection from '../../../components/shared/PatientSearchSection';
 import PatientInfoForm from '../../../components/shared/PatientInfoForm';
 import './Consultation.css';
+import { personName } from '../../../tools/formatters';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 
 const { Title, Text } = Typography;
 
 export default function CreateConsultationPage() {
     const { t } = useTranslation();
+    useDocumentTitle(t('create_consultation', { defaultValue: "Yangi konsultatsiya" }));
     const navigate = useNavigate();
     const { setConsultationBadge } = useStore();
 
@@ -201,7 +204,7 @@ export default function CreateConsultationPage() {
                             showIcon
                             className="consultation-inline-alert"
                             message={t('data_found')}
-                            description={[patcient.lastName, patcient.firstName, patcient.sureName].filter(Boolean).join(' ')}
+                            description={personName(patcient)}
                         />
                     )}
 

@@ -1,4 +1,4 @@
-using EkgAnalyzerApi.Data;
+﻿using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
 using EkgAnalyzerApi.Constants;
@@ -77,7 +77,7 @@ namespace EkgAnalyzerApi.Services
                 .Where(u => u.RoleId != _adminRoleId && u.RoleId != _superAdminRoleId && u.ClinicId == user.ClinicId && u.Id != user_id)
                 .Include(u => u.Role)
                 .Include(u => u.Doctor)
-                    .ThenInclude(d => d.DoctorPositions)
+                    .ThenInclude(d => d.DoctorPositions!)
                         .ThenInclude(dp => dp.Position);
 
             var totalDoctors = await doctorsQuery.CountAsync();
@@ -85,12 +85,10 @@ namespace EkgAnalyzerApi.Services
 
             var doctors = await doctorsQuery
                 .OrderBy(u => u.Id)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
+                .ApplyPaging(pageNumber, pageSize)
                 .Select(u => new DoctorDTOResponseData
                 {
                     Id = u.Doctor.Id,
-                    Password = u.PasswordPlain ?? "",
                     RoleId = u.RoleId,
                     FirstName = u.Doctor.FirstName,
                     LastName = u.Doctor.LastName,
@@ -131,7 +129,7 @@ namespace EkgAnalyzerApi.Services
             var doctorsQuery = _context.Users
                 .Where(u => u.RoleId == _doctorRoleId && u.ClinicId == id)
                 .Include(u => u.Doctor)
-                    .ThenInclude(d => d.DoctorPositions)
+                    .ThenInclude(d => d.DoctorPositions!)
                         .ThenInclude(dp => dp.Position);
 
 
@@ -183,7 +181,7 @@ namespace EkgAnalyzerApi.Services
                 .Where(u => u.Id == doc.UserId)
                 .Include(u => u.Role)
                 .Include(u => u.Doctor)
-                    .ThenInclude(d => d.DoctorPositions)
+                    .ThenInclude(d => d.DoctorPositions!)
                         .ThenInclude(dp => dp.Position);
 
 
@@ -193,7 +191,6 @@ namespace EkgAnalyzerApi.Services
                 {
                     Id = u.Doctor.Id,
                     UserId=u.Id,
-                    Password = u.PasswordPlain ?? "",
                     RoleId = u.RoleId,
                     FirstName = u.Doctor.FirstName,
                     LastName = u.Doctor.LastName,
@@ -286,10 +283,23 @@ namespace EkgAnalyzerApi.Services
             // =========================
             if (dto.Id == null)
             {
+                // Ilgari bu yerda `dto.Password ?? "000"` turardi: parol
+                // berilmasa xodimga jimgina `000` paroli qo'yilardi va
+                // uni hech kim bilmasdi — akkaunt esa ochiq qolardi (T-022)
+                // `throw` emas, `Fail(...)`: bu servis xatoliklarni natija
+                // obyekti orqali qaytaradi va kontroller uni 400 ga
+                // aylantiradi. Istisno esa 500 "Ichki xatolik" bo'lib
+                // chiqardi va foydalanuvchi sababni ko'rmasdi.
+                if (!PasswordPolicy.IsValid(dto.Password, out var newUserPasswordError))
+                    return Fail(newUserPasswordError);
+
                 var newUser = new User
                 {
-                    PasswordPlain = dto.Password ?? "000",
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password ?? "000"),
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                    // Parolni admin tanlaydi va uni xodimga aytadi — ya'ni
+                    // uni kamida ikki kishi biladi. Xodim birinchi kirishda
+                    // o'zining parolini qo'yishi shart (T-022).
+                    MustChangePassword = true,
                     Email = BuildInternalEmail(dto.Phone),
                     Status = true,
                     RoleId = dto.RoleId,
@@ -338,6 +348,18 @@ namespace EkgAnalyzerApi.Services
                 if (doctor == null)
                     return Fail("doctor_not_found");
 
+                // Shifokor yozuvi bor, lekin unga bog'langan `users` yozuvi
+                // yo'q holat bazada uchraydi (eski, yarim yaratilgan
+                // yozuvlar). Ilgari quyidagi uchta qator — email, parol va
+                // rol yozish — bunday holatda `NullReferenceException`
+                // berib, tahrirlashni 500 bilan buzardi (T-009).
+                //
+                // Jimgina o'tkazib yuborish ham to'g'ri emas: rol va parol
+                // yozilmasa, admin o'zgartirdim deb o'ylagan sozlama
+                // aslida qo'llanmagan bo'lardi. Shuning uchun aniq xato.
+                if (doctor.User == null)
+                    return Fail("doctor_user_missing");
+
                 doctor.FirstName = dto.FirstName;
                 doctor.LastName = dto.LastName;
                 doctor.SureName = dto.SureName;
@@ -353,8 +375,15 @@ namespace EkgAnalyzerApi.Services
 
                 if (!string.IsNullOrWhiteSpace(dto.Password))
                 {
-                    doctor.User.PasswordPlain = dto.Password;
+                    // Tahrirlashda parol ixtiyoriy, lekin berilgan bo'lsa
+                    // u ham siyosatga bo'ysunadi
+                    if (!PasswordPolicy.IsValid(dto.Password, out var updatePasswordError))
+                        return Fail(updatePasswordError);
+
                     doctor.User.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+                    // Admin parolni qayta o'rnatdi — u yana ikki kishiga
+                    // ma'lum bo'ldi, demak almashtirish talabi qaytadi
+                    doctor.User.MustChangePassword = true;
                 }
                 doctor.User.RoleId = dto.RoleId;
                 if (dto.Positions != null)
@@ -380,10 +409,17 @@ namespace EkgAnalyzerApi.Services
             // =========================
             // RESPONSE
             // =========================
+            // Javob uchun yozuv qayta o'qiladi. Natija `null` bo'lishi
+            // mumkin (parallel o'chirish), va ilgari u tekshirilmasdan
+            // ishlatilardi (T-009).
+            var savedId = doctor.Id;
             doctor = await _context.Doctors
                 .Include(d => d.User)
                 .ThenInclude(u => u.Role)
-                .FirstOrDefaultAsync(d => d.Id == doctor.Id);
+                .FirstOrDefaultAsync(d => d.Id == savedId);
+
+            if (doctor == null)
+                return Fail("doctor_not_found");
 
             var positions = await _context.DoctorPositions
                 .Where(dp => dp.DoctorId == doctor.Id && dp.Position != null)
@@ -409,7 +445,6 @@ namespace EkgAnalyzerApi.Services
                     Gender = doctor.Gender,
                     Phone = doctor.Phone,
                     Avatar = doctor.Avatar,
-                    Password = doctor.User?.PasswordPlain ?? "",
                     Positions = positions
                 }
             };

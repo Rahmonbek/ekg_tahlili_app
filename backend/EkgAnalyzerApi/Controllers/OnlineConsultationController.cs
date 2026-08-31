@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using EkgAnalyzerApi.Helpers;
 
 [ApiController]
 [Route("api/consultation")]
@@ -13,11 +14,13 @@ using System.Security.Claims;
 public class ConsultationController : ControllerBase
 {
     private readonly IOnlineConsultationService _service;
+    private readonly DocumentVerificationService _verification;
     private readonly MedDataDB _db;
 
-    public ConsultationController(IOnlineConsultationService service, MedDataDB db)
+    public ConsultationController(IOnlineConsultationService service, MedDataDB db, DocumentVerificationService verification)
     {
         _service = service;
+        _verification = verification;
         _db = db;
     }
 
@@ -493,34 +496,44 @@ public class ConsultationController : ControllerBase
 
     // ─── PRIVATE HELPERS ──────────────────────────────────────────────────────
 
-    [HttpGet("verify/{id:int}")]
+    /// <summary>
+    /// Konsultatsiya xulosasining haqiqiyligini tasdiqlash (QR kod). Autentifikatsiyasiz.
+    ///
+    /// Ilgari ketma-ket ID bilan ishlardi va javobda bemorning to'liq ismi hamda
+    /// <b>shifokorning tibbiy bahosi</b> (<c>patientCondition</c>) qaytarilardi —
+    /// ya'ni tibbiy sir parolsiz ochiq edi. Endi taxmin qilib bo'lmaydigan token
+    /// ishlatiladi va javobda tibbiy mazmun umuman yo'q.
+    /// </summary>
+    [HttpGet("verify/{token}")]
     [AllowAnonymous]
-    public async Task<IActionResult> VerifyConsultation(int id)
+    [EnableRateLimiting("strict")]
+    public async Task<IActionResult> VerifyConsultation(string token)
     {
+        if (!_verification.TryParseToken(token, out var type, out var id) || type != "consultation")
+            return NotFound(new { isValid = false, message = "Tasdiqlash kodi yaroqsiz" });
+
         var row = await _db.Consultations
             .AsNoTracking()
             .Include(c => c.Patient)
-            .Include(c => c.Doctor)
             .Include(c => c.Clinic)
             .Include(c => c.Conclusion)
             .FirstOrDefaultAsync(c => c.Id == id);
 
         if (row?.Conclusion == null)
-            return NotFound(new { message = "Konsultatsiya xulosasi topilmadi yoki hali tasdiqlanmagan" });
+            return NotFound(new { isValid = false, message = "Hujjat topilmadi yoki hali tasdiqlanmagan" });
 
-        return Ok(new ConsultationVerificationDto
+        // Faqat hujjat haqiqiyligini tasdiqlash uchun zarur minimum.
+        // Tibbiy xulosa va to'liq ism-shariflar ATAYLAB qaytarilmaydi.
+        return Ok(new
         {
-            ConsultationId = row.Id,
-            IsValid = true,
-            DocumentNumber = $"CONS-{row.CreatedAt:yyyyMM}-{row.Id:D4}",
-            PatientFullName = row.Patient == null ? "" : $"{row.Patient.LastName} {row.Patient.FirstName} {row.Patient.SureName}".Trim(),
-            DoctorFullName = row.Doctor == null ? "" : $"{row.Doctor.LastName} {row.Doctor.FirstName} {row.Doctor.SureName}".Trim(),
-            ClinicName = row.Clinic?.ClinicName ?? "",
-            ConsultationDate = row.ConsultationDate,
-            ConclusionCreatedAt = row.Conclusion.CreatedAt,
-            PatientCondition = row.Conclusion.PatientCondition,
-            Status = row.Status,
-            VerificationText = "Ushbu konsultatsiya xulosasi NMED platformasida shakllantirilgan va QR orqali tasdiqlandi."
+            isValid = true,
+            documentType = "Online konsultatsiya xulosasi",
+            documentNumber = $"CONS-{row.CreatedAt:yyyyMM}-{row.Id:D4}",
+            patientInitials = DocumentVerificationService.ToInitials(
+                row.Patient == null ? "" : PersonNameHelper.Display(row.Patient.LastName, row.Patient.FirstName)),
+            clinicName = row.Clinic?.ClinicName ?? "",
+            issuedAt = row.Conclusion.CreatedAt,
+            verificationText = "Ushbu hujjat NMED platformasida shakllantirilgan va haqiqiy."
         });
     }
 

@@ -113,6 +113,7 @@ const translateApiError = (errorCode) => {
         'doctor_not_found': "Shifokor topilmadi",
         'user_has_not_permission': "Sizda ruxsat yo'q",
         'doctor_saved_success': "Shifokor ma'lumotlari saqlandi",
+        'doctor_user_missing': "Shifokorning hisob yozuvi topilmadi — yozuv buzilgan, administratorga murojaat qiling",
         
         // Hozirgi / Yangi (.NET)
         'Invalid birthdate format': "Tug'ilgan sana formati noto'g'ri",

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
+using EkgAnalyzerApi.Helpers;
 
 namespace EkgAnalyzerApi.Services
 {
@@ -145,7 +146,7 @@ namespace EkgAnalyzerApi.Services
                     return new DoctorSearchResultDto
                     {
                         DoctorId    = d.Id,
-                        FullName    = $"{d.FirstName} {d.LastName}".Trim(),
+                        FullName    = PersonNameHelper.Display(d.LastName, d.FirstName),
                         Position    = position,
                         Phone       = d.Phone,
                         ClinicName  = d.User?.Clinic?.ClinicName ?? "",
@@ -192,7 +193,7 @@ namespace EkgAnalyzerApi.Services
                     Found = true,
                     PatientId = patient.Id,
                     PassportSeries = decryptedPassport,
-                    FullName = $"{patient.FirstName} {patient.LastName} {patient.SureName}".Trim(),
+                    FullName = PersonNameHelper.Display(patient.LastName, patient.FirstName),
                     BirthDate = patient.BirthDate,
                     Gender = patient.Gender,
                     Phone = patient.Phone,
@@ -297,7 +298,7 @@ namespace EkgAnalyzerApi.Services
                         ClinicConsultantId = cc.Id,
                         DoctorId           = cc.DoctorId,
                         FullName           = cc.Doctor != null
-                            ? $"{cc.Doctor.FirstName} {cc.Doctor.LastName}".Trim() : "",
+                            ? $"{cc.Doctor.LastName} {cc.Doctor.FirstName}".Trim() : "",
                         Position           = cc.Doctor != null && cc.Doctor.DoctorPositions != null
                             ? cc.Doctor.DoctorPositions
                                 .Select(dp => dp.Position != null ? dp.Position.NameUz ?? dp.Position.NameRu : null)
@@ -347,7 +348,7 @@ namespace EkgAnalyzerApi.Services
                         Id = i.Id,
                         DoctorId = i.DoctorId,
                         DoctorFullName = i.Doctor != null
-                            ? $"{i.Doctor.FirstName} {i.Doctor.LastName}".Trim()
+                            ? $"{i.Doctor.LastName} {i.Doctor.FirstName}".Trim()
                             : "",
                         DoctorPosition = i.Doctor != null && i.Doctor.DoctorPositions != null
                             ? i.Doctor.DoctorPositions
@@ -405,7 +406,7 @@ namespace EkgAnalyzerApi.Services
                         EffectiveFrom = p.EffectiveFrom,
                         ChangedAt = p.ChangedAt,
                         ChangedByFullName = p.ChangedByUser != null && p.ChangedByUser.Doctor != null
-                            ? (p.ChangedByUser.Doctor.FirstName + " " + p.ChangedByUser.Doctor.LastName).Trim()
+                            ? (p.ChangedByUser.Doctor.LastName + " " + p.ChangedByUser.Doctor.FirstName).Trim()
                             : null,
                         IsActiveToday = activeId.HasValue && p.Id == activeId.Value
                     })
@@ -563,7 +564,7 @@ namespace EkgAnalyzerApi.Services
                 {
                     Id              = c.Id,
                     PatientFullName = c.Patient != null
-                        ? $"{c.Patient.FirstName} {c.Patient.LastName}".Trim() : "",
+                        ? $"{c.Patient.LastName} {c.Patient.FirstName}".Trim() : "",
                     ConsultationDate = c.ConsultationDate,
                     PriceAtCreation  = c.PriceAtCreation,
                     Status           = c.Status,
@@ -766,9 +767,9 @@ namespace EkgAnalyzerApi.Services
                     {
                         Id              = c.Id,
                         PatientFullName = c.Patient != null
-                            ? $"{c.Patient.FirstName} {c.Patient.LastName}".Trim() : "",
+                            ? $"{c.Patient.LastName} {c.Patient.FirstName}".Trim() : "",
                         DoctorFullName  = c.Doctor != null
-                            ? $"{c.Doctor.FirstName} {c.Doctor.LastName}".Trim() : "",
+                            ? $"{c.Doctor.LastName} {c.Doctor.FirstName}".Trim() : "",
                         PriceAtCreation  = c.PriceAtCreation,
                         ConsultationDate = c.ConsultationDate,
                         CreatedAt        = c.CreatedAt,
@@ -808,13 +809,15 @@ namespace EkgAnalyzerApi.Services
                 // Bemorning barcha tahlillari
                 var analyses = await GetPatientAnalysesAsync(c.PatientId);
 
-                // Passport decrypt qilish (admin uchun ko'rsatiladi)
-                string? decryptedPassport = null;
-                if (c.Patient?.Passport != null)
-                {
-                    try { decryptedPassport = _encryption.Decrypt(c.Patient.Passport); }
-                    catch { decryptedPassport = null; }
-                }
+                // Passport MASKALANGAN holda beriladi (T-098).
+                //
+                // Ilgari bu yerda to'liq seriya qaytarilardi va u
+                // konsultatsiya sahifasida doimiy ko'rinib turardi.
+                // Bemorni ajratish uchun oxirgi to'rtta belgi yetarli;
+                // to'liq seriya faqat bemor kartasida, uni ataylab
+                // ochgan foydalanuvchiga ko'rsatiladi.
+                var maskedPassport = PatientPrivacy.MaskPassport(
+                    _encryption, c.Patient?.Passport);
 
                 var d = c.Doctor;
                 var position = d?.DoctorPositions?.FirstOrDefault()?.Position?.NameUz
@@ -832,17 +835,17 @@ namespace EkgAnalyzerApi.Services
 
                     PatientId        = c.PatientId,
                     PatientFullName  = c.Patient != null
-                        ? $"{c.Patient.FirstName} {c.Patient.LastName}".Trim() : "",
+                        ? PersonNameHelper.Display(c.Patient.LastName, c.Patient.FirstName) : "",
                     BirthDate        = c.Patient?.BirthDate,
                     Gender           = c.Patient?.Gender,
                     Phone            = c.Patient?.Phone,
                     Address          = c.Patient?.Address,
-                    PassportSeries   = decryptedPassport,
+                    PassportSeries   = maskedPassport,
 
                     DoctorId         = c.DoctorId,
                     DoctorUserId     = d?.UserId,
                     DoctorIsOnline   = d?.UserId > 0 && _connections.IsOnline(d.UserId),
-                    DoctorFullName   = d != null ? $"{d.FirstName} {d.LastName}".Trim() : "",
+                    DoctorFullName   = d != null ? $"{d.LastName} {d.FirstName}".Trim() : "",
                     DoctorPosition   = position,
                     DoctorPhone      = d?.Phone,
                     DoctorClinicName = d?.User?.Clinic?.ClinicName ?? "",
@@ -1124,7 +1127,7 @@ namespace EkgAnalyzerApi.Services
                 {
                     Id               = c.Id,
                     PatientFullName  = c.Patient != null
-                        ? $"{c.Patient.FirstName} {c.Patient.LastName}".Trim() : "",
+                        ? $"{c.Patient.LastName} {c.Patient.FirstName}".Trim() : "",
                     ConsultationDate = c.ConsultationDate,
                     PriceAtCreation  = c.PriceAtCreation,
                     Status           = c.Status,
@@ -1171,7 +1174,7 @@ namespace EkgAnalyzerApi.Services
                     {
                         Id               = c.Id,
                         PatientFullName  = c.Patient != null
-                            ? $"{c.Patient.FirstName} {c.Patient.LastName}".Trim() : "",
+                            ? $"{c.Patient.LastName} {c.Patient.FirstName}".Trim() : "",
                         ClinicName       = c.Clinic?.ClinicName ?? "",
                         PriceAtCreation  = c.PriceAtCreation,
                         ConsultationDate = c.ConsultationDate,
@@ -1284,7 +1287,7 @@ namespace EkgAnalyzerApi.Services
 
                 var adminDoctor = admin?.Doctor;
                 var adminFullName = adminDoctor != null
-                    ? $"{adminDoctor.FirstName} {adminDoctor.LastName}".Trim()
+                    ? $"{adminDoctor.LastName} {adminDoctor.FirstName}".Trim()
                     : "";
 
                 // Bemorning tahlillari (shifokor klinikaga tegishli — clinic consultantId orqali)
@@ -1300,11 +1303,23 @@ namespace EkgAnalyzerApi.Services
                     LiveKitRoomName  = c.LiveKitRoomName,
 
                     PatientFullName  = c.Patient != null
-                        ? $"{c.Patient.FirstName} {c.Patient.LastName}".Trim() : "",
+                        ? PersonNameHelper.Display(c.Patient.LastName, c.Patient.FirstName) : "",
                     BirthDate        = c.Patient?.BirthDate,
                     Gender           = c.Patient?.Gender,
-                    Phone            = c.Patient?.Phone,
-                    Address          = c.Patient?.Address,
+
+                    // Telefon va manzil ATAYIN berilmaydi (T-091).
+                    //
+                    // Konsultatsiya maqsadi — tibbiy xulosa berish. Buning
+                    // uchun tashqi klinika shifokoriga bemorning uy manzili
+                    // va telefon raqami kerak emas: ular tibbiy qarorga
+                    // hech qanday hissa qo'shmaydi, lekin oqib chiqish
+                    // xavfini oshiradi — konsultant boshqa tashkilot xodimi.
+                    //
+                    // Bemorni ajratish uchun ism, yosh va jinsi yetarli.
+                    // Aloqa kerak bo'lsa u klinika administratori orqali
+                    // amalga oshiriladi — uning kontakti quyida berilgan.
+                    Phone            = null,
+                    Address          = null,
 
                     AdminFullName    = adminFullName,
                     AdminUserId      = admin?.Id,

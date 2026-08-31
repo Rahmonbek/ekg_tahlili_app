@@ -7,7 +7,7 @@ const statusIcon = {
     loading: (
         <span style={{ display: 'inline-block', width: 16, height: 16, marginRight: 8, verticalAlign: 'middle' }}>
             <svg viewBox="0 0 24 24" width="16" height="16">
-                <circle cx="12" cy="12" r="10" stroke="#4FD1C5" strokeWidth="3" fill="none"
+                <circle cx="12" cy="12" r="10" stroke="#00B39A" strokeWidth="3" fill="none"
                     strokeDasharray="31.4" strokeDashoffset="10">
                     <animateTransform attributeName="transform" type="rotate"
                         from="0 12 12" to="360 12 12" dur="0.9s" repeatCount="indefinite" />
@@ -15,7 +15,7 @@ const statusIcon = {
             </svg>
         </span>
     ),
-    done:    <span style={{ color: '#52c41a', marginRight: 8, fontSize: 16 }}>✓</span>,
+    done:    <span style={{ color: '#16A34A', marginRight: 8, fontSize: 16 }}>✓</span>,
     error:   <span style={{ color: '#ff4d4f', marginRight: 8, fontSize: 16 }}>✗</span>,
 };
 
@@ -98,7 +98,15 @@ export default function AnalysisProgressFloat() {
                             {item.label}
                         </span>
                         {item.status === 'loading' ? (
-                            <span style={{ fontSize: 11, color: '#999' }}>davom etmoqda...</span>
+                            /* Fayl hali yuklanayotgan bo'lsa foiz ko'rsatiladi:
+                               katta fayl (13.5 MB) sekin internetda bir necha
+                               daqiqa ketadi va foydalanuvchi hech narsa
+                               bo'lmayapti deb o'ylab tugmani qayta bosardi (T-054) */
+                            <span style={{ fontSize: 11, color: '#999' }}>
+                                {item.uploadPercent != null && item.uploadPercent < 100
+                                    ? `${item.uploadPercent}%`
+                                    : 'davom etmoqda...'}
+                            </span>
                         ) : item.status === 'done' ? (
                             <span
                                 style={{ fontSize: 12, color: '#0f766e', cursor: 'pointer', textDecoration: 'underline' }}

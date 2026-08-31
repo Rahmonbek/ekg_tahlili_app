@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { Button, Spin } from 'antd';
 import { IoArrowBack } from 'react-icons/io5';
 import { FaDownload } from 'react-icons/fa6';
-import { apiEcg } from '../../../host/Host';
-import { formatDateTime } from '../../../tools/formatters';
+import { buildFileUrl } from '../../../host/Host';
+import { formatDateTime, personName } from '../../../tools/formatters';
 import ClinicHeader from '../../../components/results/ClinicHeader';
 import { get_diagnose_by_id } from '../../../host/requests/DiagnoseRequest';
 import { useStore } from '../../../store/Store';
@@ -72,7 +72,7 @@ export default function DiagnoseView() {
                             <p className="ecg_label">{t('patcient_info')}</p>
                             <div className="ekg-item-info-text">
                                 <b>{t('patient_fullname')}: </b>
-                                <p>{data.patcient.lastName} {data.patcient.firstName} {data.patcient.sureName}</p>
+                                <p>{personName(data.patcient)}</p>
                             </div>
                             {data.patcient.passport && (
                                 <div className="ekg-item-info-text">
@@ -120,7 +120,7 @@ export default function DiagnoseView() {
                         <div style={{ marginTop: 16 }}>
                             <p className="ecg_label">{t('diagnoses_file')}</p>
                             <a
-                                href={`${apiEcg}${data.diagnoseFileLink}`}
+                                href={buildFileUrl(data.diagnoseFileLink)}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="btn_form mini_btn_main"

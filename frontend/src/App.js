@@ -39,9 +39,8 @@ export default function App() {
   const [first_load, setfirst_load] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
-  const isPublicConsultationVerify = location.pathname.startsWith('/consultation/verify/')
-  const isPublicAnalysisVerify = location.pathname.startsWith('/analysis/verify/')
-  const isPublicVerify = isPublicConsultationVerify || isPublicAnalysisVerify
+  // QR kod orqali ochiladigan ommaviy tasdiqlash sahifasi: /verify/{token}
+  const isPublicVerify = location.pathname.startsWith('/verify/')
   const publicPaths = ['/', '/login', '/register']
   const isPublicPath = publicPaths.includes(location.pathname)
 
@@ -139,8 +138,11 @@ export default function App() {
       setsmad_unread(data.smad || 0);
       setlab_unread(data.lab || 0);
       setdiagnoses_unread(data.diagnoses || 0);
-    } catch (err) {
-      console.log(err)
+    } catch {
+      // Badge sonlari ikkinchi darajali — xatolik foydalanuvchiga ko'rsatilmaydi,
+      // lekin jimgina yutib yuborilmaydi ham: interceptor uni allaqachon log qiladi.
+      setecg_unread(0); setholter_unread(0); setsmad_unread(0);
+      setlab_unread(0); setdiagnoses_unread(0);
     }
   }
 
@@ -148,8 +150,9 @@ export default function App() {
     try {
       const res = await getConsultationBadgeCounts();
       setConsultationBadge(res.data || {});
-    } catch (err) {
-      console.log(err)
+    } catch {
+      // Konsultatsiya badge'lari ikkinchi darajali — nolga tushiriladi
+      setConsultationBadge({});
     }
   }
 

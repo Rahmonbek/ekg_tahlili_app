@@ -7,7 +7,7 @@ import { useStore } from '../../../store/Store';
 import DownloadReportButton from '../../../components/DownloadReportButton';
 import DoctorDiagnosisBlock from '../../../components/results/DoctorDiagnosisBlock';
 import { get_parasitology_analyse_by_id } from '../../../host/requests/ParasitologyRequest';
-import { formatDate, calculateAge } from '../../../tools/formatters';
+import { formatDate, calculateAge, personName } from '../../../tools/formatters';
 import AnalyseViewHeader from '../../../components/shared/AnalyseViewHeader';
 
 const { Title, Text } = Typography;
@@ -50,7 +50,7 @@ export default function ParasitologyAnalyseView() {
     }
 
     const clinic = data.clinic;
-    const patientName = [data.patcient?.lastName, data.patcient?.firstName, data.patcient?.sureName].filter(Boolean).join(' ');
+    const patientName = personName(data.patcient);
     const createdDoctorName = data.createdDoctor
         ? `${data.createdDoctor.lastName ?? ''} ${data.createdDoctor.firstName ?? ''}`.trim()
         : '';
@@ -72,7 +72,7 @@ export default function ParasitologyAnalyseView() {
 
     const diagnosisTag = typeof data.hasDiagnosis === 'boolean' ? (
         <Tag color={data.hasDiagnosis ? 'success' : 'default'}>
-            {(t('diagnosis_status') || 'Tashxis')}: {data.hasDiagnosis ? (t('has_diagnosis') || 'Bor') : (t('no_diagnosis') || 'Yo‘q')}
+            {(t('diagnosis_status', { defaultValue: 'Tashxis' }))}: {data.hasDiagnosis ? (t('has_diagnosis', { defaultValue: 'Bor' })) : (t('no_diagnosis', { defaultValue: 'Yo‘q' }))}
         </Tag>
     ) : null;
 
@@ -84,8 +84,9 @@ export default function ParasitologyAnalyseView() {
                 downloadNode={data.analysisStatus === 'analyzed' ? <DownloadReportButton type="parasitology" id={data.id} size="middle" className="analysis-view-download-btn" /> : null}
                 clinic={clinic}
                 onClinicClick={() => setClinicModalVisible(true)}
+                documentNumber={data.documentNumber}
                 patientName={patientName}
-                ageText={data.patcient?.birthDate ? `${calculateAge(data.patcient.birthDate)} ${t('age') || 'yosh'}` : ''}
+                ageText={data.patcient?.birthDate ? `${calculateAge(data.patcient.birthDate)} ${t('age', { defaultValue: 'yosh' })}` : ''}
                 createdDoctorName={createdDoctorName}
                 treatingDoctorsText={treatingDoctorsText}
                 statusNode={statusTag}
@@ -99,7 +100,7 @@ export default function ParasitologyAnalyseView() {
             <DoctorDiagnosisBlock analysisType="para" analysisId={data.id} />
 
             <Modal
-                title={t('clinic_info') || 'Shifoxona ma\'lumotlari'}
+                title={t('clinic_info', { defaultValue: 'Shifoxona ma\'lumotlari' })}
                 open={clinicModalVisible}
                 onCancel={() => setClinicModalVisible(false)}
                 footer={null}
@@ -122,15 +123,15 @@ export default function ParasitologyAnalyseView() {
                         <Space direction="vertical" style={{ width: '100%', marginTop: 12 }}>
                             {clinic.address && (
                                 <div style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: 8 }}>
-                                    <Text type="secondary">{t('address') || 'Manzil'}:</Text>
+                                    <Text type="secondary">{t('address', { defaultValue: 'Manzil' })}:</Text>
                                     <div style={{ fontWeight: 500 }}>{clinic.district ? `${clinic.district.nameUz || clinic.district}, ` : ''}{clinic.address}</div>
                                 </div>
                             )}
                             {clinic.phoneNumbers && clinic.phoneNumbers.length > 0 && (
                                 <div style={{ paddingTop: 8 }}>
-                                    <Text type="secondary">{t('phones') || 'Telefon raqamlar'}:</Text>
+                                    <Text type="secondary">{t('phones', { defaultValue: 'Telefon raqamlar' })}:</Text>
                                     {clinic.phoneNumbers.map((p, index) => (
-                                        <div key={index} style={{ fontWeight: 500, fontSize: '16px', color: '#00D1B2' }}>{p}</div>
+                                        <div key={index} style={{ fontWeight: 500, fontSize: '16px', color: '#00B39A' }}>{p}</div>
                                     ))}
                                 </div>
                             )}

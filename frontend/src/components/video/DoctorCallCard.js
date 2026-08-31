@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store/Store';
 import { getVideoToken } from '../../host/requests/VideoCallRequest';
 import { initiateCall } from '../../hooks/videoSignalRService';
+import { personName } from '../../tools/formatters';
 
 const { Text } = Typography;
 
@@ -17,9 +18,9 @@ export default function DoctorCallCard({ doctor }) {
         if (!doctor.isOnline || doctor.isBusy || calling || videoCall.isCalling || videoCall.activeRoom) return;
 
         const roomName = `nmed-room-${user.id}-${doctor.userId}-${Date.now()}`;
-        const myName = user?.doctor
-            ? `${user.doctor.firstName ?? ''} ${user.doctor.lastName ?? ''}`.trim()
-            : 'Admin';
+        // Ism tartibi platformaning qolgan qismi bilan bir xil:
+        // familiya, keyin ism, sharifsiz
+        const myName = personName(user?.doctor, 'Admin');
 
         try {
             setCalling(true);
@@ -79,7 +80,7 @@ export default function DoctorCallCard({ doctor }) {
                         width: 12,
                         height: 12,
                         borderRadius: '50%',
-                        background: isOnline ? '#52c41a' : '#bfbfbf',
+                        background: isOnline ? '#16A34A' : '#bfbfbf',
                         border: '2px solid #fff',
                         display: 'block',
                     }} />
@@ -103,7 +104,7 @@ export default function DoctorCallCard({ doctor }) {
                     </Text>
                     <Text style={{
                         fontSize: 11,
-                        color: isBusy ? '#fa8c16' : (isOnline ? '#52c41a' : '#bfbfbf'),
+                        color: isBusy ? '#fa8c16' : (isOnline ? '#16A34A' : '#bfbfbf'),
                         fontWeight: 500,
                         letterSpacing: 0.2,
                     }}>
@@ -125,8 +126,8 @@ export default function DoctorCallCard({ doctor }) {
                             width: 44,
                             height: 44,
                             flexShrink: 0,
-                            backgroundColor: isOnline ? '#52c41a' : undefined,
-                            borderColor: isOnline ? '#52c41a' : undefined,
+                            backgroundColor: isOnline ? '#16A34A' : undefined,
+                            borderColor: isOnline ? '#16A34A' : undefined,
                             boxShadow: isOnline ? '0 3px 10px rgba(82,196,26,0.35)' : 'none',
                         }}
                     />

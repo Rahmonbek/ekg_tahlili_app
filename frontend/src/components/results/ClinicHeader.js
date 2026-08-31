@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Image, List, Typography, Space, Divider } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { MdLocationOn, MdPhone, MdLocalHospital } from 'react-icons/md';
-import { apiEcg } from '../../host/Host';
+import { buildFileUrl } from '../../host/Host';
 
 const { Title, Text } = Typography;
 
@@ -37,8 +37,8 @@ const ClinicHeader = ({ clinic }) => {
         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e6f7ff'}
         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f0f2f5'}
       >
-        <MdLocalHospital style={{ color: '#1890ff', fontSize: '20px' }} />
-        <Text strong style={{ fontSize: '16px', color: '#1890ff' }}>
+        <MdLocalHospital style={{ color: '#2563EB', fontSize: '20px' }} />
+        <Text strong style={{ fontSize: '16px', color: '#2563EB' }}>
           {clinic.clinicName}
         </Text>
       </div>
@@ -54,7 +54,7 @@ const ClinicHeader = ({ clinic }) => {
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           {clinic.clinicLogo ? (
             <Image
-              src={`${apiEcg}${clinic.clinicLogo}`}
+              src={buildFileUrl(clinic.clinicLogo)}
               alt={clinic.clinicName}
               style={{ maxHeight: '100px', objectFit: 'contain', marginBottom: '16px' }}
               fallback="/placeholder-clinic.png"
@@ -83,7 +83,7 @@ const ClinicHeader = ({ clinic }) => {
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
           {clinic.address && (
             <div style={{ display: 'flex', gap: '12px' }}>
-              <MdLocationOn style={{ color: '#1890ff', fontSize: '20px', marginTop: '4px' }} />
+              <MdLocationOn style={{ color: '#2563EB', fontSize: '20px', marginTop: '4px' }} />
               <div>
                 <Text strong>{t('address')}:</Text>
                 <br />
@@ -97,7 +97,7 @@ const ClinicHeader = ({ clinic }) => {
 
           {clinic.phoneNumbers && clinic.phoneNumbers.length > 0 && (
             <div style={{ display: 'flex', gap: '12px' }}>
-              <MdPhone style={{ color: '#52c41a', fontSize: '20px', marginTop: '4px' }} />
+              <MdPhone style={{ color: '#16A34A', fontSize: '20px', marginTop: '4px' }} />
               <div style={{ flex: 1 }}>
                 <Text strong>{t('phone_numbers')}:</Text>
                 <List

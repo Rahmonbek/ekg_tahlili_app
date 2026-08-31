@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using EkgAnalyzerApi.Data;
 
@@ -11,7 +11,7 @@ namespace EkgAnalyzerApi.Models
         [Column("id")]
         public int Id { get; set; }
 
-        [Column("patcient_id")]
+        [Column("patient_id")]
         public int PatcientId { get; set; }
         [ForeignKey(nameof(PatcientId))]
         public Patcient Patcient { get; set; } = null!;

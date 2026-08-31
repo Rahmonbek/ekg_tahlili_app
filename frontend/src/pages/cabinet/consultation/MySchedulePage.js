@@ -13,6 +13,7 @@ import {
 import { useStore } from '../../../store/Store';
 import dayjs from 'dayjs';
 import './Consultation.css';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 
 const { Title, Text } = Typography;
 
@@ -23,6 +24,7 @@ const STATUS_COLORS = {
 
 export default function MySchedulePage() {
     const { t } = useTranslation();
+    useDocumentTitle(t('my_schedule', { defaultValue: "Mening jadvalim" }));
     const navigate = useNavigate();
     const { setVideoCall } = useStore();
 
@@ -102,7 +104,7 @@ export default function MySchedulePage() {
                     {loading ? (
                 <div style={{ textAlign: 'center', padding: 40 }}><Spin /></div>
             ) : data.length === 0 ? (
-                <Empty description={t('no_incoming') || 'Faol konsultatsiyalar yo\'q'} />
+                <Empty description={t('no_incoming', { defaultValue: 'Faol konsultatsiyalar yo\'q' })} />
             ) : (
                 <Row gutter={[12, 12]}>
                     {data.map(item => (
@@ -159,7 +161,7 @@ export default function MySchedulePage() {
                                         loading={videoLoading[item.id]}
                                         onClick={() => handleStartVideo(item.id)}
                                     >
-                                        {t('start_video_call') || 'Video qo\'ng\'iroq'}
+                                        {t('start_video_call', { defaultValue: 'Video qo\'ng\'iroq' })}
                                     </Button>
                                     <Button
                                         size="small"

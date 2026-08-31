@@ -181,10 +181,29 @@ sudo mkdir -p /var/www/nmed/api/wwwroot
 sudo chown -R www-data:www-data /var/www/nmed/api/wwwroot
 ```
 
+> **MUHIM.** `.NET` va Python bitta uploads papkasidan foydalanadi. `.NET` uchun uning
+> yo'lini `Storage__UploadsRoot` orqali aniq ko'rsatish **majburiy** — aks holda
+> fayllar topilmaydi va PDF hisobotlarga EKG rasmlari qo'shilmaydi:
+>
+> ```bash
+> # /var/www/nmed/api/.env.production
+> Storage__UploadsRoot=/var/www/nmed/python/uploads
+> App__TimeZone=Asia/Tashkent
+> ```
+>
+> Papkaga `.NET` jarayoni ham o'qish huquqiga ega bo'lishi kerak:
+> ```bash
+> sudo chown -R www-data:www-data /var/www/nmed/python/uploads
+> ```
+
 ### Python backend
 
 ```bash
-rsync -a --delete /var/www/nmed/source/python_back/ /var/www/nmed/python/
+# DIQQAT: `--delete` maqsad papkadagi ortiqcha fayllarni o'chiradi.
+# Bemor fayllari endi bu papkada EMAS (STORAGE_ROOT ga ko'chirilgan),
+# lekin `venv` va `.env` ni saqlab qolish uchun ular chiqarib tashlanadi.
+rsync -a --delete /var/www/nmed/source/python_back/ /var/www/nmed/python/ \
+      --exclude venv --exclude .env
 cd /var/www/nmed/python
 python3 -m venv venv
 venv/bin/pip install --upgrade pip
@@ -400,7 +419,8 @@ cd ../backend/EkgAnalyzerApi
 dotnet publish -c Release -o /var/www/nmed/api
 cp .env.production /var/www/nmed/api/.env.production
 
-rsync -a --delete ../../python_back/ /var/www/nmed/python/ --exclude venv --exclude uploads --exclude .env
+rsync -a --delete ../../python_back/ /var/www/nmed/python/ \
+      --exclude venv --exclude .env --exclude uploads
 cd /var/www/nmed/python
 venv/bin/pip install -r requirements.txt
 
@@ -417,3 +437,92 @@ sudo systemctl reload nginx
 - `.env`, `.env.production`, real `appsettings.Production.json` va API keylar git'ga commit qilinmaydi.
 - `Jwt__Key` va Python `JWT_SECRET` bir xil bo'lmasa Python API tokenlarni rad qiladi.
 - Nginx SSL tugatadi, .NET Kestrel esa productionda faqat `127.0.0.1:5000`da HTTP ishlaydi.
+
+---
+
+## Tibbiy fayllarni saqlash (STORAGE_ROOT)
+
+**Muhim:** bemorlarning tibbiy fayllari (EKG suratlari, Holter/SMAD/laboratoriya
+PDF'lari, shifokor xulosalari) **loyiha papkasi ichida saqlanmasligi kerak**.
+
+Ilgari ular `python_back/uploads/` ichida yotardi. Bu uch xavf tug'dirardi:
+
+1. **Deploy paytida yo'qolish** — `rsync --delete` buyrug'ida `--exclude uploads`
+   unutilsa yoki xato yozilsa, barcha bemor fayllari o'chib ketardi.
+2. **Zaxira nusxa chalkash** — kod va ma'lumot bir papkada bo'lgani uchun
+   "kodni backup qilish" va "ma'lumotni backup qilish" ajratilmagan edi.
+3. **Masshtablash imkonsiz** — ikkinchi server qo'shilsa fayllar faqat
+   bittasida qolardi.
+
+### Sozlash
+
+```bash
+# 1. Papka yaratish (kod papkasidan TASHQARIDA)
+sudo mkdir -p /var/lib/nmed/storage
+sudo chown -R www-data:www-data /var/lib/nmed/storage
+sudo chmod 750 /var/lib/nmed/storage
+```
+
+```bash
+# 2. Python: /var/www/nmed/python/.env
+STORAGE_ROOT=/var/lib/nmed/storage
+```
+
+```bash
+# 3. .NET: /var/www/nmed/api/.env.production
+Storage__UploadsRoot=/var/lib/nmed/storage
+```
+
+Ikkala xizmat ham **ayni bitta papkani** ko'rsatishi shart — Python fayllarni
+yozadi, .NET esa ularni proksi orqali beradi.
+
+### Mavjud fayllarni ko'chirish
+
+```bash
+sudo systemctl stop nmed-python nmed-api
+
+# Fayllarni ko'chirish (nusxa olish, keyin tekshirib o'chirish)
+sudo rsync -a /var/www/nmed/python/uploads/ /var/lib/nmed/storage/
+sudo chown -R www-data:www-data /var/lib/nmed/storage
+
+# Hajmlarni solishtirib tekshirish
+du -sh /var/www/nmed/python/uploads /var/lib/nmed/storage
+
+sudo systemctl start nmed-python nmed-api
+```
+
+Tekshirib bo'lgach eski papkani o'chirish mumkin:
+```bash
+sudo rm -rf /var/www/nmed/python/uploads
+```
+
+### Zaxira nusxa
+
+Endi ma'lumot bitta joyda va uni alohida zaxiralash mumkin:
+
+```bash
+# Baza + fayllar birga
+pg_dump med_helper_data | gzip > /backup/db-$(date +%F).sql.gz
+tar czf /backup/files-$(date +%F).tar.gz -C /var/lib/nmed storage
+```
+
+> Baza va fayllar **birga** tiklanishi kerak: bazada yozuv bo'lib fayl
+> bo'lmasa yoki aksincha bo'lsa, tahlil ochilmaydi.
+
+### Fayl tuzilmasi
+
+Yangi fayllar sana bo'yicha papkalarga va UUID nomi bilan saqlanadi:
+
+```
+/var/lib/nmed/storage/
+    ecg_analyse_files/2026/08/c599b9e3f1c64da89da0c43859e54228.jpg
+    ecg_generated_files/2026/08/...
+    holter_analyse_files/2026/08/...
+    smad_analyse_files/2026/08/...
+    lab_analyse_files/2026/08/...
+    medical_diagnoses/2026/08/...
+```
+
+Asl fayl nomi ataylab saqlanmaydi — u bemor ismini o'z ichiga olishi va
+manzilni taxmin qilish orqali oshkor bo'lishi mumkin edi.
+Eski, tekis tuzilmadagi fayllar ham ishlashda davom etadi.

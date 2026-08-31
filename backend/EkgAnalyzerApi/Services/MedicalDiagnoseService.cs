@@ -1,4 +1,4 @@
-using EkgAnalyzerApi.Data;
+﻿using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Models;
 using Microsoft.EntityFrameworkCore;
@@ -25,15 +25,14 @@ namespace EkgAnalyzerApi.Services
             var totalCount = await baseQuery.CountAsync();
 
             var items = await baseQuery
-                .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail).ThenInclude(c => c.District).ThenInclude(c => c.Region)
+                .Include(e => e.Clinic!).ThenInclude(c => c.ClinicDetail!).ThenInclude(c => c.District!).ThenInclude(c => c.Region!)
                 .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
                 .Include(e => e.Patcient)
-                .Include(e => e.CreatedDoctor).ThenInclude(d => d.User).ThenInclude(u => u.Role)
-                .Include(e => e.MainDoctor).ThenInclude(d => d.User).ThenInclude(u => u.Role)
+                .Include(e => e.CreatedDoctor!).ThenInclude(d => d.User!).ThenInclude(u => u.Role!)
+                .Include(e => e.MainDoctor!).ThenInclude(d => d.User!).ThenInclude(u => u.Role!)
                 .Include(e => e.MainDoctor).ThenInclude(d => d.DoctorPositions).ThenInclude(dp => dp.Position)
                 .OrderByDescending(e => e.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .ApplyPaging(page, pageSize)
                 .Select(e => new MedicalDiagnoseDTO
                 {
                     Id = e.Id,
@@ -70,10 +69,10 @@ namespace EkgAnalyzerApi.Services
                         Phone = e.CreatedDoctor.Phone,
                         Role = new RolesDTO
                         {
-                            Id = e.CreatedDoctor.User.Role.Id,
-                            NameUz = e.CreatedDoctor.User.Role.NameUz,
-                            NameRu = e.CreatedDoctor.User.Role.NameRu,
-                            NameEn = e.CreatedDoctor.User.Role.NameEn
+                            Id = e.CreatedDoctor.User!.Role!.Id,
+                            NameUz = e.CreatedDoctor.User!.Role!.NameUz,
+                            NameRu = e.CreatedDoctor.User!.Role!.NameRu,
+                            NameEn = e.CreatedDoctor.User!.Role!.NameEn
                         }
                     },
                     MainDoctor = new DoctorForECGData
@@ -85,10 +84,10 @@ namespace EkgAnalyzerApi.Services
                         Phone = e.MainDoctor.Phone,
                         Role = new RolesDTO
                         {
-                            Id = e.MainDoctor.User.Role.Id,
-                            NameUz = e.MainDoctor.User.Role.NameUz,
-                            NameRu = e.MainDoctor.User.Role.NameRu,
-                            NameEn = e.MainDoctor.User.Role.NameEn
+                            Id = e.MainDoctor.User!.Role!.Id,
+                            NameUz = e.MainDoctor.User!.Role!.NameUz,
+                            NameRu = e.MainDoctor.User!.Role!.NameRu,
+                            NameEn = e.MainDoctor.User!.Role!.NameEn
                         },
                         Positions = e.MainDoctor.DoctorPositions
                             .Select(dp => new PositionDto
@@ -166,8 +165,7 @@ namespace EkgAnalyzerApi.Services
 
             var items = await query
                 .OrderByDescending(e => e.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .ApplyPaging(page, pageSize)
                 .Select(e => new MedicalDiagnoseListDTO
                 {
                     Id = e.Id,
@@ -251,8 +249,7 @@ namespace EkgAnalyzerApi.Services
 
             var items = await query
                 .OrderByDescending(e => e.Id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .ApplyPaging(page, pageSize)
                 .Select(e => new MedicalDiagnoseListDTO
                 {
                     Id              = e.Id,
@@ -354,8 +351,7 @@ namespace EkgAnalyzerApi.Services
 
             var items = await query
                 .OrderByDescending(e => e.Id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .ApplyPaging(page, pageSize)
                 .Select(e => new MedicalDiagnoseListDTO
                 {
                     Id               = e.Id,
@@ -401,11 +397,11 @@ namespace EkgAnalyzerApi.Services
         public async Task<MedicalDiagnoseDTO?> GetMedicalDiagnoseByIdAsync(int id)
         {
             var e = await _context.MedicalDiagnose
-                .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail).ThenInclude(c => c.District).ThenInclude(c => c.Region)
+                .Include(e => e.Clinic!).ThenInclude(c => c.ClinicDetail!).ThenInclude(c => c.District!).ThenInclude(c => c.Region!)
                 .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
                 .Include(e => e.Patcient)
-                .Include(e => e.CreatedDoctor).ThenInclude(d => d.User).ThenInclude(u => u.Role)
-                .Include(e => e.MainDoctor).ThenInclude(d => d.User).ThenInclude(u => u.Role)
+                .Include(e => e.CreatedDoctor!).ThenInclude(d => d.User!).ThenInclude(u => u.Role!)
+                .Include(e => e.MainDoctor!).ThenInclude(d => d.User!).ThenInclude(u => u.Role!)
                 .Include(e => e.MainDoctor).ThenInclude(d => d.DoctorPositions).ThenInclude(dp => dp.Position)
                 .FirstOrDefaultAsync(x => x.Id == id);
 
@@ -447,10 +443,10 @@ namespace EkgAnalyzerApi.Services
                     Phone = e.CreatedDoctor.Phone,
                     Role = new RolesDTO
                     {
-                        Id = e.CreatedDoctor.User.Role.Id,
-                        NameUz = e.CreatedDoctor.User.Role.NameUz,
-                        NameRu = e.CreatedDoctor.User.Role.NameRu,
-                        NameEn = e.CreatedDoctor.User.Role.NameEn
+                        Id = e.CreatedDoctor.User!.Role!.Id,
+                        NameUz = e.CreatedDoctor.User!.Role!.NameUz,
+                        NameRu = e.CreatedDoctor.User!.Role!.NameRu,
+                        NameEn = e.CreatedDoctor.User!.Role!.NameEn
                     }
                 },
                 MainDoctor = new DoctorForECGData
@@ -462,10 +458,10 @@ namespace EkgAnalyzerApi.Services
                     Phone = e.MainDoctor.Phone,
                     Role = new RolesDTO
                     {
-                        Id = e.MainDoctor.User.Role.Id,
-                        NameUz = e.MainDoctor.User.Role.NameUz,
-                        NameRu = e.MainDoctor.User.Role.NameRu,
-                        NameEn = e.MainDoctor.User.Role.NameEn
+                        Id = e.MainDoctor.User!.Role!.Id,
+                        NameUz = e.MainDoctor.User!.Role!.NameUz,
+                        NameRu = e.MainDoctor.User!.Role!.NameRu,
+                        NameEn = e.MainDoctor.User!.Role!.NameEn
                     },
                     Positions = e.MainDoctor.DoctorPositions
                         .Select(dp => new PositionDto

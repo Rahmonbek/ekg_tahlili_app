@@ -13,6 +13,7 @@ import {
 import { formatDateTime, calculateAge, formatDate } from '../../../tools/formatters';
 import { useStore } from '../../../store/Store';
 import EmptyState from '../../../components/shared/EmptyState';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 
 const { Option } = Select;
 
@@ -25,15 +26,16 @@ const STATUS_COLORS = {
 };
 
 const JIDDIYLIK_COLORS = {
-    1: '#52c41a',
-    2: '#faad14',
-    3: '#ff4d4f',
+    1: 'green',
+    2: 'gold',
+    3: 'red',
 };
 
 const PAGE_SIZE = 10;
 
 export default function ParasitologyAnalysesList() {
     const { t } = useTranslation();
+    useDocumentTitle(t('parasitology_analyse', { defaultValue: "Parazitologik tahlillar" }));
     const navigate = useNavigate();
     const { user } = useStore();
     const isDoctor = user && user.roleId === 4;
@@ -113,9 +115,9 @@ export default function ParasitologyAnalysesList() {
 
     const jiddiylikLabel = (j) => {
         const map = {
-            1: t('normal') || 'Normal',
-            2: t('avarage') || "O'rta",
-            3: t('danger') || 'Xavfli',
+            1: t('normal', { defaultValue: 'Normal' }),
+            2: t('avarage', { defaultValue: "O'rta" }),
+            3: t('danger', { defaultValue: 'Xavfli' }),
         };
         return map[j] ?? '—';
     };
@@ -134,14 +136,15 @@ export default function ParasitologyAnalysesList() {
             render: (_, row) => {
                 const p = row.patcient;
                 if (!p) return '—';
-                const name = [p.lastName, p.firstName, p.sureName].filter(Boolean).join(' ');
+                // Jadvalda faqat familiya va ism (otasining ismisiz)
+                const name = [p.lastName, p.firstName].filter(Boolean).join(' ');
                 const age = p.birthDate ? calculateAge(p.birthDate) : null;
                 return (
                     <span>
                         <strong>{name || `ID: ${p.id}`}</strong>
                         {age !== null && (
                             <span style={{ color: '#888', marginLeft: 6 }}>
-                                ({age} {t('age') || 'yosh'})
+                                ({age} {t('age', { defaultValue: 'yosh' })})
                             </span>
                         )}
                     </span>
@@ -164,44 +167,44 @@ export default function ParasitologyAnalysesList() {
             },
         },
         {
-            title: t('infection_level') || "Jiddiylik",
+            title: t('infection_level', { defaultValue: "Jiddiylik" }),
             dataIndex: 'jiddiylikDarajasi',
             key: 'jiddiylik',
             align: 'center',
             render: (j) =>
                 j ? (
-                    <Tag color={JIDDIYLIK_COLORS[j]} style={{ borderRadius: 4, fontWeight: 500 }}>
+                    <Tag color={JIDDIYLIK_COLORS[j] || 'default'} style={{ borderRadius: 4, fontWeight: 500 }}>
                         {jiddiylikLabel(j)}
                     </Tag>
                 ) : '—',
         },
         {
-            title: t('diagnosis_written') || 'Holati',
+            title: t('diagnosis_written', { defaultValue: 'Holati' }),
             key: 'diagnosis_written',
             align: 'center',
             render: (_, row) => {
                 if (row.hasDiagnosis) {
                     return (
                         <Tag color="success" style={{ borderRadius: '4px', fontWeight: 500 }}>
-                            <FaCheck style={{ marginRight: 4 }} /> {t('diagnosis_written') || 'Tashxis yozilgan'}
+                            <FaCheck style={{ marginRight: 4 }} /> {t('diagnosis_written', { defaultValue: 'Tashxis yozilgan' })}
                         </Tag>
                     );
                 }
                 return (
                     <Tag color="default" style={{ borderRadius: '4px' }}>
-                        {t('diagnosis_not_written') || 'Tashxis yozilmagan'}
+                        {t('diagnosis_not_written', { defaultValue: 'Tashxis yozilmagan' })}
                     </Tag>
                 );
             },
         },
         {
-            title: t('date_filter') || 'Tizimga kiritilgan sana',
+            title: t('date_filter', { defaultValue: 'Tizimga kiritilgan sana' }),
             key: 'createdAt',
             align: 'center',
             render: (_, row) => formatDate(row.createdAt),
         },
         {
-            title: t('analysis_date') || 'Tahlil olingan sana',
+            title: t('analysis_date', { defaultValue: 'Tahlil olingan sana' }),
             key: 'analysisDate',
             align: 'center',
             render: (_, row) => (row.analysisDate ? formatDate(row.analysisDate) : formatDate(row.createdAt)),
@@ -228,13 +231,13 @@ export default function ParasitologyAnalysesList() {
         <div>
             <div className="main_card">
                 <h1>
-                    {t('parasitology_analyse') || 'Parazitologik tahlillar'}
+                    {t('parasitology_analyse', { defaultValue: 'Parazitologik tahlillar' })}
                     <button
                         onClick={() => navigate('/parasitology-analyzer')}
                         className="btn_form"
                         style={{ width: 'auto', padding: '0 24px', marginTop: 0 }}
                     >
-                        {t('create_new_parasitology_analyse') || 'Yangi Parazitologiya tahlil'}
+                        {t('create_new_parasitology_analyse', { defaultValue: 'Yangi Parazitologiya tahlil' })}
                     </button>
                 </h1>
                 <div className="main_card_content big_card_content">
@@ -309,7 +312,7 @@ export default function ParasitologyAnalysesList() {
                             </Col>
                             <Col xs={24} sm={24} md={12} lg={8} xl={4}>
                                 <div className="filter_item">
-                                    <label className="filter_label">{t('para_filter_jiddiylik') || 'AI natija'}</label>
+                                    <label className="filter_label">{t('para_filter_jiddiylik', { defaultValue: 'AI natija' })}</label>
                                     <Select
                                         className="login_input custom_select"
                                         placeholder={t('para_filter_jiddiylik')}
@@ -332,10 +335,10 @@ export default function ParasitologyAnalysesList() {
                             </Col>
                             <Col xs={24} sm={24} md={12} lg={8} xl={4}>
                                 <div className="filter_item">
-                                    <label className="filter_label">{t('diagnosis_status') || 'Tashxis holati'}</label>
+                                    <label className="filter_label">{t('diagnosis_status', { defaultValue: 'Tashxis holati' })}</label>
                                     <Select
                                         className="login_input custom_select"
-                                        placeholder={t('diagnosis_status') || 'Tashxis holati'}
+                                        placeholder={t('diagnosis_status', { defaultValue: 'Tashxis holati' })}
                                         value={hasDiagnosisFilter}
                                         allowClear
                                         onClear={() => {
@@ -347,8 +350,8 @@ export default function ParasitologyAnalysesList() {
                                         onChange={(val) => setHasDiagnosisFilter(val ?? null)}
                                         style={{ width: '100%' }}
                                     >
-                                        <Option value={true}>{t('diagnosis_written') || 'Tashxis yozilgan'}</Option>
-                                        <Option value={false}>{t('diagnosis_not_written') || 'Tashxis yozilmagan'}</Option>
+                                        <Option value={true}>{t('diagnosis_written', { defaultValue: 'Tashxis yozilgan' })}</Option>
+                                        <Option value={false}>{t('diagnosis_not_written', { defaultValue: 'Tashxis yozilmagan' })}</Option>
                                     </Select>
                                 </div>
                             </Col>
@@ -363,16 +366,25 @@ export default function ParasitologyAnalysesList() {
                     {/* Table */}
                     <div className="doctors_table">
                         <Table
+                            // Jadval keng bo'lsa gorizontal aylantirish — ilgari ortiqcha
+                            // ustunlar shunchaki kesilardi va ularga yetib bo'lmasdi
+                            scroll={{ x: "max-content" }}
                             rowKey="id"
                             loading={loading}
                             dataSource={data}
+                            // Qator bosilsa ko'rish sahifasi ochiladi — tor ekranlarda
+                            // "ko'z" tugmasi gorizontal skroll ortida qolib ketardi
+                            onRow={(row) => ({
+                                onClick: () => navigate(`/parasitology-analyses/view/${row.id}`),
+                                style: { cursor: 'pointer' },
+                            })}
                             columns={columns}
                             locale={{
                                 emptyText: (
                                     <EmptyState
                                         icon={<GiMicroscope />}
-                                        message={t('parasitology_analyse') || 'Hech qanday parazitologik tahlil topilmadi'}
-                                        actionLabel={t('retry_parasitology_analyse') || 'Yangi tahlil qilish'}
+                                        message={t('parasitology_analyse', { defaultValue: 'Hech qanday parazitologik tahlil topilmadi' })}
+                                        actionLabel={t('retry_parasitology_analyse', { defaultValue: 'Yangi tahlil qilish' })}
                                         actionPath="/parasitology-analyzer"
                                     />
                                 ),
@@ -382,7 +394,7 @@ export default function ParasitologyAnalysesList() {
                                 pageSize: PAGE_SIZE,
                                 total: total,
                                 showSizeChanger: false,
-                                showTotal: (tot) => `${tot} ta natija`,
+                                showTotal: (tot) => t('total_results', { defaultValue: '{{count}} ta natija', count: tot }),
                                 onChange: (p) => setPage(p),
                             }}
                         />

@@ -1,4 +1,4 @@
-namespace EkgAnalyzerApi.Services;
+﻿namespace EkgAnalyzerApi.Services;
 
 /// <summary>
 /// PDF hujjatlar uchun ko'p tilli lug'at (uz/ru/en).
@@ -29,7 +29,7 @@ public static class PdfTranslations
 
         // Bemor ma'lumotlari bloki
         ["patient_info"]            = "BEMOR MA'LUMOTLARI",
-        ["fio"]                     = "Familiya, ism, sharif",
+        ["fio"]                     = "Familiya, ism",
         ["birth_date"]              = "Tug'ilgan sana",
         ["age_suffix"]              = "yosh",
         ["gender"]                  = "Jinsi",
@@ -42,6 +42,9 @@ public static class PdfTranslations
         // Tahlil bloki
         ["analysis_info"]           = "TAHLIL MA'LUMOTLARI",
         ["analysis_date"]           = "Tahlil sanasi",
+        ["document_date"]           = "Hujjat sanasi",
+        ["analysis_performed_date"] = "Tahlil o'tkazilgan sana",
+        ["date_not_specified"]      = "ko'rsatilmagan",
         ["analysis_type"]           = "Tahlil turi",
         ["device"]                  = "Uskunа",
         ["device_value"]            = "AI yordamida avtomatik tahlil",
@@ -158,7 +161,7 @@ public static class PdfTranslations
         ["parasitology_title"]      = "РЕЗУЛЬТАТЫ ПАРАЗИТОЛОГИЧЕСКОГО АНАЛИЗА",
 
         ["patient_info"]            = "ДАННЫЕ ПАЦИЕНТА",
-        ["fio"]                     = "Фамилия, имя, отчество",
+        ["fio"]                     = "Фамилия, имя",
         ["birth_date"]              = "Дата рождения",
         ["age_suffix"]              = "лет",
         ["gender"]                  = "Пол",
@@ -170,6 +173,9 @@ public static class PdfTranslations
 
         ["analysis_info"]           = "ДАННЫЕ АНАЛИЗА",
         ["analysis_date"]           = "Дата анализа",
+        ["document_date"]           = "Дата документа",
+        ["analysis_performed_date"] = "Дата проведения анализа",
+        ["date_not_specified"]      = "не указана",
         ["analysis_type"]           = "Тип анализа",
         ["device"]                  = "Оборудование",
         ["device_value"]            = "Автоматический анализ с помощью ИИ",
@@ -275,7 +281,7 @@ public static class PdfTranslations
         ["parasitology_title"]      = "PARASITOLOGICAL EXAMINATION RESULTS",
 
         ["patient_info"]            = "PATIENT INFORMATION",
-        ["fio"]                     = "Full Name",
+        ["fio"]                     = "Surname, first name",
         ["birth_date"]              = "Date of Birth",
         ["age_suffix"]              = "years",
         ["gender"]                  = "Gender",
@@ -287,6 +293,9 @@ public static class PdfTranslations
 
         ["analysis_info"]           = "ANALYSIS DETAILS",
         ["analysis_date"]           = "Analysis Date",
+        ["document_date"]           = "Document Date",
+        ["analysis_performed_date"] = "Date the analysis was performed",
+        ["date_not_specified"]      = "not specified",
         ["analysis_type"]           = "Analysis Type",
         ["device"]                  = "Equipment",
         ["device_value"]            = "Automated AI-assisted analysis",

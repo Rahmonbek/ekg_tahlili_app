@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import SideBar from '../../components/SideBar'
+import { TourProvider } from '../../components/shared/TourProvider'
 import Header from '../../components/Header'
 import { useTranslation } from 'react-i18next'
 import { Route, Routes, Navigate } from 'react-router-dom'
@@ -15,6 +16,12 @@ import Diagnoses from './diagnoses/Diagnoses'
 import LabAnalyzer from './lab_analyse/LabAnalyzer'
 import { get_lab_values_data } from '../../host/requests/LabValueTypesRequest'
 import Patcients from './pages/patcients/Patcients'
+import PatcientCard from './pages/patcients/PatcientCard'
+import Profile from './pages/Profile'
+import AuditLogs from './pages/AuditLogs'
+import SystemStatus from './pages/SystemStatus'
+import Help from './pages/Help'
+import NotFound from './pages/NotFound'
 import HolterAnalyzer from './holter_analyse/HolterAnalyzer'
 import SmadAnalyzer from './smad_analyse/SmadAnalyzer'
 import ParasitologyAnalyzer from './parasitology/ParasitologyAnalyzer'
@@ -42,6 +49,7 @@ import DoctorClinicsPage from './consultation/DoctorClinicsPage'
 import DoctorClinicHistoryPage from './consultation/DoctorClinicHistoryPage'
 import DoctorConsultationsPage from './consultation/DoctorConsultationsPage'
 import ConsultationDetailDoctorPage from './consultation/ConsultationDetailDoctorPage'
+import TableScrollHint from '../../components/shared/TableScrollHint';
 
 // ─── Rol asosida himoya ──────────────────────────────────────────────────────
 const ProtectedRoute = ({ allowedRoles, userRole, children }) => {
@@ -98,10 +106,14 @@ export default function Main() {
 
     return (
         <div className='main_box'>
+            <TourProvider>
             <SideBar />
             <div className='content_box'>
                 <Header />
                 {user != null ? <div className='content'>
+                    {/* Gorizontal aylantiriladigan jadvallarga ishora (mobil) */}
+                    <TableScrollHint />
+
                     <Routes>
                         {/* ── Bosh sahifa va Dashboard ───────────────────────── */}
                         <Route path="/" element={
@@ -240,6 +252,11 @@ export default function Main() {
                                 <Patcients />
                             </ClinicGatedRoute>
                         } />
+                        <Route path="/patcients/:id" element={
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <PatcientCard />
+                            </ClinicGatedRoute>
+                        } />
 
                         {/* ── Video Konferensiya — Admin/Direktor/Shifokor ── */}
                         <Route path="/video-conference" element={
@@ -308,11 +325,34 @@ export default function Main() {
                         } />
 
                         {/* 404 */}
-                        <Route path="*" element={<Navigate to="/" replace />} />
+                        {/* ── Yangi sahifalar (T-062) ── */}
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/help" element={<Help />} />
+                        <Route path="/audit-logs" element={
+                            <ProtectedRoute allowedRoles={[1]} userRole={user.roleId}>
+                                <AuditLogs />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/system-status" element={
+                            <ProtectedRoute allowedRoles={[1]} userRole={user.roleId}>
+                                <SystemStatus />
+                            </ProtectedRoute>
+                        } />
+
+                        {/* Tizimga kirgan foydalanuvchi `/login` yoki `/register`
+                            manziliga o'tsa 404 ko'rsatish noto'g'ri — u allaqachon
+                            kirgan, shuning uchun bosh sahifaga yo'naltiriladi */}
+                        <Route path="/login" element={<Navigate to="/" replace />} />
+                        <Route path="/register" element={<Navigate to="/" replace />} />
+
+                        {/* Qolgan noma'lum manzil endi jimgina bosh sahifaga
+                            yo'naltirilmaydi — foydalanuvchi nima bo'lganini ko'radi */}
+                        <Route path="*" element={<NotFound />} />
                     </Routes>
                 </div> : <></>}
             </div>
             <AdminModal />
+            </TourProvider>
         </div>
     )
 }

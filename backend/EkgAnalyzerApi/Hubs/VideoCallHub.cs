@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using EkgAnalyzerApi.Helpers;
 
 namespace EkgAnalyzerApi.Hubs
 {
@@ -115,9 +116,14 @@ namespace EkgAnalyzerApi.Hubs
                 .Include(u => u.Doctor)
                 .FirstOrDefaultAsync(u => u.Id == callerId);
 
+            // Ismi to'ldirilmagan bo'lsa telefon raqami ko'rsatiladi:
+            // "Admin" degan umumiy so'z ikkita ishtirokchini ajratmasdi (T-085)
             var callerName = caller?.Doctor != null
-                ? $"{caller.Doctor.FirstName} {caller.Doctor.LastName}".Trim()
-                : "Admin";
+                ? PersonNameHelper.Display(caller.Doctor.LastName, caller.Doctor.FirstName)
+                : "";
+            if (string.IsNullOrWhiteSpace(callerName))
+                callerName = caller?.Doctor?.Phone?.Trim() is { Length: > 0 } pcaller
+                    ? pcaller : "Admin";
 
             var session = new VideoCallSession
             {
@@ -166,9 +172,14 @@ namespace EkgAnalyzerApi.Hubs
                 .Include(u => u.Doctor)
                 .FirstOrDefaultAsync(u => u.Id == callerId);
 
+            // Ismi to'ldirilmagan bo'lsa telefon raqami ko'rsatiladi:
+            // "Admin" degan umumiy so'z ikkita ishtirokchini ajratmasdi (T-085)
             var callerName = caller?.Doctor != null
-                ? $"{caller.Doctor.FirstName} {caller.Doctor.LastName}".Trim()
-                : "Admin";
+                ? PersonNameHelper.Display(caller.Doctor.LastName, caller.Doctor.FirstName)
+                : "";
+            if (string.IsNullOrWhiteSpace(callerName))
+                callerName = caller?.Doctor?.Phone?.Trim() is { Length: > 0 } pcaller
+                    ? pcaller : "Admin";
 
             var session = new VideoCallSession
             {
@@ -212,7 +223,7 @@ namespace EkgAnalyzerApi.Hubs
                 .FirstOrDefaultAsync(u => u.Id == recipientId);
 
             var recipientName = recipient?.Doctor != null
-                ? $"{recipient.Doctor.FirstName} {recipient.Doctor.LastName}".Trim()
+                ? $"{recipient.Doctor.LastName} {recipient.Doctor.FirstName}".Trim()
                 : "Shifokor";
 
             var initiatorConns = _connections.GetConnectionIds(session.InitiatorId).ToList();

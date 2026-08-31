@@ -47,8 +47,9 @@ export const getConsultationDetailAdmin = (id) =>
 export const getConsultationTokenAdmin = (id) =>
     httpGetRequest(`/consultation/${id}/livekit-token`);
 
-export const getConsultationVerification = (id) =>
-    httpGetRequest(`/consultation/verify/${id}`);
+// Konsultatsiya xulosasini QR token orqali tekshirish (autentifikatsiyasiz)
+export const getConsultationVerification = (token) =>
+    httpGetRequest(`/consultation/verify/${token}`);
 
 // ─── DOCTOR ────────────────────────────────────────────────────────────────
 

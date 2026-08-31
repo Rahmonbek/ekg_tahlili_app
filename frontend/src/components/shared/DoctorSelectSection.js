@@ -1,5 +1,5 @@
 import React from 'react';
-import { Checkbox, Col, Form, Row, Select } from 'antd';
+import { Alert, Checkbox, Col, Form, Row, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { FaUserDoctor } from 'react-icons/fa6';
 
@@ -27,7 +27,7 @@ export default function DoctorSelectSection({
     return (
         <>
 
-            <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
+            <Col className="main_col" data-tour="analyzer-doctors" lg={24} xs={24} sm={24} md={24}>
                 <p className="ecg_label">{t('select_doctor_of_patcient')}</p>
                 <br />
                 <Row>
@@ -46,7 +46,13 @@ export default function DoctorSelectSection({
                         </Col>
                     ))}
                 </Row>
-                <p className="ecg_has_not_label">{t('has_not_doctor')}</p>
+                {/* Oddiy "!!!" matn o'rniga to'g'ri Alert komponenti */}
+                <Alert
+                    type="info"
+                    showIcon
+                    message={t('has_not_doctor')}
+                    style={{ marginTop: 12 }}
+                />
             </Col>
         </>
     );

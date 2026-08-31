@@ -30,6 +30,7 @@ import PatientSearchSection from '../../../components/shared/PatientSearchSectio
 import LiveKitRoomView from '../../../components/video/LiveKitRoom';
 import ConsultationAnalysisInlineView, { normalizeAnalysisType } from '../consultation/ConsultationAnalysisInlineView';
 import '../../../components/video/VideoConference.css';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 
 const { Title, Text } = Typography;
 
@@ -47,6 +48,7 @@ const participantStatusMeta = {
 
 export default function VideoConference() {
     const { t } = useTranslation();
+    useDocumentTitle(t('video_conference', { defaultValue: "Video konferensiya" }));
     const navigate = useNavigate();
     const location = useLocation();
     const params = useParams();
@@ -342,7 +344,7 @@ export default function VideoConference() {
                     </Button>
                     {videoCall.activeRoom && (
                         <Button icon={<PoweroffOutlined />} onClick={leaveActiveConference}>
-                            {t('leave') || 'Chiqish'}
+                            {t('leave', { defaultValue: 'Chiqish' })}
                         </Button>
                     )}
                     {activeDetail?.canManage && (
@@ -416,7 +418,7 @@ export default function VideoConference() {
                         { title: t('type'), dataIndex: 'type' },
                         { title: t('analysis_date'), dataIndex: 'date', render: (v) => v ? dayjs(v).format('DD.MM.YYYY HH:mm') : '-' },
                         { title: t('clinic'), dataIndex: 'clinicName', render: (v) => v || '-' },
-                        { title: 'AI', dataIndex: 'hasAiResult', render: (v) => v ? <CheckCircleOutlined style={{ color: '#42c8bd' }} /> : <ClockCircleOutlined /> },
+                        { title: 'AI', dataIndex: 'hasAiResult', render: (v) => v ? <CheckCircleOutlined style={{ color: '#00B39A' }} /> : <ClockCircleOutlined /> },
                         {
                             title: t('actions'),
                             render: (_, row) => {
@@ -427,7 +429,7 @@ export default function VideoConference() {
                                         icon={<EyeOutlined />}
                                         onClick={() => setExpandedAnalysisKey(isOpen ? null : key)}
                                     >
-                                        {isOpen ? (t('hide') || 'Yashirish') : (t('view') || "Ko'rish")}
+                                        {isOpen ? (t('hide', { defaultValue: 'Yashirish' })) : (t('view', { defaultValue: "Ko'rish" }))}
                                     </Button>
                                 );
                             },

@@ -99,8 +99,19 @@ export default function ClinicSetupModal() {
             width={560}
             centered
         >
+            {/* Ikkinchi qadam — foydalanuvchi qayerda turganini bilsin */}
+            <Steps
+                size="small"
+                current={1}
+                style={{ marginBottom: 20 }}
+                items={[
+                    { title: t('onboarding_step_profile') },
+                    { title: t('onboarding_step_clinic') },
+                ]}
+            />
+
             <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                <FaBuilding size={40} color="#1D9E75" />
+                <FaBuilding size={40} color="#00B39A" />
                 <h2 style={{ marginTop: 12, marginBottom: 4, color: '#2C3E6B' }}>
                     {t('clinic_setup_title')}
                 </h2>
@@ -120,7 +131,7 @@ export default function ClinicSetupModal() {
                     rules={[{ required: true, message: t('not_empty') }]}
                 >
                     <Input
-                        prefix={<FaBuilding color="#1D9E75" />}
+                        prefix={<FaBuilding color="#00B39A" />}
                         className="login_input"
                         placeholder={t('clinic_name_label')}
                     />
@@ -174,7 +185,7 @@ export default function ClinicSetupModal() {
                     rules={[{ required: true, message: t('not_empty') }]}
                 >
                     <Input
-                        prefix={<FaLocationDot color="#1D9E75" />}
+                        prefix={<FaLocationDot color="#00B39A" />}
                         className="login_input"
                         placeholder={t('clinic_address_label')}
                     />
@@ -187,7 +198,6 @@ export default function ClinicSetupModal() {
                         loading={loading}
                         className="btn_form"
                         block
-                        style={{ background: '#1D9E75', borderColor: '#1D9E75' }}
                     >
                         {t('save')}
                     </Button>

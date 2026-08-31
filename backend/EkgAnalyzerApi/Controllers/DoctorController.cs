@@ -1,4 +1,5 @@
-﻿using EkgAnalyzerApi.DTOs;
+using EkgAnalyzerApi.Constants;
+using EkgAnalyzerApi.DTOs;
 using EkgAnalyzerApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +20,7 @@ public class DoctorController : ControllerBase
 
 
     [HttpPost("save-doctor-data")]
+    [Authorize(Policy = RoleConstants.PolicyClinicManager)]
     public async Task<IActionResult> SaveDoctorData([FromForm] DoctorDTORequest data)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
@@ -38,6 +40,7 @@ public class DoctorController : ControllerBase
         return Ok(clinic);
     }
     [HttpGet("get-doctors-of-clinic")]
+    [Authorize(Policy = RoleConstants.PolicyClinicManager)]
     public async Task<IActionResult> GetDoctors([FromQuery] int page = 1)
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
@@ -89,6 +92,7 @@ public class DoctorController : ControllerBase
 
 
     [HttpGet("get-params-for-add-staff")]
+    [Authorize(Policy = RoleConstants.PolicyClinicManager)]
     public async Task<IActionResult> GetRolesForAddStaff()
     {
         var roleIdClaim = User.Claims.FirstOrDefault(c => c.Type == "roleId");

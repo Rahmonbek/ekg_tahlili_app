@@ -1,6 +1,6 @@
 import { Alert, Button, Col, Form, Row, Select, Tooltip, Upload } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef} from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { IoAlertCircleSharp } from 'react-icons/io5';
@@ -29,9 +29,21 @@ import { warningAlert } from '../../../tools/Alerts';
 // ─── Result Components ───
 import SmadResult from '../../../components/results/smad_analyse/SmadResult';
 import SmadOldResult from '../../../components/results/smad_analyse/SmadOldResult';
+import { analyzerTour } from '../../../tools/tourSteps';
+import { usePageTour } from '../../../components/shared/TourProvider';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
+import DateField from '../../../components/shared/DateField';
+import { askDuplicate, withForce } from '../../../components/shared/duplicateUpload';
+import useFileTypes from '../../../hooks/useFileTypes';
 
 export default function SmadAnalyzer() {
-    const { t } = useTranslation();
+    // Ruxsat etilgan formatlar serverdan olinadi — ilgari ular
+    // bu yerda qo'lda yozilgan va server ro'yxatidan farq qilardi (T-041)
+    const fileTypes = useFileTypes('smad');
+    // Qo'llanma qadamlari ro'yxatdan o'tkaziladi; tugma header'da
+    usePageTour(analyzerTour, { keepMissing: true });
+    const { t } = useTranslation()
+    useDocumentTitle(t('create_new_smad_analyse', { defaultValue: "Yangi SMAD tahlil" }));
     const [form] = Form.useForm();
     const [form1] = Form.useForm();
     const [form2] = Form.useForm();
@@ -109,6 +121,14 @@ export default function SmadAnalyzer() {
     }, [resetPatient, resetDoctorSelection, resetAll, form, form1, form2]);
 
     // ─── Submit ───
+
+    const uploadAbortRef = useRef(null);
+
+    /** Yuklashni bekor qilish (T-054). Fon panelидagi yozuv o'chiriladi. */
+    const cancelUpload = () => {
+        uploadAbortRef.current?.abort();
+    };
+
     const handleSubmit = useCallback(() => {
         if (state.files.length === 0) return alert(t('select_file_error'));
 
@@ -126,12 +146,22 @@ export default function SmadAnalyzer() {
             formData.append('analysis_date', state.analysis_date);
         }
 
-        runInBackground({
+        // Takroriy fayl aniqlansa server 409 qaytaradi va hech qanday
+        // yozuv yaratmaydi. Foydalanuvchi tasdiqlasa, aynan shu forma
+        // `force_duplicate` bayrog'i bilan qayta yuboriladi (T-096).
+        const send = (data) => runInBackground({
             type: 'smad',
             label: 'SMAD tahlil',
             listPath: '/smad-analyses',
-            analyzePromise: analyzeSmadFile(formData),
+            makeRequest: (handlers) => analyzeSmadFile(data, {
+                ...handlers,
+                signal: (uploadAbortRef.current = new AbortController()).signal,
+            }),
+            onDuplicate: async (err) => {
+                if (await askDuplicate(err, t)) send(withForce(data));
+            },
         });
+        send(formData);
         retryAnalyse();
     }, [state, patcient, user, selectedDoctors, selectedMainDoctor, runInBackground, t, retryAnalyse]);
 
@@ -196,9 +226,9 @@ export default function SmadAnalyzer() {
                         <Form form={form2} name="smadUpload" labelCol={{ span: 24 }} wrapperCol={{ span: 24 }}>
                             <Row>
                                 <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
-                                    <Form.Item name="select_lab_file" label={t('select_smad_file')} rules={[{ required: true, message: '' }]}>
+                                    <Form.Item name="select_lab_file" data-tour="analyzer-file" label={t('select_smad_file')} rules={[{ required: true, message: t('field_required') }]}>
                                         <Upload.Dragger
-                                            accept=".pdf"
+                                            accept={fileTypes.accept}
                                             beforeUpload={handleUploadFile}
                                             maxCount={1}
                                             fileList={state.files}
@@ -206,12 +236,12 @@ export default function SmadAnalyzer() {
                                         >
                                             <p className="ant-upload-drag-icon"><InboxOutlined /></p>
                                             <p className="ant-upload-text">{t('select_smad_file')}</p>
-                                            <p className="ant-upload-hint">{t('access_file_types')}: pdf</p>
+                                            <p className="ant-upload-hint">{t('access_file_types')}: {fileTypes.label}</p>
                                         </Upload.Dragger>
                                     </Form.Item>
                                 </Col>
                                 <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
-                                    <Form.Item name="lang" label={t('lang_analyse')} rules={[{ required: true, message: '' }]}>
+                                    <Form.Item name="lang" label={t('lang_analyse')} rules={[{ required: true, message: t('field_required') }]}>
                                         <Select
                                             style={{ width: '100%' }}
                                             className="login_input"
@@ -229,15 +259,20 @@ export default function SmadAnalyzer() {
                                     <Form.Item
                                         name="analysis_date"
                                         label={t('analysis_date')}
-                                        rules={[{ required: true, message: t('enter_analysis_date') || '' }]}
+                                        rules={[{ required: true, message: t('enter_analysis_date', { defaultValue: '' }) }]}
                                     >
-                                        <input
-                                            className="input_date"
-                                            type="date"
+                                        {/* Tug'ma `<input type="date">` brauzer tiliga bo'ysunardi
+                                            (o'zbek interfeysda ruscha `дд.мм.гггг`) va har bir brauzerda
+                                            boshqacha ko'rinardi. */}
+                                        <DateField
                                             value={analysisDateValue}
-                                            onChange={(e) => {
-                                                setAnalysisDateValue(e.target.value);
-                                                dispatch({ type: 'SET_FIELD', field: 'analysis_date', value: e.target.value ? new Date(`${e.target.value}T00:00:00`).toISOString() : null });
+                                            onChange={(value) => {
+                                                setAnalysisDateValue(value || '');
+                                                dispatch({
+                                                    type: 'SET_FIELD',
+                                                    field: 'analysis_date',
+                                                    value: value ? new Date(`${value}T00:00:00`).toISOString() : null,
+                                                });
                                             }}
                                         />
                                     </Form.Item>
@@ -245,7 +280,7 @@ export default function SmadAnalyzer() {
 
                                 {/* SMAD uchun asosiy shifokor */}
                                 <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
-                                    <Form.Item name="main_doctor" label={t('smad_doctor')} rules={[{ required: true, message: '' }]}>
+                                    <Form.Item name="main_doctor" label={t('smad_doctor')} rules={[{ required: true, message: t('field_required') }]}>
                                         <Select
                                             style={{ width: '100%' }} value={selectedMainDoctor}
                                             prefix={<FaUserDoctor />} defaultValue={selectedMainDoctor}
@@ -264,9 +299,11 @@ export default function SmadAnalyzer() {
                                 <Col lg={9} xs={24} sm={24} md={24}></Col>
                                 <Col lg={6} xs={24} sm={24} md={24}>
                                     {canSubmit && state.showBtn && (
-                                        <Button onClick={handleSubmit} loading={state.loading3} htmlType="button" className="btn_form">
+                                        <>
+                                            <Button data-tour="analyzer-submit" onClick={handleSubmit} loading={state.loading3} htmlType="button" className="btn_form">
                                             {t('check')}
                                         </Button>
+                                    </>
                                     )}
                                 </Col>
                                 <Col lg={9} xs={24} sm={24} md={24}></Col>
@@ -282,7 +319,7 @@ export default function SmadAnalyzer() {
                     <h1>{t('smad_last_result')}</h1>
                     <div className="main_card_content">
                         {state.loading3 ? (
-                            <div className="mini_loader"><MoonLoader size={50} color="#4FD1C5" /></div>
+                            <div className="mini_loader"><MoonLoader size={50} color="#00B39A" /></div>
                         ) : (
                             <>
                                 <SmadResult error={state.error} result={state.result} image={state.image} clinic={user.clinic} />

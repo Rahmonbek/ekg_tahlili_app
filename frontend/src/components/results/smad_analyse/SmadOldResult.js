@@ -1,54 +1,33 @@
+import parseAiResult from '../../../tools/aiResult';
+import AnalysisResultBody from '../AnalysisResultBody';
 import { Button, Image } from 'antd'
 import { formatTimeStr } from 'antd/es/statistic/utils'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { calculateAge, formatDateTime } from '../../../tools/formatters'
-import { IoIosArrowBack, IoIosArrowDown } from 'react-icons/io'
+import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io'
 import { dangerAlert, warningAlert } from '../../../tools/Alerts'
 import { analyzeEkgFileRetry } from '../../../host/EkgService'
 import { useStore } from '../../../store/Store'
-import { apiEcg } from '../../../host/Host'
+import { buildFileUrl } from '../../../host/Host'
 import { FaDownload } from 'react-icons/fa6'
 import ClinicHeader from '../ClinicHeader'
+import { severityClass, severityLabel, severityIcon } from '../../../tools/severity';
+import MeasurementsList from '../MeasurementsList';
 
-export default function SmadOldResult({data, initialOpen = false}) {
+// `showMeta`: klinika va shifokor ma'lumotlari. Ko'rish sahifalarida
+// ular sahifa sarlavhasida chiqadi, shuning uchun u yerda o'chiriladi.
+export default function SmadOldResult({data, initialOpen = false, showMeta = true}) {
   const [result, setresult]=useState(null)
   const [image, setimage]=useState(null)
   const [open, setopen]=useState(initialOpen)
   const {t}=useTranslation()
   const {ecg_btn_loading, setecg_btn_loading}=useStore()
   useEffect(()=>{
-    const parsedResult = safeJsonParse(data.aiAnswerData);
+    const parsedResult = parseAiResult(data.aiAnswerData);
     setimage(data.analyseFileLink)
-    console.log(parsedResult)
 setresult(parsedResult);
-  }, [])
-
-  function safeJsonParse(raw) {
-  if (!raw) return null;
-  if (typeof raw !== "string") return raw;
-
-  try {
-    // Agar boshida va oxirida bo‘sh joy bo‘lsa
-    let cleaned = raw.trim();
- cleaned = cleaned
-      .replace(/\r\n/g, "\\n")
-      .replace(/\n/g, "\\n")
-      .replace(/\t/g, "\\t");
-      cleaned=cleaned.replaceAll("\\n", '')
-    // Agar string ` bilan o‘ralgan bo‘lsa
-    if (cleaned.startsWith("`") && cleaned.endsWith("`")) {
-      cleaned = cleaned.slice(1, -1);
-    }
-    
-
-     console.log(cleaned, 'AAAAAAAAAAAA')
-    return JSON.parse(cleaned);
-  } catch (e) {
-    console.error("JSON parse error:", e);
-    return raw;
-  }
-}
+  }, [data.aiAnswerData])
 
   const handleSubmit = async () => {
 
@@ -68,7 +47,6 @@ setresult(parsedResult);
         formData.append('id', data.id)
         
             var res = await analyzeEkgFileRetry(formData);
-        console.log(res)
         let parsedResult;
        try {
     // agar string bo'lsa JSON.parse qilamiz
@@ -78,35 +56,33 @@ setresult(parsedResult);
       ? JSON.parse(res.ai_response) 
       : res.ai_response;
   } catch (e) {
-         console.log(e)
    parsedResult = res.ai_response;
   }
-  setimage(res.ecg_png_base64)
+  setimage(res.ecg_image_url ?? res.ecg_png_base64)
   
   setresult(parsedResult);
         
       } catch (err) {
         dangerAlert(t("api_error"))
-          console.log(err)
       } finally {
         setecg_btn_loading(false);
       }
     };
   return (
-data!=null?<div className={`old_analyse main_card ${open?"opened_main_card":"closed_main_card"} ${result!=null?String(result.automatic_analysis_bool).indexOf('1')!=-1?"normal_analyse":String(result.automatic_analysis_bool).indexOf('2')!=-1?'avarage_analyse':String(result.automatic_analysis_bool).indexOf('3')!=-1?"danger_analyse":"unknown_analyse":"unknown_analyse"}`}>
+data!=null?<div className={`old_analyse main_card ${open?"opened_main_card":"closed_main_card"} ${result != null ? severityClass(result.automatic_analysis_bool) : 'unknown_analyse'}`}>
         <h1  onClick={()=>{setopen(!open)}}><p>
           
           {data.analysisDate ? <span><b>{t('analysis_date')}:</b> {formatDateTime(data.analysisDate)}</span> : formatDateTime(data.createdAt)}  </p>
           <p>
-{result!=null?String(result.automatic_analysis_bool).indexOf('1')!=-1?t("normal"):String(result.automatic_analysis_bool).indexOf('2')!=-1?t("avarage"):String(result.automatic_analysis_bool).indexOf('3')!=-1?t("danger"):t('unknown'):t('not_analysed')}
- <span>{open?<IoIosArrowDown />:<IoIosArrowBack />}</span>
+{result != null ? severityLabel(result.automatic_analysis_bool, t) : t('not_analysed')}
+ <span>{open ? <IoIosArrowUp /> : <IoIosArrowDown />}</span>
 </p>
         </h1>
         {
           open?
         
         <div className="main_card_content">
-          <ClinicHeader clinic={data.clinic} />
+          {showMeta && <ClinicHeader clinic={data.clinic} />}
         
        {data.mainDoctor!=null?<div>
           <p className='ecg_label'>{t("smad_doctor")}</p>
@@ -114,16 +90,17 @@ data!=null?<div className={`old_analyse main_card ${open?"opened_main_card":"clo
           <b>{data.mainDoctor.role!=null?data.mainDoctor.role[`name${t("data_lang")}`]+":":''} </b>
           <p>{data.mainDoctor.lastName} {data.mainDoctor.firstName} </p>
         </div></div>:<></>} 
-        {data.doctors!=null && data.doctors.length>0?<div>
+        {showMeta && data.doctors!=null && data.doctors.length>0?<div>
           <p className='ecg_label'>{t("doctor_of_patcient")}</p>
-          {data.doctors.map((item, index)=>(
-            <div className="ekg-item-info-text">
+          {data.doctors.map((item)=>(
+            // `key` — shifokor id si (T-067)
+            <div className="ekg-item-info-text" key={item.id}>
           <b>{item.role!=null?item.role[`name${t("data_lang")}`]+":":''} </b>
           <p>{item.lastName} {item.firstName} </p>
         </div>
           ))}
           </div>:<></>} 
-        {data.createdDoctor!=null?<div>
+        {showMeta && data.createdDoctor!=null?<div>
           <p className='ecg_label'>{t("doctor_of_created")}</p>
           <div className="ekg-item-info-text">
           <b>{data.createdDoctor.role!=null?data.createdDoctor.role[`name${t("data_lang")}`]+":":''} </b>
@@ -137,33 +114,12 @@ data!=null?<div className={`old_analyse main_card ${open?"opened_main_card":"clo
           {t("check_by_ai")}
         </Button>
        :<></>}
-      {result!=null && (
-        <div  className="ekg-result">
-        <div className="ekg-item-text"><b>⭐ {t("smad_file")}: </b>  <a className='see_diagnoses' href={`${apiEcg}${image}`} target="_blank" rel="noreferrer">
-                    <FaDownload />
-                  </a></div> 
-  
-       
-
-
-        
-      {result.automatic_analysis ? (
-  <> 
-  <div className="ekg-item-text"><b>{String(result.automatic_analysis_bool).indexOf('1')!=-1?"✅":String(result.automatic_analysis_bool).indexOf('2')!=-1?'⚠️':String(result.automatic_analysis_bool).indexOf('3')!=-1?"❌":"⭐"} Avtomatik tahlil (AI xulosasi): </b><span>{result.automatic_analysis}</span></div>
-  </>
-) : null}
- {result.AI_recommendations ? (
-  <> 
-  <div className="ekg-item-text"><b>⭐ AI tavsiyasi: </b><span>{result.AI_recommendations}</span></div>
-  </>
-) : null}
- {result.final_summary ? (
-  <> 
-  <div className="ekg-item-text"><b>⭐ Xulosa: </b><span>{result.final_summary}</span></div>
-  </>
-) : null}
-</div>
-      )}
+      {/* Natija tanasi barcha to'rt tur uchun bitta joyda (T-034) */}
+<AnalysisResultBody
+  kind="smad"
+  result={result}
+  image={image}
+/>
     </div>:<></>}</div>:<></>
   )
 }

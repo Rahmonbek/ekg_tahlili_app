@@ -22,9 +22,12 @@ import { warningAlert, dangerAlert } from '../../../tools/Alerts';
 
 import ParasitologyResult from './ParasitologyResult';
 import ParasitologyOldResult from './ParasitologyOldResult';
+import DateField from '../../../components/shared/DateField';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 
 export default function ParasitologyAnalyzer() {
     const { t } = useTranslation();
+    useDocumentTitle(t('parasitology_upload', { defaultValue: "Parazitologik tahlil yuklash" }));
     const [form] = Form.useForm();
     const [form1] = Form.useForm();
     const [form2] = Form.useForm();
@@ -182,7 +185,7 @@ export default function ParasitologyAnalyzer() {
                         <Form form={form2} name="parasitologyUpload" labelCol={{ span: 24 }} wrapperCol={{ span: 24 }}>
                             <Row>
                                 <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
-                                    <Form.Item name="select_parasitology_file" label={t('select_parasitology_file')} rules={[{ required: true, message: '' }]}>
+                                    <Form.Item name="select_parasitology_file" label={t('select_parasitology_file')} rules={[{ required: true, message: t('field_required') }]}>
                                         <Upload.Dragger
                                             accept=".jpg,.jpeg,.png"
                                             beforeUpload={handleUploadFile}
@@ -194,7 +197,7 @@ export default function ParasitologyAnalyzer() {
                                         >
                                             <p className="ant-upload-drag-icon"><InboxOutlined /></p>
                                             <p className="ant-upload-text" style={{ fontSize: 14 }}>
-                                                {t('click_or_drag_file') || 'Fayl tanlang yoki bu yerga tashlang'}
+                                                {t('click_or_drag_file', { defaultValue: 'Fayl tanlang yoki bu yerga tashlang' })}
                                             </p>
                                             <p className="ant-upload-hint">{t('access_file_types')}: jpg, jpeg, png</p>
                                         </Upload.Dragger>
@@ -202,7 +205,7 @@ export default function ParasitologyAnalyzer() {
                                 </Col>
 
                                 <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
-                                    <Form.Item name="lang" label={t('lang_analyse')} rules={[{ required: true, message: '' }]}>
+                                    <Form.Item name="lang" label={t('lang_analyse')} rules={[{ required: true, message: t('field_required') }]}>
                                         <Select
                                             style={{ width: '100%' }}
                                             value={state.lang}
@@ -222,7 +225,7 @@ export default function ParasitologyAnalyzer() {
                                     <Form.Item
                                         name="magnification"
                                         label={t('magnification')}
-                                        rules={[{ required: true, message: '' }]}
+                                        rules={[{ required: true, message: t('field_required') }]}
                                     >
                                         <Select
                                             style={{ width: '100%' }}
@@ -241,15 +244,20 @@ export default function ParasitologyAnalyzer() {
                                     <Form.Item
                                         name="analysis_date"
                                         label={t('analysis_date')}
-                                        rules={[{ required: true, message: t('enter_analysis_date') || '' }]}
+                                        rules={[{ required: true, message: t('enter_analysis_date', { defaultValue: '' }) }]}
                                     >
-                                        <input
-                                            className="input_date"
-                                            type="date"
+                                        {/* Tug'ma `<input type="date">` brauzer tiliga bo'ysunardi
+                                            (o'zbek interfeysda ruscha `дд.мм.гггг`) va har bir brauzerda
+                                            boshqacha ko'rinardi. */}
+                                        <DateField
                                             value={analysisDateValue}
-                                            onChange={(e) => {
-                                                setAnalysisDateValue(e.target.value);
-                                                dispatch({ type: 'SET_FIELD', field: 'analysis_date', value: e.target.value ? new Date(`${e.target.value}T00:00:00`).toISOString() : null });
+                                            onChange={(value) => {
+                                                setAnalysisDateValue(value || '');
+                                                dispatch({
+                                                    type: 'SET_FIELD',
+                                                    field: 'analysis_date',
+                                                    value: value ? new Date(`${value}T00:00:00`).toISOString() : null,
+                                                });
                                             }}
                                         />
                                     </Form.Item>
@@ -289,7 +297,7 @@ export default function ParasitologyAnalyzer() {
                     <h1>{t('ai_result')}</h1>
                     <div className="main_card_content">
                         {state.loading3 ? (
-                            <div className="mini_loader"><MoonLoader size={50} color="#4FD1C5" /></div>
+                            <div className="mini_loader"><MoonLoader size={50} color="#00B39A" /></div>
                         ) : state.error ? (
                             <Alert
                                 message={t('api_error')}

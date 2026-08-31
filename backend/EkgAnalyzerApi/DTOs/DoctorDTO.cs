@@ -30,8 +30,8 @@ public class DoctorListDTO
 
 public class ParamsStaffDTO
 {
-    public List<RolesDTO> Roles { get; set; }
-    public List<PositionDto> Positions { get; set; }
+    public List<RolesDTO> Roles { get; set; } = new();
+    public List<PositionDto> Positions { get; set; } = new();
 }
 public class DoctorDTORequest
 {
@@ -40,10 +40,10 @@ public class DoctorDTORequest
     public IFormFile? AvatarFile { get; set; }
     public string? Password { get; set; }
     public int RoleId { get; set; }
-    public string FirstName { get; set; }
-    public string LastName { get; set; }
-    public string SureName { get; set; }
-    public string Phone { get; set; }
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string SureName { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
     public string? Avatar { get; set; }
     public bool Gender { get; set; }
 
@@ -53,10 +53,10 @@ public class DoctorDTORequest
 public class DoctorDTOResponseEcgData
 {
     public int? Id { get; set; }
-    public string FirstName { get; set; }
-    public string LastName { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
 
-    public List<PositionDto> Positions { get; set; }
+    public List<PositionDto> Positions { get; set; } = new();
 }
 
 
@@ -64,16 +64,16 @@ public class DoctorDTOResponseEcgData
 {
     public int? Id { get; set; }
     public int? UserId { get; set; }
-    public string Password { get; set; }
+    public string Password { get; set; } = string.Empty;
     public int RoleId { get; set; }
-    public string FirstName { get; set; }
-    public string LastName { get; set; }
-    public string SureName { get; set; }
-    public string Phone { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? SureName { get; set; }
+    public string? Phone { get; set; }
     public string? Avatar { get; set; }
     public bool Gender { get; set; }
 
-    public List<PositionDto> Positions { get; set; }
+    public List<PositionDto> Positions { get; set; } = new();
     public RolesDTO? Role { get; set; }
 
 }

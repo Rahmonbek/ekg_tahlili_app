@@ -1,4 +1,4 @@
-using EkgAnalyzerApi.Data;
+﻿using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.Models;
 using EkgAnalyzerApi.Services;
 using System.Security.Claims;
@@ -15,8 +15,16 @@ namespace EkgAnalyzerApi.Middleware
         private readonly ILogger<AuditMiddleware> _logger;
 
         // Loglanmaydigan yo'llar (health check, swagger, static files)
+        //
+        // `/hubs` — SignalR `negotiate` so'rovlari. Har bir sahifa
+        // yangilanishida uchta hub uchun uchta `POST .../negotiate` ketadi
+        // va ularning har biri "CREATE" amali sifatida yozilardi.
+        // Natijada jurnaldagi 1432 yozuvning ~20% i shu shovqin edi
+        // (videocall 102, consultation 98, analysis 96) va haqiqiy
+        // foydalanuvchi amallari (ecg-analyses 6, LOGIN 5) ular ichida
+        // ko'rinmay qolardi (T-083).
         private static readonly string[] ExcludedPaths = {
-            "/swagger", "/health", "/_framework", "/favicon"
+            "/swagger", "/health", "/_framework", "/favicon", "/hubs"
         };
 
         public AuditMiddleware(RequestDelegate next, ILogger<AuditMiddleware> logger)
@@ -81,12 +89,39 @@ namespace EkgAnalyzerApi.Middleware
                     var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
                     var entityType = segments.Length >= 2 ? segments[1] : path;
 
+                    // `EntityId` ustuni hech qachon to'ldirilmasdi: jurnaldan
+                    // "kimdir shu URL ga POST yubordi" dan boshqa narsa
+                    // bilib bo'lmasdi (T-083). Endi u ikki manbadan olinadi:
+                    //   * yo'ldagi son (`/api/ecg-analyses/96`)
+                    //   * yoki forma/so'rov maydonidagi `id`
+                    string? entityId = segments.LastOrDefault(seg =>
+                        seg.Length <= 12 && seg.All(char.IsDigit));
+
+                    if (entityId == null && context.Request.HasFormContentType)
+                    {
+                        try
+                        {
+                            var formId = context.Request.Form["id"].ToString();
+                            if (!string.IsNullOrWhiteSpace(formId)) entityId = formId;
+                        }
+                        catch
+                        {
+                            // Forma o'qib bo'lmasa audit yozuvi baribir saqlanadi
+                        }
+                    }
+
+                    if (entityId == null && context.Request.Query.ContainsKey("id"))
+                    {
+                        entityId = context.Request.Query["id"].ToString();
+                    }
+
                     var auditLog = new AuditLog
                     {
                         UserId = userId,
                         Username = username,
                         Action = action,
                         EntityType = entityType,
+                        EntityId = string.IsNullOrWhiteSpace(entityId) ? null : entityId,
                         RequestPath = path,
                         HttpMethod = method,
                         ResponseStatus = context.Response.StatusCode,

@@ -3,17 +3,35 @@ import Cookies from "js-cookie";
 
 export const api = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 export const imgApi = process.env.REACT_APP_IMG_URL || "http://localhost:5000";
-// EKG/Lab/Holter/SMAD fayllari Python backend uploads papkasidan beriladi.
-// Dev: http://127.0.0.1:8000/uploads/...
-// Prod: https://analyse.nmed.uz/uploads/...
-export const apiEcg = process.env.REACT_APP_MEDIA_URL
-    || process.env.REACT_APP_ECG_URL
-    || 'http://127.0.0.1:8000';
 
 export const getTokenAccess = () => {
     var token = Cookies.get("NMED_token")
     return (token)
 }
+
+/**
+ * Tahlil fayli (EKG rasmi, Holter/SMAD/Lab PDF) uchun to'liq manzil quradi.
+ *
+ * Ilgari bu fayllar Python backenddan to'g'ridan-to'g'ri olinardi
+ * (`https://analyse.nmed.uz/uploads/...`) va u yerda hech qanday himoya yo'q edi —
+ * URL ni bilgan har kim bemorning EKG rasmini yuklab olardi.
+ *
+ * Endi fayllar .NET API orqali beriladi va u foydalanuvchi klinikasiga
+ * tegishliligini tekshiradi. `<img>` va `<a>` teglari Authorization sarlavhasini
+ * yubora olmagani uchun token query parametrida uzatiladi (loyihada SignalR
+ * uchun allaqachon ishlatilayotgan naqsh).
+ *
+ * @param {string} link bazadagi havola, masalan `/uploads/ecg_analyse_files/x.jpg`
+ * @returns {string} to'liq manzil yoki bo'sh satr
+ */
+export const buildFileUrl = (link) => {
+    if (!link) return '';
+    const token = getTokenAccess();
+    const path = String(link).startsWith('/') ? link : `/${link}`;
+    const url = `${imgApi}/api/files${path}`;
+    return token ? `${url}?access_token=${encodeURIComponent(token)}` : url;
+}
+
 
 export const deleteTokenAccess = () => {
     Cookies.remove("NMED_token")

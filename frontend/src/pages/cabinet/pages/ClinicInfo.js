@@ -1,8 +1,8 @@
-import { Button, Col, Form, Input, Row, Select } from 'antd';
+import { Button, Col, Form, Input, Row, Select, Upload } from 'antd';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaBuilding, FaLocationDot, FaPlus } from 'react-icons/fa6';
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { MinusCircleOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import InputMask from 'react-input-mask';
 import { AiOutlineFieldNumber } from 'react-icons/ai';
 import { BsBank2 } from 'react-icons/bs';
@@ -14,11 +14,17 @@ import { get_districts_data, get_region_data } from '../../../host/requests/Regi
 import { api, imgApi } from '../../../host/Host';
 import { dangerAlert, successAlert } from '../../../tools/Alerts';
 import { formatPhoneNumber, formatPhoneNumberForForm } from '../../../tools/formatters';
+import { clinicInfoTour } from '../../../tools/tourSteps'
+import { usePageTour } from '../../../components/shared/TourProvider';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 
 const formatBankAccount = (value) => (value ? value.replace(/(.{4})/g, '$1 ').trim() : '');
 
 export default function ClinicInfo() {
-  const { t } = useTranslation();
+    // Qo'llanma qadamlari ro'yxatdan o'tkaziladi; tugma header'da
+    usePageTour(clinicInfoTour);
+  const { t } = useTranslation()
+  useDocumentTitle(t('main_info', { defaultValue: "Tashkilot ma'lumotlari" }));
   const { user, setloader } = useStore();
   const [mainForm] = Form.useForm();
   const [phoneForm] = Form.useForm();
@@ -82,7 +88,6 @@ export default function ClinicInfo() {
             phoneNumber: formatPhoneNumberForForm(item.phoneNumber),
           }))
         : [{ id: null, phoneNumber: '' }];
-console.log(phones)
       phoneForm.setFieldsValue({ phone_numbers: phones });
 
       let districtValue;
@@ -141,6 +146,45 @@ console.log(phones)
     }
   };
 
+  // ── Saqlanmagan o'zgarishlar (T-077) ─────────────────────────────────
+
+  // Sahifada uchta mustaqil forma bor va har birining o'z saqlash tugmasi.
+
+  // Foydalanuvchi uchalasini ham tahrirlab, faqat bittasini saqlashi va
+
+  // qolgan o'zgarishlarni sezmasdan yo'qotishi juda oson edi.
+
+  const [dirtyBlocks, setDirtyBlocks] = useState({ main: false, phones: false, detail: false });
+
+  const hasUnsaved = dirtyBlocks.main || dirtyBlocks.phones || dirtyBlocks.detail;
+
+
+  const markDirty = (block) => setDirtyBlocks((prev) => (prev[block] ? prev : { ...prev, [block]: true }));
+
+  const markClean = (block) => setDirtyBlocks((prev) => ({ ...prev, [block]: false }));
+
+
+  // Brauzer yorlig'ini yopishda / sahifani yangilashda ogohlantirish
+
+  useEffect(() => {
+
+      if (!hasUnsaved) return undefined;
+
+      const handler = (event) => {
+
+          event.preventDefault();
+
+          event.returnValue = '';   // brauzer o'z standart matnini ko'rsatadi
+
+      };
+
+      window.addEventListener('beforeunload', handler);
+
+      return () => window.removeEventListener('beforeunload', handler);
+
+  }, [hasUnsaved]);
+
+
   const handleMainSubmit = async (values) => {
     if (!clinic?.id) {
       dangerAlert(t('server_error'));
@@ -158,7 +202,8 @@ console.log(phones)
       }
 
       await send_clinic_info(formData);
-      successAlert(t('data_saved'));
+      successAlert(t('main_info_saved', { defaultValue: 'Asosiy ma\'lumotlar saqlandi' }));
+      markClean('main');
       await loadInitialData();
     } catch (error) {
       dangerAlert(t(error?.response?.data?.message || 'server_error'));
@@ -187,7 +232,8 @@ console.log(phones)
         PhoneNumbers: phoneNumbers,
       });
 
-      successAlert(t('data_saved'));
+      successAlert(t('phones_saved', { defaultValue: 'Telefon raqamlar saqlandi' }));
+      markClean('phones');
       await loadInitialData();
     } catch (error) {
       dangerAlert(t(error?.response?.data?.message || 'server_error'));
@@ -220,7 +266,8 @@ console.log(phones)
       }
 
       await send_clinic_detail(formData);
-      successAlert(t('data_saved'));
+      successAlert(t('details_saved', { defaultValue: 'Tashkilot rekvizitlari saqlandi' }));
+      markClean('detail');
       await loadInitialData();
     } catch (error) {
       dangerAlert(t(error?.response?.data?.message || 'server_error'));
@@ -263,12 +310,14 @@ console.log(phones)
     <div>
       <Row>
         <Col className="main_col" lg={8} xs={24} sm={24} md={12}>
-          <div className="main_card">
-            <h1>{t('main_info')}</h1>
+          <div className="main_card" data-tour="clinic-main">
+            <h1>
+              <span>{t('main_info')}</span>
+            </h1>
 
             <div className="main_card_content">
-              <Form form={mainForm} layout="vertical" onFinish={handleMainSubmit}>
-                <Form.Item name="clinicLogo" label={t('clinic_logo')}>
+              <Form form={mainForm} layout="vertical" onFinish={handleMainSubmit} onValuesChange={() => markDirty('main')}>
+                <Form.Item name="clinicLogo" label={t('clinic_logo')} data-tour="clinic-logo">
                   <div className="input_img_box">
                     <input
                       type="file"
@@ -312,11 +361,11 @@ console.log(phones)
             </div>
           </div>
 
-          <div className="main_card">
+          <div className="main_card" data-tour="clinic-phones">
             <h1>{t('phone_numbers')}</h1>
 
             <div className="main_card_content">
-              <Form form={phoneForm} layout="vertical" onFinish={handlePhonesSubmit}>
+              <Form form={phoneForm} layout="vertical" onFinish={handlePhonesSubmit} onValuesChange={() => markDirty('phones')}>
                 <Form.List name="phone_numbers">
                   {(fields, { add, remove }) => (
                     <>
@@ -329,7 +378,7 @@ console.log(phones)
                           <Form.Item
                             {...restField}
                             name={[name, 'phoneNumber']}
-                            rules={[{ required: true, message: '' }, { len: 19, message: '' }]}
+                            rules={[{ required: true, message: t('field_required') }, { len: 19, message: t('phone_incomplete', { defaultValue: "Telefon raqamni to'liq kiriting" }) }]}
                             style={{ width: '95%' }}
                           >
                             <InputMask mask="+\9\9\8 (99) 999-99-99" maskChar={null}>
@@ -374,10 +423,10 @@ console.log(phones)
             <h1>{t('bank_info')}</h1>
 
             <div className="main_card_content">
-              <Form form={detailForm} layout="vertical" onFinish={handleDetailSubmit}>
+              <Form form={detailForm} layout="vertical" onFinish={handleDetailSubmit} onValuesChange={() => markDirty('detail')}>
                 <Row>
                   <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
-                    <Form.Item name="inn" label={t('inn')} rules={[{ required: true, message: '' }]}>
+                    <Form.Item name="inn" label={t('inn')} rules={[{ required: true, message: t('field_required', { defaultValue: 'Maydonni to\'ldiring' }) }, { validator: (_, v) => (!v || String(v).replace(/\D/g, '').length === 9) ? Promise.resolve() : Promise.reject(new Error(t('digits_required', { defaultValue: '{{count}} ta raqam bo\'lishi kerak', count: 9 }))) }]}>
                       <InputMask mask="999999999" maskChar={null}>
                         {(props) => (
                           <Input
@@ -392,19 +441,34 @@ console.log(phones)
                   </Col>
 
                   <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
-                    <Form.Item name="license" label={t('license')} rules={[{ required: true, message: '' }]}>
+                    <Form.Item name="license" label={t('license')} rules={[{ required: true, message: t('field_required') }]}>
+                      {/* Tug'ma `<input type="file">` brauzer tiliga bo'ysunardi:
+                          o'zbek interfeysda "Выберите файл / Файл не выбран" chiqardi
+                          va dizayn tizimiga mos kelmasdi. */}
                       <div className="file-input-wrapper">
-                        <input
-                          type="file"
-                          accept=".pdf,.jpg,.png"
-                          onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            if (file) {
-                              setLicenseFile(file);
-                              detailForm.setFieldValue('license', file.name);
+                        <Upload
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          maxCount={1}
+                          fileList={licenseFile ? [{ uid: '-1', name: licenseFile.name, status: 'done' }] : []}
+                          beforeUpload={(file) => {
+                            // 10 MB dan katta guvohnoma nusxasi bo'lishi shart emas
+                            if (file.size > 10 * 1024 * 1024) {
+                              dangerAlert(t('file_too_large', { defaultValue: 'Fayl hajmi 10 MB dan oshmasligi kerak' }));
+                              return Upload.LIST_IGNORE;
                             }
+                            setLicenseFile(file);
+                            detailForm.setFieldValue('license', file.name);
+                            return false;   // avtomatik yuborishni to'xtatamiz
                           }}
-                        />
+                          onRemove={() => {
+                            setLicenseFile(null);
+                            detailForm.setFieldValue('license', undefined);
+                          }}
+                        >
+                          <Button icon={<UploadOutlined />}>
+                            {t('select_file', { defaultValue: 'Faylni tanlash' })}
+                          </Button>
+                        </Upload>
 
                         <div className="download_button">
                           <button type="button" disabled={!clinic?.clinicDetail?.license} onClick={downloadLicense}>
@@ -416,7 +480,7 @@ console.log(phones)
                   </Col>
 
                   <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
-                    <Form.Item name="regionId" label={t('region')} rules={[{ required: true, message: '' }]}>
+                    <Form.Item name="regionId" label={t('region')} rules={[{ required: true, message: t('field_required') }]}>
                       <Select
                         style={{ width: '100%' }}
                         placeholder={t('enter_region_clinic')}
@@ -427,7 +491,7 @@ console.log(phones)
                   </Col>
 
                   <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
-                    <Form.Item name="districtId" label={t('district')} rules={[{ required: true, message: '' }]}>
+                    <Form.Item name="districtId" label={t('district')} rules={[{ required: true, message: t('field_required') }]}>
                       <Select
                         style={{ width: '100%' }}
                         placeholder={t('enter_district_clinic')}
@@ -439,14 +503,14 @@ console.log(phones)
                   </Col>
 
                   <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
-                    <Form.Item name="address" label={t('address')} rules={[{ required: true, message: '' }]}>
+                    <Form.Item name="address" label={t('address')} rules={[{ required: true, message: t('field_required') }]}>
                       <Input prefix={<FaLocationDot />} className="login_input" placeholder={t('enter_address')} />
                     </Form.Item>
                   </Col>
 
                   <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
-                    <Form.Item name="bankAccount" label={t('bank_account')} rules={[{ required: true, message: '' }]}>
-                      <InputMask mask="9999 9999 9999 9999" maskChar={null}>
+                    <Form.Item name="bankAccount" label={t('bank_account')} rules={[{ required: true, message: t('field_required', { defaultValue: 'Maydonni to\'ldiring' }) }, { validator: (_, v) => (!v || String(v).replace(/\D/g, '').length === 20) ? Promise.resolve() : Promise.reject(new Error(t('digits_required', { defaultValue: '{{count}} ta raqam bo\'lishi kerak', count: 20 }))) }]}>
+                      <InputMask mask="9999 9999 9999 9999 9999" maskChar={null}>
                         {(props) => (
                           <Input
                             {...props}
@@ -460,8 +524,8 @@ console.log(phones)
                   </Col>
 
                   <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
-                    <Form.Item name="mfo" label={t('mfo')} rules={[{ required: true, message: '' }]}>
-                      <InputMask mask="9999" maskChar={null}>
+                    <Form.Item name="mfo" label={t('mfo')} rules={[{ required: true, message: t('field_required', { defaultValue: 'Maydonni to\'ldiring' }) }, { validator: (_, v) => (!v || String(v).replace(/\D/g, '').length === 5) ? Promise.resolve() : Promise.reject(new Error(t('digits_required', { defaultValue: '{{count}} ta raqam bo\'lishi kerak', count: 5 }))) }]}>
+                      <InputMask mask="99999" maskChar={null}>
                         {(props) => (
                           <Input
                             {...props}
@@ -475,7 +539,7 @@ console.log(phones)
                   </Col>
 
                   <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
-                    <Form.Item name="bankName" label={t('bankName')} rules={[{ required: true, message: '' }]}>
+                    <Form.Item name="bankName" label={t('bankName')} rules={[{ required: true, message: t('field_required') }]}>
                       <Input prefix={<BsBank2 />} className="login_input" placeholder={t('enter_bankName')} />
                     </Form.Item>
                   </Col>
@@ -491,6 +555,36 @@ console.log(phones)
           </div>
         </Col>
       </Row>
+
+      {/* Saqlanmagan o'zgarishlar indikatori — sahifa pastida yopishib turadi.
+          Ilgari foydalanuvchi uchta blokni tahrirlab, faqat bittasini saqlashi
+          va qolganini sezmasdan yo'qotishi mumkin edi. */}
+      {hasUnsaved ? (
+        <div className="unsaved_bar">
+          <span className="unsaved_bar_text">
+            ⚠ {t('unsaved_changes', { defaultValue: "Saqlanmagan o'zgarishlar bor" })}
+            {': '}
+            {[
+              dirtyBlocks.main && t('main_info'),
+              dirtyBlocks.phones && t('phone_numbers'),
+              dirtyBlocks.detail && t('bank_info'),
+            ].filter(Boolean).join(', ')}
+          </span>
+          <Button
+            type="primary"
+            loading={loadingMain || loadingPhones || loadingDetail}
+            onClick={() => {
+              // Har bir "iflos" blokni o'z formasi orqali yuboramiz —
+              // validatsiya ham shu formaning qoidalari bo'yicha ishlaydi
+              if (dirtyBlocks.main) mainForm.submit();
+              if (dirtyBlocks.phones) phoneForm.submit();
+              if (dirtyBlocks.detail) detailForm.submit();
+            }}
+          >
+            {t('save_all', { defaultValue: 'Barchasini saqlash' })}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }

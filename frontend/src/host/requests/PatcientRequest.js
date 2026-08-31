@@ -11,3 +11,7 @@ export const save_patcient_data=(data)=>{
 export const get_patcients_of_clinic=(data)=>{
     return httpGetRequest("/patcient/get-patcients-of-clinic/", data)
 }
+
+export const get_patient_card=(id, data)=>{
+    return httpGetRequest("/patcient/get-patient-card/"+id, data)
+}

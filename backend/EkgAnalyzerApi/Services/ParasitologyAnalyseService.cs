@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Text.Json;
 using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.DTOs;
@@ -189,8 +189,7 @@ namespace EkgAnalyzerApi.Services
 
             var ids = await query
                 .OrderByDescending(a => a.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .ApplyPaging(page, pageSize)
                 .Select(a => a.Id)
                 .ToListAsync();
 
@@ -230,8 +229,7 @@ namespace EkgAnalyzerApi.Services
 
             var items = await query
                 .OrderByDescending(a => a.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .ApplyPaging(page, pageSize)
                 .Select(a => new ParasitologyAnalyseListDTO
                 {
                     Id = a.Id,
@@ -259,6 +257,7 @@ namespace EkgAnalyzerApi.Services
                     }
                 })
                 .ToListAsync();
+
 
             return new PagedResult<ParasitologyAnalyseListDTO>
             {
@@ -293,8 +292,7 @@ namespace EkgAnalyzerApi.Services
 
             var items = await query
                 .OrderByDescending(a => a.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .ApplyPaging(page, pageSize)
                 .Select(a => new ParasitologyAnalyseListDTO
                 {
                     Id = a.Id,
@@ -322,6 +320,7 @@ namespace EkgAnalyzerApi.Services
                     }
                 })
                 .ToListAsync();
+
 
             return new PagedResult<ParasitologyAnalyseListDTO>
             {
@@ -355,8 +354,7 @@ namespace EkgAnalyzerApi.Services
 
             var items = await query
                 .OrderByDescending(a => a.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .ApplyPaging(page, pageSize)
                 .Select(a => new ParasitologyAnalyseListDTO
                 {
                     Id = a.Id,
@@ -384,6 +382,7 @@ namespace EkgAnalyzerApi.Services
                     }
                 })
                 .ToListAsync();
+
 
             return new PagedResult<ParasitologyAnalyseListDTO>
             {
@@ -866,8 +865,8 @@ namespace EkgAnalyzerApi.Services
                 .Include(a => a.Patcient)
                 .Include(a => a.Clinic).ThenInclude(c => c!.ClinicDetail).ThenInclude(d => d!.District)
                 .Include(a => a.Clinic).ThenInclude(c => c!.ClinicPhoneNumber)
-                .Include(a => a.CreatedDoctor).ThenInclude(d => d.User).ThenInclude(u => u.Role)
-                .Include(a => a.Doctors!).ThenInclude(d => d.Doctor).ThenInclude(d => d.User).ThenInclude(u => u.Role)
+                .Include(a => a.CreatedDoctor!).ThenInclude(d => d.User!).ThenInclude(u => u.Role!)
+                .Include(a => a.Doctors!).ThenInclude(d => d.Doctor!).ThenInclude(d => d.User!).ThenInclude(u => u.Role!)
                 .Include(a => a.Results)
                 .FirstOrDefaultAsync(a => a.Id == id);
 
@@ -909,10 +908,10 @@ namespace EkgAnalyzerApi.Services
                     Phone = e.CreatedDoctor.Phone,
                     Role = new RolesDTO
                     {
-                        Id = e.CreatedDoctor.User.Role.Id,
-                        NameUz = e.CreatedDoctor.User.Role.NameUz,
-                        NameEn = e.CreatedDoctor.User.Role.NameEn,
-                        NameRu = e.CreatedDoctor.User.Role.NameRu
+                        Id = e.CreatedDoctor.User!.Role!.Id,
+                        NameUz = e.CreatedDoctor.User!.Role!.NameUz,
+                        NameEn = e.CreatedDoctor.User!.Role!.NameEn,
+                        NameRu = e.CreatedDoctor.User!.Role!.NameRu
                     }
                 },
                 Clinic = e.Clinic == null ? null : new ClinicForECG
@@ -933,10 +932,10 @@ namespace EkgAnalyzerApi.Services
                     Phone = d.Doctor.Phone,
                     Role = new RolesDTO
                     {
-                        Id = d.Doctor.User.Role.Id,
-                        NameUz = d.Doctor.User.Role.NameUz,
-                        NameEn = d.Doctor.User.Role.NameEn,
-                        NameRu = d.Doctor.User.Role.NameRu
+                        Id = d.Doctor.User!.Role!.Id,
+                        NameUz = d.Doctor.User!.Role!.NameUz,
+                        NameEn = d.Doctor.User!.Role!.NameEn,
+                        NameRu = d.Doctor.User!.Role!.NameRu
                     }
                 }).ToList(),
                 Results = e.Results?.Select(r => new ParasitologyResultDto

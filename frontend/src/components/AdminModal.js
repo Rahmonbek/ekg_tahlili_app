@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Col, Form, Input, message, Modal, Row, Select } from 'antd';
+import { Button, Col, Form, Input, message, Modal, Row, Select, Steps } from 'antd';
 import { IoPerson } from 'react-icons/io5';
 
 import { FaFemale, FaMale } from 'react-icons/fa';
@@ -61,7 +61,6 @@ export default function AdminModal() {
       setopen_admin_modal(false)
       message.success(t("data_saved"))
     } catch (e) {
-      console.log("Xatolik:", e);
       message.error(t("server_error"))
     }
   };
@@ -92,6 +91,20 @@ export default function AdminModal() {
 <h1>{t("self_data_add")}</h1>
 {!(user?.doctor!=null && user?.doctor?.firstName!=null)?<p>{t("required_self_data")}</p>:<></>}
 </div>
+
+{/* Qadam ko'rsatkichi faqat birinchi sozlash paytida: modal header
+    menyusidan ham ochiladi va u yerda "1 / 2" yozuvi noto'g'ri bo'lardi */}
+{!(user?.doctor!=null && user?.doctor?.firstName!=null) ? (
+  <Steps
+    size="small"
+    current={0}
+    style={{ marginBottom: 20 }}
+    items={[
+      { title: t('onboarding_step_profile') },
+      { title: t('onboarding_step_clinic') },
+    ]}
+  />
+) : null}
     <Form
       form={form}
       name="completeProfile"
@@ -117,7 +130,7 @@ export default function AdminModal() {
           >
             <Input prefix={<IoPerson />} 
             className="login_input"
-            placeholder={t('enter_lastname_staff')}/>
+            placeholder={t('enter_your_lastname')}/>
           </Form.Item>
         </Col>
 
@@ -130,7 +143,7 @@ export default function AdminModal() {
             rules={[{ required: true }]}
           >
             <Input prefix={<IoPerson />}   className="login_input"
-                      placeholder={t('enter_firstname_staff')}/>
+                      placeholder={t('enter_your_firstname')}/>
           </Form.Item>
         </Col>
 
@@ -144,7 +157,7 @@ export default function AdminModal() {
           >
             <Input prefix={<IoPerson />} 
                 className="login_input"
-                placeholder={t('enter_surename_staff')}/>
+                placeholder={t('enter_your_surename')}/>
           </Form.Item>
         </Col>
         <Col lg={24} xs={24} sm={24} md={24}>
@@ -152,10 +165,10 @@ export default function AdminModal() {
                    className=''
                     name="gender"
                     label={t('gender')}
-                    rules={[{ required: true, message: '' }]}
+                    rules={[{ required: true, message: t('field_required') }]}
                   >
                     <Select
-                    placeholder={t('enter_gender_staff')}
+                    placeholder={t('enter_your_gender')}
                     className="modal_select"
                       style={{ width: '100%' }}
                       value={gender}
@@ -174,7 +187,7 @@ export default function AdminModal() {
                       label={t('phone_number')}
                       name="phone"
                       wrapperCol={{ span: 24 }}
-                      rules={[{ required: true, message: '' }, { len: 19, message: '' }]}
+                      rules={[{ required: true, message: t('field_required') }, { len: 19, message: t('phone_incomplete', { defaultValue: "Telefon raqamni to'liq kiriting" }) }]}
                     >
                       <Cleave
                         options={{
@@ -205,7 +218,7 @@ export default function AdminModal() {
           className='btn_form'
             htmlType="submit"
           >
-            {t('saveDataStaff')}
+            {t('save_my_data')}
           </Button>
         </Form.Item>
         </Col>

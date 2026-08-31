@@ -1,5 +1,6 @@
 import { getVideoToken, endVideoCall } from '../../host/requests/VideoCallRequest';
 import { acceptCall, endCall } from '../../hooks/videoSignalRService';
+import { personName } from '../../tools/formatters';
 
 export const getVideoTargetPath = (call, user) => {
     if (call?.consultationId) {
@@ -20,7 +21,7 @@ export const acceptIncomingVideoCall = async ({ incomingCall, activeRoom, user, 
     }
 
     const myName = user?.doctor
-        ? `${user.doctor.firstName ?? ''} ${user.doctor.lastName ?? ''}`.trim()
+        ? personName(user.doctor)
         : 'User';
 
     const res = await getVideoToken(incomingCall.roomName, myName);

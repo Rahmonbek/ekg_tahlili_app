@@ -21,7 +21,7 @@ namespace EkgAnalyzerApi.Models
         [Column("lastname")]
         public string? LastName { get; set; }
 
-        [Column("surename")]
+        [Column("sure_name")]
         public string? SureName { get; set; }
 
         [Column("gender")]

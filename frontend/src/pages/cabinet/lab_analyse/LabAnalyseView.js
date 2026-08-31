@@ -3,24 +3,38 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Spin, Modal, Space, Image, Typography, Tag } from 'antd';
 import LabOldResult from '../../../components/results/lab_analyse/LabOldResult';
+import LabDynamicsChart from '../../../components/results/LabDynamicsChart';
 import { get_lab_analyse_by_id } from '../../../host/requests/LabAnalyseRequest';
 import { useStore } from '../../../store/Store';
 import DownloadReportButton from '../../../components/DownloadReportButton';
 import DoctorDiagnosisBlock from '../../../components/results/DoctorDiagnosisBlock';
-import { formatDate, calculateAge } from '../../../tools/formatters';
+import { formatDate, calculateAge, personName } from '../../../tools/formatters';
 import AnalyseViewHeader from '../../../components/shared/AnalyseViewHeader';
+import FileMismatchBanner, { parseFileMismatch } from '../../../components/shared/FileMismatchBanner';
+import NotAnalyzableBanner, { parseAiResult } from '../../../components/shared/NotAnalyzableBanner';
+import { replaceLabFile } from '../../../host/LabService';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
+import AiLanguageNotice from '../../../components/shared/AiLanguageNotice';
 
 const { Title, Text } = Typography;
 
 export default function LabAnalyseView() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { setloader } = useStore();
 
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [clinicModalVisible, setClinicModalVisible] = useState(false);
+
+    // Yorliq sarlavhasi: bemor ismi va hujjat raqami bilan — shifokor
+    // bir vaqtda bir nechta tahlilni ochganda keraklisini topa olishi uchun.
+    useDocumentTitle(
+        data
+            ? `${[data.patcient?.lastName, data.patcient?.firstName].filter(Boolean).join(' ')} — ${data.documentNumber || t('analyse_lab', { defaultValue: 'Laboratoriya' })}`
+            : t('analyse_lab', { defaultValue: 'Laboratoriya' })
+    )
 
     const getData = useCallback(async () => {
         if (!id) return;
@@ -50,7 +64,7 @@ export default function LabAnalyseView() {
     }
 
     const clinic = data.clinic;
-    const patientName = [data.patcient?.lastName, data.patcient?.firstName, data.patcient?.sureName].filter(Boolean).join(' ');
+    const patientName = personName(data.patcient);
     const createdDoctorName = data.createdDoctor
         ? `${data.createdDoctor.lastName ?? ''} ${data.createdDoctor.firstName ?? ''}`.trim()
         : '';
@@ -65,14 +79,14 @@ export default function LabAnalyseView() {
         : '';
 
     const statusTag = (
-        <Tag color={{ 0: 'default', 1: 'processing', 2: 'success', '-1': 'error' }[data.status]}>
-            {{ 0: t('status_pending'), 1: t('status_processing'), 2: t('status_done'), '-1': t('status_error') }[data.status] ?? data.status}
+        <Tag color={{ 0: 'default', 1: 'processing', 2: 'success', 3: 'warning', '-1': 'error' }[data.status]}>
+            {{ 0: t('status_pending'), 1: t('status_processing'), 2: t('status_done'), 3: (t('status_file_mismatch', { defaultValue: 'Fayl mos emas' })), '-1': t('status_error') }[data.status] ?? data.status}
         </Tag>
     );
 
     const diagnosisTag = typeof data.hasDiagnosis === 'boolean' ? (
         <Tag color={data.hasDiagnosis ? 'success' : 'default'}>
-            {(t('diagnosis_status') || 'Tashxis')}: {data.hasDiagnosis ? (t('has_diagnosis') || 'Bor') : (t('no_diagnosis') || 'Yo‘q')}
+            {(t('diagnosis_status', { defaultValue: 'Tashxis' }))}: {data.hasDiagnosis ? (t('has_diagnosis', { defaultValue: 'Bor' })) : (t('no_diagnosis', { defaultValue: 'Yo‘q' }))}
         </Tag>
     ) : null;
 
@@ -84,22 +98,67 @@ export default function LabAnalyseView() {
                 downloadNode={data.status === 2 ? <DownloadReportButton type="lab" id={data.id} size="middle" className="analysis-view-download-btn" /> : null}
                 clinic={clinic}
                 onClinicClick={() => setClinicModalVisible(true)}
+                documentNumber={data.documentNumber}
                 patientName={patientName}
-                ageText={data.patcient?.birthDate ? `${calculateAge(data.patcient.birthDate)} ${t('age') || 'yosh'}` : ''}
+                ageText={data.patcient?.birthDate ? `${calculateAge(data.patcient.birthDate)} ${t('age', { defaultValue: 'yosh' })}` : ''}
                 createdDoctorName={createdDoctorName}
                 treatingDoctorsText={treatingDoctorsText}
                 statusNode={statusTag}
                 diagnosisNode={diagnosisTag}
-                analysisDateText={formatDate(data.analysisDate || data.createdAt)}
+                analysisDateText={data.analysisDate ? formatDate(data.analysisDate) : null}
                 createdAtText={formatDate(data.createdAt)}
             />
 
-            <LabOldResult data={data} initialOpen={true} />
+
+            {/* AI "tahlil qilib bo'lmadi" degan holat — kulrang chip
+
+                o'zi yetarli emas, uni e'tibordan chetda qoldirish oson */}
+
+            <NotAnalyzableBanner result={parseAiResult(data.aiAnswerData)} />
+
+            {/* AI xulosasi boshqa tilda yaratilgan bo'lsa sababi
+                tushuntiriladi (T-059) */}
+            <AiLanguageNotice
+                aiLang={data.aiLang}
+                kind="lab"
+                analysisId={data.id}
+                onTranslated={(translated) => setData({
+                    ...data,
+                    // Asl matn bazada o'zgarishsiz qoladi — bu faqat
+                    // ekrandagi ko'rinish (T-059)
+                    aiAnswerData: JSON.stringify(translated),
+                })}
+            />
+
+            <FileMismatchBanner
+                info={parseFileMismatch(data.aiAnswerData)}
+                analysisId={data.id}
+                onReplace={replaceLabFile}
+                accept=".pdf,.png,.jpg,.jpeg"
+                meta={{
+                    age: data.patcient?.birthDate ? calculateAge(data.patcient.birthDate) : 0,
+                    gender: data.patcient?.gender ? 'erkak' : 'ayol',
+                    lang: i18n.language || 'uz',
+                }}
+                onSuccess={getData}
+            />
+
+            <LabOldResult data={data} initialOpen={true} showMeta={false} />
+
+            {/* Bitta tahlildagi raqam kam narsa aytadi — muhimi
+                ko'rsatkich vaqt bo'yicha qaysi tomonga siljiyotgani (T-035).
+                Kamida ikkita o'lchov bo'lmasa komponent o'zi bo'sh holatni
+                ko'rsatadi. */}
+            <div className="main_card">
+                <div className="main_card_content">
+                    <LabDynamicsChart patcientId={data.patcient?.id} />
+                </div>
+            </div>
 
             <DoctorDiagnosisBlock analysisType="lab" analysisId={data.id} />
 
             <Modal
-                title={t('clinic_info') || 'Shifoxona ma\'lumotlari'}
+                title={t('clinic_info', { defaultValue: 'Shifoxona ma\'lumotlari' })}
                 open={clinicModalVisible}
                 onCancel={() => setClinicModalVisible(false)}
                 footer={null}
@@ -122,15 +181,15 @@ export default function LabAnalyseView() {
                         <Space direction="vertical" style={{ width: '100%', marginTop: 12 }}>
                             {clinic.address && (
                                 <div style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: 8 }}>
-                                    <Text type="secondary">{t('address') || 'Manzil'}:</Text>
+                                    <Text type="secondary">{t('address', { defaultValue: 'Manzil' })}:</Text>
                                     <div style={{ fontWeight: 500 }}>{clinic.district ? `${clinic.district.nameUz || clinic.district}, ` : ''}{clinic.address}</div>
                                 </div>
                             )}
                             {clinic.phoneNumbers && clinic.phoneNumbers.length > 0 && (
                                 <div style={{ paddingTop: 8 }}>
-                                    <Text type="secondary">{t('phones') || 'Telefon raqamlar'}:</Text>
+                                    <Text type="secondary">{t('phones', { defaultValue: 'Telefon raqamlar' })}:</Text>
                                     {clinic.phoneNumbers.map((p, index) => (
-                                        <div key={index} style={{ fontWeight: 500, fontSize: '16px', color: '#00D1B2' }}>{p}</div>
+                                        <div key={index} style={{ fontWeight: 500, fontSize: '16px', color: '#00B39A' }}>{p}</div>
                                     ))}
                                 </div>
                             )}

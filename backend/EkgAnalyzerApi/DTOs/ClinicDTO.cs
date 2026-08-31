@@ -16,7 +16,7 @@ public class ClinicUpsertDto
 public class ClinicPhoneUpsertDto
 {
     public int ClinicId { get; set; }
-    public List<ClinicPhoneNumberDTO> PhoneNumbers { get; set; }
+    public List<ClinicPhoneNumberDTO> PhoneNumbers { get; set; } = new();
 }
 
 public class ClinicDetailUpsertDto
@@ -80,7 +80,7 @@ public class ClinicPhoneNumberDTO
 {
     public int? Id { get; set; }
 
-    public string PhoneNumber { get; set; }
+    public string PhoneNumber { get; set; } = string.Empty;
 
 
 }

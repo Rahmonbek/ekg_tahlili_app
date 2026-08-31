@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     Card, Descriptions, Tag, Button, Rate, Input, Typography,
-    Spin, Space, Popconfirm, notification, Divider, List
-} from 'antd';
+    Spin, Space, Popconfirm, notification, Divider, List, Result} from 'antd';
 import { ArrowLeftOutlined, VideoCameraOutlined, StarOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -16,6 +15,7 @@ import { useStore } from '../../../store/Store';
 import { initiateConsultationCall } from '../../../hooks/videoSignalRService';
 import dayjs from 'dayjs';
 import './Consultation.css';
+import useDocumentTitle from '../../../tools/useDocumentTitle';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -39,6 +39,7 @@ const TYPE_COLOR = {
 
 export default function ConsultationDetailPage() {
     const { t }       = useTranslation();
+    useDocumentTitle(t('consultation_detail', { defaultValue: "Konsultatsiya ma'lumotlari" }));
     const navigate    = useNavigate();
     const { id }      = useParams();
     const { user, setVideoCall } = useStore();
@@ -100,7 +101,24 @@ export default function ConsultationDetailPage() {
     };
 
     if (loading) return <div style={{ textAlign: 'center', padding: 60 }}><Spin size="large" /></div>;
-    if (!data) return null;
+    if (!data) {
+        // Ilgari bu yerda `return null` turardi — mavjud bo'lmagan yoki
+        // ruxsat berilmagan ID da sahifa butunlay bo'sh qolardi: na
+        // xabar, na orqaga qaytish yo'li. Foydalanuvchi ilova buzilgan
+        // deb o'ylardi.
+        return (
+            <Result
+                status="404"
+                title={t('consultation_not_found', { defaultValue: 'Konsultatsiya topilmadi' })}
+                subTitle={t('consultation_not_found_hint', {
+                    defaultValue: "Bunday konsultatsiya mavjud emas yoki uni ko'rish huquqingiz yo'q",
+                })}
+                extra={<Button type="primary" onClick={() => navigate('/consultations')}>
+                    {t('back', { defaultValue: 'Orqaga' })}
+                </Button>}
+            />
+        );
+    }
 
     const canCancel  = isAdmin && (data.status === 'pending' || data.status === 'accepted');
     const canVideo   = (data.status === 'accepted' || data.status === 'scheduled') && isAdmin && !data.isLinkRequest;
@@ -210,7 +228,7 @@ export default function ConsultationDetailPage() {
                                             type="link"
                                             onClick={() => navigate(`${route}/${item.analysisId}`)}
                                         >
-                                            {t('view') || "Ko'rish"}
+                                            {t('view', { defaultValue: "Ko'rish" })}
                                         </Button>
                                     ] : []}
                                 >

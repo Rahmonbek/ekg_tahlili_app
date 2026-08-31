@@ -5,7 +5,7 @@ using System.Drawing;
 
 namespace EkgAnalyzerApi.Models
 {
-    [Table("patcients")]
+    [Table("patients")]
     public class Patcient
     {
         [Key]
@@ -13,25 +13,25 @@ namespace EkgAnalyzerApi.Models
         public int Id { get; set; }
 
         [Column("passport")]
-        public string Passport { get; set; }
+        public string Passport { get; set; } = string.Empty;
 
         [Column("birthdate")]
         public DateOnly BirthDate { get; set; }
 
         [Column("firstname")]
-        public string FirstName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
 
         [Column("lastname")]
-        public string LastName { get; set; }
+        public string LastName { get; set; } = string.Empty;
 
-        [Column("surename")]
-        public string SureName { get; set; }
+        [Column("sure_name")]
+        public string SureName { get; set; } = string.Empty;
 
         [Column("gender")]
         public bool Gender { get; set; }
 
         [Column("phone")]
-        public string Phone { get; set; }
+        public string Phone { get; set; } = string.Empty;
 
 
         [Column("address")]
