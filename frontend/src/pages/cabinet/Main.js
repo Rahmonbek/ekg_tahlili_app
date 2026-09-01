@@ -344,6 +344,7 @@ export default function Main() {
                             kirgan, shuning uchun bosh sahifaga yo'naltiriladi */}
                         <Route path="/login" element={<Navigate to="/" replace />} />
                         <Route path="/register" element={<Navigate to="/" replace />} />
+                        <Route path="/reset-password" element={<Navigate to="/" replace />} />
 
                         {/* Qolgan noma'lum manzil endi jimgina bosh sahifaga
                             yo'naltirilmaydi — foydalanuvchi nima bo'lganini ko'radi */}

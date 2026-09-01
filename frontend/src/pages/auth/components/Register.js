@@ -347,7 +347,7 @@ export default function Register() {
           </p>
           <Form form={codeForm} onFinish={handleFinish}>
             <Form.Item name='code' rules={[{ required: true, message: t('not_empty') }]}>
-              <Input.OTP length={4} size='large' />
+              <Input.OTP length={4} size='large' inputMode='numeric' formatter={(v) => v.replace(/\D/g, '')} />
             </Form.Item>
             <Button className='btn_form' loading={loading} htmlType='submit' block>
               {t('verify')}

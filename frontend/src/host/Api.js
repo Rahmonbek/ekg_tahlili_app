@@ -9,7 +9,7 @@ const axiosInstance = axios.create({
 });
 
 const isPublicRoute = (path) => {
-    const publicPaths = ["/", "/login", "/register"];
+    const publicPaths = ["/", "/login", "/register", "/reset-password"];
     return publicPaths.includes(path)
         || path.startsWith("/verify/");
 };

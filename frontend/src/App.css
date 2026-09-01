@@ -135,9 +135,18 @@ body {
 
 .login_img img {
   width: 100%;
+  height: 100%;
+  /* Rasm butun panelni to'ldiradi — ilgari faqat width:100% edi va
+     yon-tomonlarda teal fon ko'rinib, rasm "kichik" tuyulardi */
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
 .login_img {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   background: linear-gradient(var(--back_color), var(--back_gradient_color));
 }
 
@@ -158,12 +167,193 @@ body {
   justify-content: center;
 }
 
-/* Parol tiklash modalidagi tushuntirish matni */
-.reset_pass_hint {
+/* ── Parolni tiklash sahifasi (/reset-password) ──────────────────────── */
+.reset_page_form {
+  padding-top: 8px;
+}
+
+.reset_page_body {
+  padding-top: 4px;
+}
+
+/* Bosqich ko'rsatkichi (1 → 2) */
+.reset-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 4px 0 18px;
+}
+
+.reset-step {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--surface-tertiary, #EFEDE6);
+  background: #EEF2F6;
+  color: var(--grey_color);
+  border: 2px solid transparent;
+  transition: 0.25s;
+}
+
+.reset-step.is-active {
+  background: var(--back_color);
+  color: #fff;
+}
+
+.reset-step.is-done {
+  background: #E6F5EC;
+  color: #16A34A;
+  border-color: #16A34A;
+}
+
+.reset-step-line {
+  width: 48px;
+  height: 2px;
+  background: #E2E8F0;
+  transition: 0.25s;
+}
+
+.reset-step-line.is-done {
+  background: #16A34A;
+}
+
+.reset-page-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.reset-page-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--text_color);
+  margin: 0;
+}
+
+.reset-modal-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--back_color);
+  background: var(--primarySoft, #E6F7F4);
+  background: linear-gradient(135deg, #E6F7F4, #d5f2ec);
+}
+
+.reset-modal-badge.is-done {
+  color: #16A34A;
+  background: #E6F5EC;
+}
+
+.reset-modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text_color);
+  margin: 0;
+}
+
+.reset-modal-hint {
   font-size: var(--small_size);
   color: var(--text_second_color);
   line-height: 1.55;
-  margin-bottom: 14px;
+  margin: 0 0 18px;
+  text-align: center;
+}
+
+/* Tasdiqlash kodi maydoni — bitta keng, markazlashgan, faqat raqam */
+.reset-otp-input {
+  width: 100%;
+  height: 56px;
+  border: 1.5px solid var(--border_color);
+  border-radius: 12px;
+  background: #fff;
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.6em;
+  text-indent: 0.6em;
+  color: var(--text_color);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.reset-otp-input:focus {
+  border-color: var(--back_color);
+  box-shadow: 0 0 0 3px rgba(0, 179, 154, 0.15);
+}
+
+.reset-otp-input::placeholder {
+  color: #cbd5e1;
+  letter-spacing: 0.4em;
+}
+
+.reset-modal-resend {
+  display: flex;
+  justify-content: flex-end;
+  margin: -6px 0 16px;
+  min-height: 20px;
+}
+
+.reset-modal-resend-wait {
+  font-size: var(--mini_size);
+  color: var(--grey_color);
+}
+
+.reset-modal-link {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--small_size);
+  font-weight: 600;
+  color: var(--back_color);
+  transition: color 0.2s;
+}
+
+.reset-modal-link:hover:not(:disabled) {
+  color: var(--back_hover_color);
+  text-decoration: underline;
+}
+
+.reset-modal-link:disabled {
+  color: var(--grey_color);
+  cursor: not-allowed;
+}
+
+.reset-modal-back {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 14px;
+}
+
+.reset-modal-done {
+  text-align: center;
+}
+
+.reset-modal-done-text {
+  font-size: var(--small_size);
+  color: var(--text_second_color);
+  line-height: 1.6;
+  margin: 0 0 22px;
+}
+
+/* Modal ichidagi asosiy tugma — login sahifadagi bilan bir xil balandlik */
+.reset-modal .btn_form {
+  margin-top: 4px;
 }
 
 .login_bottom,

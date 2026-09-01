@@ -19,22 +19,18 @@ namespace EkgAnalyzerApi.Services;
 /// </remarks>
 public static class PasswordPolicy
 {
-    public const int MinLength = 8;
-
-    /// <summary>Shu uzunlikdan boshlab parol iborasi deb hisoblanadi.</summary>
-    private const int PassphraseLength = 12;
+    // Talablar soddalashtirildi: faqat minimal uzunlik va eng keng
+    // tarqalgan parollarni bloklash. Ilgari harf+raqam+4 xil belgi majburiy
+    // edi va foydalanuvchilar uchun ortiqcha to'siq bo'lardi.
+    public const int MinLength = 6;
 
     /// <summary>
-    /// Eng ko'p uchraydigan parollar. To'liq ro'yxat emas — bu yerda
-    /// faqat aynan shu loyihada va mintaqada real uchraganlari hamda
-    /// klaviatura ketma-ketliklari.
+    /// Eng ko'p uchraydigan parollar — faqat eng ошkoralari bloklanadi.
     /// </summary>
     private static readonly HashSet<string> Common = new(StringComparer.OrdinalIgnoreCase)
     {
-        "12345678", "123456789", "1234567890", "password", "parol123",
-        "qwertyui", "qwerty123", "11111111", "00000000", "87654321",
-        "admin123", "adminadmin", "doctor123", "nmed1234", "nmedadmin",
-        "iloveyou", "welcome1", "abc12345", "1q2w3e4r", "zxcvbnm1",
+        "123456", "1234567", "12345678", "123456789", "1234567890",
+        "password", "parol123", "qwerty", "111111", "000000", "abc123",
     };
 
     /// <summary>
@@ -61,29 +57,6 @@ public static class PasswordPolicy
         if (Common.Contains(password))
         {
             error = "Bu parol juda ko'p ishlatiladi. Boshqasini tanlang.";
-            return false;
-        }
-
-        var hasLetter = password.Any(char.IsLetter);
-        if (!hasLetter)
-        {
-            error = "Parolda kamida bitta harf bo'lishi kerak.";
-            return false;
-        }
-
-        // Uzun parol iborasi raqamsiz ham yetarli darajada kuchli
-        if (password.Length < PassphraseLength && !password.Any(char.IsDigit))
-        {
-            error = "Parolda kamida bitta raqam bo'lishi kerak "
-                  + $"(yoki parolni {PassphraseLength} belgidan uzun qiling).";
-            return false;
-        }
-
-        // "aaaaaaaa" kabi bir xil belgidan iborat parol uzunlik shartini
-        // qanoatlantiradi, lekin amalda himoya bermaydi
-        if (password.Distinct().Count() < 4)
-        {
-            error = "Parolda kamida 4 xil belgi bo'lishi kerak.";
             return false;
         }
 

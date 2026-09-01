@@ -17,34 +17,26 @@ import { useTranslation } from 'react-i18next';
  * ikkinchisi esa haqiqiy himoya (frontendni chetlab o'tish mumkin).
  */
 
-const MIN_LENGTH = 8;
-const PASSPHRASE_LENGTH = 12;
+// Soddalashtirilgan siyosat — backend `PasswordPolicy.cs` bilan bir xil:
+// faqat minimal uzunlik va eng keng tarqalgan parollarni bloklash.
+const MIN_LENGTH = 6;
 
 /** `PasswordPolicy.Common` bilan bir xil ro'yxat. */
 const COMMON = new Set([
-    '12345678', '123456789', '1234567890', 'password', 'parol123',
-    'qwertyui', 'qwerty123', '11111111', '00000000', '87654321',
-    'admin123', 'adminadmin', 'doctor123', 'nmed1234', 'nmedadmin',
-    'iloveyou', 'welcome1', 'abc12345', '1q2w3e4r', 'zxcvbnm1',
+    '123456', '1234567', '12345678', '123456789', '1234567890',
+    'password', 'parol123', 'qwerty', '111111', '000000', 'abc123',
 ]);
 
 /** Parol qoidalarini tekshiradi. Formaning `rules` da ham ishlatiladi. */
 export function checkPassword(value) {
     const v = value || '';
     const longEnough = v.length >= MIN_LENGTH;
-    const hasLetter = /\p{L}/u.test(v);
-    // Uzun parol iborasi raqamsiz ham kuchli
-    const hasDigit = /\d/.test(v) || v.length >= PASSPHRASE_LENGTH;
-    const varied = new Set(v).size >= 4;
     const notCommon = !COMMON.has(v.toLowerCase());
 
     return {
         longEnough,
-        hasLetter,
-        hasDigit,
-        varied,
         notCommon,
-        valid: longEnough && hasLetter && hasDigit && varied && notCommon,
+        valid: longEnough && notCommon,
     };
 }
 
@@ -59,18 +51,8 @@ export function passwordRule(t) {
                 return Promise.reject(new Error(
                     t('pw_min_length', { defaultValue: `Kamida ${MIN_LENGTH} ta belgi`, count: MIN_LENGTH })));
             }
-            if (!r.notCommon) {
-                return Promise.reject(new Error(
-                    t('pw_too_common', { defaultValue: 'Bu parol juda ko\'p ishlatiladi' })));
-            }
-            if (!r.hasLetter) {
-                return Promise.reject(new Error(t('pw_need_letter', { defaultValue: 'Kamida bitta harf' })));
-            }
-            if (!r.hasDigit) {
-                return Promise.reject(new Error(t('pw_need_digit', { defaultValue: 'Kamida bitta raqam' })));
-            }
             return Promise.reject(new Error(
-                t('pw_need_variety', { defaultValue: 'Kamida 4 xil belgi' })));
+                t('pw_too_common', { defaultValue: 'Bu parol juda ko\'p ishlatiladi' })));
         },
     };
 }
@@ -96,9 +78,8 @@ export default function PasswordField({ value, onChange, showRequirements = true
     const { t } = useTranslation();
     const result = useMemo(() => checkPassword(value), [value]);
 
-    const passed = [result.longEnough, result.hasLetter, result.hasDigit,
-                    result.varied, result.notCommon].filter(Boolean).length;
-    const percent = (passed / 5) * 100;
+    const passed = [result.longEnough, result.notCommon].filter(Boolean).length;
+    const percent = (passed / 2) * 100;
 
     return (
         <div>
@@ -120,12 +101,6 @@ export default function PasswordField({ value, onChange, showRequirements = true
                     <ul style={{ margin: '6px 0 0', padding: 0 }}>
                         <Requirement ok={result.longEnough}
                             text={t('pw_min_length', { defaultValue: `Kamida ${MIN_LENGTH} ta belgi`, count: MIN_LENGTH })} />
-                        <Requirement ok={result.hasLetter}
-                            text={t('pw_need_letter', { defaultValue: 'Kamida bitta harf' })} />
-                        <Requirement ok={result.hasDigit}
-                            text={t('pw_need_digit', { defaultValue: 'Kamida bitta raqam' })} />
-                        <Requirement ok={result.varied}
-                            text={t('pw_need_variety', { defaultValue: 'Kamida 4 xil belgi' })} />
                         <Requirement ok={result.notCommon}
                             text={t('pw_not_common', { defaultValue: 'Ko\'p ishlatiladigan parol emas' })} />
                     </ul>

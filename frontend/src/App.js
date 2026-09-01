@@ -41,7 +41,7 @@ export default function App() {
   const location = useLocation()
   // QR kod orqali ochiladigan ommaviy tasdiqlash sahifasi: /verify/{token}
   const isPublicVerify = location.pathname.startsWith('/verify/')
-  const publicPaths = ['/', '/login', '/register']
+  const publicPaths = ['/', '/login', '/register', '/reset-password']
   const isPublicPath = publicPaths.includes(location.pathname)
 
   // Boshlang'ich yuklanish: faqat user yuklanmagan bo'lsa fetch qilish
