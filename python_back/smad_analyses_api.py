@@ -175,7 +175,7 @@ def _sync_smad_openai(content: bytes, fname: str, age: int, gender: str, lang: s
     # keta olmaydi va javobni ``` ichiga o'rab yubormaydi (T-031, T-032)
     resp = client.responses.create(
         # Model va fikrlash chuqurligi bitta joyda (A-11)
-        **ai_config.diagnosis_request(),
+        **ai_config.holter_smad_lab_request(),
         input=[{
             "role": "user",
             "content": [

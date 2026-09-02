@@ -96,6 +96,27 @@ def ecg_image_request(**overrides) -> dict:
     return params
 
 
+# ─── Holter / SMAD / Laboratoriya — maxsus model ─────────────────────
+#: Holter, SMAD va laboratoriya tahlillari uchun model. EKG (gpt-5.6-sol)
+#: va parazitologiyadan ALOHIDA sozlanadi (foydalanuvchi so'rovi).
+HOLTER_SMAD_LAB_MODEL: str = os.getenv("AI_HOLTER_SMAD_LAB_MODEL", "gpt-5.6-terra")
+
+
+def holter_smad_lab_request(**overrides) -> dict:
+    """Holter, SMAD va laboratoriya tahlili uchun so'rov parametrlari.
+
+    `diagnosis_request` bilan bir xil (fikrlash chuqurligi, token byudjeti),
+    faqat model boshqacha — `gpt-5.6-terra`.
+    """
+    params = {
+        "model": HOLTER_SMAD_LAB_MODEL,
+        "reasoning": {"effort": REASONING_EFFORT},
+        "max_output_tokens": MAX_OUTPUT_TOKENS,
+    }
+    params.update(overrides)
+    return params
+
+
 def diagnosis_request(**overrides) -> dict:
     """Tashxis so'rovi uchun umumiy parametrlar.
 

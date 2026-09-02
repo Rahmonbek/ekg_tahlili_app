@@ -1295,7 +1295,10 @@ def _sync_ecg_process_and_ai(
         # EKG SURATI (foto/rasm) uchun kuchliroq vizual model + to'liq
         # (original) tafsilot; PDF (signaldan chizilgan grafik) uchun
         # standart tashxis modeli.
-        _req = ai_config.ecg_image_request() if is_image else ai_config.diagnosis_request()
+        # EKG doim gpt-5.6-sol da tahlil qilinadi: rasm uchun image-so'rov
+        # (detail + kattaroq token byudjeti), PDF uchun esa oddiy so'rov,
+        # lekin AYNI model (sol). Holter/SMAD/Lab dan farqli (ular terra).
+        _req = ai_config.ecg_image_request() if is_image else ai_config.diagnosis_request(model=ai_config.ECG_IMAGE_MODEL)
         resp = client.responses.create(
             # Model va fikrlash chuqurligi bitta joyda (A-11)
             **_req,
@@ -1866,7 +1869,10 @@ async def analyze_retry(
         # EKG SURATI (foto/rasm) uchun kuchliroq vizual model + to'liq
         # (original) tafsilot; PDF (signaldan chizilgan grafik) uchun
         # standart tashxis modeli.
-        _req = ai_config.ecg_image_request() if is_image else ai_config.diagnosis_request()
+        # EKG doim gpt-5.6-sol da tahlil qilinadi: rasm uchun image-so'rov
+        # (detail + kattaroq token byudjeti), PDF uchun esa oddiy so'rov,
+        # lekin AYNI model (sol). Holter/SMAD/Lab dan farqli (ular terra).
+        _req = ai_config.ecg_image_request() if is_image else ai_config.diagnosis_request(model=ai_config.ECG_IMAGE_MODEL)
         resp = client.responses.create(
             # Model va fikrlash chuqurligi bitta joyda (A-11)
             **_req,
