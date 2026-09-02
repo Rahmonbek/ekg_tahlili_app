@@ -292,7 +292,6 @@ export default function EcgAnalysesList() {
             title: t('ai_summary', { defaultValue: 'AI xulosasi' }),
             dataIndex: 'aiSummary',
             key: 'aiSummary',
-            width: 320,
             // Matn katakka chizilmaydi: yon panel ochilganda u uch-to'rt
             // qatorga bo'linib, qator balandligini ikki barobar oshirardi.
             // Endi ko'z tugmasi — to'liq matn modalda.
