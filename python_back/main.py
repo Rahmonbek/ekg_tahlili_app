@@ -480,7 +480,7 @@ Javobdan oldin yoki keyin hech qanday matn yozmang.
 
   "automatic_analysis_bool": "Holat jiddiyligi darajasi: 1 = normal (patologiya aniqlanmadi yoki topilgani klinik ahamiyatga ega emas), 2 = e'tibor talab qiladi (patologiya bor, shoshilinch emas — rejali ko'rik kerak), 3 = shoshilinch (hayot uchun xavfli yoki tezkor aralashuv talab qiladigan holat). MUHIM: patologiya topilgan bo'lsa — u qanchalik yengil bo'lmasin — 1 QO'YMA, kamida 2 qo'y.",
 
-  "AI_recommendations": "Oddiy tilda bemor uchun tavsiyalar: qo'shimcha tekshiruv zarurati, jismoniy faollik bo'yicha ko'rsatma, shifokorga murojaat qilish zarurati. Agar kasallik aniqlansa, umumiy davolash yo'nalishi qisqacha yozilsin.",
+  "AI_recommendations": "Oddiy tilda bemor uchun tavsiyalar:  Agar kasallik yoki patologiya aniqlansa, umumiy davolash yo'nalishi qisqacha yozilsin. Agar aniqlanmasa EKG holatiga bemorga qarab tavsiya berilsin.",
 
   "final_summary": "Tibbiy asoslangan yakuniy xulosa: asosiy EKG topilmalari va umumiy klinik baho."
 }}

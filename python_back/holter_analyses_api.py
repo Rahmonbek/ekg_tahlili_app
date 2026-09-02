@@ -122,7 +122,7 @@ Aniqlanmagan qiymatlarga null bering.
 
 "automatic_analysis":
 Faqat aniqlangan patologik holatlar, ritm buzilishlari va klinik muhim
-topilmalarni qisqa yozing.
+topilmalarni qisqa yozing. Ushbu holterdagi aynan qaysi vaqtlarda qanday o'zgarishlar bo'lganini yozing. Faqat PDFdagi topilmalarni yozing, taxmin qilmang.
 
 "automatic_analysis_bool":
 1 = normal;
