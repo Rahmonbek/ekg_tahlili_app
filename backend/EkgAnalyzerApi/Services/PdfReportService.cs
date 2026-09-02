@@ -2727,13 +2727,17 @@ public class PdfReportService
         {
             var cb = writer.DirectContent;
             var ps = document.PageSize;
-            var y  = document.BottomMargin - 8;
+            // Yashil chiziq pastki chegara balandligida turadi; footer matni
+            // esa undan ~14 pt pastda chiziladi — ilgari matn 10 pt shrift
+            // bilan chiziqqa tegib/yopishib qolardi (foydalanuvchi so'rovi).
+            var lineY = document.BottomMargin;
+            var y     = lineY - 14;
 
             // ── #1D9E75 chiziq ────────────────────────────────────────
             cb.SetColorStroke(CL_Green);
             cb.SetLineWidth(0.5f);
-            cb.MoveTo(document.LeftMargin, y + 8);
-            cb.LineTo(ps.Width - document.RightMargin, y + 8);
+            cb.MoveTo(document.LeftMargin, lineY);
+            cb.LineTo(ps.Width - document.RightMargin, lineY);
             cb.Stroke();
 
             // ── CHAP: platforma nomi ──────────────────────────────────
