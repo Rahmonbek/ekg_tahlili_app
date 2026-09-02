@@ -45,6 +45,9 @@ export default function SmadAnalysesList() {
     // O'chirish faqat Admin (2) va Direktor (3) uchun — backend ham shuni tekshiradi
     const isClinicManager = user && (user.roleId === 2 || user.roleId === 3);
     const isNurse = user && user.roleId === 5;
+    // O'chirish: Admin/Direktor har qanday; Shifokor/Hamshira faqat o'zi yuklagan
+    const canDeleteRow = (row) => isClinicManager
+        || ((isDoctor || isNurse) && row?.createdDoctorId === user?.doctor?.id);
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -250,16 +253,7 @@ export default function SmadAnalysesList() {
                         {/* Hujjat raqami — bir bemorning bir necha tahlilini
                             ajratish va PDF bilan solishtirish uchun (T-097) */}
                         <div style={{ fontSize: 11, color: '#94A3B8', letterSpacing: 0.2 }}>{row.documentNumber}</div>
-                        {age !== null && (
-                            <span style={{ color: '#888', marginLeft: 6 }}>
-                                ({age} {t('age', { defaultValue: 'yosh' })})
-                            </span>
-                        )}
-                        {doctorName ? (
-                            <div style={{ color: '#94a3b8', fontSize: 12 }}>
-                                {t('created_by', { defaultValue: 'Kiritgan' })}: {doctorName}
-                            </div>
-                        ) : null}
+                        
                     </div>
                 );
             },
@@ -267,7 +261,7 @@ export default function SmadAnalysesList() {
         {
             // Qisqacha AI xulosasi — ilgari ro'yxatda jiddiylik chipidan boshqa
             // hech narsa yo'q edi va shifokor har bir tahlilni ochishga majbur edi.
-            title: t('ai_summary', { defaultValue: 'AI xulosasi (qisqacha)' }),
+            title: t('ai_summary', { defaultValue: 'AI xulosasi' }),
             dataIndex: 'aiSummary',
             key: 'aiSummary',
             width: 320,
@@ -277,7 +271,7 @@ export default function SmadAnalysesList() {
             render: (value, row) => (
                 <LongTextCell
                     text={value}
-                    title={t('ai_summary', { defaultValue: 'AI xulosasi (qisqacha)' })}
+                    title={t('ai_summary', { defaultValue: 'AI xulosasi' })}
                 />
             ),
         },
@@ -424,7 +418,7 @@ export default function SmadAnalysesList() {
                             onDone={() => fetchData(page)}
                         />
                     ) : null}
-                    {isClinicManager ? (
+                    {canDeleteRow(row) ? (
                         <DeleteAnalysisButton
                             type="smad"
                             id={row.id}

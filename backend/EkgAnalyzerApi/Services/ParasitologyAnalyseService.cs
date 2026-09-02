@@ -280,7 +280,8 @@ namespace EkgAnalyzerApi.Services
             bool? hasDiagnosis = null)
         {
             var query = _context.ParasitologyAnalyses
-                .Where(a => a.Doctors!.Any(d => d.DoctorId == doctorId))
+                // Shifokor: O'ZI YUKLAGAN (CreatedDoctorId) YOKI unga tayinlangan
+                .Where(a => a.CreatedDoctorId == doctorId || a.Doctors!.Any(d => d.DoctorId == doctorId))
                 .Include(a => a.Patcient)
                 .Include(a => a.CreatedDoctor)
                 .Include(a => a.Doctors)

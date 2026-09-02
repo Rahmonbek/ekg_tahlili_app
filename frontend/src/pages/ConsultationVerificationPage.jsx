@@ -112,7 +112,7 @@ export default function ConsultationVerificationPage() {
                     <Descriptions.Item label="Bemor">
                         {data.patientInitials || '-'}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Klinika">
+                    <Descriptions.Item label="Shifoxona">
                         {data.clinicName || '-'}
                     </Descriptions.Item>
                     <Descriptions.Item label="Sana">

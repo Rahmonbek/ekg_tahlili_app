@@ -15,7 +15,7 @@ import ClinicHeader from '../ClinicHeader'
 import { severityClass, severityLabel, severityIcon } from '../../../tools/severity';
 import MeasurementsList from '../MeasurementsList';
 
-// `showMeta`: klinika va shifokor ma'lumotlari. Ko'rish sahifalarida
+// `showMeta`: shifoxona va shifokor ma'lumotlari. Ko'rish sahifalarida
 // ular sahifa sarlavhasida chiqadi, shuning uchun u yerda o'chiriladi.
 export default function SmadOldResult({data, initialOpen = false, showMeta = true}) {
   const [result, setresult]=useState(null)

@@ -57,7 +57,7 @@ export default function Header() {
     ? `${imgApi}${user.doctor.avatar}`
     : (!user?.doctor?.gender ? femaleStaff : maleStaff);
 
-  // Admin yoki Direktor va klinika hali faollashtirilmagan
+  // Admin yoki Direktor va shifoxona hali faollashtirilmagan
   const showInactiveNotice =
     (user?.roleId === 2 || user?.roleId === 3) &&
     user?.clinic?.isActive === false;
@@ -68,7 +68,7 @@ export default function Header() {
         <FaBars />
       </div>
 
-      {/* Klinika faollashtirilmagan xabar — markazda, faqat Admin/Direktor uchun */}
+      {/* Shifoxona faollashtirilmagan xabar — markazda, faqat Admin/Direktor uchun */}
       {showInactiveNotice && (
         <div className='clinic_inactive_notice'>
           <span className='clinic_inactive_pulse' />

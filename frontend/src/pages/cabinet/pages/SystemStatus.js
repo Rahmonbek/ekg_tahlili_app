@@ -11,7 +11,7 @@ const { Text } = Typography
 /**
  * Tizim holati / diagnostika sahifasi.
  *
- * Klinika xodimi tahlil natijasi kelmayotganda muammo o'zidami yoki
+ * Shifoxona xodimi tahlil natijasi kelmayotganda muammo o'zidami yoki
  * platformadami — buni bilishning yo'li yo'q edi. Endi API, baza va AI
  * xizmatining holati hamda oxirgi 24 soatdagi tahlillar statistikasi
  * bir joyda ko'rinadi.

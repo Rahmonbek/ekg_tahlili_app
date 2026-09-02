@@ -48,7 +48,7 @@ export default function LongTextCell({ text, title, before = null, emptyMark = '
             {before}
             <Tooltip title={label}>
                 <Button
-                    type="text"
+                    type="primary"
                     size="small"
                     icon={<EyeOutlined />}
                     aria-label={label}

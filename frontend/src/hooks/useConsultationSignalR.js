@@ -40,7 +40,7 @@ export default function useConsultationSignalR(enabled) {
                 message: 'Yangi konsultant taklifi',
                 description: payload?.clinicName
                     ? `${payload.clinicName} sizni konsultant sifatida taklif qildi`
-                    : 'Klinikadan yangi taklif keldi',
+                    : 'Shifoxonadan yangi taklif keldi',
                 duration: 6,
             });
             patchBadge((current) => ({

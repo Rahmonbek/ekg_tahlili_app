@@ -28,6 +28,9 @@ export default function DiagnosesList() {
     // O'chirish faqat Admin (2) va Direktor (3) uchun — backend ham shuni tekshiradi
     const isClinicManager = user && (user.roleId === 2 || user.roleId === 3);
     const isNurse  = user && user.roleId === 5;
+    // O'chirish: Admin/Direktor har qanday; Shifokor/Hamshira faqat o'zi yuklagan
+    const canDeleteRow = (row) => isClinicManager
+        || ((isDoctor || isNurse) && row?.createdDoctorId === user?.doctor?.id);
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -172,7 +175,7 @@ export default function DiagnosesList() {
                             <FaEye />
                         </span>
                     </Tooltip>
-                    {isClinicManager ? (
+                    {canDeleteRow(row) ? (
                         <DeleteAnalysisButton
                             type="diagnose"
                             id={row.id}

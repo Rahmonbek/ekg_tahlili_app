@@ -3,6 +3,15 @@ import { Button, Tooltip } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { successAlert, dangerAlert } from '../../tools/Alerts'
+import { useStore } from '../../store/Store'
+
+// Qayta tahlil progress elementi uchun tur bo'yicha yorliq va ro'yxat yo'li
+const RETRY_TYPE_META = {
+    ecg: { label: 'EKG AI tahlil', listPath: '/ecg-analyses' },
+    holter: { label: 'Holter AI tahlil', listPath: '/holter-analyses' },
+    smad: { label: 'SMAD AI tahlil', listPath: '/smad-analyses' },
+    lab: { label: 'Laboratoriya AI tahlil', listPath: '/lab-analyses' },
+}
 
 /**
  * Xatolik bilan tugagan tahlilni AI ga qayta yuborish tugmasi.
@@ -17,9 +26,10 @@ import { successAlert, dangerAlert } from '../../tools/Alerts'
  * @param {object}   meta     { age, gender, lang } — qayta tahlil uchun
  * @param {function} onDone   muvaffaqiyatdan keyin (ro'yxatni yangilash)
  */
-export default function RetryAnalysisButton({ id, onRetry, meta = {}, onDone }) {
+export default function RetryAnalysisButton({ id, type, onRetry, meta = {}, onDone }) {
     const { t } = useTranslation()
     const [loading, setLoading] = useState(false)
+    const { upsertPendingAnalysisByRef } = useStore()
 
     const handleClick = async (e) => {
         e.stopPropagation()
@@ -32,6 +42,22 @@ export default function RetryAnalysisButton({ id, onRetry, meta = {}, onDone }) 
             formData.append('lang', meta.lang ?? 'uz')
 
             await onRetry(formData)
+
+            // Qayta yuborilgan tahlilni "Tahlillar" progress paneliga qo'shamiz
+            // (id oldindan ma'lum). Backend uni Track qiladi va tugaganda
+            // SignalR orqali shu element yangilanadi (websocket + komponent).
+            if (type) {
+                const tm = RETRY_TYPE_META[type] || { label: t('analysis', { defaultValue: 'Tahlil' }), listPath: '/' }
+                upsertPendingAnalysisByRef({
+                    key: `analysis-${type}-${id}`,
+                    type,
+                    analysisId: Number(id),
+                    status: 'loading',
+                    label: tm.label,
+                    listPath: tm.listPath,
+                })
+            }
+
             successAlert(t('retry_started', { defaultValue: 'Tahlil qaytadan yuborildi' }))
             if (onDone) onDone()
         } catch (err) {

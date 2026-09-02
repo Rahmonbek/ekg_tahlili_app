@@ -81,7 +81,7 @@ public class LabValuesController : ControllerBase
             .ToListAsync();
 
         if (analyses.Count == 0)
-            return Ok(Array.Empty<object>());
+            return Ok(new { analysisCount = 0, series = Array.Empty<object>() });
 
         var entityType = typeof(EkgAnalyzerApi.Models.LabAnalyses);
         var series = new List<object>();
@@ -136,6 +136,11 @@ public class LabValuesController : ControllerBase
             });
         }
 
-        return Ok(series);
+        // `analysisCount` frontend uchun MUHIM: agar bemorda ikki va undan
+        // ortiq tahlil bo'lsa-yu, lekin `series` bo'sh bo'lsa — bu "kamida
+        // ikkita tahlil kerak" degani EMAS, balki tahlillar HAR XIL
+        // ko'rsatkichlarni o'lchagani (umumiy ko'rsatkich yo'q) degani.
+        // Frontend shu ikki holatga alohida tushunarli xabar ko'rsatadi.
+        return Ok(new { analysisCount = analyses.Count, series });
     }
 }

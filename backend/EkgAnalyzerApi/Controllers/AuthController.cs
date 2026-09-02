@@ -210,9 +210,19 @@ public class AuthController : ControllerBase
         {
             await _authService.SendResetCodeAsync(dto);
         }
+        catch (Exception ex) when (ex.Message == "user_not_found")
+        {
+            // Foydalanuvchi mavjudligini oshkor qilmaymiz — javob baribir
+            // muvaffaqiyatli ko'rinadi (raqamlarni sanab chiqishning oldini olish).
+            _logger.LogInformation("Parolni tiklash: raqam topilmadi (javob yashiriladi)");
+        }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Parolni tiklash kodini yuborib bo'lmadi (javob baribir bir xil qaytariladi)");
+            // SMS infratuzilma xatosi (Eskiz sozlanmagan/ishlamayapti/shablon
+            // tasdiqlanmagan) — buni foydalanuvchidan YASHIRMAYMIZ, aks holda u
+            // nega kod kelmayotganini bilmay qoladi. Bu raqam-spetsifik ma'lumot emas.
+            _logger.LogError(ex, "Parolni tiklash: SMS yuborib bo'lmadi");
+            return BadRequest(new { message = ex.Message });
         }
 
         return Ok(new { message = "code_sended" });

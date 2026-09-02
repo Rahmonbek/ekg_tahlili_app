@@ -16,7 +16,7 @@ export const getTokenAccess = () => {
  * (`https://analyse.nmed.uz/uploads/...`) va u yerda hech qanday himoya yo'q edi —
  * URL ni bilgan har kim bemorning EKG rasmini yuklab olardi.
  *
- * Endi fayllar .NET API orqali beriladi va u foydalanuvchi klinikasiga
+ * Endi fayllar .NET API orqali beriladi va u foydalanuvchi shifoxonasiga
  * tegishliligini tekshiradi. `<img>` va `<a>` teglari Authorization sarlavhasini
  * yubora olmagani uchun token query parametrida uzatiladi (loyihada SignalR
  * uchun allaqachon ishlatilayotgan naqsh).

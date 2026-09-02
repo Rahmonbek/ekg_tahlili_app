@@ -220,10 +220,19 @@ public class AuthService
         });
     }
 
-    private async Task SendVerificationCodeAsync(User user)
+    /// <param name="awaitSms">
+    /// true bo'lsa SMS sinxron yuboriladi va Eskiz xatoligi yuqoriga
+    /// otiladi — foydalanuvchi "kod yuborildi" degan yolg'on muvaffaqiyat
+    /// o'rniga haqiqiy xatolikni ko'radi (parol tiklash uchun muhim).
+    /// false bo'lsa fonda yuboriladi (ro'yxatdan o'tishni bloklamaslik uchun).
+    /// </param>
+    private async Task SendVerificationCodeAsync(User user, bool awaitSms = false)
     {
         var (phone, code) = await AddVerificationCodeAsync(user);
-        SendSmsInBackground(phone, code);
+        if (awaitSms)
+            await _smsService.SendVerificationCodeAsync(phone, code);
+        else
+            SendSmsInBackground(phone, code);
     }
 
     public async Task RegisterAsync(RegisterDto dto)
@@ -270,15 +279,42 @@ public class AuthService
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Phone == phone);
 
+        // Telefon faqat TASDIQLANGAN foydalanuvchiga tegishli bo'lsa bloklanadi.
+        // Tasdiqlanmagan (pending) hisob raqamni band qilib qo'ymaydi — aks holda
+        // SMS kodni kiritmagan foydalanuvchi qayta ro'yxatdan o'tolmay qolardi.
         if (existingDoctor?.User?.Status == true)
             throw new Exception("phone_already_exists");
 
-        var existingClinicInn = await _context.ClinicDetails
-            .AnyAsync(x => x.INN == clinicInn &&
-                           (existingDoctor == null || x.ClinicId != existingDoctor.User!.ClinicId));
+        // INN faqat TASDIQLANGAN klinika (admini tasdiqlangan) egallagan bo'lsa
+        // bloklanadi. Pending/tashlab ketilgan klinika INN'ni abadiy band
+        // qilib qo'ymaydi — o'sha klinikani qayta ro'yxatdan o'tkazish mumkin.
+        var innTakenByVerified = await _context.ClinicDetails
+            .AnyAsync(cd => cd.INN == clinicInn
+                && (existingDoctor == null || cd.ClinicId != existingDoctor.User!.ClinicId)
+                && _context.Users.Any(u => u.ClinicId == cd.ClinicId && u.Status));
 
-        if (existingClinicInn)
+        if (innTakenByVerified)
             throw new Exception("clinic_already_registered");
+
+        // Qayta egallanadigan pending hisobni aniqlaymiz:
+        //   • telefon bo'yicha topilgan pending doctor, YOKI
+        //   • telefon topilmasa — shu INN'ga ega pending klinikaning admini.
+        // Shu tariqa foydalanuvchi bir xil telefon yoki bir xil INN bilan
+        // qayta ro'yxatdan o'tsa, dublikat yaratilmay eski yozuv yangilanadi.
+        int? reuseDoctorId = null;
+        if (existingDoctor?.User != null && existingDoctor.User.Status == false)
+        {
+            reuseDoctorId = existingDoctor.Id;
+        }
+        else if (existingDoctor == null)
+        {
+            reuseDoctorId = await _context.ClinicDetails
+                .Where(cd => cd.INN == clinicInn)
+                .Join(_context.Users, cd => cd.ClinicId, u => u.ClinicId, (cd, u) => u)
+                .Where(u => !u.Status && u.Doctor != null)
+                .Select(u => (int?)u.Doctor!.Id)
+                .FirstOrDefaultAsync();
+        }
 
         // ── 4. License faylni saqlash ────────────────────────────────────────
         var savedLicense = await SaveLicenseAsync(dto.LicenseFile);
@@ -292,16 +328,16 @@ public class AuthService
             User   user;
             Doctor doctor;
 
-            // ── 5a. Qayta ro'yhatdan o'tish (telefon bor, lekin tasdiqlanmagan) ──
-            if (existingDoctor?.User != null && existingDoctor.User.Status == false)
+            // ── 5a. Qayta ro'yhatdan o'tish (pending hisobni qayta egallash) ──
+            if (reuseDoctorId != null)
             {
+                doctor = await _context.Doctors.FirstAsync(d => d.Id == reuseDoctorId.Value);
+
                 // AsNoTracking ishlatildi, shuning uchun qayta yuklaymiz (tracked)
                 user = await _context.Users
                     .Include(u => u.Clinic)
                         .ThenInclude(c => c.ClinicDetail!)
-                    .FirstAsync(u => u.Id == existingDoctor.User.Id);
-
-                doctor = await _context.Doctors.FirstAsync(d => d.Id == existingDoctor.Id);
+                    .FirstAsync(u => u.Id == doctor.UserId);
 
                 user.Email        = internalEmail;
                 user.PasswordHash  = BCrypt.Net.BCrypt.HashPassword(dto.Password);
@@ -524,11 +560,28 @@ public class AuthService
         if (user == null)
             return Fail("user_not_found");
 
-        if (!user.Status)
-            return Fail("phone_not_verified");
-
-        if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+        // Parolni AVVAL tekshiramiz: shunda tasdiqlanmagan hisobga kodni faqat
+        // parolni bilgan odam qayta yuboradi (SMS spam oldini olish).
+        if (string.IsNullOrEmpty(user.PasswordHash) ||
+            !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
             return Fail("invalid_password");
+
+        // Hisob hali tasdiqlanmagan, lekin parol to'g'ri — deadlock'ga tushmaslik
+        // uchun kodni qayta yuboramiz. Frontend `phone_not_verified` ni ko'rib,
+        // login sahifasidayoq tasdiqlash oynasini ochadi (qayta ro'yxat shart emas).
+        if (!user.Status)
+        {
+            try
+            {
+                await SendVerificationCodeAsync(user);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Login: tasdiqlanmagan hisob uchun kodni qayta yuborib bo'lmadi (user {UserId})", user.Id);
+            }
+            return Fail("phone_not_verified");
+        }
 
         bool isPrivileged = user.RoleId == RoleConstants.SuperAdmin
                          || user.RoleId == RoleConstants.Admin
@@ -561,7 +614,10 @@ public class AuthService
         if (user == null)
             throw new Exception("user_not_found");
 
-        await SendVerificationCodeAsync(user);
+        // Parol tiklash — SMS sinxron yuboriladi. Eskiz yuborolmasa
+        // (sozlanmagan/shablon tasdiqlanmagan/tarmoq), xatolik foydalanuvchiga
+        // qaytadi; ilgari fonda yutilib, "kod yuborildi" yolg'on ko'rsatilardi.
+        await SendVerificationCodeAsync(user, awaitSms: true);
     }
 
     public async Task ChangePasswordAsync(ChangePasswordDto dto)

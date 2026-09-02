@@ -126,7 +126,7 @@ export default function CreateUpdateDoctor() {
         5: 'role_hint_nurse',
     };
 
-    /** Klinikadagi hamma narsani ko'radigan va xodimlarni boshqaradigan rollar */
+    /** Shifoxonadagi hamma narsani ko'radigan va xodimlarni boshqaradigan rollar */
     const ELEVATED_ROLES = [2, 3];
 
     const changeRole = (val) => {

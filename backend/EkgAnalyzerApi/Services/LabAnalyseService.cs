@@ -92,6 +92,53 @@ namespace EkgAnalyzerApi.Services
                     daily_creatinine = e.daily_creatinine,
                     daily_calcium = e.daily_calcium,
                     daily_sodium = e.daily_sodium,
+                    triglycerides = e.triglycerides,
+                    hdl = e.hdl,
+                    ldl = e.ldl,
+                    vldl = e.vldl,
+                    atherogenic_index = e.atherogenic_index,
+                    hba1c = e.hba1c,
+                    c_peptide = e.c_peptide,
+                    crp = e.crp,
+                    ggt = e.ggt,
+                    alp = e.alp,
+                    amylase = e.amylase,
+                    lipase = e.lipase,
+                    ldh = e.ldh,
+                    ck = e.ck,
+                    ck_mb = e.ck_mb,
+                    uric_acid = e.uric_acid,
+                    magnesium = e.magnesium,
+                    phosphorus = e.phosphorus,
+                    chloride = e.chloride,
+                    ferritin = e.ferritin,
+                    tibc = e.tibc,
+                    transferrin = e.transferrin,
+                    bilirubin_indirect = e.bilirubin_indirect,
+                    globulin = e.globulin,
+                    free_t3 = e.free_t3,
+                    t3_total = e.t3_total,
+                    t4_total = e.t4_total,
+                    vitamin_d = e.vitamin_d,
+                    vitamin_b12 = e.vitamin_b12,
+                    folate = e.folate,
+                    prothrombin_time = e.prothrombin_time,
+                    prothrombin_index = e.prothrombin_index,
+                    inr = e.inr,
+                    aptt = e.aptt,
+                    fibrinogen = e.fibrinogen,
+                    thrombin_time = e.thrombin_time,
+                    d_dimer = e.d_dimer,
+                    neutrophils = e.neutrophils,
+                    lymphocytes = e.lymphocytes,
+                    monocytes = e.monocytes,
+                    eosinophils = e.eosinophils,
+                    basophils = e.basophils,
+                    rdw = e.rdw,
+                    mpv = e.mpv,
+                    pdw = e.pdw,
+                    pct = e.pct,
+                    reticulocytes = e.reticulocytes,
                     PatcientId = e.PatcientId,
                     CreatedDoctorId = e.CreatedDoctorId,
                     Clinic = new ClinicForECG
@@ -293,7 +340,7 @@ namespace EkgAnalyzerApi.Services
 
                 item.AIStatus = AiSeverity.Parse(item.AIAnswerData);
             foreach (var item in items)
-                item.AiSummary = AiSeverity.Summarize(item.AIAnswerData);
+                item.AiSummary = AiSeverity.Conclusion(item.AIAnswerData);
             foreach (var item in items)
                 item.ErrorReason = item.Status == -1
                     ? AiSeverity.ExtractErrorMessage(item.AIAnswerData)
@@ -323,7 +370,8 @@ namespace EkgAnalyzerApi.Services
             bool? hasDiagnosis = null)
         {
             var query = _context.LabAnalyse
-                .Where(e => e.Doctors!.Any(d => d.DoctorId == doctorId))
+                // Shifokor: O'ZI YUKLAGAN (CreatedDoctorId) YOKI unga tayinlangan
+                .Where(e => e.CreatedDoctorId == doctorId || e.Doctors!.Any(d => d.DoctorId == doctorId))
                 .Include(e => e.Patcient)
                 .Include(e => e.CreatedDoctor)
                 .Include(e => e.Doctors)
@@ -433,7 +481,7 @@ namespace EkgAnalyzerApi.Services
 
                 item.AIStatus = AiSeverity.Parse(item.AIAnswerData);
             foreach (var item in items)
-                item.AiSummary = AiSeverity.Summarize(item.AIAnswerData);
+                item.AiSummary = AiSeverity.Conclusion(item.AIAnswerData);
             foreach (var item in items)
                 item.ErrorReason = item.Status == -1
                     ? AiSeverity.ExtractErrorMessage(item.AIAnswerData)
@@ -589,7 +637,7 @@ namespace EkgAnalyzerApi.Services
 
                 item.AIStatus = AiSeverity.Parse(item.AIAnswerData);
             foreach (var item in items)
-                item.AiSummary = AiSeverity.Summarize(item.AIAnswerData);
+                item.AiSummary = AiSeverity.Conclusion(item.AIAnswerData);
             foreach (var item in items)
                 item.ErrorReason = item.Status == -1
                     ? AiSeverity.ExtractErrorMessage(item.AIAnswerData)
@@ -673,6 +721,53 @@ namespace EkgAnalyzerApi.Services
                 daily_creatinine = e.daily_creatinine,
                 daily_calcium = e.daily_calcium,
                 daily_sodium = e.daily_sodium,
+                triglycerides = e.triglycerides,
+                hdl = e.hdl,
+                ldl = e.ldl,
+                vldl = e.vldl,
+                atherogenic_index = e.atherogenic_index,
+                hba1c = e.hba1c,
+                c_peptide = e.c_peptide,
+                crp = e.crp,
+                ggt = e.ggt,
+                alp = e.alp,
+                amylase = e.amylase,
+                lipase = e.lipase,
+                ldh = e.ldh,
+                ck = e.ck,
+                ck_mb = e.ck_mb,
+                uric_acid = e.uric_acid,
+                magnesium = e.magnesium,
+                phosphorus = e.phosphorus,
+                chloride = e.chloride,
+                ferritin = e.ferritin,
+                tibc = e.tibc,
+                transferrin = e.transferrin,
+                bilirubin_indirect = e.bilirubin_indirect,
+                globulin = e.globulin,
+                free_t3 = e.free_t3,
+                t3_total = e.t3_total,
+                t4_total = e.t4_total,
+                vitamin_d = e.vitamin_d,
+                vitamin_b12 = e.vitamin_b12,
+                folate = e.folate,
+                prothrombin_time = e.prothrombin_time,
+                prothrombin_index = e.prothrombin_index,
+                inr = e.inr,
+                aptt = e.aptt,
+                fibrinogen = e.fibrinogen,
+                thrombin_time = e.thrombin_time,
+                d_dimer = e.d_dimer,
+                neutrophils = e.neutrophils,
+                lymphocytes = e.lymphocytes,
+                monocytes = e.monocytes,
+                eosinophils = e.eosinophils,
+                basophils = e.basophils,
+                rdw = e.rdw,
+                mpv = e.mpv,
+                pdw = e.pdw,
+                pct = e.pct,
+                reticulocytes = e.reticulocytes,
                 PatcientId = e.PatcientId,
                 CreatedDoctorId = e.CreatedDoctorId,
                 Clinic = new ClinicForECG

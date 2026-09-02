@@ -31,7 +31,7 @@ public class FileTypesController : ControllerBase
     /// </summary>
     private static readonly Dictionary<string, string[]> Fallback = new()
     {
-        ["ecg"] = new[] { ".csv", ".jpeg", ".jpg", ".png", ".tsv", ".xml" },
+        ["ecg"] = new[] { ".jpeg", ".jpg", ".pdf", ".png" },
         ["holter"] = new[] { ".jpeg", ".jpg", ".pdf", ".png" },
         ["smad"] = new[] { ".jpeg", ".jpg", ".pdf", ".png" },
         ["lab"] = new[] { ".jpeg", ".jpg", ".pdf", ".png" },

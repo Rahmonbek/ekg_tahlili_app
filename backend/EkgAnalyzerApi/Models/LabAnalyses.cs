@@ -171,6 +171,152 @@ namespace EkgAnalyzerApi.Models
         [Column("daily_sodium")]
         public decimal? daily_sodium { get; set; } // mmol/24h
 
+        // ── Qo'shimcha ko'rsatkichlar (20260905 migratsiya) ─────────────────
+        // Lipid, koagulyatsiya, qon formulasi, gormon, vitamin, ferment va h.k.
+        // Dinamika grafigi (LabValuesController) shu ustunlarni reflection
+        // orqali o'qiydi, shuning uchun har bir ko'rsatkich model xossasi
+        // sifatida ham mavjud bo'lishi kerak.
+        [Column("triglycerides")]
+        public decimal? triglycerides { get; set; } // mmol/L
+
+        [Column("hdl")]
+        public decimal? hdl { get; set; } // mmol/L
+
+        [Column("ldl")]
+        public decimal? ldl { get; set; } // mmol/L
+
+        [Column("vldl")]
+        public decimal? vldl { get; set; } // mmol/L
+
+        [Column("atherogenic_index")]
+        public decimal? atherogenic_index { get; set; } // nisbat (ratio)
+
+        [Column("hba1c")]
+        public decimal? hba1c { get; set; } // %
+
+        [Column("c_peptide")]
+        public decimal? c_peptide { get; set; } // ng/mL
+
+        [Column("crp")]
+        public decimal? crp { get; set; } // mg/L
+
+        [Column("ggt")]
+        public decimal? ggt { get; set; } // U/L
+
+        [Column("alp")]
+        public decimal? alp { get; set; } // U/L
+
+        [Column("amylase")]
+        public decimal? amylase { get; set; } // U/L
+
+        [Column("lipase")]
+        public decimal? lipase { get; set; } // U/L
+
+        [Column("ldh")]
+        public decimal? ldh { get; set; } // U/L
+
+        [Column("ck")]
+        public decimal? ck { get; set; } // U/L
+
+        [Column("ck_mb")]
+        public decimal? ck_mb { get; set; } // U/L
+
+        [Column("uric_acid")]
+        public decimal? uric_acid { get; set; } // µmol/L
+
+        [Column("magnesium")]
+        public decimal? magnesium { get; set; } // mmol/L
+
+        [Column("phosphorus")]
+        public decimal? phosphorus { get; set; } // mmol/L
+
+        [Column("chloride")]
+        public decimal? chloride { get; set; } // mmol/L
+
+        [Column("ferritin")]
+        public decimal? ferritin { get; set; } // µg/L
+
+        [Column("tibc")]
+        public decimal? tibc { get; set; } // µmol/L
+
+        [Column("transferrin")]
+        public decimal? transferrin { get; set; } // g/L
+
+        [Column("bilirubin_indirect")]
+        public decimal? bilirubin_indirect { get; set; } // µmol/L
+
+        [Column("globulin")]
+        public decimal? globulin { get; set; } // g/L
+
+        [Column("free_t3")]
+        public decimal? free_t3 { get; set; } // pmol/L
+
+        [Column("t3_total")]
+        public decimal? t3_total { get; set; } // nmol/L
+
+        [Column("t4_total")]
+        public decimal? t4_total { get; set; } // nmol/L
+
+        [Column("vitamin_d")]
+        public decimal? vitamin_d { get; set; } // ng/mL
+
+        [Column("vitamin_b12")]
+        public decimal? vitamin_b12 { get; set; } // pg/mL
+
+        [Column("folate")]
+        public decimal? folate { get; set; } // ng/mL
+
+        [Column("prothrombin_time")]
+        public decimal? prothrombin_time { get; set; } // sekund
+
+        [Column("prothrombin_index")]
+        public decimal? prothrombin_index { get; set; } // %
+
+        [Column("inr")]
+        public decimal? inr { get; set; } // nisbat (ratio)
+
+        [Column("aptt")]
+        public decimal? aptt { get; set; } // sekund
+
+        [Column("fibrinogen")]
+        public decimal? fibrinogen { get; set; } // g/L
+
+        [Column("thrombin_time")]
+        public decimal? thrombin_time { get; set; } // sekund
+
+        [Column("d_dimer")]
+        public decimal? d_dimer { get; set; } // mg/L
+
+        [Column("neutrophils")]
+        public decimal? neutrophils { get; set; } // %
+
+        [Column("lymphocytes")]
+        public decimal? lymphocytes { get; set; } // %
+
+        [Column("monocytes")]
+        public decimal? monocytes { get; set; } // %
+
+        [Column("eosinophils")]
+        public decimal? eosinophils { get; set; } // %
+
+        [Column("basophils")]
+        public decimal? basophils { get; set; } // %
+
+        [Column("rdw")]
+        public decimal? rdw { get; set; } // %
+
+        [Column("mpv")]
+        public decimal? mpv { get; set; } // fL
+
+        [Column("pdw")]
+        public decimal? pdw { get; set; } // %
+
+        [Column("pct")]
+        public decimal? pct { get; set; } // %
+
+        [Column("reticulocytes")]
+        public decimal? reticulocytes { get; set; } // %
+
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 

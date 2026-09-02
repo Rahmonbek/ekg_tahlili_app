@@ -185,8 +185,8 @@ namespace EkgAnalyzerApi.Services
                 .FirstOrDefaultAsync(x => x.Id == user_id);
             if (user == null) return null;
 
-            var isDoctor = user.RoleId == RoleConstants.Doctor && user.Doctor != null;
-            var doctorId = user.Doctor?.Id ?? 0;
+            // Bemor tarixida ROL FILTRI YO'Q: bemorga tegishli klinikadagi
+            // BARCHA tahlillar barcha foydalanuvchilarga ko'rinadi (foydalanuvchi so'rovi).
             var clinicId = user.ClinicId;
 
             var patient = await _context.Patcients.AsNoTracking()
@@ -197,9 +197,7 @@ namespace EkgAnalyzerApi.Services
             var timeline = new List<PatientTimelineItemDTO>();
 
             var ecg = await _context.ECGAnalyse.AsNoTracking()
-                .Where(a => a.PatcientId == patientId && a.ClinicId == clinicId)
-                .Where(a => !isDoctor || a.Doctors!.Any(d => d.DoctorId == doctorId))
-                .Select(a => new { a.Id, a.DocumentNumber, a.CreatedAt, a.AnalysisDate, a.Status, a.AIAnswerData,
+                .Where(a => a.PatcientId == patientId && a.ClinicId == clinicId)                .Select(a => new { a.Id, a.DocumentNumber, a.CreatedAt, a.AnalysisDate, a.Status, a.AIAnswerData,
                     Doctor = a.CreatedDoctor.LastName + " " + a.CreatedDoctor.FirstName })
                 .ToListAsync();
             timeline.AddRange(ecg.Select(a => new PatientTimelineItemDTO
@@ -210,9 +208,7 @@ namespace EkgAnalyzerApi.Services
             }));
 
             var holter = await _context.HolterAnalyses.AsNoTracking()
-                .Where(a => a.PatcientId == patientId && a.ClinicId == clinicId)
-                .Where(a => !isDoctor || a.Doctors!.Any(d => d.DoctorId == doctorId))
-                .Select(a => new { a.Id, a.DocumentNumber, a.CreatedAt, a.AnalysisDate, a.Status, a.AIAnswerData,
+                .Where(a => a.PatcientId == patientId && a.ClinicId == clinicId)                .Select(a => new { a.Id, a.DocumentNumber, a.CreatedAt, a.AnalysisDate, a.Status, a.AIAnswerData,
                     Doctor = a.CreatedDoctor.LastName + " " + a.CreatedDoctor.FirstName })
                 .ToListAsync();
             timeline.AddRange(holter.Select(a => new PatientTimelineItemDTO
@@ -223,9 +219,7 @@ namespace EkgAnalyzerApi.Services
             }));
 
             var smad = await _context.SmadAnalyses.AsNoTracking()
-                .Where(a => a.PatcientId == patientId && a.ClinicId == clinicId)
-                .Where(a => !isDoctor || a.Doctors!.Any(d => d.DoctorId == doctorId))
-                .Select(a => new { a.Id, a.DocumentNumber, a.CreatedAt, a.AnalysisDate, a.Status, a.AIAnswerData,
+                .Where(a => a.PatcientId == patientId && a.ClinicId == clinicId)                .Select(a => new { a.Id, a.DocumentNumber, a.CreatedAt, a.AnalysisDate, a.Status, a.AIAnswerData,
                     Doctor = a.CreatedDoctor.LastName + " " + a.CreatedDoctor.FirstName })
                 .ToListAsync();
             timeline.AddRange(smad.Select(a => new PatientTimelineItemDTO
@@ -236,9 +230,7 @@ namespace EkgAnalyzerApi.Services
             }));
 
             var lab = await _context.LabAnalyse.AsNoTracking()
-                .Where(a => a.PatcientId == patientId && a.ClinicId == clinicId)
-                .Where(a => !isDoctor || a.Doctors!.Any(d => d.DoctorId == doctorId))
-                .Select(a => new { a.Id, a.DocumentNumber, a.CreatedAt, a.AnalysisDate, a.Status, a.AIAnswerData,
+                .Where(a => a.PatcientId == patientId && a.ClinicId == clinicId)                .Select(a => new { a.Id, a.DocumentNumber, a.CreatedAt, a.AnalysisDate, a.Status, a.AIAnswerData,
                     Doctor = a.CreatedDoctor.LastName + " " + a.CreatedDoctor.FirstName })
                 .ToListAsync();
             timeline.AddRange(lab.Select(a => new PatientTimelineItemDTO
@@ -250,7 +242,6 @@ namespace EkgAnalyzerApi.Services
 
             var diagnoses = await _context.MedicalDiagnose.AsNoTracking()
                 .Where(a => a.PatcientId == patientId && a.ClinicId == clinicId)
-                .Where(a => !isDoctor || a.MainDoctorId == doctorId)
                 .Select(a => new { a.Id, a.CreatedAt,
                     Doctor = a.MainDoctor.LastName + " " + a.MainDoctor.FirstName })
                 .ToListAsync();

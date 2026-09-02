@@ -28,6 +28,15 @@ public class PdfReportService
     private readonly IFileStorage _storage;
     private readonly ILogger<PdfReportService> _logger;
 
+    // Hujjatdagi eng kichik yozuv o'lchami — bundan past shrift ishlatilmaydi.
+    private const float MinFontSize = 12f;
+
+    // Kolontitul (footer) yozuvi — "NMED | nmed.uz", hujjat raqami va sahifa
+    // raqami. U 12 pt umumiy chegaradan ATAYIN kichikroq (10 pt): footer
+    // yordamchi ma'lumot bo'lib, asosiy matndan ajralib turishi kerak
+    // (foydalanuvchi so'rovi).
+    private const float FooterFontSize = 10f;
+
     // ── Sahifa geometriyasi (mm → pt: 1 mm = 2.8346 pt) ────────────────
     private const float MrgSide   = 51.02f;  // 18 mm
     private const float MrgTop    = 34.02f;  // 12 mm
@@ -661,8 +670,7 @@ public class PdfReportService
         InfoRow(tbl, tr["passport"] + ":",
             MaskPassport(patient.Passport), fonts, 1);
 
-        if (!string.IsNullOrWhiteSpace(patient.Address))
-            InfoRow(tbl, tr["address"] + ":", patient.Address, fonts, 0);
+        // Manzil ataylab chiqarilmaydi (loyiha egasi qarori)
 
         if (!string.IsNullOrWhiteSpace(patient.Phone))
             InfoRow(tbl, tr["phone"] + ":", patient.Phone, fonts, 1);
@@ -815,7 +823,7 @@ public class PdfReportService
             TblCell(tbl, $"{valStr} {unit}", fonts["td9bold"],    bg, Element.ALIGN_CENTER);
             TblCell(tbl, normal,             fonts["td9gray"],    bg, Element.ALIGN_CENTER);
 
-            var assessFont = new Font(fonts["td9bold"].BaseFont, 9, Font.NORMAL, color);
+            var assessFont = new Font(fonts["td9bold"].BaseFont, MinFontSize, Font.NORMAL, color);
             var ac = new PdfPCell(new Phrase(assess, assessFont))
             {
                 BackgroundColor     = bg,
@@ -1078,6 +1086,54 @@ public class PdfReportService
         ("Siydik eritrosit",     "maydon",    "0–2",      "0–2",     e => e.urine_rbc),
         ("Siydik leykosit",      "maydon",    "0–5",      "0–5",     e => e.urine_wbc),
         ("Kunlik oqsil",         "mg/24h",    "0–150",    "0–150",   e => e.daily_protein),
+        // ── Qo'shimcha ko'rsatkichlar (20260905 migratsiya) ──
+        ("Triglitseridlar",                                   "mmol/L",  "< 1.7",       "< 1.7",       e => e.triglycerides),
+        ("HDL xolesterin (yuqori zichlik)",                   "mmol/L",  "> 1",         "> 1.2",       e => e.hdl),
+        ("LDL xolesterin (past zichlik)",                     "mmol/L",  "< 3",         "< 3",         e => e.ldl),
+        ("VLDL xolesterin (juda past zichlik)",               "mmol/L",  "0.1–1",       "0.1–1",       e => e.vldl),
+        ("Aterogenlik koeffitsienti",                         "",        "< 3",         "< 3",         e => e.atherogenic_index),
+        ("Glikirlangan gemoglobin (HbA1c)",                   "%",       "4–5.6",       "4–5.6",       e => e.hba1c),
+        ("S-peptid",                                          "ng/mL",   "1.1–4.4",     "1.1–4.4",     e => e.c_peptide),
+        ("C-reaktiv oqsil (CRP)",                             "mg/L",    "< 5",         "< 5",         e => e.crp),
+        ("Gamma-glutamiltransferaza (GGT)",                   "U/L",     "< 55",        "< 38",        e => e.ggt),
+        ("Ishqoriy fosfataza (ALP)",                          "U/L",     "40–130",      "40–130",      e => e.alp),
+        ("Amilaza",                                           "U/L",     "28–100",      "28–100",      e => e.amylase),
+        ("Lipaza",                                            "U/L",     "13–60",       "13–60",       e => e.lipase),
+        ("Laktatdegidrogenaza (LDH)",                         "U/L",     "125–220",     "125–220",     e => e.ldh),
+        ("Kreatinkinaza (KFK)",                               "U/L",     "39–308",      "26–192",      e => e.ck),
+        ("Kreatinkinaza-MB (KFK-MB)",                         "U/L",     "< 25",        "< 25",        e => e.ck_mb),
+        ("Siydik kislotasi",                                  "µmol/L",  "202–416",     "142–339",     e => e.uric_acid),
+        ("Magniy",                                            "mmol/L",  "0.66–1.07",   "0.66–1.07",   e => e.magnesium),
+        ("Fosfor",                                            "mmol/L",  "0.81–1.45",   "0.81–1.45",   e => e.phosphorus),
+        ("Xlor",                                              "mmol/L",  "98–107",      "98–107",      e => e.chloride),
+        ("Ferritin",                                          "µg/L",    "30–400",      "13–150",      e => e.ferritin),
+        ("Umumiy temir bog'lash qobiliyati (TIBC)",           "µmol/L",  "45–72",       "45–72",       e => e.tibc),
+        ("Transferrin",                                       "g/L",     "2–3.6",       "2–3.6",       e => e.transferrin),
+        ("To'g'ri bo'lmagan bilirubin",                       "µmol/L",  "< 17",        "< 17",        e => e.bilirubin_indirect),
+        ("Globulinlar",                                       "g/L",     "20–35",       "20–35",       e => e.globulin),
+        ("Erkin T3 (FT3)",                                    "pmol/L",  "3.1–6.8",     "3.1–6.8",     e => e.free_t3),
+        ("Umumiy T3",                                         "nmol/L",  "1.3–3.1",     "1.3–3.1",     e => e.t3_total),
+        ("Umumiy T4",                                         "nmol/L",  "66–181",      "66–181",      e => e.t4_total),
+        ("Vitamin D (25-OH)",                                 "ng/mL",   "30–100",      "30–100",      e => e.vitamin_d),
+        ("Vitamin B12",                                       "pg/mL",   "187–883",     "187–883",     e => e.vitamin_b12),
+        ("Foliy kislotasi",                                   "ng/mL",   "3.1–20.5",    "3.1–20.5",    e => e.folate),
+        ("Protrombin vaqti (PV)",                             "sekund",  "11–14",       "11–14",       e => e.prothrombin_time),
+        ("Protrombin indeksi (PTI)",                          "%",       "70–130",      "70–130",      e => e.prothrombin_index),
+        ("Xalqaro normallashgan nisbat (INR)",                "",        "0.8–1.2",     "0.8–1.2",     e => e.inr),
+        ("Faollashgan qisman tromboplastin vaqti (aPTT)",     "sekund",  "25–35",       "25–35",       e => e.aptt),
+        ("Fibrinogen",                                        "g/L",     "2–4",         "2–4",         e => e.fibrinogen),
+        ("Trombin vaqti",                                     "sekund",  "14–21",       "14–21",       e => e.thrombin_time),
+        ("D-dimer",                                           "mg/L",    "< 0.5",       "< 0.5",       e => e.d_dimer),
+        ("Neytrofillar",                                      "%",       "40–70",       "40–70",       e => e.neutrophils),
+        ("Limfotsitlar",                                      "%",       "20–40",       "20–40",       e => e.lymphocytes),
+        ("Monotsitlar",                                       "%",       "2–10",        "2–10",        e => e.monocytes),
+        ("Eozinofillar",                                      "%",       "1–6",         "1–6",         e => e.eosinophils),
+        ("Bazofillar",                                        "%",       "0–1",         "0–1",         e => e.basophils),
+        ("Eritrositlar taqsimlanish kengligi (RDW)",          "%",       "11.5–14.5",   "11.5–14.5",   e => e.rdw),
+        ("O'rtacha trombotsit hajmi (MPV)",                   "fL",      "7.5–11.5",    "7.5–11.5",    e => e.mpv),
+        ("Trombotsitlar taqsimlanish kengligi (PDW)",         "%",       "10–18",       "10–18",       e => e.pdw),
+        ("Trombokrit (PCT)",                                  "%",       "0.15–0.4",    "0.15–0.4",    e => e.pct),
+        ("Retikulotsitlar",                                   "%",       "0.5–2.5",     "0.5–2.5",     e => e.reticulocytes),
     };
 
     private void AddLabTable(Document doc, Dictionary<string, string> tr, LabAnalyses lab)
@@ -1102,8 +1158,8 @@ public class PdfReportService
             var (badge, color, prefix) = LabAssess(val.Value, norm);
             var bg     = rowIdx++ % 2 == 0 ? CL_White : CL_RowAlt;
 
-            var valFont  = new Font(fonts["td9bold"].BaseFont, 9, Font.NORMAL, color);
-            var badgeFont= new Font(fonts["td9bold"].BaseFont, 9, Font.NORMAL, color);
+            var valFont  = new Font(fonts["td9bold"].BaseFont, MinFontSize, Font.NORMAL, color);
+            var badgeFont= new Font(fonts["td9bold"].BaseFont, MinFontSize, Font.NORMAL, color);
 
             TblCell(tbl, name,           fonts["td9"],   bg, Element.ALIGN_LEFT);
             TblCell(tbl, prefix + valStr,valFont,        bg, Element.ALIGN_CENTER);
@@ -1134,6 +1190,15 @@ public class PdfReportService
                     System.Globalization.CultureInfo.InvariantCulture, out var up))
                 return val > up
                     ? ("↑ Yuqori", CL_BadText,  "↑ ")
+                    : ("✓ Normal",  CL_GoodText, "");
+
+            // Bir tomonlama pastki chegara (masalan HDL "> 1.0"): qiymat
+            // chegaradan past bo'lsa — past, aks holda normal.
+            if (norm.StartsWith("> ") &&
+                decimal.TryParse(norm[2..], System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture, out var low))
+                return val < low
+                    ? ("↓ Past",   CL_WarnText, "↓ ")
                     : ("✓ Normal",  CL_GoodText, "");
 
             if (norm == "0")
@@ -1743,7 +1808,7 @@ public class PdfReportService
         var barCell = new PdfPCell(barTbl) { Border = Rectangle.NO_BORDER, PaddingBottom = 2 };
         wrapper.AddCell(barCell);
 
-        var labelFont = new Font(fonts["p9label"].BaseFont, 10, Font.NORMAL, barColor);
+        var labelFont = new Font(fonts["p9label"].BaseFont, MinFontSize, Font.NORMAL, barColor);
         wrapper.AddCell(new PdfPCell(new Phrase($"{label.ToUpper()}  ({level}/3)", labelFont))
         {
             Border        = Rectangle.NO_BORDER,
@@ -2113,12 +2178,29 @@ public class PdfReportService
         _storage.ResolveStoredLink(rel) ?? string.Empty;
 
     /// <summary>
-    /// Hisobotdagi passport. Maskalash loyiha egasining qarori bo'yicha
-    /// o'chirilgan — qiymat to'liq chiqadi
-    /// (<see cref="EkgAnalyzerApi.Helpers.PatientPrivacy.MaskingEnabled"/>).
+    /// Hisobotdagi passport. PDF'da HAR DOIM maskalanadi: birinchi belgi
+    /// ochiq, o'rtasi yulduzcha, oxirgi ikki belgi ochiq — masalan
+    /// "AB6377391" → "A******91".
     /// </summary>
-    private string MaskPassport(string? raw) =>
-        EkgAnalyzerApi.Helpers.PatientPrivacy.MaskPassport(_encryption, raw) ?? "—";
+    private string MaskPassport(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return "—";
+
+        var value = raw.Trim();
+        // Shifrlangan bo'lsa ochamiz; ochiq matn bo'lsa o'zgarishsiz qoladi
+        try
+        {
+            var decrypted = _encryption.Decrypt(value);
+            if (!string.IsNullOrWhiteSpace(decrypted)) value = decrypted.Trim();
+        }
+        catch { /* ochiq matnda saqlangan eski yozuv */ }
+
+        if (value.Length <= 3)
+            return new string('*', Math.Max(value.Length, 1));
+
+        var stars = new string('*', value.Length - 3);
+        return $"{value[0]}{stars}{value[^2..]}";
+    }
 
     private static int Age(DateOnly bd, DateTime now)
     {
@@ -2209,9 +2291,9 @@ public class PdfReportService
         if (doctors.Count == 0) return null;
 
         return string.Join(", ", doctors
-            // Sharif bosh harfi ham chiqarilmaydi: "AMRULLAYEV A." ko'rinishi
-            // platformadagi qolgan barcha joylar bilan izchil
-            .Select(d => $"{d!.LastName} {d.FirstName?[..1]}."));
+            // Davolovchi shifokorning TO'LIQ ism-familiyasi chiqariladi
+            // (ilgari ism bosh harfga qisqartirilardi: "AMRULLAYEV A.")
+            .Select(d => $"{d!.LastName} {d.FirstName}".Trim()));
     }
 
     private static string? ComplaintNames(IEnumerable<ECGAnalyseComplaints>? list)
@@ -2314,8 +2396,11 @@ public class PdfReportService
             bf = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
         }
 
+        // PDF hujjatidagi eng kichik yozuv o'lchami 12 bo'lishi kerak
+        // (foydalanuvchi so'rovi): 12 dan past har qanday o'lcham 12 ga
+        // ko'tariladi. Katta o'lchamlar (sarlavha, logotip) o'zgarmaydi.
         Font F(float sz, int style = Font.NORMAL, BaseColor? c = null) =>
-            new Font(bf, sz, style, c ?? CL_Black);
+            new Font(bf, Math.Max(sz, MinFontSize), style, c ?? CL_Black);
 
         _fontsCache = new Dictionary<string, Font>
         {
@@ -2621,12 +2706,16 @@ public class PdfReportService
         private readonly Dictionary<string, Font>   _f;
         private readonly Dictionary<string, string> _tr;
         private readonly string _docNum;
+        private readonly Font _foot;
         private PdfTemplate? _totalPages;
 
         public FooterEvent(Dictionary<string, Font> f,
             Dictionary<string, string> tr, string docNum)
         {
             _f = f; _tr = tr; _docNum = docNum;
+            // Footer shrifti — p8gray bilan bir xil shrift va rang, lekin
+            // 10 pt (umumiy 12 pt chegarasidan past — atayin kichik).
+            _foot = new Font(_f["p8gray"].BaseFont, FooterFontSize, Font.NORMAL, CL_Gray);
         }
 
         public override void OnOpenDocument(PdfWriter writer, Document document)
@@ -2652,30 +2741,30 @@ public class PdfReportService
             // raqami: ..."), shuning uchun joyiga sig'masa qisqartiriladi.
             var leftText = $"{_tr["footer_platform"]} | nmed.uz";
             var maxLeft = ps.Width / 2
-                - _f["p8gray"].BaseFont.GetWidthPoint($"{_tr["doc_number_prefix"]}: {_docNum}", 8) / 2
+                - _f["p8gray"].BaseFont.GetWidthPoint($"{_tr["doc_number_prefix"]}: {_docNum}", FooterFontSize) / 2
                 - document.LeftMargin - 10;
-            if (_f["p8gray"].BaseFont.GetWidthPoint(leftText, 8) > maxLeft)
+            if (_f["p8gray"].BaseFont.GetWidthPoint(leftText, FooterFontSize) > maxLeft)
                 leftText = "NMED | nmed.uz";
 
             ColumnText.ShowTextAligned(cb, Element.ALIGN_LEFT,
-                new Phrase(leftText, _f["p8gray"]),
+                new Phrase(leftText, _foot),
                 document.LeftMargin, y, 0);
 
             // ── MARKAZDA: hujjat raqami ───────────────────────────────
             ColumnText.ShowTextAligned(cb, Element.ALIGN_CENTER,
-                new Phrase($"{_tr["doc_number_prefix"]}: {_docNum}", _f["p8gray"]),
+                new Phrase($"{_tr["doc_number_prefix"]}: {_docNum}", _foot),
                 ps.Width / 2, y, 0);
 
             // ── O'NG: sahifa raqami (X / Y) ───────────────────────────
             var pageText = $"{_tr["footer_page"]} {writer.PageNumber} {_tr["footer_of"]} ";
             var rightX = ps.Width - document.RightMargin;
-            var textWidth = _f["p8gray"].BaseFont.GetWidthPoint(pageText, 8);
-            var totalWidth = _f["p8gray"].BaseFont.GetWidthPoint("00", 8); // max 2 raqam
+            var textWidth = _f["p8gray"].BaseFont.GetWidthPoint(pageText, FooterFontSize);
+            var totalWidth = _f["p8gray"].BaseFont.GetWidthPoint("00", FooterFontSize); // max 2 raqam
             var startX = rightX - textWidth - totalWidth;
 
             // Avval matn, keyin template
             ColumnText.ShowTextAligned(cb, Element.ALIGN_LEFT,
-                new Phrase(pageText, _f["p8gray"]), startX, y, 0);
+                new Phrase(pageText, _foot), startX, y, 0);
             cb.AddTemplate(_totalPages!, startX + textWidth, y);
         }
 
@@ -2683,7 +2772,7 @@ public class PdfReportService
         {
             if (_totalPages == null) return;
             _totalPages.BeginText();
-            _totalPages.SetFontAndSize(_f["p8gray"].BaseFont, 8);
+            _totalPages.SetFontAndSize(_f["p8gray"].BaseFont, FooterFontSize);
             _totalPages.SetColorFill(new BaseColor(136, 136, 136)); // #888
             // `writer.PageNumber` hujjat yopilganda KEYINGI sahifa raqamini
             // qaytaradi, ya'ni 2 sahifali hujjatda 3 bo'ladi. Shu sababli

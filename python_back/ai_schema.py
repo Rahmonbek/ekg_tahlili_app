@@ -223,6 +223,32 @@ LAB_COLUMNS = [
     "urine_rbc", "urine_wbc",
     # Sutkalik peshob
     "daily_protein", "daily_creatinine", "daily_calcium", "daily_sodium",
+    # ── Qo'shimcha ko'rsatkichlar (20260905 migratsiya) ──
+    # Lipid paneli
+    "triglycerides", "hdl", "ldl", "vldl", "atherogenic_index",
+    # Uglevod almashinuvi
+    "hba1c", "c_peptide",
+    # Yallig'lanish
+    "crp",
+    # Fermentlar
+    "ggt", "alp", "amylase", "lipase", "ldh", "ck", "ck_mb",
+    # Buyrak / elektrolit / almashinuv
+    "uric_acid", "magnesium", "phosphorus", "chloride",
+    # Temir almashinuvi
+    "ferritin", "tibc", "transferrin",
+    # Bilirubin / oqsil
+    "bilirubin_indirect", "globulin",
+    # Qalqonsimon bez
+    "free_t3", "t3_total", "t4_total",
+    # Vitaminlar
+    "vitamin_d", "vitamin_b12", "folate",
+    # Koagulyatsiya (gemostaz)
+    "prothrombin_time", "prothrombin_index", "inr", "aptt",
+    "fibrinogen", "thrombin_time", "d_dimer",
+    # Qon formulasi (leykotsitar)
+    "neutrophils", "lymphocytes", "monocytes", "eosinophils", "basophils",
+    # Qizil qon / trombotsit indekslari
+    "rdw", "mpv", "pdw", "pct", "reticulocytes",
 ]
 
 #: Laboratoriya o'lchovlari — obyekt emas, **massiv**.

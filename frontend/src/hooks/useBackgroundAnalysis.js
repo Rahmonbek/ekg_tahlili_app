@@ -3,7 +3,7 @@ import { isDuplicateError } from '../components/shared/duplicateUpload';
 import { extractApiError } from '../tools/apiError';
 
 export const useBackgroundAnalysis = () => {
-    const { addPendingAnalysis, updatePendingAnalysis, removePendingAnalysis } = useStore();
+    const { addPendingAnalysis, updatePendingAnalysis, attachPendingAnalysisId, removePendingAnalysis } = useStore();
 
     /**
      * @param {function} [makeRequest] `(handlers) => Promise` — berilsa,
@@ -28,7 +28,9 @@ export const useBackgroundAnalysis = () => {
                 const data = result?.data || result || {};
                 const analysisId = extractAnalysisId(type, data);
                 if (analysisId) {
-                    updatePendingAnalysis(key, { type, analysisId, status: 'loading' });
+                    // ID ni biriktiramiz; SignalR eventi allaqachon kelgan
+                    // bo'lsa dublikatni oldini oladi (juda tez tugagan tahlil).
+                    attachPendingAnalysisId(key, type, analysisId);
                 } else {
                     updatePendingAnalysis(key, { status: 'done' });
                     setTimeout(() => removePendingAnalysis(key), 12000);

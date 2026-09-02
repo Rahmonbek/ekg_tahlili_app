@@ -19,7 +19,7 @@ const STATUS_COLORS = {
 
 export default function DoctorClinicHistoryPage() {
     const { t } = useTranslation();
-    useDocumentTitle(t('doctor_clinic_history', { defaultValue: "Klinika tarixi" }));
+    useDocumentTitle(t('doctor_clinic_history', { defaultValue: "Shifoxona tarixi" }));
     const navigate = useNavigate();
     const { id } = useParams();
 

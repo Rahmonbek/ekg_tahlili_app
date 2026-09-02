@@ -23,7 +23,7 @@ export default function Dashboard() {
     const navigate = useNavigate();
     const { user, ecg_unread, holter_unread, smad_unread, lab_unread, diagnoses_unread } = useStore();
 
-    // SuperAdmin (1) uchun klinika tekshiruvi qo'llanmaydi
+    // SuperAdmin (1) uchun shifoxona tekshiruvi qo'llanmaydi
     const clinicIsActive = user?.roleId === 1 || user?.clinic?.isActive !== false;
 
     const [today, setToday] = useState(EMPTY_COUNTS);
@@ -98,15 +98,15 @@ export default function Dashboard() {
             color: '#16A34A',
             path: '/lab-analyses',
         },
-        {
-            icon: <MdOutlineMedicalInformation />,
-            title: t('patient_diagnostics', { defaultValue: 'Tashxislar' }),
-            value: today.diagnoses,
-            allTimeValue: allTime.diagnoses,
-            subValue: diagnoses_unread,
-            color: '#DC2626',
-            path: '/patient-diagnoses',
-        },
+        // {
+        //     icon: <MdOutlineMedicalInformation />,
+        //     title: t('patient_diagnostics', { defaultValue: 'Tashxislar' }),
+        //     value: today.diagnoses,
+        //     allTimeValue: allTime.diagnoses,
+        //     subValue: diagnoses_unread,
+        //     color: '#DC2626',
+        //     path: '/patient-diagnoses',
+        // },
         // {
         //     icon: <FaMicroscope />,
         //     title: t('parasitology_analyse', { defaultValue: 'Parazitologiya' }),
@@ -123,7 +123,7 @@ export default function Dashboard() {
         { label: t('new_holter_analyse', { defaultValue: 'Yangi Holter' }), path: '/analyse-holter', icon: <RiPulseLine /> },
         { label: t('new_smad_analyse', { defaultValue: 'Yangi SMAD' }), path: '/analyse-smad', icon: <FaChartLine /> },
         { label: t('new_lab_analyse', { defaultValue: 'Yangi Lab' }), path: '/analyse-lab', icon: <FaFlask /> },
-        { label: t('new_diagnose', { defaultValue: 'Yangi Tashxis' }), path: '/diagnoses-create', icon: <MdOutlineMedicalInformation /> },
+        // { label: t('new_diagnose', { defaultValue: 'Yangi Tashxis' }), path: '/diagnoses-create', icon: <MdOutlineMedicalInformation /> },
         // { label: t('new_parasitology_analyse', { defaultValue: 'Yangi Parazitologiya' }), path: '/parasitology-analyzer', icon: <FaMicroscope /> },
     ];
 
@@ -168,7 +168,7 @@ export default function Dashboard() {
                                 onClick={() => navigate(action.path)}
                                 disabled={!clinicIsActive}
                                 title={clinicIsActive ? undefined
-                                    : (t('clinic_not_active_hint', { defaultValue: "Klinikangiz faollashtirilgandan so'ng ochiladi" }))}
+                                    : (t('clinic_not_active_hint', { defaultValue: "Shifoxonangiz faollashtirilgandan so'ng ochiladi" }))}
                             >
                                 <span className="quick_action_icon">{action.icon}</span>
                                 <FaPlus style={{ fontSize: 11 }} />

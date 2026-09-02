@@ -13,12 +13,12 @@ import { useStore } from '../store/Store'
 const { Text, Title, Paragraph } = Typography
 
 /**
- * Klinika hali faollashtirilmagan bo'lsa ko'rsatiladigan holat sahifasi.
+ * Shifoxona hali faollashtirilmagan bo'lsa ko'rsatiladigan holat sahifasi.
  *
- * Klinikani SuperAdmin bazada qo'lda faollashtiradi — bu ataylab shunday,
+ * Shifoxonani SuperAdmin bazada qo'lda faollashtiradi — bu ataylab shunday,
  * haqiqiy tibbiy muassasa ekanini tasdiqlash uchun. Muammo faollashtirish
  * tartibida emas, **kutish davridagi tajribada** edi: foydalanuvchi
- * ro'yxatdan o'tishga 10-15 daqiqa sarflab, oxirida "Klinikangiz hali
+ * ro'yxatdan o'tishga 10-15 daqiqa sarflab, oxirida "Shifoxonangiz hali
  * faollashtirilmagan" degan bitta jumlani ko'rardi va nima qilish, qancha
  * kutish, kimga murojaat qilish kerakligini bilmasdi.
  *
@@ -40,7 +40,7 @@ export default function ClinicActivationGate({ isActive, children }) {
     if (isActive) return children
 
     const clinic = user?.clinic
-    // Ariza raqami — murojaat qilganda operator klinikani darhol topishi uchun
+    // Ariza raqami — murojaat qilganda operator shifoxonani darhol topishi uchun
     const requestNumber = clinic?.id
         ? `NMED-CL-${String(clinic.id).padStart(6, '0')}`
         : null
@@ -87,7 +87,7 @@ export default function ClinicActivationGate({ isActive, children }) {
                         {
                             title: t('activation_step_registered', { defaultValue: 'Ro\'yxatdan o\'tildi' }),
                             description: t('activation_step_registered_desc', {
-                                defaultValue: 'Klinika ma\'lumotlari va admin profili saqlandi',
+                                defaultValue: 'Shifoxona ma\'lumotlari va admin profili saqlandi',
                             }),
                             status: 'finish',
                             icon: <CheckCircleFilled style={{ color: '#16A34A' }} />,

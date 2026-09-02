@@ -68,6 +68,13 @@ public class AnalysisDiagnosisController : ControllerBase
         if (string.IsNullOrWhiteSpace(req.DiagnosisText))
             return BadRequest(new { message = "Tashxis matni bo'sh" });
 
+        // Tashxis FAQAT shifokorda (roleId=4). Admin, direktor, hamshira va
+        // boshqa rollar tashxis yoza/tahrirlay olmaydi (foydalanuvchi so'rovi).
+        var writer = await GetCurrentUser();
+        if (writer == null) return Unauthorized();
+        if (writer.RoleId != 4)
+            return StatusCode(403, new { message = "Tashxisni faqat shifokor yozishi mumkin" });
+
         var (doctor, error) = await GetCurrentDoctor();
         if (error != null) return error;
 
@@ -103,6 +110,13 @@ public class AnalysisDiagnosisController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(req.DiagnosisText))
             return BadRequest(new { message = "Tashxis matni bo'sh" });
+
+        // Tashxis FAQAT shifokorda (roleId=4). Admin, direktor, hamshira va
+        // boshqa rollar tashxis yoza/tahrirlay olmaydi (foydalanuvchi so'rovi).
+        var writer = await GetCurrentUser();
+        if (writer == null) return Unauthorized();
+        if (writer.RoleId != 4)
+            return StatusCode(403, new { message = "Tashxisni faqat shifokor yozishi mumkin" });
 
         var (doctor, error) = await GetCurrentDoctor();
         if (error != null) return error;

@@ -53,15 +53,15 @@ export const routers = [
         unread_key: 'lab_unread',
         requires_active: true
     },
-    {
-        path: '/patient-diagnoses',
-        icon: < MdOutlineMedicalInformation />,
-        title: "patient_diagnostics",
-        tools: "patient-diagnoses",
-        role_id: [],
-        unread_key: 'diagnoses_unread',
-        requires_active: true
-    },
+    // {
+    //     path: '/patient-diagnoses',
+    //     icon: < MdOutlineMedicalInformation />,
+    //     title: "patient_diagnostics",
+    //     tools: "patient-diagnoses",
+    //     role_id: [],
+    //     unread_key: 'diagnoses_unread',
+    //     requires_active: true
+    // },
     // {
     //     path:'/parasitology-analyses',
     //     icon:<GiMicroscope />,
@@ -90,15 +90,7 @@ export const routers = [
     //     role_id:[2, 3],
     //     requires_active: false
     // },
-    {
-        path: '/video-conference',
-        icon: <VideoCameraOutlined />,
-        title: "video_conference",
-        tools: "video-conference",
-        role_id: [2, 3, 4],
-        unread_key: null,
-        requires_active: false
-    },
+    
 
     // ── Online Konsultatsiya — Admin/Direktor ──────────────────────────────────
     {
@@ -119,12 +111,20 @@ export const routers = [
         unread_key: 'consultation_admin_pending',
         requires_active: false
     },
-
+{
+        path: '/video-conference',
+        icon: <VideoCameraOutlined />,
+        title: "video_conference",
+        tools: "video-conference",
+        role_id: [2, 3, 4],
+        unread_key: null,
+        requires_active: false
+    },
     // ── Online Konsultatsiya — Doctor ──────────────────────────────────────────
     {
         path: '/doctor/clinics',
         icon: <TeamOutlined />,
-        title: "my_clinics",
+        title: "accepts",
         tools: "doctor/clinics",
         role_id: [4],
         unread_key: 'consultation_doctor_invitations',
@@ -154,7 +154,7 @@ export const routers = [
     {
         // Audit jurnali — O'z DSt 2814:2014 C2 talabi:
         // "Admin uchun loglarni ko'rish interfeysi"
-        // Faqat SuperAdmin: bu platforma darajasidagi vosita, klinika
+        // Faqat SuperAdmin: bu platforma darajasidagi vosita, shifoxona
         // administratori uchun kundalik ishda kerak emas
         path: '/audit-logs',
         icon: <SafetyCertificateOutlined />,

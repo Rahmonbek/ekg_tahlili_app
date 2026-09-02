@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
  *
  * Ilgari kartochka `allTimeValue` ni asosiy raqam sifatida ko'rsatardi,
  * bo'lim sarlavhasi esa "BUGUNGI TAHLILLAR" edi. Ya'ni bugun bironta ham
- * tahlil bo'lmasa-da ekranda umumiy son (masalan 10) turardi va klinika
+ * tahlil bo'lmasa-da ekranda umumiy son (masalan 10) turardi va shifoxona
  * rahbari uni bugungi ish hajmi deb tushunardi.
  *
  * Endi: asosiy raqam — BUGUNGI son, umumiy son esa pastda kichik matnda.
@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom';
  * @param {number|null} value        bugungi son (null = yuklanmoqda)
  * @param {number|null} allTimeValue umumiy son
  * @param {number}      subValue     ko'rilmagan tahlillar soni (badge)
- * @param {boolean}     disabled     klinika faollashtirilmagan bo'lsa bosilmaydi
+ * @param {boolean}     disabled     shifoxona faollashtirilmagan bo'lsa bosilmaydi
  */
 export default function StatCard({
     icon,
@@ -92,6 +92,6 @@ export default function StatCard({
     );
 
     return disabled
-        ? <Tooltip title="Klinikangiz faollashtirilgandan so'ng ochiladi">{card}</Tooltip>
+        ? <Tooltip title="Shifoxonangiz faollashtirilgandan so'ng ochiladi">{card}</Tooltip>
         : card;
 }

@@ -76,9 +76,18 @@ Senga bitta fayl beriladi (rasm yoki PDF). Vazifang — u QANDAY turdagi tibbiy
 tekshiruv natijasi ekanini aniqlash. Hujjatni tahlil qilma, faqat turini ayt.
 
 Mumkin bo'lgan qiymatlar:
-  "ekg"          — bir martalik elektrokardiogramma (EKG lentasi yoki EKG apparati hisoboti)
-  "holter"       — Holter monitoringi (24-48 soatlik uzluksiz EKG hisoboti)
-  "smad"         — sutkalik arterial bosim monitoringi (SMAD/ABPM)
+  "ekg"          — elektrokardiogramma: yurak elektr faoliyatining millimetrli
+                   (pushti/qizil katakli) qog'ozga bosilgan egri chiziqli yozuvi.
+                   BUNGA UZUN, UZLUKSIZ RITM LENTASI HAM TO'LIQ KIRADI — lenta
+                   qancha uzun bo'lishidan qat'i nazar, agar u qog'ozdagi EKG
+                   egri chizig'i bo'lsa, bu "ekg". EKG apparati bosib chiqargan
+                   har qanday hisobot ham "ekg".
+  "holter"       — FAQAT 24-48 soatlik Holter monitoringi HISOBOTI: kompyuterda
+                   tayyorlangan, ko'p sahifali, ichida statistika, jadvallar,
+                   gistogrammalar, soatlik yurak urishi trend grafiklari bo'lgan
+                   HUJJAT. Oddiy qog'oz EKG lentasi — hatto juda uzun bo'lsa ham —
+                   Holter EMAS. Statistik jadval/grafik ko'rinmasa, "holter" DEMA.
+  "smad"         — sutkalik arterial bosim monitoringi (SMAD/ABPM) hisoboti
   "laboratoriya" — qon, siydik va boshqa laborator ko'rsatkichlar natijasi
   "boshqa"       — tibbiy hujjat, lekin yuqoridagilardan biri emas
                    (masalan UZI, rentgen, MRT, retsept, ma'lumotnoma)
@@ -184,7 +193,12 @@ def classify_document(
         return None
 
     try:
-        client = OpenAI(api_key=OPENAI_API_KEY)
+        # Timeout: klassifikator osilib qolmasin (asosiy tahlildan oldingi qadam).
+        client = OpenAI(
+            api_key=OPENAI_API_KEY,
+            timeout=float(os.getenv("AI_CLASSIFIER_TIMEOUT", "60")),
+            max_retries=1,
+        )
 
         fobj = io.BytesIO(content)
         fobj.name = filename

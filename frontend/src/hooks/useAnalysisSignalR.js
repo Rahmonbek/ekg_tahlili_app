@@ -22,6 +22,32 @@ export default function useAnalysisSignalR(enabled) {
             .configureLogging(signalR.LogLevel.Warning)
             .build();
 
+        // Ulanganda/qayta ulanganda serverdan joriy tahlillar ro'yxatini olib
+        // holatni tiklaymiz: sahifa yangilanganda yuklanayotgan tahlillar qayta
+        // ko'rinadi, uzilish paytida yo'qolgan "tugadi" xabari ham qamraladi.
+        const syncPending = async () => {
+            try {
+                const list = await connection.invoke('SyncPending');
+                (list || []).forEach((p) => {
+                    if (!p?.type || !p?.analysisId) return;
+                    upsertPendingAnalysisByRef({
+                        key: `analysis-${p.type}-${p.analysisId}`,
+                        type: p.type,
+                        analysisId: p.analysisId,
+                        status: p.status || 'loading',
+                        label: p.label || 'Tahlil',
+                        listPath: p.listPath || '/',
+                        errorMsg: p.status === 'error' ? 'AI tahlil xatolik bilan tugadi' : undefined,
+                    });
+                });
+            } catch (err) {
+                // Sinxronlash muvaffaqiyatsiz bo'lsa ham asosiy oqim ishlaydi
+                console.warn('SyncPending muvaffaqiyatsiz:', err);
+            }
+        };
+
+        connection.onreconnected(() => { syncPending(); });
+
         connection.on('AnalysisProgressUpdated', (payload) => {
             const type = payload?.type;
             const analysisId = payload?.analysisId;
@@ -54,6 +80,8 @@ export default function useAnalysisSignalR(enabled) {
         connection.start()
             .then(() => {
                 connectionRef.current = connection;
+                // Dastlabki ulanishda ham holatni tiklaymiz (sahifa yangilangan bo'lishi mumkin)
+                syncPending();
             })
             .catch((err) => {
                 console.error('AnalysisHub ulanishda xatolik:', err);

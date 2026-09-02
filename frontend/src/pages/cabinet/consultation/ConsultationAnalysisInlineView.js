@@ -68,8 +68,18 @@ function AnalysisFiles({ type, data, t }) {
 
     if (type === 'EKG') {
         if (data?.analyseFileLink) files.push({ label: t('analysis_file', { defaultValue: 'Tahlil fayli' }), url: buildFileUrl(data.analyseFileLink) });
-        if (data?.generatedFileLink) files.push({ label: t('ecg-image', { defaultValue: 'EKG rasmi' }), url: buildFileUrl(data.generatedFileLink), image: true });
-        if (data?.generatedShortFileLink) files.push({ label: t('short_image', { defaultValue: 'Qisqa rasm' }), url: buildFileUrl(data.generatedShortFileLink), image: true });
+        // Bitta rasm: qisqa (short) rasm — thumbnail sifatida; kattalashtirilganda
+        // asl (to'liq) rasm ochiladi. Ikkalasi alohida chiqmasin.
+        const fullImg = data?.generatedFileLink ? buildFileUrl(data.generatedFileLink) : null;
+        const shortImg = data?.generatedShortFileLink ? buildFileUrl(data.generatedShortFileLink) : null;
+        if (fullImg || shortImg) {
+            files.push({
+                label: t('ecg-image', { defaultValue: 'EKG rasmi' }),
+                url: shortImg || fullImg,       // thumbnail
+                previewUrl: fullImg || shortImg, // kattalashtirilganda — asl rasm
+                image: true,
+            });
+        }
     } else if (type === 'Parasit') {
         if (data?.filePath) files.push({ label: t('analysis_file', { defaultValue: 'Tahlil fayli' }), url: joinUrl(imgApi, data.filePath), image: true });
     } else if (data?.analyseFileLink) {
@@ -91,7 +101,7 @@ function AnalysisFiles({ type, data, t }) {
                             src={file.url}
                             alt={file.label}
                             style={{ objectFit: 'cover', borderRadius: 8, border: '1px solid #e2e8f0' }}
-                            preview={{ src: file.url }}
+                            preview={{ src: file.previewUrl || file.url }}
                             fallback=""
                         />
                     ) : (

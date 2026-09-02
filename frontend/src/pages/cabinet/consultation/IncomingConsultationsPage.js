@@ -156,7 +156,7 @@ export default function IncomingConsultationsPage() {
 
     const handleUnlinkClinic = async (id) => {
         await unlinkConsultantClinic(id);
-        notification.success({ message: 'Klinika bilan aloqa uzildi' });
+        notification.success({ message: 'Shifoxona bilan aloqa uzildi' });
         fetchData();
     };
 
@@ -292,7 +292,7 @@ export default function IncomingConsultationsPage() {
                             <div className="consultation-summary-value">{pendingCount}</div>
                         </div>
                         <div className="consultation-summary-card">
-                            <div className="consultation-summary-label">Klinika takliflari</div>
+                            <div className="consultation-summary-label">Shifoxona takliflari</div>
                             <div className="consultation-summary-value">{invitations.filter(item => item.status === 'pending').length}</div>
                         </div>
                     </div>
@@ -305,7 +305,7 @@ export default function IncomingConsultationsPage() {
                         <div className="consultation-flow-item">
                             <span className="consultation-flow-step">1</span>
                             <div className="consultation-flow-title">So'rovni ko'ring</div>
-                            <div className="consultation-flow-copy">Klinika, bemor va ulashilgan tahlillarni tekshiring.</div>
+                            <div className="consultation-flow-copy">Shifoxona, bemor va ulashilgan tahlillarni tekshiring.</div>
                         </div>
                         <div className="consultation-flow-item">
                             <span className="consultation-flow-step">2</span>
@@ -348,15 +348,15 @@ export default function IncomingConsultationsPage() {
             <section className="consultation-shell">
                 <div className="consultation-header">
                     <div>
-                        <Title level={5} className="consultation-title">Men konsultant bo'lgan klinikalar</Title>
+                        <Title level={5} className="consultation-title">Men konsultant bo'lgan shifoxonalar</Title>
                         <Text className="consultation-subtitle">
-                            Qaysi klinikalar sizni online konsultant sifatida biriktirganini shu yerda boshqarasiz.
+                            Qaysi shifoxonalar sizni online konsultant sifatida biriktirganini shu yerda boshqarasiz.
                         </Text>
                     </div>
                 </div>
                 <div className="consultation-body">
                     {linkedClinics.length === 0 ? (
-                        <Empty description="Hozircha biriktirilgan klinika yo'q" />
+                        <Empty description="Hozircha biriktirilgan shifoxona yo'q" />
                     ) : (
                         <Row gutter={[12, 12]}>
                             {linkedClinics.map(item => (
@@ -374,7 +374,7 @@ export default function IncomingConsultationsPage() {
                                             style={{ marginTop: 12 }}
                                             onClick={() => handleUnlinkClinic(item.clinicConsultantId)}
                                         >
-                                            Klinikadan uzilish
+                                            Shifoxonadan uzilish
                                         </Button>
                                     </Card>
                                 </Col>
@@ -389,7 +389,7 @@ export default function IncomingConsultationsPage() {
                     <div>
                         <Title level={5} className="consultation-title">Konsultant bo'lish takliflari</Title>
                         <Text className="consultation-subtitle">
-                            Klinikalar yuborgan takliflarni qabul qilishingiz yoki rad etishingiz mumkin.
+                            Shifoxonalar yuborgan takliflarni qabul qilishingiz yoki rad etishingiz mumkin.
                         </Text>
                     </div>
                 </div>

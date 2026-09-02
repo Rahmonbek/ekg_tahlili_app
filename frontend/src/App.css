@@ -136,16 +136,16 @@ body {
 .login_img img {
   width: 100%;
   height: 100%;
-  /* Rasm butun panelni to'ldiradi — ilgari faqat width:100% edi va
-     yon-tomonlarda teal fon ko'rinib, rasm "kichik" tuyulardi */
-  object-fit: cover;
+  
+  object-fit:fill;
   object-position: center;
   display: block;
 }
 
 .login_img {
-  height: 100vh;
+  
   height: 100dvh;
+ 
   overflow: hidden;
   background: linear-gradient(var(--back_color), var(--back_gradient_color));
 }
@@ -356,6 +356,179 @@ body {
   margin-top: 4px;
 }
 
+/* ─────────── Ro'yxatdan o'tish: SMS tasdiqlash modali ─────────── */
+.sms-verify-modal .ant-modal-content {
+  border-radius: 20px;
+  padding: 34px 30px 26px;
+}
+
+.sms-verify {
+  text-align: center;
+}
+
+.sms-verify-badge {
+  width: 66px;
+  height: 66px;
+  border-radius: 18px;
+  font-size: 28px;
+  margin: 0 auto 18px;
+}
+
+.sms-verify-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text_color);
+  margin: 0 0 6px;
+}
+
+.sms-verify-hint {
+  font-size: var(--small_size);
+  color: var(--text_second_color);
+  margin: 0 0 4px;
+}
+
+.sms-verify-phone {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--back_color);
+  letter-spacing: 0.02em;
+  margin-bottom: 24px;
+}
+
+/* OTP kataklarini markazlash va kattalashtirish */
+.sms-verify-form .ant-otp {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sms-verify-form .ant-otp input {
+  width: 56px !important;
+  height: 62px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  border-radius: 14px;
+}
+
+.sms-verify-resend {
+  justify-content: center;
+  margin: 16px 0 18px;
+}
+
+.sms-verify .btn_form {
+  margin-top: 2px;
+}
+
+/* ─────────── EKG rasm yo'riqnomasi modali ─────────── */
+.ecg-guide-intro {
+  font-size: var(--small_size);
+  color: var(--text_second_color);
+  line-height: 1.55;
+  margin: 0 0 16px;
+}
+
+.ecg-guide-illus {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+/* SVG'lar ketma-ket (ustma-ust) — kattaroq va aniqroq ko'rinadi */
+.ecg-guide-fig svg {
+  max-width: 460px;
+}
+
+/* Haqiqiy 12-kanalli EKG namunasi — yaqqol, kattaroq, firuza ramkali */
+.ecg-guide-real {
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+  border: 2px solid var(--back_color);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  background: #fff;
+}
+
+/* Noto'g'ri namuna — qizil ramka */
+.ecg-guide-real--bad {
+  border-color: #DC2626;
+}
+
+.ecg-guide-fig {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.ecg-guide-fig svg {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+
+.ecg-guide-cap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--small_size);
+  font-weight: 700;
+}
+
+.ecg-guide-cap--good { color: #00937E; }
+.ecg-guide-cap--bad { color: #DC2626; }
+
+.ecg-guide-block { margin-bottom: 14px; }
+
+.ecg-guide-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--center_size);
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.ecg-guide-h--do { color: #00937E; }
+.ecg-guide-h--dont { color: #DC2626; }
+
+.ecg-guide-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ecg-guide-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: var(--small_size);
+  color: var(--text_color);
+  line-height: 1.5;
+}
+
+.ecg-guide-ic {
+  flex-shrink: 0;
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+.ecg-guide-ic--do { color: #16A34A; }
+.ecg-guide-ic--dont { color: #DC2626; }
+
+.ecg-guide-list--dont li { color: var(--text_second_color); }
+
+@media (max-width: 576px) {
+  .ecg-guide-illus { grid-template-columns: 1fr; }
+}
+
 .login_bottom,
 .reset_pass_text {
   font-size: var(--small_size);
@@ -410,12 +583,32 @@ body {
   height: auto;
   min-height: 100vh;
   align-items: flex-start;
+  /* Bazadagi `overflow-y: auto` sticky rasm uchun scroll konteyneri
+     bo'lib qolar va sticky effektini buzardi. Bu yerda sahifa (window)
+     scroll qiladi, shuning uchun visible. */
+  overflow: visible;
 }
 
+/* Ro'yxatdan o'tish formasi ekrandan uzun. Rasm ustuni bazadagi
+   `height: 100dvh` bilan bitta ekranga qotib qolar, forma pastga
+   cho'zilganda uning TAGI ochiq (bo'sh) qolardi. Yechim: rasm ustuni
+   forma balandligiga cho'ziladi (`align-self: stretch`), rasmning o'zi
+   esa `sticky` bo'lib scroll paytida doim to'liq ekran balandligida
+   ko'rinib turadi — ochiq tag yo'qoladi. Faqat `.register_page`ga
+   tegishli; login sahifasi (kalta, scrollsiz) o'zgarmaydi. */
 .register_page .login_img {
+  height: auto;
+  align-self: stretch;
+  /* sticky rasm uchun: ota-elementda overflow:hidden bo'lsa sticky ishlamaydi */
+  overflow: visible;
+}
+
+.register_page .login_img img {
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: 100%;
+  
+  object-fit: cover;
 }
 
 .register_page .login_form_box {
@@ -601,6 +794,7 @@ label {
   transition: 0.3s;
   max-height: 0px;
   overflow: hidden;
+  
   padding: 0px 15px;
   margin-top: 5px;
   border-radius: 10px;
@@ -668,6 +862,8 @@ label {
 .opened_lang .langs_list {
   max-height: 100vh;
   padding: 5px 15px;
+  box-shadow: rgba(14, 63, 126, 0.06) 0px 0px 0px 1px, rgba(42, 51, 70, 0.03) 0px 1px 1px -0.5px, rgba(42, 51, 70, 0.04) 0px 2px 2px -1px, rgba(42, 51, 70, 0.04) 0px 3px 3px -1.5px, rgba(42, 51, 70, 0.03) 0px 5px 5px -2.5px, rgba(42, 51, 70, 0.03) 0px 10px 10px -5px, rgba(42, 51, 70, 0.03) 0px 24px 24px -8px;
+  background-color: white;
 }
 
 .opened_lang .selected_lang span {
@@ -675,17 +871,36 @@ label {
   color: var(--back_color);
 }
 
+/* Brauzer autofill (Chrome/Edge) inputlarga sariq fon qo'yadi.
+   ESKI USUL (box-shadow inset) AntD affix-wrapper'da muammoli edi: ichki
+   <input> to'rtburchak (radius 0), wrapper esa yumaloq (radius 10px) —
+   oq blok burchaklarda seam qoldirardi.
+   YANGI USUL: `transition: background-color 100000s` — brauzer sariq fonni
+   100000 soniya davomida "animatsiya" qiladi, ya'ni amalda hech ko'rinmaydi.
+   Hech qanday blok/seam yo'q; matn rangi -webkit-text-fill-color bilan. */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
-  /* fon rangini oq qiladi */
-  box-shadow: 0 0 0 1000px #fff inset !important;
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+.ant-input-affix-wrapper input:-webkit-autofill,
+.ant-input-affix-wrapper input:-webkit-autofill:hover,
+.ant-input-affix-wrapper input:-webkit-autofill:focus,
+.ant-input-affix-wrapper input:-webkit-autofill:active {
   -webkit-text-fill-color: var(--text_color) !important;
   /* matn rangi */
-  transition: background-color 5000s ease-in-out 0s;
-  /* autofillni yashirish */
+  caret-color: var(--text_color) !important;
+  transition: background-color 100000s ease-in-out 0s !important;
+  -webkit-transition: background-color 100000s ease-in-out 0s !important;
+}
+
+/* Affix-wrapper (ikonkali input) ichida input shaffof — wrapper foni
+   ko'rinadi. Autofill holatida wrapper fonini majburan oq qilamiz, shunda
+   yumaloq burchaklar ham to'g'ri oq bo'ladi. */
+.ant-input-affix-wrapper:has(input:-webkit-autofill) {
+  background-color: #fff !important;
 }
 
 .code_verify_box {
@@ -1644,9 +1859,87 @@ input::placeholder,
   font-family: 'Open Sans', sans-serif !important;
 }
 
+/* Ko'p tanlovli select teglari — brend firuza "chip" ko'rinishida */
 .ant-select-multiple .ant-select-selection-overflow .ant-select-selection-item {
-  padding: 5px 10px !important;
-  background-color: #F7FAFC;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 2px;
+  height: 28px;
+  padding: 0 6px 0 11px !important;
+  background-color: #E6F7F4;
+  border: 1px solid rgba(0, 179, 154, 0.28);
+  border-radius: 8px;
+  color: var(--back_color);
+  font-weight: 600;
+  padding:5px 0px !important;
+  font-size: var(--small_size);
+  line-height: 1;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+/* ─────────── Profil: parol almashtirish ─────────── */
+.pwd-change-hint {
+  font-size: var(--small_size);
+  color: var(--text_second_color);
+  line-height: 1.55;
+  margin: 0 0 12px;
+}
+
+.pwd-change-phone {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--back_color);
+  letter-spacing: 0.02em;
+  margin-bottom: 18px;
+}
+
+.pwd-change-err {
+  color: #DC2626;
+  font-weight: 600;
+  font-size: var(--small_size);
+}
+
+.pwd-change-resend {
+  display: flex;
+  justify-content: flex-end;
+  margin: 6px 0 16px;
+  min-height: 20px;
+}
+
+.pwd-change-wait {
+  font-size: 13px;
+  color: var(--grey_color);
+}
+
+.pwd-change .ant-otp {
+  gap: 8px;
+}
+
+.pwd-change .ant-otp input {
+  width: 48px !important;
+  height: 52px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  border-radius: 12px;
+}
+
+.pwd-change .reset-modal-back {
+  margin-top: 12px;
+}
+.ant-select-multiple .ant-select-selection-overflow .ant-select-selection-item:hover {
+  background-color: #d7f2ec;
+  border-color: rgba(0, 179, 154, 0.5);
+}
+
+.ant-select-multiple .ant-select-selection-item-content {
+  color: var(--back_color);
+  margin-inline-end: 2px;
+}
+
+/* Select oldidagi ikonka (prefix) — brend rangida, teglar bilan hamohang */
+.ant-select-multiple .ant-select-prefix svg,
+.ant-select-multiple .ant-select-prefix .anticon {
+  color: var(--back_color);
 }
 
 .ant-select .ant-select-selection-wrap {
@@ -1673,10 +1966,30 @@ input::placeholder,
   padding-left: 0px !important;
 }
 
+/* Teg o'chirish (X) — odatda muted firuza, hoverda qizil doira */
+.ant-select-multiple .ant-select-selection-item-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  margin-left: 4px !important;
+  transition: background-color 0.15s ease;
+}
+
 .ant-select-multiple .anticon-close {
-  color: rgb(255, 33, 33);
-  margin-left: 8px !important;
-  font-size: var(--mini_size);
+  color: rgba(0, 179, 154, 0.6);
+  font-size: 11px;
+  transition: color 0.15s ease;
+}
+
+.ant-select-multiple .ant-select-selection-item-remove:hover {
+  background-color: rgba(220, 38, 38, 0.12);
+}
+
+.ant-select-multiple .ant-select-selection-item-remove:hover .anticon-close {
+  color: #DC2626;
 }
 
 .ant-form-item-has-error .claveInput {
@@ -2176,14 +2489,7 @@ td {
   color: var(--back_color) !important;
 }
 
-/* ─── Jadval — ko'rilmagan qator ajratish ─── */
-.table_row_unviewed td {
-  background-color: #FFFBEB !important;
-}
-
-.table_row_unviewed:hover td {
-  background-color: #FEF3C7 !important;
-}
+/* ─── Jadval — ko'rilmagan qator sariq fon OLIB TASHLANDI (foydalanuvchi so'rovi) ─── */
 
 /* ─── Dashboard ─── */
 .dashboard_section_label {
@@ -2345,18 +2651,11 @@ td {
   }
 }
 
-/* Ko'rilmagan jadval qatori highlight */
-.table_row_unviewed td {
-  background: #FFFBEB !important;
-  border-left: 3px solid #FAAD14;
-}
+/* Ko'rilmagan jadval qatori — SARIQ FON OLIB TASHLANDI (foydalanuvchi so'rovi).
+   Barcha tahlil ro'yxatlarida qatorlar oddiy oq fonda ko'rinadi. */
 
-.table_row_unviewed:hover td {
-  background: #FEF3C7 !important;
-}
-
-/* Ant Design jadval qatori hover */
-.ant-table-tbody>tr:not(.table_row_unviewed):hover>td {
+/* Ant Design jadval qatori hover — barcha qatorlar uchun bir xil */
+.ant-table-tbody>tr:hover>td {
   background: #F0FFFE !important;
 }
 
@@ -3196,10 +3495,11 @@ td {
     color: #64748b;
 }
 
-/* Birinchi qatordagi qidiruv maydoni tugmalar bilan bir tekisda tursin */
+/* Birinchi qatordagi qidiruv maydoni filtr ichidagi input/select'lar bilan
+   bir xil balandlikda (ilgari 48px — filtrlardan balandroq edi). */
 .filter_form_box .filter_item > .ant-input,
 .filter_form_box .filter_item > .ant-input-affix-wrapper {
-    height: 48px;
+    height: 40px;
 }
 
 /* ── Telefon maydonidagi ikonka ──────────────────────────────────────────
@@ -3402,10 +3702,14 @@ td {
   width: auto;
   padding: 0 20px;
   margin-top: 0;
+  /* Filtr input/select'lari bilan bir xil balandlik. `.btn_form` da
+     `height: auto !important` va `min-height: 44px` bor — ularni bekor qilamiz. */
+  height: 40px !important;
+  min-height: 40px !important;
 }
 
 .filter_toolbar_btn {
-  height: 48px;
+  height: 40px;
 }
 
 /* Eksport — o'ng chekkada: u ro'yxatni toraytirmaydi, chiqaradi */
@@ -3508,36 +3812,85 @@ body.hide_recaptcha_badge .grecaptcha-badge {
   color: #94A3B8;
   font-style: italic;
 }
-
+.ant-tag.ant-tag-success{
+  background:#e8ffec !important;
+}
 /* ── Laboratoriya ko'rsatkichlari (T-035) ─────────────────────────────
    Chegaradan chiqqan qiymat ikki usulda belgilanadi: rangli chap chiziq
    VA matnli teg. Faqat rang yetarli emas — rang ko'rishi buzilgan
    foydalanuvchi uchun ko'rsatkich butunlay bir xil ko'rinardi. */
-.lab-values {
-  list-style: none;
-  padding-left: 0;
+/* ─── Laboratoriya raqamli o'lchovlari — card-grid ─── */
+.lab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px;
+  margin: 10px 0 6px;
 }
 
-.lab-values li {
-  padding: 6px 10px;
-  border-left: 3px solid transparent;
-  border-radius: 6px;
+.lab-card {
+  border: 1px solid var(--border_color);
+  border-left: 4px solid #CBD5E1;
+  border-radius: 10px;
+  padding: 10px 13px;
+  background: #fff;
+  transition: box-shadow 0.15s ease;
+}
+
+.lab-card:hover { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06); }
+
+.lab-card--normal { border-left-color: #16A34A; }
+.lab-card--high { border-left-color: #DC2626; background: rgba(220, 38, 38, 0.035); }
+.lab-card--low { border-left-color: #D97706; background: rgba(217, 119, 6, 0.035); }
+
+.lab-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin-bottom: 4px;
 }
 
-.lab-values li.lab-normal {
-  border-left-color: #16A34A;
+.lab-card-name {
+  font-weight: 600;
+  font-size: var(--small_size);
+  color: var(--text_color);
+  line-height: 1.3;
 }
 
-.lab-values li.lab-high {
-  border-left-color: #DC2626;
-  background: rgba(220, 38, 38, 0.05);
+.lab-card-value, .lab-card-value * {
+  font-size: 14px !important;
+  font-weight: 700;
+  color: var(--text_color);
+  line-height: 1.1;
 }
 
-.lab-values li.lab-low {
-  border-left-color: #D97706;
-  background: rgba(217, 119, 6, 0.05);
+.lab-card-unit {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text_second_color);
 }
+
+.lab-card-range {
+  font-size: 14px !important;
+  color: #94A3B8;
+  margin-top: 4px;
+}
+
+.lab-card-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  font-size: 11px  !important;
+  font-weight: 700;
+  padding: 1px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.lab-card-pill--high { color: #DC2626; background: rgba(220, 38, 38, 0.1); }
+.lab-card-pill--low { color: #D97706; background: rgba(217, 119, 6, 0.1); }
+.lab-card-pill--normal { color: #16A34A; background: rgba(22, 163, 74, 0.1); }
 
 /* Referens diapazoni — asosiy qiymatdan sezilarli darajada past
    kontrastda: u ma'lumot, e'tibor markazi emas. */
@@ -3599,5 +3952,107 @@ body.hide_recaptcha_badge .grecaptcha-badge {
 
   .register_page .login_img {
     width: 38%;
+  }
+}
+
+/* ── Shifokor profil paneli (DoctorDashboard) ────────────────────────
+   Profil sahifasida shaxsiy ma'lumotlardan keyin: statistika kartalari
+   va xulosa yozilmagan tahlillar ro'yxati. */
+.doc-dash {
+  margin-top: 24px;
+}
+.doc-dash-heading {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 16px;
+}
+.doc-dash-stat {
+  border-radius: 12px;
+}
+.doc-dash-stat-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.doc-dash-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #111827;
+}
+.doc-dash-stat-label {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 2px;
+}
+.doc-dash-list {
+  display: flex;
+  flex-direction: column;
+}
+.doc-dash-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 6px;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.doc-dash-row:last-child {
+  border-bottom: none;
+}
+.doc-dash-row:hover {
+  background: #f8fafc;
+}
+.doc-dash-type {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  min-width: 92px;
+  text-align: center;
+}
+.doc-dash-row-main {
+  flex: 1;
+  min-width: 0;
+}
+.doc-dash-patient {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.doc-dash-meta {
+  font-size: 12px;
+  color: #94a3b8;
+  display: flex;
+  gap: 10px;
+  margin-top: 2px;
+}
+.doc-dash-date::before {
+  content: '•';
+  margin-right: 10px;
+}
+@media (max-width: 575px) {
+  .doc-dash-type {
+    min-width: 70px;
+    font-size: 11px;
+  }
+  .doc-dash-meta {
+    flex-direction: column;
+    gap: 0;
+  }
+  .doc-dash-date::before {
+    content: '';
+    margin: 0;
   }
 }

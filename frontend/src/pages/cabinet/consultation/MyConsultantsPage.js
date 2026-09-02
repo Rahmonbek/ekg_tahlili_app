@@ -103,7 +103,7 @@ export default function MyConsultantsPage() {
             render: (v) => v ? <Text type="secondary">{v}</Text> : '—',
         },
         {
-            title: 'Klinika',
+            title: 'Shifoxona',
             dataIndex: 'clinicName',
             key: 'clinicName',
             render: (v) => <Text type="secondary">{v || '—'}</Text>,
@@ -198,7 +198,7 @@ export default function MyConsultantsPage() {
             render: (v) => v ? <Text type="secondary">{v}</Text> : '—',
         },
         {
-            title: 'Klinika',
+            title: 'Shifoxona',
             dataIndex: 'clinicName',
             key: 'clinicName',
             render: (v) => <Text type="secondary">{v || '—'}</Text>,

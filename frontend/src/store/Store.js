@@ -73,7 +73,7 @@ export const useStore = create((set) => ({
     diagnoses_unread: 0,
     setdiagnoses_unread: (n) => set({ diagnoses_unread: n }),
 
-    // ─── Klinika onboarding va faollik holati ──────────────────────────────
+    // ─── Shifoxona onboarding va faollik holati ──────────────────────────────
     // null = tekshirilmagan, false = to'ldirilmagan, true = to'ldirilgan
     clinic_setup_modal: false,
     setclinic_setup_modal: (v) => set({ clinic_setup_modal: v }),
@@ -104,6 +104,24 @@ export const useStore = create((set) => ({
     updatePendingAnalysis: (key, updates) => set((s) => ({
         pendingAnalyses: s.pendingAnalyses.map((a) => a.key === key ? { ...a, ...updates } : a),
     })),
+    // Yuborish javobi kelib, tahlil ID si ma'lum bo'lganda temp elementga
+    // biriktiradi. AGAR SignalR eventi allaqachon shu (type, analysisId) uchun
+    // element yaratgan bo'lsa (tahlil juda tez tugagan holat), temp element
+    // olib tashlanadi — aks holda ikkита element qolib, biri abadiy "loading"da
+    // turib qolardi.
+    attachPendingAnalysisId: (key, type, analysisId) => set((s) => {
+        const dup = s.pendingAnalyses.find((a) =>
+            a.key !== key && a.type === type && Number(a.analysisId) === Number(analysisId)
+        );
+        if (dup) {
+            return { pendingAnalyses: s.pendingAnalyses.filter((a) => a.key !== key) };
+        }
+        return {
+            pendingAnalyses: s.pendingAnalyses.map((a) =>
+                a.key === key ? { ...a, type, analysisId } : a
+            ),
+        };
+    }),
     updatePendingAnalysisByRef: (type, analysisId, updates) => set((s) => ({
         pendingAnalyses: s.pendingAnalyses.map((a) =>
             a.type === type && Number(a.analysisId) === Number(analysisId)

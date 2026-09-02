@@ -10,7 +10,7 @@ const SEEN_PREFIX = 'nmed_tour_seen_'
  * Sahifa bo'yicha interaktiv qo'llanma (Ant Design `Tour`).
  *
  * Nima uchun kerak: platformada hech qanday o'rgatuvchi mexanizm yo'q edi.
- * Klinikalarda xodimlar tez almashadi va har birini alohida o'qitish qimmat;
+ * Shifoxonalarda xodimlar tez almashadi va har birini alohida o'qitish qimmat;
  * "Faqat saqlash" va "AI bilan tahlil" farqi, AI xulosasi ranglari, passport
  * bo'yicha qidirish mantiqi — bularning hech biri interfeysda tushuntirilmagan.
  *

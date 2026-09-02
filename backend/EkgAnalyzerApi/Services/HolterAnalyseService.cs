@@ -261,7 +261,7 @@ namespace EkgAnalyzerApi.Services
 
                 item.AIStatus = AiSeverity.Parse(item.AIAnswerData);
             foreach (var item in items)
-                item.AiSummary = AiSeverity.Summarize(item.AIAnswerData);
+                item.AiSummary = AiSeverity.Conclusion(item.AIAnswerData);
             foreach (var item in items)
                 item.ErrorReason = item.Status == -1
                     ? AiSeverity.ExtractErrorMessage(item.AIAnswerData)
@@ -388,7 +388,8 @@ namespace EkgAnalyzerApi.Services
             bool? hasDiagnosis = null)
         {
             var query = _context.HolterAnalyses
-                .Where(e => e.Doctors!.Any(d => d.DoctorId == doctorId))
+                // Shifokor: O'ZI YUKLAGAN (CreatedDoctorId) YOKI unga tayinlangan
+                .Where(e => e.CreatedDoctorId == doctorId || e.Doctors!.Any(d => d.DoctorId == doctorId))
                 .Include(e => e.Patcient)
                 .Include(e => e.CreatedDoctor)
                 .Include(e => e.Doctors)
@@ -498,7 +499,7 @@ namespace EkgAnalyzerApi.Services
 
                 item.AIStatus = AiSeverity.Parse(item.AIAnswerData);
             foreach (var item in items)
-                item.AiSummary = AiSeverity.Summarize(item.AIAnswerData);
+                item.AiSummary = AiSeverity.Conclusion(item.AIAnswerData);
             foreach (var item in items)
                 item.ErrorReason = item.Status == -1
                     ? AiSeverity.ExtractErrorMessage(item.AIAnswerData)
@@ -653,7 +654,7 @@ namespace EkgAnalyzerApi.Services
 
                 item.AIStatus = AiSeverity.Parse(item.AIAnswerData);
             foreach (var item in items)
-                item.AiSummary = AiSeverity.Summarize(item.AIAnswerData);
+                item.AiSummary = AiSeverity.Conclusion(item.AIAnswerData);
             foreach (var item in items)
                 item.ErrorReason = item.Status == -1
                     ? AiSeverity.ExtractErrorMessage(item.AIAnswerData)

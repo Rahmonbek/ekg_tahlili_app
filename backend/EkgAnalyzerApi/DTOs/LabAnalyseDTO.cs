@@ -66,6 +66,54 @@ public class LabAnalyseDTO
     public decimal? daily_creatinine { get; set; } // mmol/24h
     public decimal? daily_calcium { get; set; } // mmol/24h
     public decimal? daily_sodium { get; set; } // mmol/24h
+    // ── Qo'shimcha ko'rsatkichlar (20260905 migratsiya) ──
+    public decimal? triglycerides { get; set; } // mmol/L
+    public decimal? hdl { get; set; } // mmol/L
+    public decimal? ldl { get; set; } // mmol/L
+    public decimal? vldl { get; set; } // mmol/L
+    public decimal? atherogenic_index { get; set; } // None
+    public decimal? hba1c { get; set; } // %
+    public decimal? c_peptide { get; set; } // ng/mL
+    public decimal? crp { get; set; } // mg/L
+    public decimal? ggt { get; set; } // U/L
+    public decimal? alp { get; set; } // U/L
+    public decimal? amylase { get; set; } // U/L
+    public decimal? lipase { get; set; } // U/L
+    public decimal? ldh { get; set; } // U/L
+    public decimal? ck { get; set; } // U/L
+    public decimal? ck_mb { get; set; } // U/L
+    public decimal? uric_acid { get; set; } // µmol/L
+    public decimal? magnesium { get; set; } // mmol/L
+    public decimal? phosphorus { get; set; } // mmol/L
+    public decimal? chloride { get; set; } // mmol/L
+    public decimal? ferritin { get; set; } // µg/L
+    public decimal? tibc { get; set; } // µmol/L
+    public decimal? transferrin { get; set; } // g/L
+    public decimal? bilirubin_indirect { get; set; } // µmol/L
+    public decimal? globulin { get; set; } // g/L
+    public decimal? free_t3 { get; set; } // pmol/L
+    public decimal? t3_total { get; set; } // nmol/L
+    public decimal? t4_total { get; set; } // nmol/L
+    public decimal? vitamin_d { get; set; } // ng/mL
+    public decimal? vitamin_b12 { get; set; } // pg/mL
+    public decimal? folate { get; set; } // ng/mL
+    public decimal? prothrombin_time { get; set; } // sekund
+    public decimal? prothrombin_index { get; set; } // %
+    public decimal? inr { get; set; } // None
+    public decimal? aptt { get; set; } // sekund
+    public decimal? fibrinogen { get; set; } // g/L
+    public decimal? thrombin_time { get; set; } // sekund
+    public decimal? d_dimer { get; set; } // mg/L
+    public decimal? neutrophils { get; set; } // %
+    public decimal? lymphocytes { get; set; } // %
+    public decimal? monocytes { get; set; } // %
+    public decimal? eosinophils { get; set; } // %
+    public decimal? basophils { get; set; } // %
+    public decimal? rdw { get; set; } // %
+    public decimal? mpv { get; set; } // fL
+    public decimal? pdw { get; set; } // %
+    public decimal? pct { get; set; } // %
+    public decimal? reticulocytes { get; set; } // %
     public List<DoctorForECGData>? Doctors { get; set; }
     public DoctorForECGData? CreatedDoctor { get; set; }
     public PatcientForECG? Patcient { get; set; }

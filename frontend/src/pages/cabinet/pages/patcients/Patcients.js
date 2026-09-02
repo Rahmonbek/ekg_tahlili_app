@@ -14,7 +14,7 @@ const { Text } = Typography
 const PAGE_SIZE = 10
 
 /**
- * Klinika bemorlari ro'yxati.
+ * Shifoxona bemorlari ro'yxati.
  *
  * Bu fayl ilgari Xodimlar sahifasidan nusxa ko'chirilgan edi: "Bemorlar"
  * sarlavhasi ostida `get_doctors_of_clinic()` chaqirilib XODIMLAR ro'yxati

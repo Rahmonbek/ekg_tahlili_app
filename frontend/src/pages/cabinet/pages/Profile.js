@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
-import { Alert, Avatar, Button, Card, Col, Descriptions, Form, Input, Row, Steps, Tag, Typography } from 'antd'
-import { LockOutlined, SafetyOutlined, UserOutlined } from '@ant-design/icons'
+import { Alert, Avatar, Button, Card, Col, Descriptions, Row, Tag, Typography } from 'antd'
+import { LockOutlined, UserOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useStore } from '../../../store/Store'
-import { send_reset_code, change_password } from '../../../host/requests/AuthRequest'
-import { successAlert, dangerAlert } from '../../../tools/Alerts'
+import ChangePasswordModal from '../../../components/shared/ChangePasswordModal'
+import DoctorDashboard from '../../../components/DoctorDashboard'
 import { formatPhoneNumberForForm, personName } from '../../../tools/formatters'
 import { buildFileUrl } from '../../../host/Host'
 import RoleConstants from '../../../tools/roles'
@@ -13,7 +13,7 @@ import maleStaff from '../../../images/avatars/male.jpg'
 import femaleStaff from '../../../images/avatars/female.jpg'
 import { useLocation } from 'react-router-dom';
 
-const { Text, Title } = Typography
+const { Title } = Typography
 
 /**
  * Shaxsiy kabinet sahifasi.
@@ -31,63 +31,21 @@ export default function Profile() {
     const { t } = useTranslation()
     useDocumentTitle(t('self_data', { defaultValue: "Shaxsiy ma'lumotlar" }))
     const { user } = useStore()
-    const [form] = Form.useForm()
 
-    const [step, setStep] = useState(0)      // 0 — kod so'rash, 1 — kod va yangi parol
+    // Parolni o'zgartirish — alohida bosqichma-bosqich modal
+    const [changePwdOpen, setChangePwdOpen] = useState(false)
 
     // Vaqtinchalik parol bilan kirgan foydalanuvchi shu manzilga
-    // yo'naltiriladi (T-022). Bunday holatda nima uchun bu yerga
-    // tushgani tushuntiriladi — aks holda u sahifani tasodifan
-    // ochilgan deb o'ylaydi.
+    // yo'naltiriladi (T-022) — bu holatda modal avtomatik ochiladi.
     const mustChangePassword = new URLSearchParams(useLocation().search)
         .get('changePassword') === '1'
-    const [sending, setSending] = useState(false)
-    const [saving, setSaving] = useState(false)
 
     const doctor = user?.doctor
     const phone = doctor?.phone || user?.phone
     const fio = personName(doctor)
 
-    const handleSendCode = async () => {
-        if (!phone) {
-            dangerAlert(t('phone_not_found', { defaultValue: 'Telefon raqam topilmadi' }))
-            return
-        }
-        setSending(true)
-        try {
-            await send_reset_code({ phoneNumber: phone })
-            successAlert(t('code_sent_to_phone', { defaultValue: 'Tasdiqlash kodi telefoningizga yuborildi' }))
-            setStep(1)
-        } catch (err) {
-            dangerAlert(
-                err?.response?.data?.message ||
-                t('code_send_failed', { defaultValue: 'Kod yuborib bo\'lmadi' })
-            )
-        } finally {
-            setSending(false)
-        }
-    }
-
-    const handleChangePassword = async (values) => {
-        setSaving(true)
-        try {
-            await change_password({
-                phoneNumber: phone,
-                code: values.code,
-                newPassword: values.newPassword,
-            })
-            successAlert(t('password_changed', { defaultValue: 'Parol o\'zgartirildi' }))
-            form.resetFields()
-            setStep(0)
-        } catch (err) {
-            dangerAlert(
-                err?.response?.data?.message ||
-                t('password_change_failed', { defaultValue: 'Parolni o\'zgartirib bo\'lmadi' })
-            )
-        } finally {
-            setSaving(false)
-        }
-    }
+    // Modal AVTOMATIK ochilmaydi — parol o'zgartirish ixtiyoriy, faqat
+    // "Parolni o'zgartirish" tugmasi bosilganda ochiladi (foydalanuvchi so'rovi).
 
     return (
         <div className="main_card">
@@ -121,10 +79,10 @@ export default function Profile() {
                                 <Descriptions.Item label={t('phone_number')}>
                                     {phone ? formatPhoneNumberForForm(phone) : '—'}
                                 </Descriptions.Item>
-                                <Descriptions.Item label={t('clinic', { defaultValue: 'Klinika' })}>
+                                <Descriptions.Item label={t('clinic', { defaultValue: 'Shifoxona' })}>
                                     {user?.clinic?.clinicName || '—'}
                                 </Descriptions.Item>
-                                <Descriptions.Item label={t('clinic_status', { defaultValue: 'Klinika holati' })}>
+                                <Descriptions.Item label={t('clinic_status', { defaultValue: 'Shifoxona holati' })}>
                                     {user?.clinic?.isActive
                                         ? <Tag color="success">{t('active', { defaultValue: 'Faol' })}</Tag>
                                         : <Tag color="warning">{t('not_active', { defaultValue: 'Faol emas' })}</Tag>}
@@ -156,87 +114,33 @@ export default function Profile() {
                                 />
                             ) : null}
 
-                            <Steps
-                                size="small"
-                                current={step}
-                                style={{ marginBottom: 20 }}
-                                items={[
-                                    { title: t('confirm_by_sms', { defaultValue: 'SMS tasdiqlash' }) },
-                                    { title: t('new_password', { defaultValue: 'Yangi parol' }) },
-                                ]}
-                            />
-
-                            {step === 0 ? (
-                                <>
-                                    <Text type="secondary" style={{ display: 'block', marginBottom: 14 }}>
-                                        {t('change_password_hint', {
-                                            defaultValue: 'Parolni almashtirish uchun telefoningizga tasdiqlash kodi yuboriladi.',
-                                        })}
-                                        {phone ? ` (${formatPhoneNumberForForm(phone)})` : ''}
-                                    </Text>
-                                    <Button
-                                        type="primary"
-                                        icon={<SafetyOutlined />}
-                                        loading={sending}
-                                        onClick={handleSendCode}
-                                        disabled={!phone}
-                                    >
-                                        {t('send_code', { defaultValue: 'Kodni yuborish' })}
-                                    </Button>
-                                </>
-                            ) : (
-                                <Form form={form} layout="vertical" onFinish={handleChangePassword}>
-                                    <Form.Item
-                                        name="code"
-                                        label={t('sms_code', { defaultValue: 'SMS kod' })}
-                                        rules={[{ required: true, message: t('field_required', { defaultValue: 'Maydonni to\'ldiring' }) }]}
-                                    >
-                                        <Input maxLength={6} placeholder="123456" />
-                                    </Form.Item>
-
-                                    <Form.Item
-                                        name="newPassword"
-                                        label={t('new_password', { defaultValue: 'Yangi parol' })}
-                                        rules={[
-                                            { required: true, message: t('field_required', { defaultValue: 'Maydonni to\'ldiring' }) },
-                                            { min: 8, message: t('password_min_8', { defaultValue: 'Kamida 8 belgi' }) },
-                                        ]}
-                                    >
-                                        <Input.Password />
-                                    </Form.Item>
-
-                                    <Form.Item
-                                        name="confirmPassword"
-                                        label={t('confirm_password', { defaultValue: 'Parolni takrorlang' })}
-                                        dependencies={['newPassword']}
-                                        rules={[
-                                            { required: true, message: t('field_required', { defaultValue: 'Maydonni to\'ldiring' }) },
-                                            ({ getFieldValue }) => ({
-                                                validator(_, value) {
-                                                    if (!value || getFieldValue('newPassword') === value) return Promise.resolve()
-                                                    return Promise.reject(new Error(
-                                                        t('passwords_do_not_match', { defaultValue: 'Parollar mos kelmadi' })
-                                                    ))
-                                                },
-                                            }),
-                                        ]}
-                                    >
-                                        <Input.Password />
-                                    </Form.Item>
-
-                                    <Button type="primary" htmlType="submit" loading={saving}>
-                                        {t('save', { defaultValue: 'Saqlash' })}
-                                    </Button>
-                                    <Button type="text" onClick={() => setStep(0)} style={{ marginLeft: 8 }}>
-                                        {t('back', { defaultValue: 'Orqaga' })}
-                                    </Button>
-                                </Form>
-                            )}
+                            <p className="pwd-change-hint">
+                                {t('change_password_desc', { defaultValue: 'Parolni almashtirish uchun telefon raqamingiz SMS kod bilan tasdiqlanadi. Jarayon bosqichma-bosqich oynada bajariladi.' })}
+                            </p>
+                            <Button
+                                type="primary"
+                                block
+                                className="btn_form"
+                                icon={<LockOutlined />}
+                                onClick={() => setChangePwdOpen(true)}
+                            >
+                                {t('change_password', { defaultValue: 'Parolni o\'zgartirish' })}
+                            </Button>
                         </Card>
                     </Col>
 
                 </Row>
+
+                {/* Shifokor uchun: unga yuborilgan tahlillar statistikasi va
+                    hali xulosa yozilmagan tahlillar ro'yxati */}
+                {user?.roleId === RoleConstants.DOCTOR && <DoctorDashboard />}
             </div>
+
+            <ChangePasswordModal
+                open={changePwdOpen}
+                onClose={() => setChangePwdOpen(false)}
+                phone={phone}
+            />
         </div>
     )
 }

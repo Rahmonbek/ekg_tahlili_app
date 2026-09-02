@@ -1,6 +1,6 @@
 import { httpGetRequest } from "../Host"
 
-/** Audit jurnali — Admin/Direktor uchun o'z klinikasi doirasida. */
+/** Audit jurnali — Admin/Direktor uchun o'z shifoxonasi doirasida. */
 export const get_audit_logs = (data) => {
     return httpGetRequest("/audit-logs", data)
 }

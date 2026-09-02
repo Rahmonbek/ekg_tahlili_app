@@ -96,39 +96,66 @@ def compose_prompt_for_openai(age, gender,  lang) -> str:
     
     
     prompt_header += f"""
-    Sizga bemorda olingan va shifokor tomonidan tayyorlangan smad natijasi fayli va bemor ma'lumotlari berildi. 
-    
-❗️JAVOB QOIDALARI:
-- Javobni {language} tilida taqdim et
-- Smad natijasini tahlil qiling va quyidagi bo'limlarni to'ldiring:
+Sizga bemorning SMAD natijasi PDF fayli va bemor ma'lumotlari berilgan.
+SMAD natijasini tahlil qiling.
 
+QOIDALAR:
+- Javob FAQAT valid JSON va {language} tilida bo'lsin.
+- JSON strukturasi va maydon nomlarini o'zgartirmang, yangi maydon qo'shmang.
+- PDFdagi keraksiz matn, sarlavha, shifokor/qurilma ma'lumotlarini qaytarmang.
+- Raqamli qiymatlarni faqat PDFdan o'qing. Taxmin qilmang.
+- Topilmagan raqamli qiymatga null bering.
+- Bitta parametr topilmasa butun tahlilni rad etmang.
+- PDFning barcha sahifalarini hisobga oling.
+- Javob qisqa, aniq va klinik ahamiyatli bo'lsin.
 
-### JAVOB MAZMUNI:
+MAYDONLAR:
 
-Javob tuzilishi qat'iy sxema bilan belgilangan — maydonlarni o'zing
-o'ylab topma. Har bir maydonga nima yozish kerakligi quyida:
+"digital_measurements":
+PDFdan quyidagilarni o'qing:
+- sutkalik o'rtacha SBP va DBP;
+- kunduzgi o'rtacha SBP va DBP;
+- tungi o'rtacha SBP va DBP;
+- maksimal va minimal arterial bosim;
+- sistolik yuk indeksi;
+- diastolik yuk indeksi;
+- tungi SBP/DBP pasayish darajasi;
+- tungi profil turi: dipper / non-dipper / over-dipper / night-peaker;
+- o'rtacha yurak urish tezligi.
+Aniqlanmagan qiymatlarga null bering.
 
-- "digital_measurements" — yozuvdan o'qib olingan raqamli ko'rsatkichlar:
-  sutkalik/kunduzgi/tungi o'rtacha SBP va DBP, maksimal va minimal bosim,
-  sistolik va diastolik yuk indekslari, tungi pasayish darajasi va tungi
-  profil turi (dipper / non-dipper / over-dipper / night-peaker),
-  o'rtacha yurak urish tezligi.
-  Fayldan aniqlab bo'lmagan har bir ko'rsatkichga `null` ber. TAXMIN QILMA.
+"automatic_analysis":
+Faqat SMAD natijasida aniqlangan patologik holatlar va klinik muhim
+topilmalarni qisqa yozing.
 
-- "automatic_analysis" — aniqlangan patologik holatlar va kasalliklar.
-- "AI_recommendations" — oddiy tilda tavsiya: qaysi qo'shimcha tekshiruv
-  kerak, shifokorga qachon murojaat qilish kerak, turmush tarzi bo'yicha
-  ko'rsatma. **Bu maydon hech qachon bo'sh qolmasin** — patologiya
-  topilmasa profilaktik tavsiya yoz.
-- "final_summary" — tibbiy asoslangan yakuniy xulosa.
-- "automatic_analysis_bool" — 1 (normal), 2 (e'tibor talab qiladi) yoki
-  3 (shoshilinch).
-- "analiz_mumkinmi" — fayl tahlilga yaroqsiz bo'lsa `false`, sababini
-  "analiz_mumkin_emas_sababi" ga yoz va "automatic_analysis_bool" ni
-  `null` qoldir.
+"automatic_analysis_bool":
+1 = normal;
+2 = patologiya mavjud, shoshilinch emas;
+3 = shoshilinch/xavfli holat.
+Patologiya bo'lsa 1 qo'ymang.
+analiz_mumkinmi=false bo'lsa null.
 
-❗️Javob FAQAT JSON bo'lsin va {language} tilida bo'lsin
-    """
+"AI_recommendations":
+Bemorga qisqa tavsiya: qo'shimcha tekshiruv, shifokorga murojaat va
+zarur turmush tarzi tavsiyalari.
+Bu maydon bo'sh qolmasin.
+Aniq dori dozasi yozmang.
+
+"final_summary":
+SMAD natijasining qisqa tibbiy yakuniy xulosasi.
+automatic_analysis matnini aynan takrorlamang.
+
+"analiz_mumkinmi":
+PDF SMAD tahlili uchun yetarli bo'lsa true.
+Faqat fayl o'qib bo'lmasa, buzilgan yoki SMAD ma'lumoti bo'lmasa false.
+Ayrim parametrlar topilmagani sabab false qilmang.
+
+"analiz_mumkin_emas_sababi":
+analiz_mumkinmi=false bo'lsa sababini qisqa yozing,
+aks holda null.
+
+Javob FAQAT JSON bo'lsin.
+"""
     return prompt_header
 
 # ─── Sinxron OpenAI chaqiruvi ────────────────────────────────────────────────

@@ -120,8 +120,8 @@ const timelineSteps = [
   {
     number: '01',
     icon: 'hospital',
-    title: "Klinikani ro'yxatdan o'tkazing",
-    body: '5 daqiqada klinika nomi, INN va asosiy ma’lumotlarni kiritib ishni boshlang.',
+    title: "Shifoxonani ro'yxatdan o'tkazing",
+    body: '5 daqiqada shifoxona nomi, INN va asosiy ma’lumotlarni kiritib ishni boshlang.',
   },
   {
     number: '02',
@@ -144,7 +144,7 @@ const timelineSteps = [
 ];
 
 const stats = [
-  { icon: 'hospital', value: 142, suffix: '+', label: 'Faol klinikalar' },
+  { icon: 'hospital', value: 142, suffix: '+', label: 'Faol shifoxonalar' },
   { icon: 'chart', value: 50000, suffix: '+', label: 'Amalga oshirilgan tahlillar' },
   { icon: 'globe', value: 14, suffix: '', label: "Viloyatlar bo'yicha qamrov" },
   { icon: 'shield', value: 99.2, suffix: '%', label: 'AI aniqlik darajasi', fixed: 1 },
@@ -241,7 +241,7 @@ const blogPosts = [
   {
     category: 'Amaliyot',
     icon: 'video',
-    title: 'Online konsultatsiya: 142 klinika tajribasidan 5 saboq',
+    title: 'Online konsultatsiya: 142 shifoxona tajribasidan 5 saboq',
     date: '4-Iyun, 2026',
     read: '7 daqiqa',
   },
@@ -273,7 +273,7 @@ const faqs = [
   },
   {
     q: "Ro'yxatdan o'tish qancha vaqt oladi?",
-    a: 'Asosiy klinika ma’lumotlari tayyor bo‘lsa, tizimga kirish va ishni boshlash bir necha daqiqada yakunlanadi.',
+    a: 'Asosiy shifoxona ma’lumotlari tayyor bo‘lsa, tizimga kirish va ishni boshlash bir necha daqiqada yakunlanadi.',
   },
 ];
 
@@ -661,7 +661,7 @@ function Hero() {
           <div className="landing-hero-stats reveal" data-delay="4">
             <div>
               <strong>142+</strong>
-              <span>klinika</span>
+              <span>shifoxona</span>
             </div>
             <div>
               <strong>50K+</strong>
@@ -939,7 +939,7 @@ function Consultation() {
                 </div>
                 <div className="landing-video-person is-blue">
                   <strong>Admin + Bemor</strong>
-                  <small>Anor Klinikasi</small>
+                  <small>Anor Shifoxonasi</small>
                 </div>
               </div>
               <div className="landing-video-side">
@@ -1056,7 +1056,7 @@ function Stats() {
         <SectionHeader
           eyebrow="Statistika"
           title="Raqamlarda NMED"
-          description="Platforma klinikalar va tahlillar oqimini bir necha yo‘nalishda kuzatib boradi."
+          description="Platforma shifoxonalar va tahlillar oqimini bir necha yo‘nalishda kuzatib boradi."
         />
 
         <div className="landing-stats-grid">
@@ -1093,7 +1093,7 @@ function Stats() {
               <h3>Hududlar bo‘yicha qamrov</h3>
               <span className="landing-pill">14 viloyat</span>
             </div>
-            <p className="landing-map-note">Rang to‘qroq bo‘lsa, shu hududda faol klinikalar ko‘proq.</p>
+            <p className="landing-map-note">Rang to‘qroq bo‘lsa, shu hududda faol shifoxonalar ko‘proq.</p>
             <div className="landing-map" onMouseLeave={() => setTip(null)}>
               {regions.map((region) => {
                 const opacity = 0.54 + 0.64 * (region.count / maxRegion);
@@ -1125,7 +1125,7 @@ function Stats() {
 
               {tip ? (
                 <div className="landing-map-tooltip" style={{ left: tip.x, top: tip.y }}>
-                  {tip.name} · <b>{tip.count}</b> klinika
+                  {tip.name} · <b>{tip.count}</b> shifoxona
                 </div>
               ) : null}
             </div>
@@ -1182,12 +1182,12 @@ function Testimonials() {
 
       <div className="landing-logo-marquee">
         <div>
-          {['R.Doctor Clinics', 'MedCenter Toshkent', 'Anor Klinikasi', 'Shifobaxsh', 'SilkMed', 'NMED Partner'].map((item) => (
+          {['R.Doctor Clinics', 'MedCenter Toshkent', 'Anor Shifoxonasi', 'Shifobaxsh', 'SilkMed', 'NMED Partner'].map((item) => (
             <span key={item}>
               {item} <b>•</b>
             </span>
           ))}
-          {['R.Doctor Clinics', 'MedCenter Toshkent', 'Anor Klinikasi', 'Shifobaxsh', 'SilkMed', 'NMED Partner'].map((item) => (
+          {['R.Doctor Clinics', 'MedCenter Toshkent', 'Anor Shifoxonasi', 'Shifobaxsh', 'SilkMed', 'NMED Partner'].map((item) => (
             <span key={`${item}-copy`}>
               {item} <b>•</b>
             </span>
@@ -1288,10 +1288,10 @@ function Footer() {
             <div className="landing-cta-content">
               <span>Bugundan boshlang</span>
               <h2>
-                <strong>O‘z klinikangizni</strong>
+                <strong>O‘z shifoxonangizni</strong>
                 <b>raqamlashtiring</b>
               </h2>
-              <p>5 daqiqada ro‘yxatdan o‘ting va platformani klinika jarayonlariga ulab ko‘ring.</p>
+              <p>5 daqiqada ro‘yxatdan o‘ting va platformani shifoxona jarayonlariga ulab ko‘ring.</p>
               <Link className="landing-btn landing-btn-white landing-btn-lg" to="/register">
                 Hoziroq boshlash <Icon name="arrowRight" />
               </Link>

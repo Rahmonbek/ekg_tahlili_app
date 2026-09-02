@@ -13,7 +13,7 @@ import axiosInstance from '../host/Api';
  * | Holter | pdf                   | pdf, png, jpg, jpeg           |
  * | SMAD   | pdf                   | pdf, png, jpg, jpeg           |
  *
- * Ya'ni klinika Holter hisobotining suratini yuklay olardi, lekin buni
+ * Ya'ni shifoxona Holter hisobotining suratini yuklay olardi, lekin buni
  * bilmasdi. Teskari xavf ham bor: interfeys serverdan kengroq ro'yxat
  * ko'rsatsa, foydalanuvchi faylni tanlab, yuklab, faqat serverdan
  * xatolik olardi.
@@ -28,7 +28,7 @@ let pending = null;
 
 /** Server javob bermasa ishlatiladi — forma baribir ishlashi kerak. */
 const FALLBACK = {
-    ecg: ['.csv', '.jpeg', '.jpg', '.png', '.tsv', '.xml'],
+    ecg: ['.jpeg', '.jpg', '.pdf', '.png'],
     holter: ['.jpeg', '.jpg', '.pdf', '.png'],
     smad: ['.jpeg', '.jpg', '.pdf', '.png'],
     lab: ['.jpeg', '.jpg', '.pdf', '.png'],

@@ -41,11 +41,11 @@ public class AnalysisDeletionController : ControllerBase
     }
 
     /// <summary>
-    /// Tahlilni o'chiradi (yumshoq). Faqat Admin/Direktor, faqat o'z klinikasida.
+    /// Tahlilni o'chiradi (yumshoq). Admin/Direktor — klinikadagi HAR QANDAY
+    /// tahlilni; Shifokor/Hamshira — FAQAT o'zi yuklagan tahlilni.
     /// Sabab majburiy — audit uchun.
     /// </summary>
     [HttpDelete("{type}/{id:int}")]
-    [Authorize(Policy = RoleConstants.PolicyClinicManager)]
     public async Task<IActionResult> Delete(string type, int id, [FromBody] DeleteAnalysisRequest body)
     {
         type = (type ?? string.Empty).ToLowerInvariant();
@@ -56,13 +56,34 @@ public class AnalysisDeletionController : ControllerBase
         if (clinicId == null)
             return Unauthorized(new { message = "Klinika aniqlanmadi" });
 
-        var username = await _context.Users
+        var me = await _context.Users
             .Where(u => u.Id == _currentUser.UserId)
-            .Select(u => u.Email)
+            .Select(u => new { u.Email, u.RoleId })
             .FirstOrDefaultAsync();
+        if (me == null)
+            return Unauthorized(new { message = "Foydalanuvchi topilmadi" });
+
+        // Admin (2) / Direktor (3) — cheklovsiz. Shifokor (4) / Hamshira (5) —
+        // faqat o'zi yuklagan tahlilni o'chira oladi. Boshqa rollar o'chira olmaydi.
+        int? restrictToCreatorDoctorId = null;
+        bool isManager = me.RoleId == RoleConstants.Admin || me.RoleId == RoleConstants.Director;
+        if (!isManager)
+        {
+            if (me.RoleId != RoleConstants.Doctor && me.RoleId != RoleConstants.Nurse)
+                return Forbid();
+
+            var myDoctorId = await _context.Doctors
+                .Where(d => d.UserId == _currentUser.UserId)
+                .Select(d => (int?)d.Id)
+                .FirstOrDefaultAsync();
+            if (myDoctorId == null)
+                return Forbid();
+            restrictToCreatorDoctorId = myDoctorId;
+        }
 
         var outcome = await _deletion.DeleteAsync(
-            type, id, clinicId.Value, _currentUser.UserId, username, body?.Reason);
+            type, id, clinicId.Value, _currentUser.UserId, me.Email, body?.Reason,
+            restrictToCreatorDoctorId);
 
         return outcome switch
         {

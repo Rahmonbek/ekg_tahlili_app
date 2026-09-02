@@ -1,7 +1,7 @@
 import { Alert, Button, Checkbox, Col, Form, Row, Select, Tooltip, Upload } from 'antd';
 import { InboxOutlined, SaveOutlined, RobotOutlined, CheckCircleFilled } from '@ant-design/icons';
 import React, { useCallback, useEffect, useState, useRef} from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { IoAlertCircleSharp } from 'react-icons/io5';
 import { MoonLoader } from 'react-spinners';
@@ -36,6 +36,10 @@ import useDocumentTitle from '../../../tools/useDocumentTitle';
 import DateField from '../../../components/shared/DateField';
 import { askDuplicate, withForce, isDuplicateError } from '../../../components/shared/duplicateUpload';
 import useFileTypes from '../../../hooks/useFileTypes';
+import EcgImageGuideModal from '../../../components/shared/EcgImageGuideModal';
+
+// Birinchi marta EKG rasm yo'riqnomasi ko'rsatilgani localStorage'da belgilanadi
+const ECG_GUIDE_SEEN_KEY = 'nmed_ecg_image_guide_seen';
 
 export default function EcgAnalyzer() {
     // Ruxsat etilgan formatlar serverdan olinadi — ilgari ular
@@ -52,6 +56,11 @@ export default function EcgAnalyzer() {
     const [selectedComplaints, setSelectedComplaints] = useState([]);
     const [checkAI, setCheckAI] = useState(false);
     const [analysisDateValue, setAnalysisDateValue] = useState(getTodayDateInputValue());
+    // EKG rasm yo'riqnomasi modali
+    const [guideOpen, setGuideOpen] = useState(false);
+    const navigate = useNavigate();
+    // Dublikat modalidan mavjud tahlilni ko'rish sahifasiga o'tish
+    const openExistingAnalysis = useCallback((id) => navigate(`/ecg-analyses/view/${id}`), [navigate]);
 
     const { complaints, user } = useStore();
     const { runInBackground } = useBackgroundAnalysis();
@@ -100,6 +109,20 @@ export default function EcgAnalyzer() {
         getDistricts: fetchDistricts,
         onPatientFound: (data) => getOldECGAnalyses(data.id, 'first'),
     });
+
+    // Bemor ma'lumoti to'ldirilib, EKG yuklash bo'limi ochilganda — BIRINCHI
+    // MARTA tahlil qilayotgan foydalanuvchida rasm yo'riqnomasi avtomatik
+    // ochiladi. Keyingi tahlillarda avtomatik ochilmaydi (faqat alert_icon
+    // bosilganda). localStorage bayrog'i bir marta ko'rsatilganini eslaydi.
+    useEffect(() => {
+        if (!checkReady) return;
+        let seen = false;
+        try { seen = localStorage.getItem(ECG_GUIDE_SEEN_KEY) === '1'; } catch { seen = false; }
+        if (!seen) {
+            setGuideOpen(true);
+            try { localStorage.setItem(ECG_GUIDE_SEEN_KEY, '1'); } catch { /* maxfiy rejim */ }
+        }
+    }, [checkReady]);
 
     // ─── Complaints Toggle ───
     const onChangeComplaints = useCallback((val) => {
@@ -176,7 +199,7 @@ export default function EcgAnalyzer() {
                     signal: (uploadAbortRef.current = new AbortController()).signal,
                 }),
                 onDuplicate: async (err) => {
-                    if (await askDuplicate(err, t)) send(withForce(data));
+                    if (await askDuplicate(err, t, openExistingAnalysis)) send(withForce(data));
                 },
             });
             send(formData);
@@ -200,7 +223,7 @@ export default function EcgAnalyzer() {
                 } catch (err) {
                     if (isDuplicateError(err)) {
                         dispatch({ type: 'SUBMIT_ERROR', error: '' });
-                        if (await askDuplicate(err, t)) await save(withForce(data));
+                        if (await askDuplicate(err, t, openExistingAnalysis)) await save(withForce(data));
                         return;
                     }
                     const msg = extractApiError(err, t('something_went_wrong_try_again', { defaultValue: 'Xatolik yuz berdi' }));
@@ -229,6 +252,7 @@ export default function EcgAnalyzer() {
     // ─── RENDER ───
     return (
         <div>
+            <EcgImageGuideModal open={guideOpen} onClose={() => setGuideOpen(false)} />
             {doctorsLoaded && doctorDatas.length === 0 && (
                 <Alert
                     type="warning"
@@ -275,8 +299,17 @@ export default function EcgAnalyzer() {
                 <div className="main_card">
                     <h1>
                         {t('ecg_analyse')}{' '}
-                        <Tooltip placement="bottomRight" title={t('alert_ecg')}>
-                            <span className="alert_icon"><IoAlertCircleSharp /></span>
+                        <Tooltip placement="bottomRight" title={t('ecg_guide_tooltip', { defaultValue: 'EKG rasmi qanday bo‘lishi kerak — ko‘rsatmani ochish' })}>
+                            <span
+                                className="alert_icon"
+                                role="button"
+                                tabIndex={0}
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => setGuideOpen(true)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setGuideOpen(true); } }}
+                            >
+                                <IoAlertCircleSharp />
+                            </span>
                         </Tooltip>
                     </h1>
                     <div className="main_card_content">

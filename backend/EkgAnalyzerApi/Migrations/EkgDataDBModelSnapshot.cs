@@ -1214,6 +1214,195 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("daily_sodium");
 
+                    b.Property<decimal?>("triglycerides")
+                        .HasColumnType("numeric")
+                        .HasColumnName("triglycerides");
+
+                    b.Property<decimal?>("hdl")
+                        .HasColumnType("numeric")
+                        .HasColumnName("hdl");
+
+                    b.Property<decimal?>("ldl")
+                        .HasColumnType("numeric")
+                        .HasColumnName("ldl");
+
+                    b.Property<decimal?>("vldl")
+                        .HasColumnType("numeric")
+                        .HasColumnName("vldl");
+
+                    b.Property<decimal?>("atherogenic_index")
+                        .HasColumnType("numeric")
+                        .HasColumnName("atherogenic_index");
+
+                    b.Property<decimal?>("hba1c")
+                        .HasColumnType("numeric")
+                        .HasColumnName("hba1c");
+
+                    b.Property<decimal?>("c_peptide")
+                        .HasColumnType("numeric")
+                        .HasColumnName("c_peptide");
+
+                    b.Property<decimal?>("crp")
+                        .HasColumnType("numeric")
+                        .HasColumnName("crp");
+
+                    b.Property<decimal?>("ggt")
+                        .HasColumnType("numeric")
+                        .HasColumnName("ggt");
+
+                    b.Property<decimal?>("alp")
+                        .HasColumnType("numeric")
+                        .HasColumnName("alp");
+
+                    b.Property<decimal?>("amylase")
+                        .HasColumnType("numeric")
+                        .HasColumnName("amylase");
+
+                    b.Property<decimal?>("lipase")
+                        .HasColumnType("numeric")
+                        .HasColumnName("lipase");
+
+                    b.Property<decimal?>("ldh")
+                        .HasColumnType("numeric")
+                        .HasColumnName("ldh");
+
+                    b.Property<decimal?>("ck")
+                        .HasColumnType("numeric")
+                        .HasColumnName("ck");
+
+                    b.Property<decimal?>("ck_mb")
+                        .HasColumnType("numeric")
+                        .HasColumnName("ck_mb");
+
+                    b.Property<decimal?>("uric_acid")
+                        .HasColumnType("numeric")
+                        .HasColumnName("uric_acid");
+
+                    b.Property<decimal?>("magnesium")
+                        .HasColumnType("numeric")
+                        .HasColumnName("magnesium");
+
+                    b.Property<decimal?>("phosphorus")
+                        .HasColumnType("numeric")
+                        .HasColumnName("phosphorus");
+
+                    b.Property<decimal?>("chloride")
+                        .HasColumnType("numeric")
+                        .HasColumnName("chloride");
+
+                    b.Property<decimal?>("ferritin")
+                        .HasColumnType("numeric")
+                        .HasColumnName("ferritin");
+
+                    b.Property<decimal?>("tibc")
+                        .HasColumnType("numeric")
+                        .HasColumnName("tibc");
+
+                    b.Property<decimal?>("transferrin")
+                        .HasColumnType("numeric")
+                        .HasColumnName("transferrin");
+
+                    b.Property<decimal?>("bilirubin_indirect")
+                        .HasColumnType("numeric")
+                        .HasColumnName("bilirubin_indirect");
+
+                    b.Property<decimal?>("globulin")
+                        .HasColumnType("numeric")
+                        .HasColumnName("globulin");
+
+                    b.Property<decimal?>("free_t3")
+                        .HasColumnType("numeric")
+                        .HasColumnName("free_t3");
+
+                    b.Property<decimal?>("t3_total")
+                        .HasColumnType("numeric")
+                        .HasColumnName("t3_total");
+
+                    b.Property<decimal?>("t4_total")
+                        .HasColumnType("numeric")
+                        .HasColumnName("t4_total");
+
+                    b.Property<decimal?>("vitamin_d")
+                        .HasColumnType("numeric")
+                        .HasColumnName("vitamin_d");
+
+                    b.Property<decimal?>("vitamin_b12")
+                        .HasColumnType("numeric")
+                        .HasColumnName("vitamin_b12");
+
+                    b.Property<decimal?>("folate")
+                        .HasColumnType("numeric")
+                        .HasColumnName("folate");
+
+                    b.Property<decimal?>("prothrombin_time")
+                        .HasColumnType("numeric")
+                        .HasColumnName("prothrombin_time");
+
+                    b.Property<decimal?>("prothrombin_index")
+                        .HasColumnType("numeric")
+                        .HasColumnName("prothrombin_index");
+
+                    b.Property<decimal?>("inr")
+                        .HasColumnType("numeric")
+                        .HasColumnName("inr");
+
+                    b.Property<decimal?>("aptt")
+                        .HasColumnType("numeric")
+                        .HasColumnName("aptt");
+
+                    b.Property<decimal?>("fibrinogen")
+                        .HasColumnType("numeric")
+                        .HasColumnName("fibrinogen");
+
+                    b.Property<decimal?>("thrombin_time")
+                        .HasColumnType("numeric")
+                        .HasColumnName("thrombin_time");
+
+                    b.Property<decimal?>("d_dimer")
+                        .HasColumnType("numeric")
+                        .HasColumnName("d_dimer");
+
+                    b.Property<decimal?>("neutrophils")
+                        .HasColumnType("numeric")
+                        .HasColumnName("neutrophils");
+
+                    b.Property<decimal?>("lymphocytes")
+                        .HasColumnType("numeric")
+                        .HasColumnName("lymphocytes");
+
+                    b.Property<decimal?>("monocytes")
+                        .HasColumnType("numeric")
+                        .HasColumnName("monocytes");
+
+                    b.Property<decimal?>("eosinophils")
+                        .HasColumnType("numeric")
+                        .HasColumnName("eosinophils");
+
+                    b.Property<decimal?>("basophils")
+                        .HasColumnType("numeric")
+                        .HasColumnName("basophils");
+
+                    b.Property<decimal?>("rdw")
+                        .HasColumnType("numeric")
+                        .HasColumnName("rdw");
+
+                    b.Property<decimal?>("mpv")
+                        .HasColumnType("numeric")
+                        .HasColumnName("mpv");
+
+                    b.Property<decimal?>("pdw")
+                        .HasColumnType("numeric")
+                        .HasColumnName("pdw");
+
+                    b.Property<decimal?>("pct")
+                        .HasColumnType("numeric")
+                        .HasColumnName("pct");
+
+                    b.Property<decimal?>("reticulocytes")
+                        .HasColumnType("numeric")
+                        .HasColumnName("reticulocytes");
+
+
                     b.Property<decimal?>("esr")
                         .HasColumnType("numeric")
                         .HasColumnName("esr");

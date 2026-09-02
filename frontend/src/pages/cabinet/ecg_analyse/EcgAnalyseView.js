@@ -12,6 +12,7 @@ import AnalyseViewHeader from '../../../components/shared/AnalyseViewHeader';
 import FileMismatchBanner, { parseFileMismatch } from '../../../components/shared/FileMismatchBanner';
 import NotAnalyzableBanner, { parseAiResult } from '../../../components/shared/NotAnalyzableBanner';
 import { replaceEkgFile } from '../../../host/EkgService';
+import { buildFileUrl } from '../../../host/Host';
 import useDocumentTitle from '../../../tools/useDocumentTitle';
 import SignalOnlyBanner from '../../../components/shared/SignalOnlyBanner';
 import AiLanguageNotice from '../../../components/shared/AiLanguageNotice';
@@ -83,7 +84,13 @@ export default function EcgAnalyseView() {
     // ogohlantirish bilan ziddiyatli edi — endi status ham buni aks ettiradi.
     const aiResultForStatus = parseAiResult(data.aiAnswerData);
     const notAnalyzable = data.status === 2 && aiResultForStatus?.tahlil_imkonsiz === true;
-    const statusTag = notAnalyzable ? (
+    // status=2 (tayyor) bo'lsa-yu AI natijasi BO'SH bo'lsa — SOXTA "tayyor".
+    const noAiResult = data.status === 2 && (!data.aiAnswerData || !String(data.aiAnswerData).trim());
+    const statusTag = noAiResult ? (
+        <Tag color="error">
+            {t('status_no_ai_result', { defaultValue: 'AI natija olinmadi' })}
+        </Tag>
+    ) : notAnalyzable ? (
         <Tag color="warning">
             {t('status_not_analyzable', { defaultValue: 'AI tahlil qila olmadi' })}
         </Tag>
@@ -147,7 +154,7 @@ export default function EcgAnalyseView() {
                 info={parseFileMismatch(data.aiAnswerData)}
                 analysisId={data.id}
                 onReplace={replaceEkgFile}
-                accept=".xml,.csv,.png,.jpg,.jpeg"
+                accept=".pdf,.png,.jpg,.jpeg"
                 meta={{
                     age: data.patcient?.birthDate ? calculateAge(data.patcient.birthDate) : 0,
                     gender: data.patcient?.gender ? 'erkak' : 'ayol',
@@ -155,6 +162,29 @@ export default function EcgAnalyseView() {
                 }}
                 onSuccess={getData}
             />
+
+            {/* AI faylni tahlil qila olmaganda (mos emas / imkonsiz / xato)
+                render qilingan grafik bo'lmaydi va tahlil ichida hech qanday
+                fayl ko'rinmasdi. Bunday holatda foydalanuvchi yuklagan ASL
+                faylni ko'rsatamiz (pdf yoki rasm). */}
+            {(notAnalyzable || noAiResult || data.status === 3 || data.status === -1)
+                && data.analyseFileLink && !data.generatedFileLink ? (
+                <div className="ekg-image" style={{ marginBottom: 16 }}>
+                    <p className="ecg_label">{t('uploaded_file', { defaultValue: 'Yuklangan fayl' })}</p>
+                    {/\.pdf(\?|$)/i.test(data.analyseFileLink) ? (
+                        <iframe
+                            title={t('uploaded_file', { defaultValue: 'Yuklangan fayl' })}
+                            src={buildFileUrl(data.analyseFileLink)}
+                            style={{ width: '100%', height: '75vh', border: '1px solid var(--border_color)', borderRadius: 8 }}
+                        />
+                    ) : (
+                        <Image
+                            style={{ width: '100%', borderRadius: 8 }}
+                            src={buildFileUrl(data.analyseFileLink)}
+                        />
+                    )}
+                </div>
+            ) : null}
 
             <EcgOldResult data={data} initialOpen={true} showMeta={false} />
 

@@ -8,7 +8,7 @@ import { successAlert, dangerAlert } from '../../tools/Alerts'
 /**
  * Tahlillar ro'yxatini CSV ga eksport qilish tugmasi.
  *
- * Klinikalar oylik hisobot tayyorlashda ma'lumotni ekrandan qo'lda ko'chirib
+ * Shifoxonalar oylik hisobot tayyorlashda ma'lumotni ekrandan qo'lda ko'chirib
  * yozishga majbur edi. Eksport ro'yxatdagi joriy filtrlarni hisobga oladi —
  * ya'ni ekranda nimani ko'rsangiz, faylda ham shu bo'ladi.
  *

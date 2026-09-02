@@ -27,7 +27,9 @@ export default function DoctorDiagnosisBlock({ analysisType, analysisId }) {
     const [editingId, setEditingId] = useState(null);
     const [editText, setEditText] = useState('');
 
-    const canWrite = user && (user.roleId === 4 || user.roleId === 2 || user.roleId === 3);
+    // Tashxis yozish FAQAT shifokorda (roleId=4). Admin, direktor, hamshira
+    // va boshqa rollar tashxis yoza olmaydi (foydalanuvchi so'rovi).
+    const canWrite = user && user.roleId === 4;
 
     useEffect(() => {
         if (analysisType && analysisId) {

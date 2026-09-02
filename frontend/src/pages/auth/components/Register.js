@@ -1,9 +1,10 @@
 import { Checkbox, Button, Col, Form, Input, Modal, Row } from 'antd';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import register_img from '../../../images/register1.jpg';
 import { IoMdLock } from 'react-icons/io';
 import { LiaDownloadSolid } from 'react-icons/lia';
+import { FaShieldHalved } from 'react-icons/fa6';
 import { Link, useNavigate } from 'react-router-dom';
 import { registration, verify_code } from '../../../host/requests/AuthRequest';
 import { dangerAlert, successAlert } from '../../../tools/Alerts';
@@ -15,10 +16,16 @@ import { formatPhoneNumber } from '../../../tools/formatters';
 import ChangeLangs from '../../../components/ChangeLangs';
 import PasswordField, { passwordRule } from '../../../components/shared/PasswordField';
 
+// SMS kodni qayta yuborish orasidagi kutish (soniya) — ResetPassword bilan bir xil
+const RESEND_SECONDS = 60;
+
 export default function Register() {
   const { executeRecaptcha } = useGoogleReCaptcha();
   const [open, setopen] = useState(false);
   const [loading, setloading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resend, setResend] = useState(0);
+  const timerRef = useRef(null);
   const [phone, setPhone] = useState(null);
   const [licenseFile, setLicenseFile] = useState(null);
   const navigate = useNavigate();
@@ -26,6 +33,27 @@ export default function Register() {
   const { setuser_id } = useStore();
   const [codeForm] = Form.useForm();
   const { t } = useTranslation();
+
+  // Countdown timerni tozalash (modal yopilganda/unmount)
+  useEffect(() => () => clearInterval(timerRef.current), []);
+
+  const startResendTimer = () => {
+    setResend(RESEND_SECONDS);
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setResend((s) => {
+        if (s <= 1) { clearInterval(timerRef.current); return 0; }
+        return s - 1;
+      });
+    }, 1000);
+  };
+
+  const closeModal = () => {
+    setopen(false);
+    setResend(0);
+    clearInterval(timerRef.current);
+    codeForm.resetFields();
+  };
 
   const handleFinish = async (values) => {
     try {
@@ -35,6 +63,7 @@ export default function Register() {
         code: values.code
       });
       if (res.status === 200) {
+        clearInterval(timerRef.current);
         successAlert(t(res.data.message));
         setuser_id(res.data.userId);
         Cookies.set('NMED_token', res.data.token, {
@@ -52,6 +81,53 @@ export default function Register() {
     }
   };
 
+  // Registratsiya so'rovi — dastlabki yuborish va qayta yuborish (resend)
+  // uchun umumiy. Pending (hali tasdiqlanmagan) foydalanuvchi uchun backend
+  // yangi SMS kod generatsiya qiladi, shu bois resend ham shu yo'l bilan ishlaydi.
+  const submitRegistration = async (values) => {
+    const gToken = await executeRecaptcha('registration');
+    const normalizedPhone = formatPhoneNumber(values.phone);
+    const normalizedInn = String(values.clinicInn || '').replace(/\D/g, '');
+
+    const formData = new FormData();
+    formData.append('clinicName', values.clinicName?.trim() || '');
+    formData.append('phoneNumber', normalizedPhone);
+    formData.append('clinicInn', normalizedInn);
+    formData.append('bankAccaunt', values.bankAccaunt?.replace(/\s/g, '') || '');
+    // Haqiqiy email bo'lsa uni yuboramiz — busiz tizim
+    // `...@phone.nmed.local` sun'iy manzilini yaratadi
+    if (values.email) formData.append('email', values.email);
+    formData.append('mfo', values.mfo?.trim() || '');
+    formData.append('bankName', values.bankName?.trim() || '');
+    formData.append('password', values.password);
+    formData.append('recaptchaToken', gToken);
+    formData.append('licenseFile', licenseFile);
+
+    const res = await registration(formData);
+    return { res, normalizedPhone };
+  };
+
+  const handleResend = async () => {
+    if (resend > 0 || resendLoading) return;
+    if (!executeRecaptcha) {
+      dangerAlert(t('recaptcha_not_ready'));
+      return;
+    }
+    try {
+      setResendLoading(true);
+      const { res } = await submitRegistration(form.getFieldsValue(true));
+      if (res.status === 200) {
+        codeForm.resetFields();
+        startResendTimer();
+        successAlert(t('code_resent', { defaultValue: 'Kod qayta yuborildi' }));
+      }
+    } catch (err) {
+      dangerAlert(t(err?.response?.data?.message || 'something_went_wrong_try_again'));
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   const onFinish = async (values) => {
     if (!executeRecaptcha) {
       dangerAlert(t('recaptcha_not_ready'));
@@ -65,30 +141,13 @@ export default function Register() {
 
     try {
       setloading(true);
-      const normalizedPhone = formatPhoneNumber(values.phone);
-      const normalizedInn = String(values.clinicInn || '').replace(/\D/g, '');
-      const gToken = await executeRecaptcha('registration');
-
-      const formData = new FormData();
-      formData.append('clinicName', values.clinicName?.trim() || '');
-      formData.append('phoneNumber', normalizedPhone);
-      formData.append('clinicInn', normalizedInn);
-      formData.append('bankAccaunt', values.bankAccaunt?.replace(/\s/g, '') || '');
-      // Haqiqiy email bo'lsa uni yuboramiz — busiz tizim
-      // `...@phone.nmed.local` sun'iy manzilini yaratadi
-      if (values.email) formData.append('email', values.email);
-      formData.append('mfo', values.mfo?.trim() || '');
-      formData.append('bankName', values.bankName?.trim() || '');
-      formData.append('password', values.password);
-      formData.append('recaptchaToken', gToken);
-      formData.append('licenseFile', licenseFile);
-
-      const res = await registration(formData);
+      const { res, normalizedPhone } = await submitRegistration(values);
 
       if (res.status === 200) {
         setPhone(normalizedPhone);
         successAlert(t(res.data.message));
         setopen(true);
+        startResendTimer();
       }
     } catch (err) {
       dangerAlert(t(err?.response?.data?.message || 'registration_failed'));
@@ -336,22 +395,72 @@ export default function Register() {
         <img src={register_img} alt='register decorative' />
       </div>
 
-      <Modal open={open} closable={false} maskClosable={false} footer={null} centered>
-        <div className='code_verify_box' style={{ textAlign: 'center', padding: '8px 0' }}>
-          <div style={{ fontSize: 42, marginBottom: 12, lineHeight: 1 }}>SMS</div>
-          <h2 style={{ color: '#2C3E6B', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
-            {t('sended_code')}
+      <Modal
+        open={open}
+        closable={false}
+        maskClosable={false}
+        footer={null}
+        centered
+        width={420}
+        className='sms-verify-modal'
+      >
+        <div className='sms-verify'>
+          <span className='reset-modal-badge sms-verify-badge'>
+            <FaShieldHalved />
+          </span>
+          <h2 className='sms-verify-title'>
+            {t('verification_code', { defaultValue: 'Tasdiqlash kodi' })}
           </h2>
-          <p style={{ color: '#666', fontSize: 13, marginBottom: 20 }}>
-            +{phone}
+          <p className='sms-verify-hint'>
+            {t('sms_sent_hint', { defaultValue: 'Ushbu raqamga 4 xonali kod yuborildi' })}
           </p>
-          <Form form={codeForm} onFinish={handleFinish}>
-            <Form.Item name='code' rules={[{ required: true, message: t('not_empty') }]}>
-              <Input.OTP length={4} size='large' inputMode='numeric' formatter={(v) => v.replace(/\D/g, '')} />
+          <div className='sms-verify-phone'>+{phone}</div>
+
+          <Form form={codeForm} onFinish={handleFinish} className='sms-verify-form'>
+            <Form.Item
+              name='code'
+              rules={[{ required: true, message: t('not_empty') }]}
+              style={{ marginBottom: 0 }}
+            >
+              <Input.OTP
+                length={4}
+                size='large'
+                inputMode='numeric'
+                autoFocus
+                formatter={(v) => v.replace(/\D/g, '')}
+                onChange={(val) => { if (val?.length === 4) codeForm.submit(); }}
+              />
             </Form.Item>
+
+            <div className='reset-modal-resend sms-verify-resend'>
+              {resend > 0 ? (
+                <span className='reset-modal-resend-wait'>
+                  {t('resend_in', { seconds: resend, defaultValue: 'Qayta yuborish: {{seconds}} s' })}
+                </span>
+              ) : (
+                <button
+                  type='button'
+                  className='reset-modal-link'
+                  onClick={handleResend}
+                  disabled={resendLoading}
+                >
+                  {resendLoading
+                    ? t('sending', { defaultValue: 'Yuborilmoqda…' })
+                    : t('resend_code', { defaultValue: 'Kodni qayta yuborish' })}
+                </button>
+              )}
+            </div>
+
             <Button className='btn_form' loading={loading} htmlType='submit' block>
               {t('verify')}
             </Button>
+            <button
+              type='button'
+              className='reset-modal-link reset-modal-back'
+              onClick={closeModal}
+            >
+              {t('change_number', { defaultValue: 'Raqamni o‘zgartirish' })}
+            </button>
           </Form>
         </div>
       </Modal>

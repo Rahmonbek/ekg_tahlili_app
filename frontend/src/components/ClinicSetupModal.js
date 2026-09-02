@@ -12,7 +12,7 @@ const { Option } = Select
 
 /**
  * ClinicSetupModal — Admin onboarding 2-bosqichi.
- * Klinika nomi, viloyat, tuman va manzilni to'ldirish.
+ * Shifoxona nomi, viloyat, tuman va manzilni to'ldirish.
  * clinic_setup_modal=true bo'lganda ko'rsatiladi.
  */
 export default function ClinicSetupModal() {
@@ -59,16 +59,16 @@ export default function ClinicSetupModal() {
     const onFinish = async (values) => {
         setloading(true)
         try {
-            // 1. Klinika asosiy ma'lumotlarini saqlash
+            // 1. Shifoxona asosiy ma'lumotlarini saqlash
             const clinicId = user?.clinic?.id
-            if (!clinicId) throw new Error('Klinika ID topilmadi')
+            if (!clinicId) throw new Error('Shifoxona ID topilmadi')
 
             const formData = new FormData()
             formData.append('Id', clinicId)
             formData.append('ClinicName', values.clinicName)
             await send_clinic_info(formData)
 
-            // 2. Klinika tafsilotlarini saqlash
+            // 2. Shifoxona tafsilotlarini saqlash
             const detailFormData = new FormData()
             detailFormData.append('Id', user?.clinic?.clinicDetail?.id || 0)
             detailFormData.append('ClinicId', clinicId)
@@ -84,7 +84,7 @@ export default function ClinicSetupModal() {
             setclinic_setup_modal(false)
         } catch (err) {
             dangerAlert(t('error'))
-            console.error('Klinika ma\'lumotlarini saqlashda xatolik:', err)
+            console.error('Shifoxona ma\'lumotlarini saqlashda xatolik:', err)
         } finally {
             setloading(false)
         }

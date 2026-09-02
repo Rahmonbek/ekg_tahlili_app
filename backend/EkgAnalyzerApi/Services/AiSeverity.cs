@@ -139,19 +139,21 @@ public static class AiSeverity
         return patterns.ToArray();
     }
 
-    /// <summary>Ro'yxatda ko'rsatish uchun AI xulosasining qisqa ko'rinishi.</summary>
+    /// <summary>Ro'yxatda ko'rsatiladigan AI xulosasining TO'LIQ matni.</summary>
     /// <remarks>
-    /// Ro'yxatda shifokor har bir tahlilni ochmasdan turib nima
-    /// topilganini bilishi kerak. To'liq xulosa bir necha ming belgi
-    /// bo'lishi mumkin, shuning uchun u qisqartiriladi.
+    /// Ro'yxat katagida faqat "ko'z" tugmasi turadi; matn bosilganda modal
+    /// oynada to'liq ko'rsatiladi. Shuning uchun matnni qisqartirish shart
+    /// emas — foydalanuvchi to'liq xulosani kesilmagan holda o'qishi kerak
+    /// (foydalanuvchi so'rovi). Ilgari matn 160 belgiga kesilar va yangi
+    /// qatorlar bir qatorga siqilar edi.
     ///
     /// Manba tartibi muhim: avval `automatic_analysis` (aniqlangan
     /// patologiya), keyin `final_summary` (umumiy baho). Tavsiya
-    /// (`AI_recommendations`) ATAYIN olinmaydi — u "shifokorga murojaat
-    /// qiling" kabi umumiy matn bilan boshlanadi va ro'yxatdagi barcha
-    /// qatorlar bir xil ko'rinib qolardi.
+    /// (`AI_recommendations`) ATAYIN olinmaydi — bu maydon aynan xulosa
+    /// matni, tavsiya emas. Matnning xatboshi tuzilishi (yangi qatorlar)
+    /// saqlanadi: modal `pre-wrap` bilan chizadi.
     /// </remarks>
-    public static string? Summarize(string? aiAnswerData, int maxLength = 160)
+    public static string? Conclusion(string? aiAnswerData)
     {
         if (string.IsNullOrWhiteSpace(aiAnswerData)) return null;
 
@@ -169,12 +171,16 @@ public static class AiSeverity
                 var text = prop.GetString()?.Trim();
                 if (string.IsNullOrWhiteSpace(text)) continue;
 
-                // Ko'p qatorli matn ro'yxat qatorini buzadi
-                text = System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ");
+                // Qator ichidagi ortiqcha bo'shliqlar (probel/tab) bittaga
+                // keltiriladi, LEKIN yangi qatorlar saqlanadi — modal ularni
+                // xatboshi sifatida ko'rsatadi.
+                text = System.Text.RegularExpressions.Regex.Replace(text, @"[ \t]+", " ");
+                // Uch va undan ortiq ketma-ket yangi qator — ikkitaga.
+                text = System.Text.RegularExpressions.Regex.Replace(text, @"\n{3,}", "\n\n");
+                // Har bir qator oxiridagi bo'shliqlarni olib tashlash.
+                text = System.Text.RegularExpressions.Regex.Replace(text, @"[ \t]+\n", "\n");
 
-                return text.Length <= maxLength
-                    ? text
-                    : text[..maxLength].TrimEnd() + "…";
+                return text.Trim();
             }
 
             return null;

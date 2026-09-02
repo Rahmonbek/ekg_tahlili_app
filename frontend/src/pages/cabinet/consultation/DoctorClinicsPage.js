@@ -28,7 +28,7 @@ const INV_STATUS_COLORS = {
 
 export default function DoctorClinicsPage() {
     const { t } = useTranslation();
-    useDocumentTitle(t('doctor_clinics', { defaultValue: "Klinikalar" }));
+    useDocumentTitle(t('doctor_clinics', { defaultValue: "Shifoxonalar" }));
     const navigate = useNavigate();
     const { setConsultationBadge } = useStore();
 

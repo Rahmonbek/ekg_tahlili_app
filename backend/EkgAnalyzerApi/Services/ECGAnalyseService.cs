@@ -290,11 +290,18 @@ namespace EkgAnalyzerApi.Services
                     item.Patcient.Passport =
                         PatientPrivacy.MaskPassport(_encryption, item.Patcient.Passport);
 
+            // status=2 (tayyor) bo'lsa-yu, AI natijasi BO'SH bo'lsa — bu SOXTA
+            // "tayyor" (reasoning modeli bo'sh javob qaytargan eski yozuvlar).
+            // Ro'yxatda "AI tahlil qilindi" o'rniga xatolik ko'rsatamiz.
+            foreach (var item in items)
+                if (item.Status == 2 && string.IsNullOrWhiteSpace(item.AIAnswerData))
+                    item.Status = -1;
+
             foreach (var item in items)
 
                 item.AIStatus = AiSeverity.Parse(item.AIAnswerData);
             foreach (var item in items)
-                item.AiSummary = AiSeverity.Summarize(item.AIAnswerData);
+                item.AiSummary = AiSeverity.Conclusion(item.AIAnswerData);
             foreach (var item in items)
                 item.ErrorReason = item.Status == -1
                     ? AiSeverity.ExtractErrorMessage(item.AIAnswerData)
@@ -423,7 +430,8 @@ namespace EkgAnalyzerApi.Services
             bool? hasDiagnosis = null)
         {
             var query = _context.ECGAnalyse
-                .Where(e => e.Doctors!.Any(d => d.DoctorId == doctorId))
+                // Shifokor: O'ZI YUKLAGAN (CreatedDoctorId) YOKI unga tayinlangan
+                .Where(e => e.CreatedDoctorId == doctorId || e.Doctors!.Any(d => d.DoctorId == doctorId))
                 .Include(e => e.Patcient)
                 .Include(e => e.CreatedDoctor)
                 .Include(e => e.Doctors)
@@ -531,11 +539,18 @@ namespace EkgAnalyzerApi.Services
                     item.Patcient.Passport =
                         PatientPrivacy.MaskPassport(_encryption, item.Patcient.Passport);
 
+            // status=2 (tayyor) bo'lsa-yu, AI natijasi BO'SH bo'lsa — bu SOXTA
+            // "tayyor" (reasoning modeli bo'sh javob qaytargan eski yozuvlar).
+            // Ro'yxatda "AI tahlil qilindi" o'rniga xatolik ko'rsatamiz.
+            foreach (var item in items)
+                if (item.Status == 2 && string.IsNullOrWhiteSpace(item.AIAnswerData))
+                    item.Status = -1;
+
             foreach (var item in items)
 
                 item.AIStatus = AiSeverity.Parse(item.AIAnswerData);
             foreach (var item in items)
-                item.AiSummary = AiSeverity.Summarize(item.AIAnswerData);
+                item.AiSummary = AiSeverity.Conclusion(item.AIAnswerData);
             foreach (var item in items)
                 item.ErrorReason = item.Status == -1
                     ? AiSeverity.ExtractErrorMessage(item.AIAnswerData)
@@ -689,11 +704,18 @@ namespace EkgAnalyzerApi.Services
                     item.Patcient.Passport =
                         PatientPrivacy.MaskPassport(_encryption, item.Patcient.Passport);
 
+            // status=2 (tayyor) bo'lsa-yu, AI natijasi BO'SH bo'lsa — bu SOXTA
+            // "tayyor" (reasoning modeli bo'sh javob qaytargan eski yozuvlar).
+            // Ro'yxatda "AI tahlil qilindi" o'rniga xatolik ko'rsatamiz.
+            foreach (var item in items)
+                if (item.Status == 2 && string.IsNullOrWhiteSpace(item.AIAnswerData))
+                    item.Status = -1;
+
             foreach (var item in items)
 
                 item.AIStatus = AiSeverity.Parse(item.AIAnswerData);
             foreach (var item in items)
-                item.AiSummary = AiSeverity.Summarize(item.AIAnswerData);
+                item.AiSummary = AiSeverity.Conclusion(item.AIAnswerData);
             foreach (var item in items)
                 item.ErrorReason = item.Status == -1
                     ? AiSeverity.ExtractErrorMessage(item.AIAnswerData)

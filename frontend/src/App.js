@@ -63,7 +63,7 @@ export default function App() {
     }
   }, [isPublicVerify, isPublicPath, user, user_id])
 
-  // AdminModal yopilgandan keyin: user ma'lumotlarini yangilash va klinika setupni tekshirish
+  // AdminModal yopilgandan keyin: user ma'lumotlarini yangilash va shifoxona setupni tekshirish
   useEffect(() => {
     if (!open_admin_modal && user != null) {
       getUserData(true)
@@ -71,7 +71,7 @@ export default function App() {
   }, [open_admin_modal])
 
   /**
-   * Klinika setup kerakmi yoki yo'q tekshirish.
+   * Shifoxona setup kerakmi yoki yo'q tekshirish.
    * Faqat Admin (2) va Direktor (3) uchun.
    */
   const checkClinicSetup = (userData) => {
@@ -83,7 +83,7 @@ export default function App() {
       userData?.doctor?.firstName?.trim() !== ''
     if (!profileDone) return  // Avval profil to'ldirilsin (AdminModal ko'rsatadi)
 
-    // Klinika asosiy ma'lumotlari bormi?
+    // Shifoxona asosiy ma'lumotlari bormi?
     const clinicName = userData?.clinic?.clinicName
     const address = userData?.clinic?.clinicDetail?.address
     const clinicDone = clinicName && clinicName.trim() !== '' &&
@@ -106,7 +106,7 @@ export default function App() {
         res.data.doctor.firstName.trim() === '') {
         setopen_admin_modal(true)
       } else {
-        // Profil to'liq — klinika setup ni tekshirish
+        // Profil to'liq — shifoxona setup ni tekshirish
         checkClinicSetup(res.data)
       }
 
@@ -164,7 +164,7 @@ export default function App() {
           {loader ? <Loader /> : <></>}
         </div>
       )}
-      {/* Klinika ma'lumotlari setup modali (2-qadam onboarding) */}
+      {/* Shifoxona ma'lumotlari setup modali (2-qadam onboarding) */}
       <ClinicSetupModal />
       {/* Fon rejimidagi tahlillar float paneli */}
       {user_id != null && <AnalysisProgressFloat />}

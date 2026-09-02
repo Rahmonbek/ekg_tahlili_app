@@ -18,7 +18,6 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
-import pandas as pd
 from scipy.signal import find_peaks
 from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError
 from scipy.signal import butter, filtfilt, find_peaks, medfilt
@@ -185,122 +184,9 @@ def map_leads(candidate_names):
             mapping[c] = choice if score >= 75 else None
     return mapping
 
-# ---------------- Parsers ----------------
-def parse_table_bytes(b: bytes) -> Tuple[Dict[str, np.ndarray], Optional[float]]:
-    text = b.decode('utf-8', errors='ignore')
-    df = None
-    # try separators
-    for sep in [',',';','\t',' ']:
-        try:
-            df_try = pd.read_csv(io.StringIO(text), sep=sep)
-            if df_try.shape[1] > 1:
-                df = df_try
-                break
-        except Exception:
-            continue
-    if df is None or df.shape[1] < 1:
-        raise ValueError("Could not parse table data")
-    # find time column
-    time_col = None
-    for c in df.columns:
-        if re.search(r'time|sec|s$', str(c), re.IGNORECASE):
-            time_col = c
-            break
-    leads = {}
-    mapping = map_leads(df.columns)
-    for col in df.columns:
-        if col == time_col:
-            continue
-        name = mapping.get(col) or col
-        try:
-            arr = pd.to_numeric(df[col], errors='coerce').dropna().to_numpy(dtype=float)
-            if arr.size > 0:
-                leads[name] = arr
-        except Exception:
-            continue
-    fs = None
-    if time_col is not None:
-        t = pd.to_numeric(df[time_col], errors='coerce').dropna().to_numpy(dtype=float)
-        if t.size > 2:
-            fs = 1.0 / np.mean(np.diff(t))
-    return leads, fs
-LEAD_NAME_MAP = {
-    'MDC_ECG_LEAD_I': 'I',
-    'MDC_ECG_LEAD_II': 'II',
-    'MDC_ECG_LEAD_III': 'III',
-    'MDC_ECG_LEAD_AVR': 'aVR',
-    'MDC_ECG_LEAD_AVL': 'aVL',
-    'MDC_ECG_LEAD_AVF': 'aVF',
-    'MDC_ECG_LEAD_V1': 'V1',
-    'MDC_ECG_LEAD_V2': 'V2',
-    'MDC_ECG_LEAD_V3': 'V3',
-    'MDC_ECG_LEAD_V4': 'V4',
-    'MDC_ECG_LEAD_V5': 'V5',
-    'MDC_ECG_LEAD_V6': 'V6'
-}
-def parse_xml_bytes(b: bytes) -> Tuple[Dict[str, np.ndarray], float]:
-    ns = {'hl7': 'urn:hl7-org:v3', 'xsi': 'http://www.w3.org/2001/XMLSchema-instance'}
-    root = ET.fromstring(b)
-    
-    leads_dict = {}
-    fs = 500.0  # default sampling rate
+# EKG endi faqat pdf yoki rasm qabul qiladi (file_validator bilan majburlangan).
+# Signal fayl (csv/xml/tsv) parserlari olib tashlandi.
 
-    sr_elem = root.find(".//hl7:sampleRate", ns)
-    if sr_elem is not None and sr_elem.text:
-        try:
-            fs = float(sr_elem.text.strip())
-        except:
-            pass
-    
-    for sequence_comp in root.findall(".//hl7:sequence", ns):
-        code_elem = sequence_comp.find("hl7:code", ns)
-        value_elem = sequence_comp.find("hl7:value", ns)
-        if code_elem is None or value_elem is None:
-            continue
-        
-        raw_lead_name = code_elem.get("code")
-        if not raw_lead_name:
-            continue
-        
-        lead_name = LEAD_NAME_MAP.get(raw_lead_name, raw_lead_name)  # Standart nomga o'tkazish
-        
-        digits_elem = value_elem.find("hl7:digits", ns)
-        if digits_elem is None or not digits_elem.text:
-            continue
-        
-        digits_str = digits_elem.text.strip()
-        arr = np.array([float(x) for x in re.findall(r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?', digits_str)])
-        
-        origin_elem = value_elem.find("hl7:origin", ns)
-        scale_elem = value_elem.find("hl7:scale", ns)
-        origin = float(origin_elem.get("value")) if origin_elem is not None else 0.0
-        scale = float(scale_elem.get("value")) if scale_elem is not None else 1.0
-        arr = origin + arr * scale
-        
-        unit_elem = value_elem.find("hl7:unit", ns)
-        if unit_elem is not None and unit_elem.get("code"):
-            unit = unit_elem.get("code")
-            if unit.lower() in ["uv", "μv", "microvolt"]:
-                arr = arr / 1000.0  # uV → mV
-            # endi arr mV da
-        
-        # Old va oxiridagi 0 larni qirqish
-        nonzero_idx = np.where(arr != 0)[0]
-        if len(nonzero_idx) > 0:
-            arr = arr[nonzero_idx[0]:nonzero_idx[-1]+1]
-        # Maksimal 3000 sample (oxirgi qism)
-        if len(arr) > 7500:
-            arr = arr[-7500:-4500]
-        else: 
-            if len(arr) > 5500:
-                arr = arr[-5500:-2500]
-            else: 
-                if len(arr) >3001:
-                    arr = arr[-3001:-1]
-        
-        leads_dict[lead_name] = arr
-
-    return leads_dict, fs
 
 def extract_image_bytes_as_signal(b: bytes, paper_speed: float = 25.0) -> Tuple[Dict[str, np.ndarray], float]:
     """
@@ -478,31 +364,100 @@ asosiy EKG topilmalar va umumiy klinik baho."
 
 
 def compose_prompt_for_openai_for_img(age, gender, complaint, lang) -> str:
-    prompt_header = ""
     language = (
-    "O'ZBEK" if lang == 'uz'
-    else "RUS" if lang == 'ru'
-    else "INGLIZ" if lang == 'en'
-    else "O'ZBEK"
+        "O'ZBEK" if lang == 'uz'
+        else "RUS" if lang == 'ru'
+        else "INGLIZ" if lang == 'en'
+        else "O'ZBEK"
     )
-    # Bemor ma'lumotlari
-    if age is not None or gender is not None:
-        prompt_header += "Bemor ma'lumotlari:"
-        if age is not None:
-            prompt_header += f"\n - Yoshi {age}"
-        if gender is not None:
-            prompt_header += f"\n - Jinsi {gender}"
 
-    # Shikoyatlar
-    if complaint and len(complaint) > 0:
-        complaint_str = "\n".join([f"- {c}" for c in complaint])
-        prompt_header += f"\n\nBemorning shikoyatlari:\n{complaint_str}"
-    
-    prompt_header += f"""
-    Siz tajribali kardiolog va aritmolog shifokorsiz. Yuborilgan EKG rasmni tahlil qiling. Javob quyidagi JSON shaklida taqdim eting ortiqcha belgilarni yozmang.
-    Hech qaysi parametr qiymatini taxmin qilma. Faqat aniq aniqlash imkoni bor parametrlardan foydalan. Tahlilda grafikdagi vizual (paralogik) o'zgarishlarni ham inobatga oling.
-    {
- """{ "digital_measurements": {
+    patient_info = ""
+
+    if age is not None or gender is not None:
+        patient_info += "Bemor ma'lumotlari:"
+        if age is not None:
+            patient_info += f"\n- Yoshi: {age}"
+        if gender is not None:
+            patient_info += f"\n- Jinsi: {gender}"
+
+    if complaint:
+        if isinstance(complaint, str):
+            complaints = [complaint]
+        else:
+            complaints = complaint
+
+        complaint_str = "\n".join(
+            f"- {c}" for c in complaints if c
+        )
+
+        if complaint_str:
+            patient_info += f"\n\nBemorning shikoyatlari:\n{complaint_str}"
+
+    prompt = f"""
+{patient_info}
+
+Siz tajribali kardiolog va aritmolog shifokorsiz.
+Yuborilgan EKG rasmini professional tahlil qiling.
+
+MUHIM QOIDALAR:
+
+- Tahlilni boshlashdan oldin EKG rasmining orientatsiyasini tekshiring.
+  Agar rasm 90°, 180° yoki 270° ga aylangan, teskari yoki yonboshlagan bo'lsa,
+  avval uni to'g'ri o'qish holatiga keltirilgan deb tasavvur qiling.
+
+- Avval EKG apparati tomonidan chop etilgan raqamli qiymatlarni qidiring:
+  HR/ЧСС, PR/PQ, QRS, QT, QTc, P/QRS/T axis va boshqa mavjud parametrlar.
+
+- Apparat tomonidan chop etilgan qiymatlar birlamchi manba hisoblanadi.
+  Agar parametr rasmda yozilgan bo'lsa, aynan shu qiymatdan foydalaning,
+  uni grafikdan qayta hisoblamang.
+
+- Rasm teskari yoki qiya bo'lsa, apparat yozuvlarini faqat to'g'ri
+  orientatsiyada o'qigandan keyin qiymatlarni qaytaring.
+
+- Apparat yozmagan parametrni faqat EKG grid, kalibratsiya va tasvir
+  sifati yetarli bo'lsa rasmdan aniqlashga harakat qiling.
+
+- Hech qanday raqamli qiymatni taxmin qilmang.
+  Ishonchli aniqlab bo'lmasa null qaytaring.
+
+- Ayrim raqamli parametrlarni aniqlab bo'lmasligi butun EKG tahlilini
+  to'xtatish uchun sabab emas.
+
+- Raqamli o'lchovlar aniqlanmasa ham ritm, P-QRS-T morfologiyasi,
+  ST-T o'zgarishlari, aritmiya va boshqa ko'rinadigan patologik
+  belgilarni vizual tahlil qilishni davom ettiring.
+
+- Bemorning yoshi, jinsi va shikoyatlarini klinik kontekst sifatida
+  hisobga oling, lekin EKGda ko'rinmaydigan holatni o'ylab topmang.
+
+- Patologiya aniq bo'lmasa, ehtimoliy holat sifatida yozing.
+
+- HRVni faqat yetarli RR ma'lumotlari mavjud bo'lsa aniqlang,
+  aks holda null qaytaring.
+
+- QTc apparatda yozilgan bo'lsa aynan shu qiymatdan foydalaning.
+  Apparatda yozilmagan bo'lsa faqat QT va RR ishonchli aniqlanganda hisoblang.
+
+- EKG rasmidagi grafikni tajribali kardiolog kabi mustaqil ravishda vizual tahlil qiling va grafikda ko'rinadigan patologik, morfologik hamda ritmga oid belgilarni aniqlang.
+
+- Agar biror parametrning son qiymati EKG rasmida allaqachon yozilgan bo'lsa, shu parametr qiymatini grafikdan qayta hisoblamang yoki boshqa qiymat bilan almashtirmang. Aynan rasmda yozilgan qiymatdan foydalaning.
+
+- Faqat EKG rasmida son qiymati umuman berilmagan parametrlarni grafikning vizual ko'rinishi asosida aniqlashga harakat qiling.
+
+- Grafikni vizual tahlil qilishda noodatiy sakrashlar, muddatidan oldin kelgan komplekslar, ekstrasistoliyalar, pauzalar, ritmning buzilishi, ST-T o'zgarishlari, patologik Q to'lqinlari, blokadalar, aritmiyalar va boshqa ko'rinadigan patologik belgilar mavjud bo'lsa, ularni tahlilda albatta qayd eting.
+
+- Grafikdagi patologik belgilarni aniqlash raqamli parametrlarni qayta hisoblashdan alohida vazifa hisoblanadi.
+
+- Davolash tavsiyasida aniq dori dozasi yoki individual dori sxemasini
+  belgilamang.
+
+Javob quyidagi JSON shaklida bo'lsin.
+JSON strukturasi va key nomlarini O'ZGARTIRMANG.
+Javobdan oldin yoki keyin hech qanday matn yozmang.
+
+{{
+  "digital_measurements": {{
     "HR": "Yurak urish tezligi (bpm), raqamli qiymat + tibbiy baho (normal/patologik)",
     "PR_interval": "PR interval (ms), raqamli qiymat + izoh",
     "QRS_duration": "QRS davomiyligi (ms), raqamli qiymat + izoh",
@@ -519,31 +474,25 @@ def compose_prompt_for_openai_for_img(age, gender, complaint, lang) -> str:
     "RR_interval": "RR interval (ms), raqamli qiymat + izoh",
     "heart_rate_variability": "HRV (ms), raqamli qiymat + izoh",
     "P_QRS_T_morphology": "P, QRS va T to'lqin shakllarining qisqa professional tavsifi"
-  },
+  }},
 
   "automatic_analysis": "EKG, bemor ma'lumotlari va bemor shikoyatlari asosida ANIQLANGAN patologik holatlar yoki kasalliklar.",
-  
-  "analiz_mumkinmi": "true yoki false. Rasmda EKG yozuvi ko'rinmasa, sifati past bo'lsa yoki tahlil qilishning imkoni bo'lmasa — false",
 
-  "analiz_mumkin_emas_sababi": "analiz_mumkinmi false bo'lsa, nima uchun tahlil qilib bo'lmaganini qisqacha yoz. Aks holda null",
+  "automatic_analysis_bool": "Holat jiddiyligi darajasi: 1 = normal (patologiya aniqlanmadi yoki topilgani klinik ahamiyatga ega emas), 2 = e'tibor talab qiladi (patologiya bor, shoshilinch emas — rejali ko'rik kerak), 3 = shoshilinch (hayot uchun xavfli yoki tezkor aralashuv talab qiladigan holat). MUHIM: patologiya topilgan bo'lsa — u qanchalik yengil bo'lmasin — 1 QO'YMA, kamida 2 qo'y.",
 
-  "automatic_analysis_bool": "Holat jiddiyligi darajasi: 1 = normal (patologiya aniqlanmadi yoki topilgani klinik ahamiyatga ega emas), 2 = e'tibor talab qiladi (patologiya bor, shoshilinch emas — rejali ko'rik kerak), 3 = shoshilinch (hayot uchun xavfli yoki tezkor aralashuv talab qiladigan holat). MUHIM: patologiya topilgan bo'lsa — u qanchalik yengil bo'lmasin — 1 QO'YMA, kamida 2 qo'y. 1 faqat toza normal EKG uchun. MUHIM: analiz_mumkinmi false bo'lsa BU MAYDON null bo'lishi SHART",
+  "AI_recommendations": "Oddiy tilda bemor uchun tavsiyalar: qo'shimcha tekshiruv zarurati, jismoniy faollik bo'yicha ko'rsatma, shifokorga murojaat qilish zarurati. Agar kasallik aniqlansa, umumiy davolash yo'nalishi qisqacha yozilsin.",
 
-  "AI_recommendations": "Oddiy tilda bemor uchun tavsiyalar:
-— qo'shimcha tekshiruv zarurati
-- "digital_measurements" bo'limida aniqlash imkoni yo'q parametrlarga null qiymat ber 
-- rasmda ekg aparat aniqlagan qiymatlar mavjud bo'lsa shulardan foydalan yo'qlarini o'zing aniqlashga urinib ko'r
-— jismoniy faollik bo'yicha ko'rsatma
-— shifokorga murojaat qilish zarurati
-Agar kasallik aniqlansa, umumiy davolash yo'nalishi qisqacha yozilsin.",
-"final_summary": "Tibbiy asoslangan yakuniy xulosa:
-asosiy EKG topilmalar va umumiy klinik baho."
-}"""}
+  "final_summary": "Tibbiy asoslangan yakuniy xulosa: asosiy EKG topilmalari va umumiy klinik baho."
+}}
 
+MUHIM:
+"digital_measurements" ichida aniqlash imkoni bo'lmagan parametr qiymatini
+null qilib qaytaring va aniqlangan qiymatlarda taxminan degan so'zni yozma.
 
-❗️Javob FAQAT JSON bo'lsin va {language} tilida bo'lsin.
-    """
-    return prompt_header
+Javob FAQAT valid JSON va {language} tilida bo'lsin.
+"""
+
+    return prompt.strip()
 
 
 
@@ -1277,11 +1226,9 @@ def _sync_ecg_process_and_ai(
             leads: dict = {}
             fs = None
             try:
-                if fname.endswith(('.csv', '.txt', '.tsv')):
-                    leads, fs = parse_table_bytes(content)
-                elif fname.endswith('.xml'):
-                    leads, fs = parse_xml_bytes(content)
-                elif fname.endswith('.pdf'):
+                # EKG faqat pdf yoki rasm qabul qiladi (file_validator bilan
+                # majburlangan). `is_image` bo'lmagani uchun bu — PDF.
+                if fname.endswith('.pdf'):
                     if convert_from_bytes is None:
                         raise RuntimeError("pdf2image not installed")
                     pages = convert_from_bytes(content, first_page=1, last_page=1)
@@ -1290,10 +1237,7 @@ def _sync_ecg_process_and_ai(
                     img_bytes.seek(0)
                     leads, fs = extract_image_bytes_as_signal(img_bytes.read())
                 else:
-                    try:
-                        leads, fs = parse_table_bytes(content)
-                    except Exception:
-                        leads, fs = parse_xml_bytes(content)
+                    raise RuntimeError("Qo'llab-quvvatlanmaydigan fayl turi (faqat pdf yoki rasm)")
             except Exception as e:
                 raise RuntimeError(f"Fayl parse xatolik: {e}")
 
@@ -1336,7 +1280,11 @@ def _sync_ecg_process_and_ai(
         )
 
         # 3. OpenAI upload + call
-        client = OpenAI(api_key=OPENAI_API_KEY)
+        client = OpenAI(
+            api_key=OPENAI_API_KEY,
+            timeout=ai_config.AI_REQUEST_TIMEOUT,
+            max_retries=ai_config.AI_MAX_RETRIES,
+        )
         # `ai_image_bytes` — `png_bytes` emas: birinchisi tafsilot uchun,
         # ikkinchisi ekran va PDF uchun tayyorlangan (A-2)
         fobj = io.BytesIO(ai_image_bytes)
@@ -1344,14 +1292,18 @@ def _sync_ecg_process_and_ai(
         uploaded = client.files.create(file=fobj, purpose="vision")
         file_id = uploaded.id
 
+        # EKG SURATI (foto/rasm) uchun kuchliroq vizual model + to'liq
+        # (original) tafsilot; PDF (signaldan chizilgan grafik) uchun
+        # standart tashxis modeli.
+        _req = ai_config.ecg_image_request() if is_image else ai_config.diagnosis_request()
         resp = client.responses.create(
             # Model va fikrlash chuqurligi bitta joyda (A-11)
-            **ai_config.diagnosis_request(),
+            **_req,
             input=[{
                 "role": "user",
                 "content": [
                     {"type": "input_text", "text": prompt},
-                    {"type": "input_image", "file_id": file_id}
+                    {"type": "input_image", "file_id": file_id, "detail": ai_config.ECG_IMAGE_DETAIL}
                 ]
             }],
             # Qat'iy JSON sxema: model maydonni tashlab keta olmaydi
@@ -1362,6 +1314,20 @@ def _sync_ecg_process_and_ai(
         # 1 (= yashil "Normal") qo'yib yuborishi mumkin — T-092. Guard shu
         # holatda darajani olib tashlaydi.
         content_out = ai_result_guard.sanitize(resp.output_text, ecg_id, "ecg")
+
+        # Bo'sh natija muhofazasi: reasoning modeli butun token byudjetini
+        # FIKRLASHGA sarflab, matn chiqarmasligi mumkin (javob "incomplete").
+        # `sanitize` bunda None qaytaradi va `update_ecg_analyse` uni "maydonga
+        # tegma" deb qabul qiladi — natijada status=2 bo'lsa-da ai_answer_data
+        # NULL qolib, UI xato ravishda "AI tahlil qilindi" deb ko'rsatardi.
+        # Shuning uchun bo'sh natijani XATOLIK sifatida qayta ishlaymiz (retry
+        # mumkin, signal o'lchovlari esa saqlanadi).
+        if not content_out or not str(content_out).strip():
+            incomplete = getattr(resp, "status", None) == "incomplete"
+            raise RuntimeError(
+                "AI bo'sh natija qaytardi"
+                + (" — javob to'liq emas (token chegarasi)" if incomplete else "")
+            )
 
         # 4. DB: status=2 (AI tayyor)
         update_ecg_analyse(session=db, ecg_id=ecg_id, status=2, ai_answer_data=content_out)
@@ -1693,13 +1659,9 @@ async def analyze_save(
     if not is_image:
         leads = {}
         fs = None
-        # --- Parse file according to extension ---
+        # --- Parse file: EKG faqat pdf yoki rasm; is_image bo'lmasa — PDF ---
         try:
-            if fname.endswith(('.csv','.txt','.tsv')):
-                leads, fs = parse_table_bytes(content)
-            elif fname.endswith('.xml'):
-                leads, fs = parse_xml_bytes(content)
-            elif fname.endswith('.pdf'):
+            if fname.endswith('.pdf'):
                 if convert_from_bytes is None:
                     raise HTTPException(status_code=500, detail="pdf2image not installed or poppler missing")
                 pages = convert_from_bytes(content, first_page=1, last_page=1)
@@ -1709,10 +1671,9 @@ async def analyze_save(
                 img_bytes.seek(0)
                 leads, fs = extract_image_bytes_as_signal(img_bytes.read())
             else:
-                try:
-                    leads, fs = parse_table_bytes(content)
-                except Exception:
-                    leads, fs = parse_xml_bytes(content)
+                raise HTTPException(status_code=400, detail="Qo'llab-quvvatlanmaydigan fayl turi (faqat pdf yoki rasm)")
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Could not parse file: {e}")
 
@@ -1797,13 +1758,9 @@ async def analyze_retry(
     if not is_image:
         leads = {}
         fs = None
-        # --- Parse file according to extension ---
+        # --- Parse file: EKG faqat pdf yoki rasm; is_image bo'lmasa — PDF ---
         try:
-            if fname.endswith(('.csv','.txt','.tsv')):
-                leads, fs = parse_table_bytes(file_bytes)
-            elif fname.endswith('.xml'):
-                leads, fs = parse_xml_bytes(file_bytes)
-            elif fname.endswith('.pdf'):
+            if fname.endswith('.pdf'):
                 if convert_from_bytes is None:
                     raise HTTPException(status_code=500, detail="pdf2image not installed or poppler missing")
                 pages = convert_from_bytes(file_bytes, first_page=1, last_page=1)
@@ -1813,10 +1770,9 @@ async def analyze_retry(
                 img_bytes.seek(0)
                 leads, fs = extract_image_bytes_as_signal(img_bytes.read())
             else:
-                try:
-                    leads, fs = parse_table_bytes(file_bytes)
-                except Exception:
-                    leads, fs = parse_xml_bytes(file_bytes)
+                raise HTTPException(status_code=400, detail="Qo'llab-quvvatlanmaydigan fayl turi (faqat pdf yoki rasm)")
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Could not parse file: {e}")
 
@@ -1902,15 +1858,23 @@ async def analyze_retry(
 
     ai_error = False
     try:
-        client = OpenAI(api_key=OPENAI_API_KEY)
+        client = OpenAI(
+            api_key=OPENAI_API_KEY,
+            timeout=ai_config.AI_REQUEST_TIMEOUT,
+            max_retries=ai_config.AI_MAX_RETRIES,
+        )
+        # EKG SURATI (foto/rasm) uchun kuchliroq vizual model + to'liq
+        # (original) tafsilot; PDF (signaldan chizilgan grafik) uchun
+        # standart tashxis modeli.
+        _req = ai_config.ecg_image_request() if is_image else ai_config.diagnosis_request()
         resp = client.responses.create(
             # Model va fikrlash chuqurligi bitta joyda (A-11)
-            **ai_config.diagnosis_request(),
+            **_req,
             input=[{
                 "role": "user",
                 "content": [
                     {"type": "input_text", "text": prompt},
-                    {"type": "input_image", "file_id": file_id}
+                    {"type": "input_image", "file_id": file_id, "detail": ai_config.ECG_IMAGE_DETAIL}
                 ]
             }],
             # Qat'iy JSON sxema: model maydonni tashlab keta olmaydi
@@ -1918,6 +1882,15 @@ async def analyze_retry(
             text=ai_schema.response_format("ecg"),
         )
         content_out = resp.output_text
+        # Bo'sh natija muhofazasi (reasoning modeli matn chiqarmagan holat) —
+        # status=2 qo'ymaymiz, aks holda "AI tahlil qilindi" deyilib ma'lumot
+        # bo'sh qolardi. Xatolik sifatida qayta ishlanadi (retry mumkin).
+        if not content_out or not content_out.strip():
+            incomplete = getattr(resp, "status", None) == "incomplete"
+            raise RuntimeError(
+                "AI bo'sh natija qaytardi"
+                + (" — javob to'liq emas (token chegarasi)" if incomplete else "")
+            )
         try:
             parsed = json.loads(content_out)
         except Exception:

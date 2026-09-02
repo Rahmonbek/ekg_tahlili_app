@@ -9,16 +9,19 @@ from dotenv import load_dotenv
 
 # .env faylini yuklash (python_back/ papkasidan)
 #
-# `override=False` — MUHIM. Ilgari bu yerda `override=True` turardi va
-# `.env` fayli haqiqiy muhit o'zgaruvchilarini **bosib o'tardi**. Ishlab
-# chiqarishda kalitlar systemd unit faylida yoki konteyner muhitida
-# beriladi; serverda eskirgan `.env` qolib ketgan bo'lsa, u jimgina
-# ustun kelardi va xizmat noto'g'ri kalit bilan ishlab ketaverardi.
+# `override=True` — `.env` fayli YAGONA haqiqiy manba. U tizim (OS/User)
+# darajasidagi muhit o'zgaruvchilarini **bosib o'tadi**.
 #
-# Endi tartib odatdagidek: muhit o'zgaruvchisi ustun, `.env` esa faqat
-# u berilmagan qiymatlarni to'ldiradi (mahalliy ishlab chiqish uchun).
+# Nima uchun: OS'da eskirib qolgan `OPENAI_API_KEY` (masalan, Windows User
+# muhit o'zgaruvchisi) `.env`'dagi yangi kalitni jimgina yashirar edi va
+# xizmat yaroqsiz kalit bilan ishlab, barcha tahlillar 401 bilan tugardi.
+# Endi kalitni faqat `.env` faylida yangilash yetarli — restart qiling,
+# `os.environ`'dagi eski qiymat e'tiborga olinmaydi.
+#
+# `config.py` — .env'ni `os.environ`'ga yuklaydigan yagona joy; qolgan
+# modullar (`ai_config.py` va h.k.) `os.getenv` orqali shundan o'qiydi.
 BASE_DIR = Path(__file__).parent
-load_dotenv(BASE_DIR / ".env", override=False)
+load_dotenv(BASE_DIR / ".env", override=True)
 
 
 # ─────────────── OpenAI ───────────────

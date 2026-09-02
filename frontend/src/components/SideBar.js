@@ -33,7 +33,7 @@ export default function SideBar() {
         consultation_doctor_pending: consultationBadge?.doctorPendingCount ?? 0,
     }
 
-    // Klinika faollik holati (Main.js dagi mantiq bilan bir xil)
+    // Shifoxona faollik holati (Main.js dagi mantiq bilan bir xil)
     const clinicIsActive = user?.roleId === 1
         ? true
         : (user?.clinic?.isActive ?? false)
@@ -87,7 +87,9 @@ export default function SideBar() {
         />
     )}
     <div className={`sidebar ${!open_menu?"closed_menu":''}`}>
-        <Link to={'/'} className='sidebar_head'>
+        {/* Shifokor uchun logotip profil sahifasiga olib boradi (o'sha yerda
+            unga yuborilgan tahlillar va statistika ko'rinadi); qolganlar uchun bosh sahifa */}
+        <Link to={user?.roleId === 4 ? '/profile' : '/'} className='sidebar_head'>
             <img src={logo} alt="logo"/>
             <h1>N MED AI</h1>
         </Link>
@@ -103,7 +105,7 @@ export default function SideBar() {
                 const unreadCount = (isDoctor || isConsultationKey) && item.unread_key
                     ? (unreadMap[item.unread_key] || 0)
                     : 0
-                // Klinika faollashtilmagan va route faol klinika talab qilsa — qulf belgisi
+                // Shifoxona faollashtilmagan va route faol shifoxona talab qilsa — qulf belgisi
                 const isLocked = item.requires_active && !clinicIsActive
                 return (user==null || item.role_id.length===0 || item.role_id.indexOf(user.roleId)!==-1) ? (
                 <Tooltip

@@ -29,7 +29,7 @@ export function roleName(roleId, t) {
     return t ? t(entry[0], { defaultValue: entry[1] }) : entry[1]
 }
 
-/** Klinika boshqaruvchisimi (Admin yoki Direktor). */
+/** Shifoxona boshqaruvchisimi (Admin yoki Direktor). */
 export const isClinicManager = (roleId) => roleId === ROLE.ADMIN || roleId === ROLE.DIRECTOR
 
 export default { ...ROLE, name: roleName, isClinicManager }

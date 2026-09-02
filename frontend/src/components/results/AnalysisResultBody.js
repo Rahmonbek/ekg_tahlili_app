@@ -168,34 +168,48 @@ function LabMeasurements({ measurements, gender }) {
             <div className="ekg-item-text">
                 <b>⭐ {t('digital_measurements', { defaultValue: "Raqamli o'lchovlar" })}: </b>
             </div>
-            <ul className="lab-values">
+            <div className="lab-grid">
                 {rows.map((v) => {
                     const cell = measurements[v.columnName];
                     const verdict = evaluate(cell.value, v, gender);
+                    const status = verdict?.status || 'na';
+                    const unit = cell.unit ?? v.measure;
+                    const rangeText = verdict && (verdict.min != null || verdict.max != null)
+                        ? (verdict.min != null && verdict.max != null ? `${verdict.min}–${verdict.max}`
+                            : verdict.min != null ? `≥ ${verdict.min}` : `≤ ${verdict.max}`)
+                        : null;
                     return (
-                        <li key={v.id} className={verdict ? `lab-${verdict.status}` : undefined}>
-                            <b>{v[`name${t('data_lang')}`]}</b>
-                            <span> — {cell.value} {cell.unit ?? v.measure}</span>
-                            {verdict && verdict.status !== 'normal' && (
-                                <Tag
-                                    color={verdict.status === 'high' ? 'error' : 'warning'}
-                                    icon={verdict.status === 'high'
-                                        ? <ArrowUpOutlined />
-                                        : <ArrowDownOutlined />}
-                                >
-                                    {verdict.status === 'high'
-                                        ? t('above_normal', { defaultValue: 'Normadan yuqori' })
-                                        : t('below_normal', { defaultValue: 'Normadan past' })}
-                                </Tag>
+                        <div key={v.id} className={`lab-card lab-card--${status}`}>
+                            <div className="lab-card-top">
+                                <span className="lab-card-name">{v[`name${t('data_lang')}`]}</span>
+                                {status === 'high' && (
+                                    <span className="lab-card-pill lab-card-pill--high">
+                                        <ArrowUpOutlined /> {t('above_normal', { defaultValue: 'Yuqori' })}
+                                    </span>
+                                )}
+                                {status === 'low' && (
+                                    <span className="lab-card-pill lab-card-pill--low">
+                                        <ArrowDownOutlined /> {t('below_normal', { defaultValue: 'Past' })}
+                                    </span>
+                                )}
+                                {status === 'normal' && (
+                                    <span className="lab-card-pill lab-card-pill--normal">
+                                        {t('normal', { defaultValue: 'Norma' })}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="lab-card-value">
+                                {cell.value}{unit ? <span className="lab-card-unit"> {unit}</span> : null}
+                            </div>
+                            {rangeText && (
+                                <div className="lab-card-range">
+                                    {t('norm', { defaultValue: 'norma' })}: {rangeText}{unit ? ` ${unit}` : ''}
+                                </div>
                             )}
-                            {verdict && (
-                                <RangeHint min={verdict.min} max={verdict.max}
-                                           unit={cell.unit ?? v.measure} />
-                            )}
-                        </li>
+                        </div>
                     );
                 })}
-            </ul>
+            </div>
         </>
     );
 }

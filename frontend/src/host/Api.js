@@ -74,7 +74,14 @@ axiosInstance.interceptors.response.use(
             error.response?.status === 409 &&
             error.response?.data?.detail?.code === 'DUPLICATE_FILE';
 
-        if (!isDuplicate) {
+        // Autentifikatsiya so'rovlari (login/register/verify/reset) o'z
+        // xatoliklarini i18n bilan (`t(...)`) ko'rsatadi. Global handler esa
+        // xom inglizcha kalitni ko'rsatib, IKKITA xabar chiqarardi. Shu bois
+        // /auth/* uchun global toast o'tkazib yuboriladi — faqat komponentning
+        // tarjima qilingan xabari qoladi.
+        const isAuthRequest = (error.config?.url || '').includes('/auth/');
+
+        if (!isDuplicate && !isAuthRequest) {
             // Foydalanuvchiga xatolik xabari ko'rsatish
             handleApiError(error);
         }

@@ -41,6 +41,9 @@ export default function LabDynamicsChart({ patcientId, showTitle = true }) {
     const [series, setSeries] = useState(null);
     const [selected, setSelected] = useState(null);
     const [loading, setLoading] = useState(true);
+    // Bemorda jami nechta lab tahlili borligi — "kamida 2 tahlil kerak" va
+    // "tahlillar har xil ko'rsatkichlarni o'lchagan" holatlarini farqlash uchun.
+    const [analysisCount, setAnalysisCount] = useState(0);
 
     useEffect(() => {
         let alive = true;
@@ -53,11 +56,16 @@ export default function LabDynamicsChart({ patcientId, showTitle = true }) {
         get_lab_patient_dynamics(patcientId)
             .then((res) => {
                 if (!alive) return;
-                const data = Array.isArray(res?.data) ? res.data : [];
+                // Backend endi { analysisCount, series } qaytaradi; eski
+                // massiv shakli ham qo'llab-quvvatlanadi (zaxira).
+                const payload = res?.data;
+                const data = Array.isArray(payload?.series) ? payload.series
+                    : Array.isArray(payload) ? payload : [];
                 setSeries(data);
+                setAnalysisCount(payload?.analysisCount ?? data.length);
                 setSelected(data[0]?.columnName ?? null);
             })
-            .catch(() => { if (alive) setSeries([]); })
+            .catch(() => { if (alive) { setSeries([]); setAnalysisCount(0); } })
             .finally(() => { if (alive) setLoading(false); });
 
         return () => { alive = false; };
@@ -122,15 +130,25 @@ export default function LabDynamicsChart({ patcientId, showTitle = true }) {
 
     if (loading) return <div style={{ padding: 24 }}><Spin /></div>;
 
-    // Kamida ikki o'lchovi bor ko'rsatkich yo'q — bu nosozlik emas,
-    // shunchaki taqqoslash uchun ma'lumot yetarli emas.
+    // Kamida ikki o'lchovi bor ko'rsatkich yo'q — bu nosozlik emas.
+    // Ammo SABABI ikki xil bo'lishi mumkin, shuning uchun xabar ham farqli:
     if (!series || series.length === 0) {
+        // (a) Bemorda 2+ tahlil bor, lekin hech bir ko'rsatkich ikki
+        //     tahto takrorlanmagan — ya'ni tahlillar har xil turdagi
+        //     (biri qon, biri gormon, biri peshob) bo'lgan. Dinamika
+        //     bir XIL ko'rsatkichni vaqt bo'yicha solishtiradi.
+        const differentIndicators = analysisCount >= 2;
         return (
             <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description={t('no_dynamics_yet', {
-                    defaultValue: "Dinamikani ko'rsatish uchun kamida ikkita tahlil kerak",
-                })}
+                description={differentIndicators
+                    ? t('no_dynamics_diff_indicators', {
+                        defaultValue: "Bu bemorda {{count}} ta tahlil bor, lekin ular har xil ko'rsatkichlarni o'lchagan. Dinamika grafigi bir xil ko'rsatkichni (masalan gemoglobinni) kamida ikkita tahlilda taqqoslaydi — shuning uchun bir xil ko'rsatkich bo'lgan tahlillar kerak.",
+                        count: analysisCount,
+                    })
+                    : t('no_dynamics_yet', {
+                        defaultValue: "Dinamikani ko'rsatish uchun kamida ikkita tahlil kerak",
+                    })}
             />
         );
     }

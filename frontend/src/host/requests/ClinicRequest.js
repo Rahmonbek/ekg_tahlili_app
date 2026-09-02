@@ -20,7 +20,7 @@ export const send_clinic_detail=(data)=>{
     return httpPostFormRequest("/clinic/create-update-clinic-detail", data)
 }
 
-// SuperAdmin: klinikani faollashtirish / o'chirish
+// SuperAdmin: shifoxonani faollashtirish / o'chirish
 export const set_clinic_active=(clinicId, isActive)=>{
     return httpPatchRequest(`/clinic/${clinicId}/set-active?isActive=${isActive}`)
 }

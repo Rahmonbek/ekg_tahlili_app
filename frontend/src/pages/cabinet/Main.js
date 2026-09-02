@@ -59,7 +59,7 @@ const ProtectedRoute = ({ allowedRoles, userRole, children }) => {
     return <Navigate to="/" replace />
 }
 
-// ─── Klinika faollik gate: is_active=false bo'lsa blok xabari ko'rsatadi ────
+// ─── Shifoxona faollik gate: is_active=false bo'lsa blok xabari ko'rsatadi ────
 // Faqat admin/direktor uchun qo'llaniladi (shifokor/hamshira loginda bloklanadi)
 const ClinicGatedRoute = ({ allowedRoles, userRole, clinicIsActive, children }) => {
     if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
@@ -76,7 +76,7 @@ export default function Main() {
     const { t } = useTranslation()
     const { complaints, setcomplaints, user, setlab_values, lab_values } = useStore()
 
-    // Klinika faollik holati — SuperAdmin (1) uchun har doim true
+    // Shifoxona faollik holati — SuperAdmin (1) uchun har doim true
     const clinicIsActive = user?.roleId === 1
         ? true
         : (user?.clinic?.isActive ?? false)
@@ -126,7 +126,7 @@ export default function Main() {
                         <Route path="/cabinet" element={<Navigate to="/" replace />} />
                         <Route path="/dashboard" element={<Dashboard />} />
 
-                        {/* ── Admin/Direktor: klinika faollashtirilmasa ham kirishi mumkin ── */}
+                        {/* ── Admin/Direktor: shifoxona faollashtirilmasa ham kirishi mumkin ── */}
                         <Route path="/doctor" element={
                             <ProtectedRoute allowedRoles={[2, 3]} userRole={user.roleId}>
                                 <Doctors />
@@ -148,7 +148,7 @@ export default function Main() {
                             </ProtectedRoute>
                         } />
 
-                        {/* ── Tahlil ro'yxatlari — klinika faol bo'lsa ochiladi ── */}
+                        {/* ── Tahlil ro'yxatlari — shifoxona faol bo'lsa ochiladi ── */}
                         <Route path="/ecg-analyses" element={
                             <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
                                 <EcgAnalysesList />
@@ -175,7 +175,7 @@ export default function Main() {
                             </ClinicGatedRoute>
                         } />
 
-                        {/* ── Tahlil yaratish — klinika faol bo'lsa ochiladi ── */}
+                        {/* ── Tahlil yaratish — shifoxona faol bo'lsa ochiladi ── */}
                         <Route path="/analyse-ecg" element={
                             <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
                                 <EcgAnalyzer />
@@ -202,7 +202,7 @@ export default function Main() {
                             </ClinicGatedRoute>
                         } />
 
-                        {/* ── Ko'rish sahifalari — klinika faol bo'lsa ochiladi ── */}
+                        {/* ── Ko'rish sahifalari — shifoxona faol bo'lsa ochiladi ── */}
                         <Route path="/ecg-analyses/view/:id" element={
                             <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
                                 <EcgAnalyseView />
@@ -229,7 +229,7 @@ export default function Main() {
                             </ClinicGatedRoute>
                         } />
 
-                        {/* ── Parazitologiya — klinika faol bo'lsa ochiladi ── */}
+                        {/* ── Parazitologiya — shifoxona faol bo'lsa ochiladi ── */}
                         <Route path="/parasitology-analyses" element={
                             <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
                                 <ParasitologyAnalysesList />
@@ -246,7 +246,7 @@ export default function Main() {
                             </ClinicGatedRoute>
                         } />
 
-                        {/* ── Bemorlar — klinika faol bo'lsa ochiladi ── */}
+                        {/* ── Bemorlar — shifoxona faol bo'lsa ochiladi ── */}
                         <Route path="/patcients" element={
                             <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
                                 <Patcients />

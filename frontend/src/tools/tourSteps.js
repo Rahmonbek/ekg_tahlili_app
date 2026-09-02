@@ -177,7 +177,7 @@ export const doctorsTour = [
         titleKey: 'tour_doctors_roles_title',
         titleFallback: 'Rollar va huquqlar',
         descKey: 'tour_doctors_roles_desc',
-        descFallback: 'Admin va Direktor — klinikaning barcha tahlillarini ko\'radi va xodimlarni boshqaradi. Shifokor — faqat o\'ziga biriktirilgan tahlillarni. Hamshira — faqat o\'zi yaratgan tahlillarni.',
+        descFallback: 'Admin va Direktor — shifoxonaning barcha tahlillarini ko\'radi va xodimlarni boshqaradi. Shifokor — faqat o\'ziga biriktirilgan tahlillarni. Hamshira — faqat o\'zi yaratgan tahlillarni.',
     },
 ]
 
@@ -229,7 +229,7 @@ export const clinicInfoTour = [
     {
         selector: '[data-tour="clinic-main"]',
         titleKey: 'tour_clinic_main_title',
-        titleFallback: 'Klinika ma\'lumotlari',
+        titleFallback: 'Shifoxona ma\'lumotlari',
         descKey: 'tour_clinic_main_desc',
         descFallback: 'Bu ma\'lumotlar bemorga beriladigan PDF hujjatning sarlavhasida chiqadi — to\'liq va to\'g\'ri to\'ldiring.',
     },
@@ -238,7 +238,7 @@ export const clinicInfoTour = [
         titleKey: 'tour_clinic_logo_title',
         titleFallback: 'Logotip va litsenziya',
         descKey: 'tour_clinic_logo_desc',
-        descFallback: 'Logotip hujjat sarlavhasida ishlatiladi. Litsenziya nusxasi klinikaning faoliyat huquqini tasdiqlaydi.',
+        descFallback: 'Logotip hujjat sarlavhasida ishlatiladi. Litsenziya nusxasi shifoxonaning faoliyat huquqini tasdiqlaydi.',
     },
     {
         selector: '[data-tour="clinic-phones"]',

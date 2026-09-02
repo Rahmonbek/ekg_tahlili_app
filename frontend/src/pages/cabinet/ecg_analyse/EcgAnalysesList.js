@@ -47,6 +47,10 @@ export default function EcgAnalysesList() {
     // O'chirish faqat Admin (2) va Direktor (3) uchun — backend ham shuni tekshiradi
     const isClinicManager = user && (user.roleId === 2 || user.roleId === 3);
     const isNurse = user && user.roleId === 5;
+    // O'chirish huquqi: Admin/Direktor — har qanday; Shifokor/Hamshira — FAQAT
+    // o'zi yuklagan tahlilni (row.createdDoctorId === o'z doctor id si).
+    const canDeleteRow = (row) => isClinicManager
+        || ((isDoctor || isNurse) && row?.createdDoctorId === user?.doctor?.id);
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -277,16 +281,7 @@ export default function EcgAnalysesList() {
                         {/* Hujjat raqami — bir bemorning bir necha tahlilini
                             ajratish va PDF bilan solishtirish uchun (T-097) */}
                         <div style={{ fontSize: 11, color: '#94A3B8', letterSpacing: 0.2 }}>{row.documentNumber}</div>
-                        {age !== null && (
-                            <span style={{ color: '#888', marginLeft: 6 }}>
-                                ({age} {t('age', { defaultValue: 'yosh' })})
-                            </span>
-                        )}
-                        {doctorName ? (
-                            <div style={{ color: '#94a3b8', fontSize: 12 }}>
-                                {t('created_by', { defaultValue: 'Kiritgan' })}: {doctorName}
-                            </div>
-                        ) : null}
+                        
                     </div>
                 );
             },
@@ -294,7 +289,7 @@ export default function EcgAnalysesList() {
         {
             // Qisqacha AI xulosasi — ilgari ro'yxatda jiddiylik chipidan boshqa
             // hech narsa yo'q edi va shifokor har bir tahlilni ochishga majbur edi.
-            title: t('ai_summary', { defaultValue: 'AI xulosasi (qisqacha)' }),
+            title: t('ai_summary', { defaultValue: 'AI xulosasi' }),
             dataIndex: 'aiSummary',
             key: 'aiSummary',
             width: 320,
@@ -304,7 +299,7 @@ export default function EcgAnalysesList() {
             render: (value, row) => (
                 <LongTextCell
                     text={value}
-                    title={t('ai_summary', { defaultValue: 'AI xulosasi (qisqacha)' })}
+                    title={t('ai_summary', { defaultValue: 'AI xulosasi' })}
                 />
             ),
         },
@@ -443,6 +438,7 @@ export default function EcgAnalysesList() {
                     {row.status === -1 ? (
                         <RetryAnalysisButton
                             id={row.id}
+                            type="ecg"
                             onRetry={analyzeEkgFileRetry}
                             meta={{
                                 age: row.patcient?.birthDate ? calculateAge(row.patcient.birthDate) : 0,
@@ -452,7 +448,7 @@ export default function EcgAnalysesList() {
                             onDone={() => fetchData(page)}
                         />
                     ) : null}
-                    {isClinicManager ? (
+                    {canDeleteRow(row) ? (
                         <DeleteAnalysisButton
                             type="ecg"
                             id={row.id}
@@ -683,7 +679,7 @@ export default function EcgAnalysesList() {
                                 style: { cursor: 'pointer' },
                             })}
                             rowClassName={(row) => [
-                                (!row.isViewed && isDoctor) ? 'table_row_unviewed' : '',
+                                // Ko'rilmagan tahlil sariq fon bilan belgilanmaydi (foydalanuvchi so'rovi)
                                 row.aiStatus === 3 ? 'table_row_danger' : '',
                             ].filter(Boolean).join(' ')}
                             locale={{

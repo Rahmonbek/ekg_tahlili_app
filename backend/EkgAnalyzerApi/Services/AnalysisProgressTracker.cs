@@ -33,6 +33,25 @@ public class AnalysisProgressTracker : BackgroundService
         _pending[key] = new PendingAnalysis(userId, type.ToLowerInvariant(), analysisId, DateTime.UtcNow);
     }
 
+    /// <summary>
+    /// Foydalanuvchining joriy kuzatilayotgan tahlillari (yuklanayotgan va
+    /// yaqinda tugagan — terminal holat 60 soniya saqlanadi). Frontend qayta
+    /// ulanganda (yoki sahifa yangilanganda) shu ro'yxatni so'rab, holatni
+    /// tiklaydi — shunda uzilish paytida yo'qolgan xabar ham qamraladi.
+    /// </summary>
+    public IReadOnlyList<object> GetPendingForUser(int userId) =>
+        _pending.Values
+            .Where(p => p.UserId == userId)
+            .Select(p => (object)new
+            {
+                type = p.Type,
+                analysisId = p.AnalysisId,
+                status = p.Status,
+                listPath = ListPath(p.Type),
+                label = Label(p.Type),
+            })
+            .ToList();
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -60,6 +79,17 @@ public class AnalysisProgressTracker : BackgroundService
         foreach (var pair in _pending.ToArray())
         {
             var item = pair.Value;
+
+            // Tugagan (terminal) element yana 60 soniya saqlanadi: shu vaqt
+            // ichida qayta ulangan mijoz `SyncPending` orqali holatni oladi —
+            // uzilish paytida yo'qolgan push xabari o'rni to'ldiriladi.
+            if (item.Status != "loading")
+            {
+                if (DateTime.UtcNow - (item.CompletedAt ?? item.CreatedAt) > TimeSpan.FromSeconds(60))
+                    _pending.TryRemove(pair.Key, out _);
+                continue;
+            }
+
             if (DateTime.UtcNow - item.CreatedAt > TimeSpan.FromMinutes(30))
             {
                 _pending.TryRemove(pair.Key, out _);
@@ -69,6 +99,10 @@ public class AnalysisProgressTracker : BackgroundService
             var status = await GetStatusAsync(db, item.Type, item.AnalysisId, ct);
             if (status is null || status == "loading") continue;
 
+            // Terminal holatga o'tkazamiz (o'chirmaymiz — 60s saqlanadi)
+            item.Status = status;
+            item.CompletedAt = DateTime.UtcNow;
+
             await _hub.Clients.Group(UserGroup(item.UserId)).SendAsync("AnalysisProgressUpdated", new
             {
                 type = item.Type,
@@ -77,8 +111,6 @@ public class AnalysisProgressTracker : BackgroundService
                 listPath = ListPath(item.Type),
                 label = Label(item.Type)
             }, ct);
-
-            _pending.TryRemove(pair.Key, out _);
         }
     }
 
@@ -131,5 +163,19 @@ public class AnalysisProgressTracker : BackgroundService
         _ => "Tahlil"
     };
 
-    private sealed record PendingAnalysis(int UserId, string Type, int AnalysisId, DateTime CreatedAt);
+    private sealed class PendingAnalysis
+    {
+        public PendingAnalysis(int userId, string type, int analysisId, DateTime createdAt)
+        {
+            UserId = userId; Type = type; AnalysisId = analysisId; CreatedAt = createdAt;
+        }
+
+        public int UserId { get; }
+        public string Type { get; }
+        public int AnalysisId { get; }
+        public DateTime CreatedAt { get; }
+        //: "loading" | "done" | "error"
+        public string Status { get; set; } = "loading";
+        public DateTime? CompletedAt { get; set; }
+    }
 }

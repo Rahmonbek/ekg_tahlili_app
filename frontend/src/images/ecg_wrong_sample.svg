@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="660" viewBox="60 140 1280 660">
+  <defs>
+    <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+      <path d="M10 0H0V10" fill="none" stroke="#efb0b0" stroke-width="0.7"/>
+    </pattern>
+    <pattern id="grid2" width="50" height="50" patternUnits="userSpaceOnUse">
+      <rect width="50" height="50" fill="url(#grid)"/>
+      <path d="M50 0H0V50" fill="none" stroke="#df8f8f" stroke-width="1.1"/>
+    </pattern>
+    <filter id="blur">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+<!-- Card 1: tilted -->
+  <g filter="url(#shadow)">
+    <rect x="80" y="160" width="390" height="280" rx="20" fill="#f2eeee" stroke="#e53935" stroke-width="3"/>
+  </g>
+  <g transform="translate(145,205) rotate(-10 130 85)">
+    <rect width="260" height="170" fill="#fffdfd" stroke="#c8c8c8"/>
+    <rect width="260" height="170" fill="url(#grid2)"/>
+    <path d="M12 85L38 85L45 80L51 85L62 85L70 85L80 55L88 115L96 85L126 85L140 80L150 85L165 85L176 85L186 54L194 115L202 85L245 85"
+          fill="none" stroke="#222" stroke-width="2"/>
+    <text x="15" y="22" font-family="Arial" font-size="10">HR 78  PR 146  QRS 92  QT 352</text>
+  </g>
+<!-- Card 2: rotated 90 -->
+  <g filter="url(#shadow)">
+    <rect x="505" y="160" width="390" height="280" rx="20" fill="#f2eeee" stroke="#e53935" stroke-width="3"/>
+  </g>
+  <g transform="translate(630,187) rotate(90 70 115)">
+    <rect width="140" height="230" fill="#fffdfd" stroke="#c8c8c8"/>
+    <rect width="140" height="230" fill="url(#grid2)"/>
+    <path d="M10 85L24 85L30 80L36 85L42 85L48 85L54 58L60 112L66 85L78 85L86 80L94 85L102 85L110 85L116 58L122 112L130 85"
+          fill="none" stroke="#222" stroke-width="2"/>
+    <text x="10" y="22" font-family="Arial" font-size="8">HR 78  QRS 92</text>
+  </g>
+<!-- Card 3: cropped -->
+  <g filter="url(#shadow)">
+    <rect x="930" y="160" width="390" height="280" rx="20" fill="#f2eeee" stroke="#e53935" stroke-width="3"/>
+  </g>
+  <g transform="translate(985,205)">
+    <rect width="280" height="170" fill="#fffdfd" stroke="#c8c8c8"/>
+    <rect width="280" height="170" fill="url(#grid2)"/>
+    <path d="M-25 85L10 85L20 80L28 85L42 85L50 85L60 55L68 115L76 85L105 85L120 80L130 85L145 85L160 85L170 55L178 115L186 85L315 85"
+          fill="none" stroke="#222" stroke-width="2"/>
+    <rect x="0" y="0" width="48" height="170" fill="#fff" opacity="0.94"/>
+    <rect x="236" y="0" width="44" height="170" fill="#fff" opacity="0.94"/>
+  </g>
+<!-- Card 4: glare -->
+  <g filter="url(#shadow)">
+    <rect x="80" y="500" width="390" height="280" rx="20" fill="#f2eeee" stroke="#e53935" stroke-width="3"/>
+  </g>
+  <g transform="translate(135,545)">
+    <rect width="280" height="170" fill="#fffdfd" stroke="#c8c8c8"/>
+    <rect width="280" height="170" fill="url(#grid2)"/>
+    <path d="M10 85L38 85L45 80L52 85L65 85L73 85L83 55L91 115L99 85L128 85L143 80L153 85L168 85L185 85L195 55L203 115L211 85L270 85"
+          fill="none" stroke="#222" stroke-width="2"/>
+    <ellipse cx="175" cy="82" rx="82" ry="55" fill="#fff" opacity="0.78"/>
+  </g>
+<!-- Card 5: too far -->
+  <g filter="url(#shadow)">
+    <rect x="505" y="500" width="390" height="280" rx="20" fill="#f2eeee" stroke="#e53935" stroke-width="3"/>
+  </g>
+  <g transform="translate(635,585)">
+    <rect width="130" height="82" fill="#fffdfd" stroke="#c8c8c8"/>
+    <rect width="130" height="82" fill="url(#grid2)"/>
+    <path d="M5 42L18 42L23 39L28 42L34 42L39 42L45 26L51 57L57 42L72 42L80 39L86 42L94 42L100 42L106 26L112 57L118 42L125 42"
+          fill="none" stroke="#222" stroke-width="1.3"/>
+    <text x="6" y="13" font-family="Arial" font-size="5">HR 78 QRS 92 QT 352</text>
+  </g>
+<!-- Card 6: blurry -->
+  <g filter="url(#shadow)">
+    <rect x="930" y="500" width="390" height="280" rx="20" fill="#f2eeee" stroke="#e53935" stroke-width="3"/>
+  </g>
+  <g transform="translate(985,545)" filter="url(#blur)">
+    <rect width="280" height="170" fill="#fffdfd" stroke="#c8c8c8"/>
+    <rect width="280" height="170" fill="url(#grid2)"/>
+    <path d="M10 85L38 85L45 80L52 85L65 85L73 85L83 55L91 115L99 85L128 85L143 80L153 85L168 85L185 85L195 55L203 115L211 85L270 85"
+          fill="none" stroke="#222" stroke-width="2"/>
+    <text x="15" y="22" font-family="Arial" font-size="10">HR 78  PR 146  QRS 92  QT 352</text>
+  </g>
+</svg>

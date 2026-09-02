@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1100" viewBox="0 0 1600 1100">
+  <defs>
+    <pattern id="smallGrid" width="12" height="12" patternUnits="userSpaceOnUse">
+      <path d="M 12 0 L 0 0 0 12" fill="none" stroke="#efb2b2" stroke-width="0.8"/>
+    </pattern>
+    <pattern id="bigGrid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <rect width="60" height="60" fill="url(#smallGrid)"/>
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#e38686" stroke-width="1.4"/>
+    </pattern>
+    <style>
+      .lead { font: 700 20px Arial, Helvetica, sans-serif; fill: #111; }
+      .meta { font: 16px Arial, Helvetica, sans-serif; fill: #111; }
+      .small { font: 13px Arial, Helvetica, sans-serif; fill: #222; }
+      .trace { fill: none; stroke: #222; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+      .cal { fill: none; stroke: #333; stroke-width: 2; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1100" fill="#fffdfd"/>
+  <rect x="18" y="18" width="1564" height="1064" fill="url(#bigGrid)" stroke="#f0b7b7" stroke-width="1"/>
+
+  <!-- Lead labels -->
+  <text x="64" y="94" class="lead">I</text>
+  <text x="420" y="94" class="lead">aVR</text>
+  <text x="800" y="94" class="lead">V1</text>
+  <text x="1175" y="94" class="lead">V4</text>
+
+  <text x="64" y="302" class="lead">II</text>
+  <text x="420" y="302" class="lead">aVL</text>
+  <text x="800" y="302" class="lead">V2</text>
+  <text x="1175" y="302" class="lead">V5</text>
+
+  <text x="64" y="510" class="lead">III</text>
+  <text x="420" y="510" class="lead">aVF</text>
+  <text x="800" y="510" class="lead">V3</text>
+  <text x="1175" y="510" class="lead">V6</text>
+
+  <text x="64" y="718" class="lead">II</text>
+
+  <!-- Wave traces row 1 -->
+  <path class="trace" d="M40 170 L60 170 L67 166 L74 171 L84 170 L102 170 L110 134 L118 208 L126 170 L154 170 L170 164 L181 170 L196 170 L214 170 L222 136 L229 208 L236 170 L267 170 L283 165 L295 170 L309 170 L328 170 L336 134 L344 210 L351 170 L379 170 L396 164 L408 170"/>
+  <path class="trace" d="M405 170 L435 170 L444 172 L450 170 L463 170 L472 170 L480 194 L487 142 L494 170 L521 170 L535 173 L546 170 L561 170 L580 170 L588 195 L595 142 L602 170 L629 170 L644 173 L656 170 L670 170 L689 170 L697 194 L704 142 L711 170 L736 170"/>
+  <path class="trace" d="M785 170 L804 170 L810 164 L817 170 L826 170 L836 170 L843 152 L849 188 L856 170 L878 170 L891 169 L899 170 L910 170 L922 170 L929 152 L936 188 L943 170 L964 170 L978 169 L986 170 L996 170 L1009 170 L1016 152 L1022 188 L1029 170 L1052 170 L1066 169 L1074 170"/>
+  <path class="trace" d="M1162 170 L1180 170 L1187 163 L1194 170 L1204 170 L1215 170 L1224 104 L1232 224 L1240 170 L1270 170 L1285 163 L1296 170 L1310 170 L1328 170 L1336 106 L1344 223 L1352 170 L1382 170 L1398 163 L1410 170 L1424 170 L1442 170 L1450 106 L1458 223 L1466 170 L1495 170 L1510 163 L1521 170 L1542 170"/>
+
+  <!-- Calibration marks row1 -->
+  <path class="cal" d="M1546 170 L1546 126 L1570 126 L1570 170"/>
+
+  <!-- Wave traces row 2 -->
+  <path class="trace" d="M40 378 L60 378 L67 372 L74 379 L84 378 L102 378 L110 340 L118 416 L126 378 L154 378 L170 372 L181 378 L196 378 L214 378 L222 338 L229 417 L236 378 L267 378 L283 373 L295 378 L309 378 L328 378 L336 338 L344 417 L351 378 L379 378 L396 372 L408 378"/>
+  <path class="trace" d="M405 378 L435 378 L444 370 L450 378 L463 378 L472 378 L480 347 L487 408 L494 378 L521 378 L535 371 L546 378 L561 378 L580 378 L588 347 L595 408 L602 378 L629 378 L644 371 L656 378 L670 378 L689 378 L697 347 L704 408 L711 378 L736 378"/>
+  <path class="trace" d="M785 378 L804 378 L810 362 L817 378 L826 378 L836 378 L843 338 L849 426 L856 378 L878 378 L891 366 L899 378 L910 378 L922 378 L929 338 L936 426 L943 378 L964 378 L978 366 L986 378 L996 378 L1009 378 L1016 338 L1022 426 L1029 378 L1052 378 L1066 366 L1074 378"/>
+  <path class="trace" d="M1162 378 L1180 378 L1187 371 L1194 378 L1204 378 L1215 378 L1224 324 L1232 434 L1240 378 L1270 378 L1285 371 L1296 378 L1310 378 L1328 378 L1336 324 L1344 434 L1352 378 L1382 378 L1398 371 L1410 378 L1424 378 L1442 378 L1450 324 L1458 434 L1466 378 L1495 378 L1510 371 L1521 378 L1542 378"/>
+  <path class="cal" d="M1546 378 L1546 334 L1570 334 L1570 378"/>
+
+  <!-- Wave traces row 3 -->
+  <path class="trace" d="M40 586 L60 586 L67 582 L74 587 L84 586 L102 586 L110 565 L118 607 L126 586 L154 586 L170 582 L181 586 L196 586 L214 586 L222 565 L229 607 L236 586 L267 586 L283 582 L295 586 L309 586 L328 586 L336 565 L344 607 L351 586 L379 586 L396 582 L408 586"/>
+  <path class="trace" d="M405 586 L435 586 L444 588 L450 586 L463 586 L472 586 L480 614 L487 559 L494 586 L521 586 L535 589 L546 586 L561 586 L580 586 L588 614 L595 559 L602 586 L629 586 L644 589 L656 586 L670 586 L689 586 L697 614 L704 559 L711 586 L736 586"/>
+  <path class="trace" d="M785 586 L804 586 L810 573 L817 586 L826 586 L836 586 L843 517 L849 636 L856 586 L878 586 L891 574 L899 586 L910 586 L922 586 L929 517 L936 636 L943 586 L964 586 L978 574 L986 586 L996 586 L1009 586 L1016 517 L1022 636 L1029 586 L1052 586 L1066 574 L1074 586"/>
+  <path class="trace" d="M1162 586 L1180 586 L1187 574 L1194 586 L1204 586 L1215 586 L1224 516 L1232 637 L1240 586 L1270 586 L1285 574 L1296 586 L1310 586 L1328 586 L1336 516 L1344 637 L1352 586 L1382 586 L1398 574 L1410 586 L1424 586 L1442 586 L1450 516 L1458 637 L1466 586 L1495 586 L1510 574 L1521 586 L1542 586"/>
+  <path class="cal" d="M1546 586 L1546 542 L1570 542 L1570 586"/>
+
+  <!-- Rhythm strip -->
+  <path class="trace" d="M40 765 L60 765 L67 759 L74 765 L84 765 L102 765 L110 725 L118 802 L126 765 L154 765 L170 758 L181 765 L196 765 L214 765 L222 724 L229 802 L236 765 L267 765 L283 759 L295 765 L309 765 L328 765 L336 725 L344 801 L351 765 L379 765 L396 758 L408 765 L430 765 L447 759 L458 765 L476 765 L494 725 L502 802 L510 765 L538 765 L555 758 L566 765 L584 765 L602 765 L610 725 L618 801 L626 765 L654 765 L671 758 L682 765 L700 765 L718 765 L726 725 L734 801 L742 765 L770 765 L787 758 L798 765 L816 765 L834 765 L842 725 L850 801 L858 765 L886 765 L903 758 L914 765 L932 765 L950 765 L958 725 L966 801 L974 765 L1002 765 L1019 758 L1030 765 L1048 765 L1066 765 L1074 725 L1082 801 L1090 765 L1118 765 L1135 758 L1146 765 L1164 765 L1182 765 L1190 725 L1198 801 L1206 765 L1234 765 L1251 758 L1262 765 L1280 765 L1298 765 L1306 725 L1314 801 L1322 765 L1350 765 L1367 758 L1378 765 L1396 765 L1414 765 L1422 725 L1430 801 L1438 765 L1466 765 L1483 758 L1494 765 L1512 765 L1542 765"/>
+  <path class="cal" d="M1546 765 L1546 721 L1570 721 L1570 765"/>
+
+  <!-- Measurement block -->
+  <line x1="408" y1="868" x2="408" y2="1050" stroke="#333" stroke-width="2"/>
+  <line x1="840" y1="868" x2="840" y2="1050" stroke="#333" stroke-width="2"/>
+
+  <text x="40" y="895" class="meta">ID: 2025051713403558</text>
+  <text x="40" y="925" class="meta">Age: 29</text>
+  <text x="40" y="955" class="meta">Sex: Male</text>
+  <text x="40" y="985" class="meta">Date: 2025-05-17 13:40:25</text>
+
+  <text x="435" y="900" class="meta">HR: 78 bpm</text>
+  <text x="435" y="928" class="meta">R-R: 769 ms</text>
+  <text x="435" y="956" class="meta">P-R: 146 ms</text>
+  <text x="435" y="984" class="meta">QRS: 92 ms</text>
+  <text x="435" y="1012" class="meta">QT: 352 ms</text>
+  <text x="435" y="1040" class="meta">QTc (Bazett): 401 ms</text>
+
+  <text x="645" y="900" class="meta">P Axis: 56°</text>
+  <text x="645" y="928" class="meta">QRS Axis: 43°</text>
+  <text x="645" y="956" class="meta">T Axis: 38°</text>
+  <text x="645" y="984" class="meta">RV5: 1.21 mV</text>
+  <text x="645" y="1012" class="meta">SV1: 0.67 mV</text>
+  <text x="645" y="1040" class="meta">RV5+SV1: 1.88 mV</text>
+
+  <text x="30" y="1068" class="small">EKG-12</text>
+  <text x="440" y="1068" class="small">25 mm/s</text>
+  <text x="700" y="1068" class="small">10 mm/mV</text>
+  <text x="960" y="1068" class="small">0.05-150 Hz</text>
+</svg>

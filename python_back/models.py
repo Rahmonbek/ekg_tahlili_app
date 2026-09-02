@@ -112,6 +112,57 @@ class LabAnalyses(Base):
     daily_calcium = Column(Numeric, nullable=True)    # mmol/24h
     daily_sodium = Column(Numeric, nullable=True)     # mmol/24h
 
+    # -- Qo'shimcha ko'rsatkichlar (20260905 migratsiya) --
+    # Lipid, koagulyatsiya, qon formulasi, gormon, vitamin, ferment va h.k.
+    # AI aniqlagan qiymat shu ustunlarga yoziladi (update_lab_analyse).
+    triglycerides = Column(Numeric, nullable=True)  # mmol/L
+    hdl = Column(Numeric, nullable=True)  # mmol/L
+    ldl = Column(Numeric, nullable=True)  # mmol/L
+    vldl = Column(Numeric, nullable=True)  # mmol/L
+    atherogenic_index = Column(Numeric, nullable=True)  # None
+    hba1c = Column(Numeric, nullable=True)  # %
+    c_peptide = Column(Numeric, nullable=True)  # ng/mL
+    crp = Column(Numeric, nullable=True)  # mg/L
+    ggt = Column(Numeric, nullable=True)  # U/L
+    alp = Column(Numeric, nullable=True)  # U/L
+    amylase = Column(Numeric, nullable=True)  # U/L
+    lipase = Column(Numeric, nullable=True)  # U/L
+    ldh = Column(Numeric, nullable=True)  # U/L
+    ck = Column(Numeric, nullable=True)  # U/L
+    ck_mb = Column(Numeric, nullable=True)  # U/L
+    uric_acid = Column(Numeric, nullable=True)  # µmol/L
+    magnesium = Column(Numeric, nullable=True)  # mmol/L
+    phosphorus = Column(Numeric, nullable=True)  # mmol/L
+    chloride = Column(Numeric, nullable=True)  # mmol/L
+    ferritin = Column(Numeric, nullable=True)  # µg/L
+    tibc = Column(Numeric, nullable=True)  # µmol/L
+    transferrin = Column(Numeric, nullable=True)  # g/L
+    bilirubin_indirect = Column(Numeric, nullable=True)  # µmol/L
+    globulin = Column(Numeric, nullable=True)  # g/L
+    free_t3 = Column(Numeric, nullable=True)  # pmol/L
+    t3_total = Column(Numeric, nullable=True)  # nmol/L
+    t4_total = Column(Numeric, nullable=True)  # nmol/L
+    vitamin_d = Column(Numeric, nullable=True)  # ng/mL
+    vitamin_b12 = Column(Numeric, nullable=True)  # pg/mL
+    folate = Column(Numeric, nullable=True)  # ng/mL
+    prothrombin_time = Column(Numeric, nullable=True)  # sekund
+    prothrombin_index = Column(Numeric, nullable=True)  # %
+    inr = Column(Numeric, nullable=True)  # None
+    aptt = Column(Numeric, nullable=True)  # sekund
+    fibrinogen = Column(Numeric, nullable=True)  # g/L
+    thrombin_time = Column(Numeric, nullable=True)  # sekund
+    d_dimer = Column(Numeric, nullable=True)  # mg/L
+    neutrophils = Column(Numeric, nullable=True)  # %
+    lymphocytes = Column(Numeric, nullable=True)  # %
+    monocytes = Column(Numeric, nullable=True)  # %
+    eosinophils = Column(Numeric, nullable=True)  # %
+    basophils = Column(Numeric, nullable=True)  # %
+    rdw = Column(Numeric, nullable=True)  # %
+    mpv = Column(Numeric, nullable=True)  # fL
+    pdw = Column(Numeric, nullable=True)  # %
+    pct = Column(Numeric, nullable=True)  # %
+    reticulocytes = Column(Numeric, nullable=True)  # %
+
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 

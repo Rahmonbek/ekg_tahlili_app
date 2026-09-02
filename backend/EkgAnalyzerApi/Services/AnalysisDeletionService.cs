@@ -43,8 +43,14 @@ public class AnalysisDeletionService
     /// Tahlilni yumshoq o'chiradi va `audit_logs` ga yozuv qo'shadi.
     /// </summary>
     /// <param name="type">"ecg" | "lab" | "holter" | "smad" | "diagnose"</param>
+    /// <param name="restrictToCreatorDoctorId">
+    /// null bo'lsa — cheklovsiz (Admin/Direktor har qanday tahlilni o'chiradi).
+    /// Qiymat berilsa — FAQAT shu doktor yaratgan (CreatedDoctorId) tahlil
+    /// o'chiriladi. Shifokor/hamshira faqat O'ZI yuklagan tahlilni o'chirsin.
+    /// </param>
     public async Task<DeleteOutcome> DeleteAsync(
-        string type, int id, int clinicId, int userId, string? username, string? reason)
+        string type, int id, int clinicId, int userId, string? username, string? reason,
+        int? restrictToCreatorDoctorId = null)
     {
         if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length < MinReasonLength)
             return DeleteOutcome.ReasonRequired;
@@ -59,7 +65,8 @@ public class AnalysisDeletionService
             case "ecg":
             {
                 var e = await _context.ECGAnalyse.IgnoreQueryFilters()
-                    .FirstOrDefaultAsync(x => x.Id == id && x.ClinicId == clinicId);
+                    .FirstOrDefaultAsync(x => x.Id == id && x.ClinicId == clinicId
+                        && (restrictToCreatorDoctorId == null || x.CreatedDoctorId == restrictToCreatorDoctorId));
                 if (e == null) return DeleteOutcome.NotFound;
                 if (e.DeletedAt != null) return DeleteOutcome.AlreadyDeleted;
                 e.DeletedAt = now; e.DeletedByUserId = userId; e.DeleteReason = reason;
@@ -68,7 +75,8 @@ public class AnalysisDeletionService
             case "lab":
             {
                 var e = await _context.LabAnalyse.IgnoreQueryFilters()
-                    .FirstOrDefaultAsync(x => x.Id == id && x.ClinicId == clinicId);
+                    .FirstOrDefaultAsync(x => x.Id == id && x.ClinicId == clinicId
+                        && (restrictToCreatorDoctorId == null || x.CreatedDoctorId == restrictToCreatorDoctorId));
                 if (e == null) return DeleteOutcome.NotFound;
                 if (e.DeletedAt != null) return DeleteOutcome.AlreadyDeleted;
                 e.DeletedAt = now; e.DeletedByUserId = userId; e.DeleteReason = reason;
@@ -77,7 +85,8 @@ public class AnalysisDeletionService
             case "holter":
             {
                 var e = await _context.HolterAnalyses.IgnoreQueryFilters()
-                    .FirstOrDefaultAsync(x => x.Id == id && x.ClinicId == clinicId);
+                    .FirstOrDefaultAsync(x => x.Id == id && x.ClinicId == clinicId
+                        && (restrictToCreatorDoctorId == null || x.CreatedDoctorId == restrictToCreatorDoctorId));
                 if (e == null) return DeleteOutcome.NotFound;
                 if (e.DeletedAt != null) return DeleteOutcome.AlreadyDeleted;
                 e.DeletedAt = now; e.DeletedByUserId = userId; e.DeleteReason = reason;
@@ -86,7 +95,8 @@ public class AnalysisDeletionService
             case "smad":
             {
                 var e = await _context.SmadAnalyses.IgnoreQueryFilters()
-                    .FirstOrDefaultAsync(x => x.Id == id && x.ClinicId == clinicId);
+                    .FirstOrDefaultAsync(x => x.Id == id && x.ClinicId == clinicId
+                        && (restrictToCreatorDoctorId == null || x.CreatedDoctorId == restrictToCreatorDoctorId));
                 if (e == null) return DeleteOutcome.NotFound;
                 if (e.DeletedAt != null) return DeleteOutcome.AlreadyDeleted;
                 e.DeletedAt = now; e.DeletedByUserId = userId; e.DeleteReason = reason;
@@ -95,7 +105,8 @@ public class AnalysisDeletionService
             case "diagnose":
             {
                 var e = await _context.MedicalDiagnose.IgnoreQueryFilters()
-                    .FirstOrDefaultAsync(x => x.Id == id && x.ClinicId == clinicId);
+                    .FirstOrDefaultAsync(x => x.Id == id && x.ClinicId == clinicId
+                        && (restrictToCreatorDoctorId == null || x.CreatedDoctorId == restrictToCreatorDoctorId));
                 if (e == null) return DeleteOutcome.NotFound;
                 if (e.DeletedAt != null) return DeleteOutcome.AlreadyDeleted;
                 e.DeletedAt = now; e.DeletedByUserId = userId; e.DeleteReason = reason;

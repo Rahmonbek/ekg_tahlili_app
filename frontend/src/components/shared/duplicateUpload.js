@@ -1,5 +1,5 @@
-import { Modal } from 'antd';
-import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { Modal, Button } from 'antd';
+import { ExclamationCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import React from 'react';
 
 /**
@@ -42,8 +42,18 @@ export const askDuplicate = (err, t, onOpenExisting) =>
         const created = info?.created_at
             ? new Date(info.created_at).toLocaleString()
             : null;
+        const canOpen = typeof onOpenExisting === 'function' && info?.id;
 
-        Modal.confirm({
+        let modal;
+        // Mavjud tahlilni ochadigan ALOHIDA tugma — u modalni yopib, o'sha
+        // tahlil ko'rish sahifasiga o'tkazadi (Cancel bilan chalkashtirmaymiz).
+        const openExisting = () => {
+            resolve(false);
+            modal?.destroy();
+            onOpenExisting(info.id);
+        };
+
+        modal = Modal.confirm({
             title: t('duplicate_file_title', {
                 defaultValue: 'Bu fayl allaqachon yuklangan',
             }),
@@ -65,22 +75,22 @@ export const askDuplicate = (err, t, onOpenExisting) =>
                         </p>
                     )}
                     {created && (
-                        <p style={{ marginBottom: 0 }}>
+                        <p style={{ marginBottom: canOpen ? 12 : 0 }}>
                             <b>{t('created_at', { defaultValue: 'Yuklangan' })}:</b> {created}
                         </p>
+                    )}
+                    {canOpen && (
+                        <Button type="primary" ghost icon={<EyeOutlined />} onClick={openExisting} block>
+                            {t('open_uploaded_analysis', { defaultValue: 'Yuklangan tahlilni ochish' })}
+                        </Button>
                     )}
                 </div>
             ),
             okText: t('upload_anyway', { defaultValue: 'Baribir yuklash' }),
             okButtonProps: { danger: true },
-            cancelText: onOpenExisting
-                ? t('open_existing', { defaultValue: 'Mavjudini ochish' })
-                : t('cancel', { defaultValue: 'Bekor qilish' }),
+            cancelText: t('cancel', { defaultValue: 'Bekor qilish' }),
             onOk: () => resolve(true),
-            onCancel: () => {
-                if (onOpenExisting && info?.id) onOpenExisting(info.id);
-                resolve(false);
-            },
+            onCancel: () => resolve(false),
         });
     });
 

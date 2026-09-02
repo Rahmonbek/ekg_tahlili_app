@@ -54,6 +54,47 @@ REASONING_EFFORT: str = os.getenv("AI_REASONING_EFFORT", "high")
 #: vaqt va pul sarflashi mumkin.
 MAX_OUTPUT_TOKENS: int = int(os.getenv("AI_MAX_OUTPUT_TOKENS", "8000"))
 
+# ─── Chaqiruv vaqti chegarasi (hang oldini olish) ────────────────────
+#: OpenAI chaqiruvi shu soniyadan oshsa uziladi. Reasoning modeli
+#: (effort high/xhigh) juda uzoq "o'ylab", so'rovni minutlab osib qo'yishi
+#: mumkin — bu esa Python thread va DB ulanishini band qilib, boshqa
+#: so'rovlarni (masalan file-types) ham to'xtatadi. Timeout bunday osilib
+#: qolishning oldini oladi: chaqiruv uzilsa, tahlil xatolik bo'ladi (retry mumkin).
+AI_REQUEST_TIMEOUT: float = float(os.getenv("AI_REQUEST_TIMEOUT", "180"))
+#: Muvaffaqiyatsiz chaqiruvda takrorlar soni (standart SDK 2 — uzoq kutish beradi).
+AI_MAX_RETRIES: int = int(os.getenv("AI_MAX_RETRIES", "1"))
+
+
+# ─── EKG rasm tahlili — maxsus sozlama ───────────────────────────────
+#: EKG SURATINI (foto/rasm) tahlil qilishda kuchliroq vizual model va
+#: chuqurroq fikrlash ishlatiladi. Barchasi `.env` orqali o'zgartiriladi.
+ECG_IMAGE_MODEL: str = os.getenv("AI_ECG_IMAGE_MODEL", "gpt-5.6-sol")
+#: `high` | `xhigh` — EKG rasmda ingichka intervallarni o'qish uchun.
+ECG_IMAGE_REASONING_EFFORT: str = os.getenv("AI_ECG_IMAGE_REASONING_EFFORT", "high")
+#: OpenAI `input_image.detail` — to'liq (original) tafsilot uchun `high`.
+ECG_IMAGE_DETAIL: str = os.getenv("AI_ECG_IMAGE_DETAIL", "original")
+
+#: EKG rasm uchun token byudjeti CHEGARASI. Reasoning modeli fikrlashga
+#: ko'p token sarflaydi; byudjet BO'LMASA (cheksiz) model juda uzoq
+#: "o'ylab", so'rov minutlab osilib qoladi. Saxiy, lekin CHEKLANGAN qiymat:
+#: fikrlash va yakuniy JSON javobga joy qoladi, ammo cheksiz emas.
+ECG_IMAGE_MAX_OUTPUT_TOKENS: int = int(os.getenv("AI_ECG_IMAGE_MAX_OUTPUT_TOKENS", "20000"))
+
+
+def ecg_image_request(**overrides) -> dict:
+    """EKG rasm tahlili uchun so'rov parametrlari.
+
+    Oddiy `diagnosis_request` dan farqi — kuchliroq vizual model,
+    (ixtiyoriy) yuqoriroq `reasoning.effort` va cheklangan token byudjeti.
+    """
+    params = {
+        "model": ECG_IMAGE_MODEL,
+        "reasoning": {"effort": ECG_IMAGE_REASONING_EFFORT},
+        "max_output_tokens": ECG_IMAGE_MAX_OUTPUT_TOKENS,
+    }
+    params.update(overrides)
+    return params
+
 
 def diagnosis_request(**overrides) -> dict:
     """Tashxis so'rovi uchun umumiy parametrlar.

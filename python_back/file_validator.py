@@ -133,7 +133,7 @@ _logger = _logging.getLogger(__name__)
 # Diqqat: `.txt` ATAYLAB yo'q. Ilgari u `.csv` bilan bir qatorda ruxsat etilgan
 # edi va oddiy matn fayli EKG sifatida qabul qilinardi (auditda tasdiqlangan).
 ALLOWED_BY_ANALYSIS_TYPE = {
-    "ecg":    {".xml", ".csv", ".tsv", ".png", ".jpg", ".jpeg"},
+    "ecg":    {".pdf", ".png", ".jpg", ".jpeg"},
     "holter": {".pdf", ".png", ".jpg", ".jpeg"},
     "smad":   {".pdf", ".png", ".jpg", ".jpeg"},
     "lab":    {".pdf", ".png", ".jpg", ".jpeg"},

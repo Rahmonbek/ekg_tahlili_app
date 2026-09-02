@@ -1,10 +1,11 @@
-import { Button, Form, Input } from 'antd'
-import React, { useState } from 'react'
+import { Button, Form, Input, Modal } from 'antd'
+import React, { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next';
 import login_img from '../../../images/login1.jpg'
 import { IoMdLock } from 'react-icons/io';
+import { FaShieldHalved } from 'react-icons/fa6';
 import { Link, useNavigate } from 'react-router-dom';
-import { login } from '../../../host/requests/AuthRequest';
+import { login, verify_code, send_reset_code } from '../../../host/requests/AuthRequest';
 import { dangerAlert, successAlert, warningAlert } from '../../../tools/Alerts';
 import { useStore } from '../../../store/Store';
 import Cookies from "js-cookie";
@@ -13,12 +14,63 @@ import PhoneInput from '../../../components/shared/PhoneInput';
 import { formatPhoneNumber } from '../../../tools/formatters';
 import ChangeLangs from '../../../components/ChangeLangs';
 
+// SMS kodni qayta yuborish orasidagi kutish (soniya) — Register bilan bir xil
+const RESEND_SECONDS = 60;
+
 export default function Login() {
   const [loading, setloading] = useState(false);
   const { setuser_id } = useStore();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { executeRecaptcha } = useGoogleReCaptcha();
+
+  // Tasdiqlanmagan hisob uchun login sahifasidagi SMS tasdiqlash oynasi
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resend, setResend] = useState(0);
+  const [phone, setPhone] = useState(null);
+  const timerRef = useRef(null);
+  const [codeForm] = Form.useForm();
+
+  useEffect(() => () => clearInterval(timerRef.current), []);
+
+  const startResendTimer = () => {
+    setResend(RESEND_SECONDS);
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setResend((s) => {
+        if (s <= 1) { clearInterval(timerRef.current); return 0; }
+        return s - 1;
+      });
+    }, 1000);
+  };
+
+  const closeVerify = () => {
+    setVerifyOpen(false);
+    setResend(0);
+    clearInterval(timerRef.current);
+    codeForm.resetFields();
+  };
+
+  const applyLoginSuccess = (data) => {
+    Cookies.set("NMED_token", data.token, {
+      expires: 1,
+      path: "/",
+      secure: true,
+      sameSite: 'strict'
+    });
+    setuser_id(data.userId);
+
+    if (data.mustChangePassword) {
+      warningAlert(t('must_change_password', {
+        defaultValue: "Xavfsizlik uchun vaqtinchalik parolni o'zingiznikiga almashtiring."
+      }));
+      navigate('/profile?changePassword=1');
+      return;
+    }
+    navigate('/cabinet');
+  };
 
   const onFinish = async (val) => {
     if (!executeRecaptcha) {
@@ -37,26 +89,7 @@ export default function Login() {
 
       if (res.status === 200) {
         successAlert(t(res.data.message));
-        Cookies.set("NMED_token", res.data.token, {
-          expires: 1,
-          path: "/",
-          secure: true,
-          sameSite: 'strict'
-        });
-        setuser_id(res.data.userId);
-
-        // Admin yaratgan vaqtinchalik parol hali almashtirilmagan bo'lsa,
-        // foydalanuvchi darhol parol almashtirish sahifasiga tushadi.
-        // Bunday parolni kamida ikki kishi biladi — admin va xodim (T-022).
-        if (res.data.mustChangePassword) {
-            warningAlert(t('must_change_password', {
-                defaultValue: "Xavfsizlik uchun vaqtinchalik parolni o'zingiznikiga almashtiring."
-            }));
-            navigate('/profile?changePassword=1');
-            return;
-        }
-
-        navigate('/cabinet');
+        applyLoginSuccess(res.data);
       }
     } catch (err) {
       const errorMsg = err.response?.data?.message;
@@ -64,8 +97,13 @@ export default function Login() {
       if (errorMsg === 'user_not_found' || errorMsg === 'user_not_find' || errorMsg === 'invalid_password') {
         dangerAlert(t("login_or_password_incorrect"));
       } else if (errorMsg === 'phone_not_verified') {
-        dangerAlert(t("please_verify_phone"));
-        navigate('/register');
+        // Hisob tasdiqlanmagan, lekin parol to'g'ri — backend kodni qayta
+        // yubordi. Tupikка (/register) otish o'rniga shu yerda tasdiqlash
+        // oynasini ochamiz.
+        setPhone(formatPhoneNumber(val.phone));
+        setVerifyOpen(true);
+        startResendTimer();
+        warningAlert(t("please_verify_phone"));
       } else if (errorMsg === 'clinic_not_active') {
         dangerAlert(t("clinic_not_active_login"));
       } else if (errorMsg === 'too_many_attempts') {
@@ -75,6 +113,37 @@ export default function Login() {
       }
     } finally {
       setloading(false);
+    }
+  };
+
+  const handleVerify = async (values) => {
+    try {
+      setVerifyLoading(true);
+      const res = await verify_code({ phoneNumber: phone, code: values.code });
+      if (res.status === 200) {
+        clearInterval(timerRef.current);
+        successAlert(t(res.data.message));
+        applyLoginSuccess(res.data);
+      }
+    } catch (err) {
+      dangerAlert(t(err?.response?.data?.message || 'error'));
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (resend > 0 || resendLoading) return;
+    try {
+      setResendLoading(true);
+      await send_reset_code({ phoneNumber: phone });
+      codeForm.resetFields();
+      startResendTimer();
+      successAlert(t('code_resent', { defaultValue: 'Kod qayta yuborildi' }));
+    } catch (err) {
+      dangerAlert(t(err?.response?.data?.message || 'something_went_wrong_try_again'));
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -139,6 +208,76 @@ export default function Login() {
       <div className='login_img'>
         <img src={login_img} alt="login decorative" />
       </div>
+
+      <Modal
+        open={verifyOpen}
+        closable={false}
+        maskClosable={false}
+        footer={null}
+        centered
+        width={420}
+        className='sms-verify-modal'
+      >
+        <div className='sms-verify'>
+          <span className='reset-modal-badge sms-verify-badge'>
+            <FaShieldHalved />
+          </span>
+          <h2 className='sms-verify-title'>
+            {t('verification_code', { defaultValue: 'Tasdiqlash kodi' })}
+          </h2>
+          <p className='sms-verify-hint'>
+            {t('sms_sent_hint', { defaultValue: 'Ushbu raqamga 4 xonali kod yuborildi' })}
+          </p>
+          <div className='sms-verify-phone'>+{phone}</div>
+
+          <Form form={codeForm} onFinish={handleVerify} className='sms-verify-form'>
+            <Form.Item
+              name='code'
+              rules={[{ required: true, message: t('not_empty') }]}
+              style={{ marginBottom: 0 }}
+            >
+              <Input.OTP
+                length={4}
+                size='large'
+                inputMode='numeric'
+                autoFocus
+                formatter={(v) => v.replace(/\D/g, '')}
+                onChange={(val) => { if (val?.length === 4) codeForm.submit(); }}
+              />
+            </Form.Item>
+
+            <div className='reset-modal-resend sms-verify-resend'>
+              {resend > 0 ? (
+                <span className='reset-modal-resend-wait'>
+                  {t('resend_in', { seconds: resend, defaultValue: 'Qayta yuborish: {{seconds}} s' })}
+                </span>
+              ) : (
+                <button
+                  type='button'
+                  className='reset-modal-link'
+                  onClick={handleResend}
+                  disabled={resendLoading}
+                >
+                  {resendLoading
+                    ? t('sending', { defaultValue: 'Yuborilmoqda…' })
+                    : t('resend_code', { defaultValue: 'Kodni qayta yuborish' })}
+                </button>
+              )}
+            </div>
+
+            <Button className='btn_form' loading={verifyLoading} htmlType='submit' block>
+              {t('verify')}
+            </Button>
+            <button
+              type='button'
+              className='reset-modal-link reset-modal-back'
+              onClick={closeVerify}
+            >
+              {t('cancel', { defaultValue: 'Bekor qilish' })}
+            </button>
+          </Form>
+        </div>
+      </Modal>
     </div>
   );
 }
