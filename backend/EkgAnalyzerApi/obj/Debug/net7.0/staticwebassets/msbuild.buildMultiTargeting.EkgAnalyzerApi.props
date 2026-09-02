@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\EkgAnalyzerApi.props" />
-</Project>

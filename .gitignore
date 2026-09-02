@@ -22,9 +22,11 @@ runs/
 /dataset_app/sorted_dataset
 /dataset_app/runs
 /runs
-# Maxfiy fayllar (secrets)
-/backend/EkgAnalyzerApi/appsettings.Development.json
-/backend/EkgAnalyzerApi/appsettings.Production.json
+# ── appsettings*.json — real kalit/parollar saqlaydi, GitHub'ga TUSHMASIN ──
+/backend/EkgAnalyzerApi/appsettings.json
+/backend/EkgAnalyzerApi/appsettings.*.json
+# Build chiqindilari (ular ham appsettings/kalit nusxalarini o'z ichiga oladi)
+/backend/EkgAnalyzerApi/artifacts/
 
 /python_back/venv
 /python_back/__pycache__
@@ -53,8 +55,11 @@ node_modules/
 /frontend/node_modules/
 /admin/node_modules/
 
-# Frontend — local env overrides (secrets bo'lishi mumkin)
-
+# ── Environment fayllar — HECH BIRI GitHub'ga tushmasin (real ham, example ham) ──
+# Kalit/parollar shu fayllarda saqlanadi; ular faqat lokal va serverda turadi.
+# Fayllar o'chirilmaydi — faqat git kuzatuvidan chiqariladi.
+.env
+.env.*
 
 # Python
 **/__pycache__/
