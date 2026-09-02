@@ -19,6 +19,7 @@ import { analyzeParasitologyFile, getParasitologyByPatientId } from '../../../ho
 import { useBackgroundAnalysis } from '../../../hooks/useBackgroundAnalysis';
 import { useStore } from '../../../store/Store';
 import { warningAlert, dangerAlert } from '../../../tools/Alerts';
+import { validatedBeforeUpload } from '../../../tools/validatedBeforeUpload';
 
 import ParasitologyResult from './ParasitologyResult';
 import ParasitologyOldResult from './ParasitologyOldResult';
@@ -80,11 +81,16 @@ export default function ParasitologyAnalyzer() {
         onPatientFound: (data) => getOldAnalyses(data.id, 'first'),
     });
 
-    const handleUploadFile = useCallback((file) => {
-        dispatch({ type: 'SET_FILES', files: [file], fileInput: '' });
-        if (patcient?.id) getOldAnalyses(patcient.id, 'first');
-        return false;
-    }, [patcient, getOldAnalyses, dispatch]);
+    const handleUploadFile = useCallback((file) => (
+        validatedBeforeUpload(file, {
+            t,
+            extensions: ['.jpg', '.jpeg', '.png'],
+            onValid: () => {
+                dispatch({ type: 'SET_FILES', files: [file], fileInput: '' });
+                if (patcient?.id) getOldAnalyses(patcient.id, 'first');
+            },
+        })
+    ), [t, patcient, getOldAnalyses, dispatch]);
 
     const canSubmit = state.files.length > 0 && !!analysisDateValue && selectedDoctors.length > 0;
 

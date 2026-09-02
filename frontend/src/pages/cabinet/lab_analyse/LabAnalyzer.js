@@ -25,6 +25,7 @@ import { get_lab_categories_data } from '../../../host/requests/LabCategories';
 import { useStore } from '../../../store/Store';
 import { calculateAge } from '../../../tools/formatters';
 import { warningAlert } from '../../../tools/Alerts';
+import { validatedBeforeUpload } from '../../../tools/validatedBeforeUpload';
 
 // ─── Result Components ───
 import LabResult from '../../../components/results/lab_analyse/LabResult';
@@ -127,11 +128,16 @@ export default function LabAnalyzer() {
     }, []);
 
     // ─── File Select ───
-    const handleUploadFile = useCallback((file) => {
-        dispatch({ type: 'SET_FILES', files: [file], fileInput: '' });
-        if (patcient?.id) getOldAnalyses(patcient.id, 'first');
-        return false;
-    }, [patcient, getOldAnalyses, dispatch]);
+    const handleUploadFile = useCallback((file) => (
+        validatedBeforeUpload(file, {
+            t,
+            extensions: fileTypes.extensions,
+            onValid: () => {
+                dispatch({ type: 'SET_FILES', files: [file], fileInput: '' });
+                if (patcient?.id) getOldAnalyses(patcient.id, 'first');
+            },
+        })
+    ), [t, fileTypes.extensions, patcient, getOldAnalyses, dispatch]);
 
     // ─── Retry / Reset ───
     const retryAnalyse = useCallback(() => {

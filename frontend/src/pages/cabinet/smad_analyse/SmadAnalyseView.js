@@ -77,7 +77,14 @@ export default function SmadAnalyseView() {
             .join(', ')
         : '';
 
-    const statusTag = (
+    // AI "tahlil qilib bo'lmadi" holati: status = 2 bo'lsa ham natija ishonchsiz.
+    const aiResultForStatus = parseAiResult(data.aiAnswerData);
+    const notAnalyzable = data.status === 2 && aiResultForStatus?.tahlil_imkonsiz === true;
+    const statusTag = notAnalyzable ? (
+        <Tag color="warning">
+            {t('status_not_analyzable', { defaultValue: 'AI tahlil qila olmadi' })}
+        </Tag>
+    ) : (
         <Tag color={{ 0: 'default', 1: 'processing', 2: 'success', 3: 'warning', '-1': 'error' }[data.status]}>
             {{ 0: t('status_pending'), 1: t('status_processing'), 2: t('status_done'), 3: (t('status_file_mismatch', { defaultValue: 'Fayl mos emas' })), '-1': t('status_error') }[data.status] ?? data.status}
         </Tag>

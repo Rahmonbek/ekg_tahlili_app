@@ -249,6 +249,88 @@
       ]
     },
     {
+      "Route": "clinic_licenses/51685364-38db-440d-88df-27ebb53ea767.7y9c69amfy.pdf",
+      "AssetFile": "clinic_licenses/51685364-38db-440d-88df-27ebb53ea767.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "21"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"X2eJ+ReKNuIR5SrO/kUbFeuJdLGozUYxxpbxyz9FarA=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 01 Sep 2026 18:36:25 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "7y9c69amfy"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-X2eJ+ReKNuIR5SrO/kUbFeuJdLGozUYxxpbxyz9FarA="
+        },
+        {
+          "Name": "label",
+          "Value": "clinic_licenses/51685364-38db-440d-88df-27ebb53ea767.pdf"
+        }
+      ]
+    },
+    {
+      "Route": "clinic_licenses/51685364-38db-440d-88df-27ebb53ea767.pdf",
+      "AssetFile": "clinic_licenses/51685364-38db-440d-88df-27ebb53ea767.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "21"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"X2eJ+ReKNuIR5SrO/kUbFeuJdLGozUYxxpbxyz9FarA=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 01 Sep 2026 18:36:25 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-X2eJ+ReKNuIR5SrO/kUbFeuJdLGozUYxxpbxyz9FarA="
+        }
+      ]
+    },
+    {
       "Route": "clinic_licenses/7aad523b-ee57-4aa8-a4e2-c21361536eff.jpg",
       "AssetFile": "clinic_licenses/7aad523b-ee57-4aa8-a4e2-c21361536eff.jpg",
       "Selectors": [],

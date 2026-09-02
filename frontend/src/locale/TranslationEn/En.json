@@ -248,7 +248,9 @@
   "parasitology_saved": "Parasitology analysis saved",
   "retry_parasitology_analyse": "Analyze new parasitology",
   "save_only": "Save only",
+  "save_only_desc": "Analysis is saved without AI",
   "ai_analyse": "Analyze with AI",
+  "ai_analyse_desc": "Artificial intelligence performs the analysis",
   "select_analyse_mode": "Select analysis mode",
   "click_or_drag_file": "Select a file or drag it here",
   "clear_filters": "Clear filters",
@@ -846,5 +848,14 @@
   "step_back": "Back",
   "reset_step_phone_title": "Your phone number",
   "reset_step_code_title": "Verification code",
-  "reset_step_password_title": "New password"
+  "reset_step_password_title": "New password",
+  "fv_checking": "Checking file...",
+  "fv_empty": "No file selected.",
+  "fv_empty_file": "The uploaded file is empty or corrupted. Please choose another file.",
+  "fv_too_large": "The file is too large. The maximum allowed size is 25 MB.",
+  "fv_unsupported_type": "This file type is not supported. Allowed formats: {{formats}}.",
+  "fv_broken_image": "The image could not be opened. The file may be corrupted.",
+  "fv_image_too_small": "The image is too small ({{width}}×{{height}}). At least {{minW}}×{{minH}} pixels are required. Take the photo in good light, straight from above.",
+  "fv_image_no_content": "No analyzable content was found in the image (blank or very low contrast). Please upload a higher-quality photo.",
+  "status_not_analyzable": "AI could not analyze"
 }

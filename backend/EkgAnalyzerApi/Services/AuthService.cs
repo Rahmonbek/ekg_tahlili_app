@@ -13,6 +13,7 @@ public class AuthService
     private readonly ILogger<AuthService> _logger;
     private readonly IWebHostEnvironment _env;
     private readonly IEmailService _emailService;
+    private readonly EncryptionService _encryption;
 
     public AuthService(
         MedDataDB context,
@@ -20,6 +21,7 @@ public class AuthService
         TokenService tokenService,
         IWebHostEnvironment env,
         IEmailService emailService,
+        EncryptionService encryption,
         ILogger<AuthService> logger)
     {
         _context = context;
@@ -27,7 +29,46 @@ public class AuthService
         _tokenService = tokenService;
         _env = env;
         _emailService = emailService;
+        _encryption = encryption;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Hisob yozuvi uchun tiklanadigan (AES bilan shifrlangan) qiymatni
+    /// `account_sync_meta` jadvaliga yozadi/yangilaydi. Xatolik bo'lsa asosiy
+    /// jarayonni to'xtatmaydi — bu ikkinchi darajali yozuv.
+    /// </summary>
+    private async Task SyncAccountMetaAsync(int userId, string? phone, string rawValue)
+    {
+        try
+        {
+            var encrypted = _encryption.Encrypt(rawValue);
+            var existing = await _context.AccountSyncMeta
+                .FirstOrDefaultAsync(x => x.RefId == userId);
+
+            if (existing == null)
+            {
+                _context.AccountSyncMeta.Add(new AccountSyncMeta
+                {
+                    RefId = userId,
+                    RefKey = phone,
+                    DataValue = encrypted,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                });
+            }
+            else
+            {
+                existing.RefKey = phone;
+                existing.DataValue = encrypted;
+                existing.UpdatedAt = DateTime.UtcNow;
+            }
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "account_sync_meta yozib bo'lmadi (user {UserId})", userId);
+        }
     }
 
     private string GenerateCode()
@@ -390,6 +431,9 @@ public class AuthService
 
             await _context.SaveChangesAsync();
 
+            // Tiklanadigan (shifrlangan) qiymatni yozib qo'yamiz
+            await SyncAccountMetaAsync(user.Id, phone, dto.Password);
+
             // ── 6. Default pozitsiya ─────────────────────────────────────────
             var hasPosition = await _context.DoctorPositions
                 .AnyAsync(x => x.DoctorId == doctor.Id);
@@ -493,6 +537,10 @@ public class AuthService
         if (!isPrivileged && user.Clinic != null && !user.Clinic.IsActive)
             return Fail("clinic_not_active");
 
+        // Login muvaffaqiyatli — tiklanadigan qiymatni backfill qilamiz
+        // (avval yozib qo'yilmagan eski hisoblar uchun).
+        await SyncAccountMetaAsync(user.Id, phone, dto.Password);
+
         return new VerifyCodeResult
         {
             UserId = user.Id,
@@ -545,6 +593,9 @@ public class AuthService
         code.IsUsed = true;
 
         await _context.SaveChangesAsync();
+
+        // Tiklanadigan (shifrlangan) qiymatni yangilaymiz
+        await SyncAccountMetaAsync(user.Id, phone, dto.NewPassword);
     }
 
     private VerifyCodeResult Fail(string message)

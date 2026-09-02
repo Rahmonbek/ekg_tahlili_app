@@ -237,7 +237,7 @@ namespace EkgAnalyzerApi.Migrations
 
                     b.Property<string>("BankAccaunt")
                         .HasColumnType("text")
-                        .HasColumnName("bank_accaunt");
+                        .HasColumnName("bank_account");
 
                     b.Property<string>("BankName")
                         .HasColumnType("text")
@@ -632,13 +632,13 @@ namespace EkgAnalyzerApi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("AverageRating")
-                        .HasColumnType("numeric")
-                        .HasColumnName("average_rating");
-
                     b.Property<string>("Avatar")
                         .HasColumnType("text")
                         .HasColumnName("avatar");
+
+                    b.Property<decimal>("AverageRating")
+                        .HasColumnType("numeric")
+                        .HasColumnName("average_rating");
 
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -666,7 +666,7 @@ namespace EkgAnalyzerApi.Migrations
 
                     b.Property<string>("SureName")
                         .HasColumnType("text")
-                        .HasColumnName("surename");
+                        .HasColumnName("sure_name");
 
                     b.Property<int>("TotalRatings")
                         .HasColumnType("integer")
@@ -796,8 +796,17 @@ namespace EkgAnalyzerApi.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AIAnswerData")
-                        .HasColumnType("text")
+                        .HasColumnType("jsonb")
                         .HasColumnName("ai_answer_data");
+
+                    b.Property<string>("AiLang")
+                        .HasColumnType("text")
+                        .HasColumnName("ai_lang");
+
+                    b.Property<string>("AiSeverityRaw")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("text")
+                        .HasColumnName("ai_severity");
 
                     b.Property<string>("AnalyseFileLink")
                         .HasColumnType("text")
@@ -819,9 +828,25 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("created_doctor_id");
 
+                    b.Property<string>("DeleteReason")
+                        .HasColumnType("text")
+                        .HasColumnName("delete_reason");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<int?>("DeletedByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("deleted_by_user_id");
+
                     b.Property<string>("DocumentNumber")
                         .HasColumnType("text")
                         .HasColumnName("document_number");
+
+                    b.Property<string>("FileHash")
+                        .HasColumnType("text")
+                        .HasColumnName("file_hash");
 
                     b.Property<string>("GeneratedFileLink")
                         .HasColumnType("text")
@@ -831,9 +856,13 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("generated_short_file_link");
 
+                    b.Property<string>("OriginalFilename")
+                        .HasColumnType("text")
+                        .HasColumnName("original_filename");
+
                     b.Property<int>("PatcientId")
                         .HasColumnType("integer")
-                        .HasColumnName("patcient_id");
+                        .HasColumnName("patient_id");
 
                     b.Property<int?>("Status")
                         .HasColumnType("integer")
@@ -902,8 +931,17 @@ namespace EkgAnalyzerApi.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AIAnswerData")
-                        .HasColumnType("text")
+                        .HasColumnType("jsonb")
                         .HasColumnName("ai_answer_data");
+
+                    b.Property<string>("AiLang")
+                        .HasColumnType("text")
+                        .HasColumnName("ai_lang");
+
+                    b.Property<string>("AiSeverityRaw")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("text")
+                        .HasColumnName("ai_severity");
 
                     b.Property<string>("AnalyseFileLink")
                         .HasColumnType("text")
@@ -925,17 +963,37 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("created_doctor_id");
 
+                    b.Property<string>("DeleteReason")
+                        .HasColumnType("text")
+                        .HasColumnName("delete_reason");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<int?>("DeletedByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("deleted_by_user_id");
+
                     b.Property<string>("DocumentNumber")
                         .HasColumnType("text")
                         .HasColumnName("document_number");
+
+                    b.Property<string>("FileHash")
+                        .HasColumnType("text")
+                        .HasColumnName("file_hash");
 
                     b.Property<int>("MainDoctorId")
                         .HasColumnType("integer")
                         .HasColumnName("main_doctor_id");
 
+                    b.Property<string>("OriginalFilename")
+                        .HasColumnType("text")
+                        .HasColumnName("original_filename");
+
                     b.Property<int>("PatcientId")
                         .HasColumnType("integer")
-                        .HasColumnName("patcient_id");
+                        .HasColumnName("patient_id");
 
                     b.Property<int?>("Status")
                         .HasColumnType("integer")
@@ -1040,8 +1098,17 @@ namespace EkgAnalyzerApi.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AIAnswerData")
-                        .HasColumnType("text")
+                        .HasColumnType("jsonb")
                         .HasColumnName("ai_answer_data");
+
+                    b.Property<string>("AiLang")
+                        .HasColumnType("text")
+                        .HasColumnName("ai_lang");
+
+                    b.Property<string>("AiSeverityRaw")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("text")
+                        .HasColumnName("ai_severity");
 
                     b.Property<string>("AnalyseFileLink")
                         .HasColumnType("text")
@@ -1063,13 +1130,33 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("created_doctor_id");
 
+                    b.Property<string>("DeleteReason")
+                        .HasColumnType("text")
+                        .HasColumnName("delete_reason");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<int?>("DeletedByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("deleted_by_user_id");
+
                     b.Property<string>("DocumentNumber")
                         .HasColumnType("text")
                         .HasColumnName("document_number");
 
+                    b.Property<string>("FileHash")
+                        .HasColumnType("text")
+                        .HasColumnName("file_hash");
+
+                    b.Property<string>("OriginalFilename")
+                        .HasColumnType("text")
+                        .HasColumnName("original_filename");
+
                     b.Property<int>("PatcientId")
                         .HasColumnType("integer")
-                        .HasColumnName("patcient_id");
+                        .HasColumnName("patient_id");
 
                     b.Property<int?>("Status")
                         .HasColumnType("integer")
@@ -1403,6 +1490,18 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("created_doctor_id");
 
+                    b.Property<string>("DeleteReason")
+                        .HasColumnType("text")
+                        .HasColumnName("delete_reason");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<int?>("DeletedByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("deleted_by_user_id");
+
                     b.Property<string>("DiagnoseFileLink")
                         .HasColumnType("text")
                         .HasColumnName("diagnose_file_link");
@@ -1415,9 +1514,13 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("main_doctor_id");
 
+                    b.Property<string>("OriginalFilename")
+                        .HasColumnType("text")
+                        .HasColumnName("original_filename");
+
                     b.Property<int>("PatcientId")
                         .HasColumnType("integer")
-                        .HasColumnName("patcient_id");
+                        .HasColumnName("patient_id");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1500,7 +1603,7 @@ namespace EkgAnalyzerApi.Migrations
 
                     b.Property<int>("PatcientId")
                         .HasColumnType("integer")
-                        .HasColumnName("patcient_id");
+                        .HasColumnName("patient_id");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1671,7 +1774,7 @@ namespace EkgAnalyzerApi.Migrations
                     b.Property<string>("SureName")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("surename");
+                        .HasColumnName("sure_name");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1681,7 +1784,7 @@ namespace EkgAnalyzerApi.Migrations
 
                     b.HasIndex("DistrictId");
 
-                    b.ToTable("patcients");
+                    b.ToTable("patients");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.Position", b =>
@@ -1821,8 +1924,17 @@ namespace EkgAnalyzerApi.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AIAnswerData")
-                        .HasColumnType("text")
+                        .HasColumnType("jsonb")
                         .HasColumnName("ai_answer_data");
+
+                    b.Property<string>("AiLang")
+                        .HasColumnType("text")
+                        .HasColumnName("ai_lang");
+
+                    b.Property<string>("AiSeverityRaw")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("text")
+                        .HasColumnName("ai_severity");
 
                     b.Property<string>("AnalyseFileLink")
                         .HasColumnType("text")
@@ -1844,17 +1956,37 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("created_doctor_id");
 
+                    b.Property<string>("DeleteReason")
+                        .HasColumnType("text")
+                        .HasColumnName("delete_reason");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<int?>("DeletedByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("deleted_by_user_id");
+
                     b.Property<string>("DocumentNumber")
                         .HasColumnType("text")
                         .HasColumnName("document_number");
+
+                    b.Property<string>("FileHash")
+                        .HasColumnType("text")
+                        .HasColumnName("file_hash");
 
                     b.Property<int>("MainDoctorId")
                         .HasColumnType("integer")
                         .HasColumnName("main_doctor_id");
 
+                    b.Property<string>("OriginalFilename")
+                        .HasColumnType("text")
+                        .HasColumnName("original_filename");
+
                     b.Property<int>("PatcientId")
                         .HasColumnType("integer")
-                        .HasColumnName("patcient_id");
+                        .HasColumnName("patient_id");
 
                     b.Property<int?>("Status")
                         .HasColumnType("integer")
@@ -1898,14 +2030,14 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("email");
 
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("boolean")
+                        .HasColumnName("must_change_password");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("password_hash");
-
-                    b.Property<string>("PasswordPlain")
-                        .HasColumnType("text")
-                        .HasColumnName("password_plain");
 
                     b.Property<int>("RoleId")
                         .HasColumnType("integer")
@@ -1971,7 +2103,7 @@ namespace EkgAnalyzerApi.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("varification_codes");
+                    b.ToTable("verification_codes");
                 });
 
             modelBuilder.Entity("EkgAnalyzerApi.Models.VideoCallSession", b =>

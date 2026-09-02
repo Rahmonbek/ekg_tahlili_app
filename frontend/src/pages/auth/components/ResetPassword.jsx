@@ -200,6 +200,7 @@ export default function ResetPassword() {
                                     </p>
                                     <Form.Item
                                         name="code"
+                                        initialValue=""
                                         label={t('verification_code', { defaultValue: 'Tasdiqlash kodi' })}
                                         rules={[
                                             { required: true, message: t('not_empty') },
@@ -216,7 +217,6 @@ export default function ResetPassword() {
                                             onChange={(e) => {
                                                 const digits = e.target.value.replace(/\D/g, '').slice(0, 4);
                                                 form.setFieldsValue({ code: digits });
-                                                e.target.value = digits;
                                             }}
                                         />
                                     </Form.Item>

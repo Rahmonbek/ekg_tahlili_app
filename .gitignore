@@ -25,19 +25,12 @@ runs/
 # Maxfiy fayllar (secrets)
 /backend/EkgAnalyzerApi/appsettings.Development.json
 /backend/EkgAnalyzerApi/appsettings.Production.json
-/backend/EkgAnalyzerApi/.env
-/backend/EkgAnalyzerApi/.env.*
-!/backend/EkgAnalyzerApi/.env.example
-!/backend/EkgAnalyzerApi/.env.production.example
-/python_back/.env
-/python_back/.env.*
-!/python_back/.env.example
-!/python_back/.env.production.example
+
 /python_back/venv
 /python_back/__pycache__
 
 
-/dataset_app/.env
+
 /dataset_app/venv
 /dataset_app/venv311
 /dataset_app/dataset
@@ -61,15 +54,7 @@ node_modules/
 /admin/node_modules/
 
 # Frontend — local env overrides (secrets bo'lishi mumkin)
-frontend/.env.local
-frontend/.env.development.local
-frontend/.env.test.local
-frontend/.env.production.local
 
-admin/.env.local
-admin/.env.development.local
-admin/.env.test.local
-admin/.env.production.local
 
 # Python
 **/__pycache__/

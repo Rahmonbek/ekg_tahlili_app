@@ -1,5 +1,6 @@
 import { useStore } from '../store/Store';
 import { isDuplicateError } from '../components/shared/duplicateUpload';
+import { extractApiError } from '../tools/apiError';
 
 export const useBackgroundAnalysis = () => {
     const { addPendingAnalysis, updatePendingAnalysis, removePendingAnalysis } = useStore();
@@ -42,7 +43,7 @@ export const useBackgroundAnalysis = () => {
                     onDuplicate(err);
                     return;
                 }
-                const errorMsg = err?.response?.data?.message || err?.message || 'Xatolik yuz berdi';
+                const errorMsg = extractApiError(err, 'Xatolik yuz berdi');
                 updatePendingAnalysis(key, { status: 'error', errorMsg });
                 setTimeout(() => removePendingAnalysis(key), 8000);
             });

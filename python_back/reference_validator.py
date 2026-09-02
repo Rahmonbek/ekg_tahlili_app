@@ -60,7 +60,9 @@ def validate_analysis_refs(
     tegishliligi tekshiriladi — bu boshqa klinikaning shifokorini biriktirishning
     oldini oladi.
     """
-    if not _existing_ids(db, "patcients", [patcient_id]):
+    # Jadval nomi `patients` (ilgari `patcients` deb yozilgan edi va
+    # jadval mavjud emasligi sababli AI tahlil 500 xatolik berardi).
+    if not _existing_ids(db, "patients", [patcient_id]):
         raise ReferenceError("Bemor topilmadi")
 
     if not _existing_ids(db, "clinics", [clinic_id]):

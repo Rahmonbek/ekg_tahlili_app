@@ -4,7 +4,7 @@ import { Button, Image } from 'antd'
 import { formatTimeStr } from 'antd/es/statistic/utils'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { calculateAge, formatDateTime } from '../../../tools/formatters'
+import { calculateAge, formatDate, formatDateTime } from '../../../tools/formatters'
 import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io'
 import { dangerAlert, warningAlert } from '../../../tools/Alerts'
 import { analyzeEkgFileRetry } from '../../../host/EkgService'
@@ -71,7 +71,7 @@ setresult(parsedResult);
 data!=null?<div className={`old_analyse main_card ${open?"opened_main_card":"closed_main_card"} ${result != null ? severityClass(result.automatic_analysis_bool) : 'unknown_analyse'}`}>
         <h1  onClick={()=>{setopen(!open)}}><p>
           
-          {data.analysisDate ? <span><b>{t('analysis_date')}:</b> {formatDateTime(data.analysisDate)}</span> : formatDateTime(data.createdAt)}  </p>
+          {data.analysisDate ? <span><b>{t('analysis_date')}:</b> {formatDate(data.analysisDate)}</span> : formatDate(data.createdAt)}  </p>
           <p>
 {result != null ? severityLabel(result.automatic_analysis_bool, t) : t('not_analysed')}
  <span>{open ? <IoIosArrowUp /> : <IoIosArrowDown />}</span>

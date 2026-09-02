@@ -25,6 +25,7 @@ import { get_holter_analyses_by_patcient_id } from '../../../host/requests/Holte
 import { useStore } from '../../../store/Store';
 import { calculateAge } from '../../../tools/formatters';
 import { warningAlert } from '../../../tools/Alerts';
+import { validatedBeforeUpload } from '../../../tools/validatedBeforeUpload';
 
 // ─── Result Components ───
 import HolterResult from '../../../components/results/holter_analyse/HolterResult';
@@ -102,11 +103,16 @@ export default function HolterAnalyzer() {
     });
 
     // ─── File Select ───
-    const handleUploadFile = useCallback((file) => {
-        dispatch({ type: 'SET_FILES', files: [file], fileInput: '' });
-        if (patcient?.id) getOldAnalyses(patcient.id, 'first');
-        return false;
-    }, [patcient, getOldAnalyses, dispatch]);
+    const handleUploadFile = useCallback((file) => (
+        validatedBeforeUpload(file, {
+            t,
+            extensions: fileTypes.extensions,
+            onValid: () => {
+                dispatch({ type: 'SET_FILES', files: [file], fileInput: '' });
+                if (patcient?.id) getOldAnalyses(patcient.id, 'first');
+            },
+        })
+    ), [t, fileTypes.extensions, patcient, getOldAnalyses, dispatch]);
 
     // ─── Retry / Reset ───
     const retryAnalyse = useCallback(() => {

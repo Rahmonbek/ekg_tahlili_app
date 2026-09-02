@@ -249,7 +249,9 @@
   "parasitology_saved": "Parazitologik tahlil saqlandi",
   "retry_parasitology_analyse": "Yangi parazitologik tahlil qilish",
   "save_only": "Faqat saqlash",
+  "save_only_desc": "Tahlil AI ishtirokisiz saqlanadi",
   "ai_analyse": "AI bilan tahlil",
+  "ai_analyse_desc": "Sun'iy intellekt tahlil qiladi",
   "select_analyse_mode": "Tahlil usulini tanlang",
   "click_or_drag_file": "Fayl tanlang yoki bu yerga tashlang",
   "clear_filters": "Filtrlarni tozalash",
@@ -846,5 +848,14 @@
   "step_back": "Orqaga",
   "reset_step_phone_title": "Telefon raqamingiz",
   "reset_step_code_title": "Tasdiqlash kodi",
-  "reset_step_password_title": "Yangi parol"
+  "reset_step_password_title": "Yangi parol",
+  "fv_checking": "Fayl tekshirilmoqda...",
+  "fv_empty": "Fayl tanlanmadi.",
+  "fv_empty_file": "Yuklangan fayl bo'sh yoki buzilgan. Boshqa fayl tanlang.",
+  "fv_too_large": "Fayl hajmi juda katta. Maksimal ruxsat etilgan hajm — 25 MB.",
+  "fv_unsupported_type": "Bu fayl turi qabul qilinmaydi. Ruxsat etilgan formatlar: {{formats}}.",
+  "fv_broken_image": "Rasmni ochib bo'lmadi. Fayl buzilgan bo'lishi mumkin.",
+  "fv_image_too_small": "Rasm o'lchami juda kichik ({{width}}×{{height}}). Kamida {{minW}}×{{minH}} piksel bo'lishi kerak. Tahlilni yaxshi yorug'likda, to'g'ridan-to'g'ri tepadan suratga oling.",
+  "fv_image_no_content": "Rasmda tahlil qilinadigan mazmun topilmadi (bo'sh yoki juda past kontrastli). Yaxshiroq sifatli surat yuklang.",
+  "status_not_analyzable": "AI tahlil qila olmadi"
 }

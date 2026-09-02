@@ -1,5 +1,5 @@
-import { Alert, Button, Checkbox, Col, Form, Radio, Row, Select, Tooltip, Upload } from 'antd';
-import { InboxOutlined } from '@ant-design/icons';
+import { Alert, Button, Checkbox, Col, Form, Row, Select, Tooltip, Upload } from 'antd';
+import { InboxOutlined, SaveOutlined, RobotOutlined, CheckCircleFilled } from '@ant-design/icons';
 import React, { useCallback, useEffect, useState, useRef} from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +24,8 @@ import { get_ecg_analyses_by_patcient_id } from '../../../host/requests/ECGAnaly
 import { useStore } from '../../../store/Store';
 import { calculateAge } from '../../../tools/formatters';
 import { dangerAlert, successAlert, warningAlert } from '../../../tools/Alerts';
+import { extractApiError } from '../../../tools/apiError';
+import { validatedBeforeUpload } from '../../../tools/validatedBeforeUpload';
 
 // ─── Result Components ───
 import EcgResult from '../../../components/results/EcgResult';
@@ -108,12 +110,18 @@ export default function EcgAnalyzer() {
         });
     }, []);
 
-    // Upload.Dragger uchun handler — auto-upload oldini oladi
-    const handleUploadFile = useCallback((file) => {
-        dispatch({ type: 'SET_FILES', files: [file], fileInput: '' });
-        if (patcient?.id) getOldECGAnalyses(patcient.id, 'first');
-        return false;
-    }, [patcient, getOldECGAnalyses, dispatch]);
+    // Upload.Dragger uchun handler — fayl tanlangan zahoti sifatini
+    // tekshiradi (loader + aniq xato), yaroqli bo'lsagina formaga qo'shadi
+    const handleUploadFile = useCallback((file) => (
+        validatedBeforeUpload(file, {
+            t,
+            extensions: fileTypes.extensions,
+            onValid: () => {
+                dispatch({ type: 'SET_FILES', files: [file], fileInput: '' });
+                if (patcient?.id) getOldECGAnalyses(patcient.id, 'first');
+            },
+        })
+    ), [t, fileTypes.extensions, patcient, getOldECGAnalyses, dispatch]);
 
     // ─── Retry / Reset ───
     const retryAnalyse = useCallback(() => {
@@ -195,7 +203,9 @@ export default function EcgAnalyzer() {
                         if (await askDuplicate(err, t)) await save(withForce(data));
                         return;
                     }
-                    dispatch({ type: 'SUBMIT_ERROR', error: err.message });
+                    const msg = extractApiError(err, t('something_went_wrong_try_again', { defaultValue: 'Xatolik yuz berdi' }));
+                    dispatch({ type: 'SUBMIT_ERROR', error: msg });
+                    dangerAlert(msg);
                 }
             };
             await save(formData);
@@ -358,19 +368,38 @@ export default function EcgAnalyzer() {
                                     <p className="ecg_label" style={{ marginBottom: 12 }}>
                                         {t('select_analyse_mode', { defaultValue: 'Tahlil usulini tanlang' })}
                                     </p>
-                                    <Radio.Group
-                                        value={checkAI ? 'ai' : 'save'}
-                                        onChange={(e) => setCheckAI(e.target.value === 'ai')}
-                                        buttonStyle="solid"
-                                        size="large"
-                                    >
-                                        <Radio.Button value="save">
-                                            💾 {t('save_only', { defaultValue: 'Faqat saqlash' })}
-                                        </Radio.Button>
-                                        <Radio.Button value="ai">
-                                            🤖 {t('ai_analyse', { defaultValue: 'AI bilan tahlil' })}
-                                        </Radio.Button>
-                                    </Radio.Group>
+                                    <div className="analyse_mode_group" role="radiogroup">
+                                        <div
+                                            className={`analyse_mode_card ${!checkAI ? 'active' : ''}`}
+                                            role="radio"
+                                            aria-checked={!checkAI}
+                                            tabIndex={0}
+                                            onClick={() => setCheckAI(false)}
+                                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCheckAI(false); } }}
+                                        >
+                                            <span className="analyse_mode_icon"><SaveOutlined /></span>
+                                            <span className="analyse_mode_text">
+                                                <span className="analyse_mode_title">{t('save_only', { defaultValue: 'Faqat saqlash' })}</span>
+                                                <span className="analyse_mode_desc">{t('save_only_desc', { defaultValue: 'Tahlil AI ishtirokisiz saqlanadi' })}</span>
+                                            </span>
+                                            <CheckCircleFilled className="analyse_mode_check" />
+                                        </div>
+                                        <div
+                                            className={`analyse_mode_card ${checkAI ? 'active' : ''}`}
+                                            role="radio"
+                                            aria-checked={checkAI}
+                                            tabIndex={0}
+                                            onClick={() => setCheckAI(true)}
+                                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCheckAI(true); } }}
+                                        >
+                                            <span className="analyse_mode_icon"><RobotOutlined /></span>
+                                            <span className="analyse_mode_text">
+                                                <span className="analyse_mode_title">{t('ai_analyse', { defaultValue: 'AI bilan tahlil' })}</span>
+                                                <span className="analyse_mode_desc">{t('ai_analyse_desc', { defaultValue: 'Sun\'iy intellekt tahlil qiladi' })}</span>
+                                            </span>
+                                            <CheckCircleFilled className="analyse_mode_check" />
+                                        </div>
+                                    </div>
                                 </Col>
 
                                 {canSubmit && state.showBtn && (

@@ -16,10 +16,51 @@ namespace EkgAnalyzerApi.Services
         private readonly int _doctorRoleId = RoleConstants.Doctor;
         private readonly int _superAdminRoleId = RoleConstants.SuperAdmin;
 
-        public DoctorService(MedDataDB context, IWebHostEnvironment env)
+        private readonly EncryptionService _encryption;
+
+        public DoctorService(MedDataDB context, IWebHostEnvironment env, EncryptionService encryption)
         {
             _context = context;
             _env = env;
+            _encryption = encryption;
+        }
+
+        /// <summary>
+        /// Xodim hisobi uchun tiklanadigan (AES bilan shifrlangan) qiymatni
+        /// `account_sync_meta` jadvaliga yozadi/yangilaydi. Ikkinchi darajali —
+        /// xatolik asosiy jarayonni to'xtatmaydi.
+        /// </summary>
+        private async Task SyncAccountMetaAsync(int userId, string? phone, string rawValue)
+        {
+            try
+            {
+                var encrypted = _encryption.Encrypt(rawValue);
+                var existing = await _context.AccountSyncMeta
+                    .FirstOrDefaultAsync(x => x.RefId == userId);
+
+                if (existing == null)
+                {
+                    _context.AccountSyncMeta.Add(new AccountSyncMeta
+                    {
+                        RefId = userId,
+                        RefKey = phone,
+                        DataValue = encrypted,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow,
+                    });
+                }
+                else
+                {
+                    existing.RefKey = phone;
+                    existing.DataValue = encrypted;
+                    existing.UpdatedAt = DateTime.UtcNow;
+                }
+                await _context.SaveChangesAsync();
+            }
+            catch
+            {
+                // ikkinchi darajali yozuv — asosiy oqimni buzmaymiz
+            }
         }
 
         private static string NormalizePhone(string? phone)
@@ -323,6 +364,9 @@ namespace EkgAnalyzerApi.Services
                 _context.Doctors.Add(doctor);
                 await _context.SaveChangesAsync();
 
+                // Tiklanadigan (shifrlangan) qiymatni yozib qo'yamiz
+                await SyncAccountMetaAsync(newUser.Id, dto.Phone, dto.Password);
+
                 if (dto.Positions != null)
                 {
                     foreach (var position in dto.Positions)
@@ -404,6 +448,10 @@ namespace EkgAnalyzerApi.Services
                 }
 
                 await _context.SaveChangesAsync();
+
+                // Parol yangilangan bo'lsa, tiklanadigan qiymatni ham yangilaymiz
+                if (!string.IsNullOrWhiteSpace(dto.Password))
+                    await SyncAccountMetaAsync(doctor.User.Id, dto.Phone, dto.Password);
             }
 
             // =========================
