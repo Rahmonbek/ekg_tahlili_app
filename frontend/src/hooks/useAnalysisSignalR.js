@@ -9,7 +9,7 @@ const HUB_URL = `${_apiBase}/hubs/analysis`;
 
 export default function useAnalysisSignalR(enabled) {
     const connectionRef = useRef(null);
-    const { updatePendingAnalysisByRef, upsertPendingAnalysisByRef } = useStore();
+    const { updatePendingAnalysisByRef, upsertPendingAnalysisByRef, removePendingAnalysisByRef } = useStore();
 
     useEffect(() => {
         if (!enabled) return;
@@ -53,6 +53,12 @@ export default function useAnalysisSignalR(enabled) {
             const analysisId = payload?.analysisId;
             if (!type || !analysisId) return;
 
+            // Tahlil o'chirilgan — ko'rsatkichdan olib tashlanadi, yangilanmaydi.
+            if (payload.status === 'removed') {
+                removePendingAnalysisByRef(type, analysisId);
+                return;
+            }
+
             const current = useStore.getState().pendingAnalyses || [];
             const exists = current.some((item) =>
                 item.type === type && Number(item.analysisId) === Number(analysisId)
@@ -91,5 +97,5 @@ export default function useAnalysisSignalR(enabled) {
             connection.stop();
             connectionRef.current = null;
         };
-    }, [enabled, updatePendingAnalysisByRef, upsertPendingAnalysisByRef]);
+    }, [enabled, updatePendingAnalysisByRef, upsertPendingAnalysisByRef, removePendingAnalysisByRef]);
 }

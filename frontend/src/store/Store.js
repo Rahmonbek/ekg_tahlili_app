@@ -147,4 +147,10 @@ export const useStore = create((set) => ({
     removePendingAnalysis: (key) => set((s) => ({
         pendingAnalyses: s.pendingAnalyses.filter((a) => a.key !== key),
     })),
+    // Tahlil o'chirilganda ko'rsatkichdan darhol olib tashlash (tur+id bo'yicha).
+    removePendingAnalysisByRef: (type, analysisId) => set((s) => ({
+        pendingAnalyses: s.pendingAnalyses.filter((a) =>
+            !(a.type === type && Number(a.analysisId) === Number(analysisId))
+        ),
+    })),
 }))

@@ -31,13 +31,16 @@ public class AnalysisDeletionController : ControllerBase
     private readonly AnalysisDeletionService _deletion;
     private readonly ICurrentUser _currentUser;
     private readonly MedDataDB _context;
+    private readonly AnalysisProgressTracker _tracker;
 
     public AnalysisDeletionController(
-        AnalysisDeletionService deletion, ICurrentUser currentUser, MedDataDB context)
+        AnalysisDeletionService deletion, ICurrentUser currentUser, MedDataDB context,
+        AnalysisProgressTracker tracker)
     {
         _deletion = deletion;
         _currentUser = currentUser;
         _context = context;
+        _tracker = tracker;
     }
 
     /// <summary>
@@ -84,6 +87,12 @@ public class AnalysisDeletionController : ControllerBase
         var outcome = await _deletion.DeleteAsync(
             type, id, clinicId.Value, _currentUser.UserId, me.Email, body?.Reason,
             restrictToCreatorDoctorId);
+
+        // O'chirish muvaffaqiyatli bo'lsa — AI progress ko'rsatkichini DARHOL
+        // to'xtatamiz: aks holda hali "loading" bo'lgan tahlil o'chirilganda
+        // ko'rsatkich "tahlil qilinyapti" bo'lib qolardi (2s pollingni kutmasdan).
+        if (outcome == DeleteOutcome.Ok)
+            await _tracker.RemoveByAnalysisAsync(type, id);
 
         return outcome switch
         {
