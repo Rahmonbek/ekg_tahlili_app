@@ -78,6 +78,10 @@ export default function Patcients() {
         {
             title: t('FIO'),
             key: 'fio',
+            // Ustunlarga aniq kenglik: `scroll={{ x: 'max-content' }}` bilan
+            // kenglik berilmagan ustun tarkibga qarab cheksiz kengayadi va
+            // 1366 px ekranda jadval o'ngdan chiqib ketardi
+            width: 200,
             render: (_, row) => (
                 <div>
                     <Text strong>
@@ -99,6 +103,7 @@ export default function Patcients() {
             dataIndex: 'passportMasked',
             key: 'passport',
             align: 'center',
+            width: 120,
             render: (value) => (
                 <Tooltip title={t('passport_masked_hint', { defaultValue: 'Maxfiylik uchun to\'liq ko\'rsatilmaydi' })}>
                     <Text type="secondary">{value || '—'}</Text>
@@ -110,6 +115,7 @@ export default function Patcients() {
             dataIndex: 'birthDate',
             key: 'birthDate',
             align: 'center',
+            width: 120,
             render: (value) => (value ? formatDate(value) : '—'),
         },
         {
@@ -117,12 +123,16 @@ export default function Patcients() {
             dataIndex: 'phone',
             key: 'phone',
             align: 'center',
+            width: 150,
             render: (value) => (value ? formatPhoneNumberForForm(value) : '—'),
         },
         {
             title: t('addres', { defaultValue: 'Manzil' }),
             key: 'address',
+            // `ellipsis` faqat kenglik berilgandagina ishlaydi — busiz
+            // manzil butun qatorni cho'zib yuborardi
             ellipsis: true,
+            width: 240,
             render: (_, row) => {
                 const parts = [row.regionName, row.districtName, row.address].filter(Boolean)
                 return parts.length ? parts.join(', ') : '—'
@@ -171,7 +181,12 @@ export default function Patcients() {
                     </div>
                     <div className="doctors_table" data-tour="patients-table">
                         <Table
-                            scroll={{ x: 'max-content' }}
+                            // `max-content` EMAS: u ustunga berilgan kenglikni
+                            // faqat MINIMUM deb qabul qiladi va uzun manzil butun
+                            // jadvalni cho'zib yuborardi. Aniq son bilan antd
+                            // `table-layout: fixed` ga o'tadi — kenglik hurmat
+                            // qilinadi, `ellipsis` ishlaydi, sig'masa skroll chiqadi.
+                            scroll={{ x: 1010 }}
                             rowKey="id"
                             loading={loading}
                             dataSource={patients}

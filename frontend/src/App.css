@@ -4056,3 +4056,76 @@ body.hide_recaptcha_badge .grecaptcha-badge {
     margin: 0;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   Jadvallar — kichik noutbuk ekranlari (1366×768 va shunga yaqin)
+   ══════════════════════════════════════════════════════════════════
+
+   Muammo: yon panel ochiq turganda kontent kengligi ~1040 px qoladi.
+   Bemorlar jadvali esa 1319 px joy talab qilardi — "Manzil" ustuni
+   ekrandan chiqib ketar, "Tahlillar" ustuni umuman ko'rinmasdi.
+
+   Yechim ikki qismli:
+     1) tor ekranlarda katak ichki bo'shlig'i va shrift bir oz
+        kichrayadi (o'qilishi saqlangan holda ~120 px tejaydi);
+     2) sig'masa — ko'rinadigan, chiroyli gorizontal skroll.
+
+   Katta monitorlarda (1600 px dan keng) hech narsa o'zgarmaydi. */
+
+@media (max-width: 1600px) {
+  .ant-table-wrapper .ant-table-tbody > tr > td,
+  .ant-table-wrapper .ant-table-thead > tr > th {
+    padding-inline: 10px;
+    font-size: 0.8125rem;   /* 13px */
+  }
+
+  .ant-table-wrapper .ant-table-thead > tr > th {
+    font-size: 0.75rem;     /* 12px — sarlavhalar baribir CAPS */
+  }
+
+  /* Ustun ichidagi ikkilamchi matn (yosh, hujjat raqami) */
+  .ant-table-wrapper .ant-table-tbody .ant-typography-secondary,
+  .ant-table-wrapper .ant-table-tbody small {
+    font-size: 0.6875rem;   /* 11px */
+  }
+
+  .ant-table-wrapper .ant-tag {
+    font-size: 0.6875rem;
+    padding-inline: 6px;
+    margin-inline-end: 4px;
+  }
+}
+
+/* ── Gorizontal skroll: ko'rinadigan va chiroyli ─────────────────
+   Standart skroll juda ingichka va oq fonda deyarli ko'rinmasdi —
+   foydalanuvchi jadval o'ngga surilishini bilmasdi. */
+
+.ant-table-wrapper .ant-table-body,
+.ant-table-wrapper .ant-table-content {
+  scrollbar-width: thin;                      /* Firefox */
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.ant-table-wrapper .ant-table-body::-webkit-scrollbar,
+.ant-table-wrapper .ant-table-content::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.ant-table-wrapper .ant-table-body::-webkit-scrollbar-track,
+.ant-table-wrapper .ant-table-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 999px;
+}
+
+.ant-table-wrapper .ant-table-body::-webkit-scrollbar-thumb,
+.ant-table-wrapper .ant-table-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+  transition: background 0.15s ease;
+}
+
+.ant-table-wrapper .ant-table-body::-webkit-scrollbar-thumb:hover,
+.ant-table-wrapper .ant-table-content::-webkit-scrollbar-thumb:hover {
+  background: #00b39a;
+}

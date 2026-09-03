@@ -60,6 +60,7 @@ export default function PatcientPassportSearch() {
         {
             title: t('FIO'),
             key: 'fio',
+            width: 220,
             render: (_, row) => (
                 <div>
                     <Text strong>{[row.lastName, row.firstName, row.sureName].filter(Boolean).join(' ')}</Text>
@@ -79,6 +80,7 @@ export default function PatcientPassportSearch() {
             dataIndex: 'passportMasked',
             key: 'passport',
             align: 'center',
+            width: 120,
             render: (value) => value || '—',
         },
         {
@@ -86,6 +88,7 @@ export default function PatcientPassportSearch() {
             dataIndex: 'birthDate',
             key: 'birthDate',
             align: 'center',
+            width: 120,
             render: (value) => (value ? formatDate(value) : '—'),
         },
         {
@@ -93,12 +96,14 @@ export default function PatcientPassportSearch() {
             dataIndex: 'phone',
             key: 'phone',
             align: 'center',
+            width: 150,
             render: (value) => (value ? formatPhoneNumberForForm(value) : '—'),
         },
         {
             title: t('addres', { defaultValue: 'Manzil' }),
             key: 'address',
             ellipsis: true,
+            width: 240,
             render: (_, row) => {
                 const parts = [row.regionName, row.districtName, row.address].filter(Boolean)
                 return parts.length ? parts.join(', ') : '—'
@@ -183,7 +188,8 @@ export default function PatcientPassportSearch() {
 
                 {rows !== null && (
                     <Table
-                        scroll={{ x: 'max-content' }}
+                        // `max-content` EMAS — pastdagi izohga qarang
+                        scroll={{ x: 1000 }}
                         rowKey="id"
                         loading={loading}
                         dataSource={rows}

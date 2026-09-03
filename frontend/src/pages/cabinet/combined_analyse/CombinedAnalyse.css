@@ -287,3 +287,20 @@
   .cai-hero { padding: 14px 16px; }
   .cai-hero-text { font-size: 1rem; }
 }
+
+/* ── Ro'yxatdagi "Xulosaga kirgan tahlillar" ustuni ─────────────
+   Teglar konteynerining kengligi ekranga qarab o'zgaradi: kichik
+   noutbukda ustun jadvalni cho'zib yubormasligi kerak, katta
+   monitorda esa teglar 5 qatorga bo'linib qator balandligini
+   bekorga oshirmasligi kerak. */
+
+.cai-source-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  max-width: 230px;
+}
+
+@media (min-width: 1600px) {
+  .cai-source-tags { max-width: 420px; }
+}

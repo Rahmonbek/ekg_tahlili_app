@@ -8,6 +8,7 @@ import { calculateAge, formatDateTime, rowNumber } from '../../../tools/formatte
 import { severityColor, severityLabel } from '../../../tools/severity'
 import EmptyState from '../../../components/shared/EmptyState'
 import useDocumentTitle from '../../../tools/useDocumentTitle'
+import './CombinedAnalyse.css'
 
 const { Text } = Typography
 const PAGE_SIZE = 10
@@ -27,13 +28,14 @@ const TYPE_META = {
 }
 
 /**
- * "Xulosaga kirgan tahlillar" ustunining eng katta kengligi.
+ * "Xulosaga kirgan tahlillar" ustunining boshlang'ich kengligi.
  *
- * Jadval `scroll={{ x: 'max-content' }}` bilan ishlaydi — chegara
- * qo'yilmasa ustun tarkibga qarab cheksiz kengayib, qolgan ustunlarni
- * ekrandan surib chiqarardi. Chegara bilan teglar pastki qatorga tushadi.
+ * Teglar konteynerining haqiqiy chegarasi CSS da (`.cai-source-tags`) —
+ * u ekran kengligiga qarab o'zgaradi: kichik noutbukda 230 px,
+ * 1600 px dan keng monitorda 420 px. Chegara bo'lmasa ustun tarkibga
+ * qarab cheksiz kengayib, qolgan ustunlarni ekrandan surib chiqarardi.
  */
-const SOURCES_MAX_WIDTH = 280
+const SOURCES_MAX_WIDTH = 230
 
 /** Kompleks xulosa holati (int) → rangli belgi. */
 function StatusTag({ status, t }) {
@@ -113,6 +115,7 @@ export default function CombinedAnalysesList() {
         {
             title: t('patcient', { defaultValue: 'Bemor' }),
             key: 'patient',
+            width: 190,
             render: (_, row) => (
                 <div>
                     <Text strong>
@@ -136,12 +139,7 @@ export default function CombinedAnalysesList() {
             key: 'items',
             width: SOURCES_MAX_WIDTH,
             render: (_, row) => (
-                <div style={{
-                    display: 'flex',
-                    gap: 4,
-                    flexWrap: 'wrap',
-                    maxWidth: SOURCES_MAX_WIDTH,
-                }}>
+                <div className="cai-source-tags">
                     {(row.items ?? []).map((item) => {
                         const meta = TYPE_META[item.type]
                         return (
@@ -162,6 +160,7 @@ export default function CombinedAnalysesList() {
             dataIndex: 'createdAt',
             key: 'createdAt',
             align: 'center',
+            width: 130,
             render: (value) => (value ? formatDateTime(value) : '—'),
         },
         {
@@ -169,6 +168,7 @@ export default function CombinedAnalysesList() {
             dataIndex: 'status',
             key: 'status',
             align: 'center',
+            width: 130,
             render: (status) => <StatusTag status={status} t={t} />,
         },
         {
@@ -176,6 +176,7 @@ export default function CombinedAnalysesList() {
             dataIndex: 'aiStatus',
             key: 'aiStatus',
             align: 'center',
+            width: 100,
             render: (severity) =>
                 severity == null
                     ? <Text type="secondary">—</Text>
@@ -185,6 +186,8 @@ export default function CombinedAnalysesList() {
             title: t('doctor', { defaultValue: 'Shifokor' }),
             dataIndex: 'doctorName',
             key: 'doctorName',
+            width: 180,
+            ellipsis: true,
             render: (value) => value || <Text type="secondary">—</Text>,
         },
     ]
@@ -218,7 +221,10 @@ export default function CombinedAnalysesList() {
                     </div>
                     <div className="doctors_table">
                         <Table
-                            scroll={{ x: 'max-content' }}
+                            // Aniq son — `max-content` ustun kengligini
+                            // faqat minimum deb qabul qilardi va jadval
+                            // kichik ekranda sig'masdi
+                            scroll={{ x: 990 }}
                             rowKey="id"
                             loading={loading}
                             dataSource={rows}

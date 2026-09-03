@@ -292,6 +292,11 @@ export default function EcgAnalysesList() {
             title: t('ai_summary', { defaultValue: 'AI xulosasi' }),
             dataIndex: 'aiSummary',
             key: 'aiSummary',
+            // Katakda faqat ko'z tugmasi turadi — ustun keng bo'lishi
+            // shart emas. Kenglik berilmasa sarlavha matni ustunni
+            // cho'zib, 1366 px ekranda jadval sig'masdi.
+            width: 90,
+            align: 'center',
             // Matn katakka chizilmaydi: yon panel ochilganda u uch-to'rt
             // qatorga bo'linib, qator balandligini ikki barobar oshirardi.
             // Endi ko'z tugmasi — to'liq matn modalda.
