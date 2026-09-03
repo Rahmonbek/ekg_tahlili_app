@@ -37,6 +37,9 @@ export default function useAnalysisSignalR(enabled) {
                         status: p.status || 'loading',
                         label: p.label || 'Tahlil',
                         listPath: p.listPath || '/',
+                        // Aynan shu tahlilni ochadigan manzil — "Ko'rish"
+                        // tugmasi ro'yxatga emas, tahlilning o'ziga olib boradi
+                        viewPath: p.viewPath || null,
                         errorMsg: p.status === 'error' ? 'AI tahlil xatolik bilan tugadi' : undefined,
                     });
                 });
@@ -68,6 +71,7 @@ export default function useAnalysisSignalR(enabled) {
                 status: payload.status || 'loading',
                 label: payload.label || 'Tahlil',
                 listPath: payload.listPath || '/',
+                viewPath: payload.viewPath || null,
                 errorMsg: payload.status === 'error' ? 'AI tahlil xatolik bilan tugadi' : undefined,
             };
 

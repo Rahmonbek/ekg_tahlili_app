@@ -55,6 +55,7 @@ from lab_analyses_api import router as lab_router
 from holter_analyses_api import router as holter_router
 from smad_analyses_api import router as smad_router
 from parasitology_api import router as parasitology_router
+from combined_analyses_api import router as combined_router
 Image.MAX_IMAGE_PIXELS = 50_000_000  # ZIP bomb himoyasi (50 megapiksel limit)
 # Optional for PDF -> image
 try:
@@ -136,6 +137,7 @@ app.include_router(lab_router)
 app.include_router(holter_router)
 app.include_router(smad_router)
 app.include_router(parasitology_router)
+app.include_router(combined_router)
 # Tibbiy fayllar ATAYLAB ochiq berilmaydi.
 #
 # Ilgari bu yerda `app.mount("/uploads", StaticFiles(...))` bor edi va bemorning

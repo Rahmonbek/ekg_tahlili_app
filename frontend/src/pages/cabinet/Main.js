@@ -17,6 +17,10 @@ import LabAnalyzer from './lab_analyse/LabAnalyzer'
 import { get_lab_values_data } from '../../host/requests/LabValueTypesRequest'
 import Patcients from './pages/patcients/Patcients'
 import PatcientCard from './pages/patcients/PatcientCard'
+import PatcientPassportSearch from './pages/patcients/PatcientPassportSearch'
+import CombinedAnalyseView from './combined_analyse/CombinedAnalyseView'
+import CombinedAnalysesList from './combined_analyse/CombinedAnalysesList'
+import CombinedAnalyzer from './combined_analyse/CombinedAnalyzer'
 import Profile from './pages/Profile'
 import AuditLogs from './pages/AuditLogs'
 import SystemStatus from './pages/SystemStatus'
@@ -252,9 +256,33 @@ export default function Main() {
                                 <Patcients />
                             </ClinicGatedRoute>
                         } />
+                        {/* Passport bo'yicha qidiruv — `:id` dan OLDIN:
+                            React Router statik segmentni ustun qo'ysa ham,
+                            tartib o'qishni osonlashtiradi */}
+                        <Route path="/patcients/search" element={
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <PatcientPassportSearch />
+                            </ClinicGatedRoute>
+                        } />
                         <Route path="/patcients/:id" element={
                             <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
                                 <PatcientCard />
+                            </ClinicGatedRoute>
+                        } />
+                        {/* ── Kompleks (ko'p tahlilli) AI xulosasi — to'rttala rol uchun ── */}
+                        <Route path="/combined-analyses" element={
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <CombinedAnalysesList />
+                            </ClinicGatedRoute>
+                        } />
+                        <Route path="/combined-analyzer" element={
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <CombinedAnalyzer />
+                            </ClinicGatedRoute>
+                        } />
+                        <Route path="/combined-analyses/view/:id" element={
+                            <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <CombinedAnalyseView />
                             </ClinicGatedRoute>
                         } />
 

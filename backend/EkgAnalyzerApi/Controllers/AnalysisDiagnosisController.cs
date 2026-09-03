@@ -18,7 +18,14 @@ namespace EkgAnalyzerApi.Controllers;
 public class AnalysisDiagnosisController : ControllerBase
 {
     private readonly MedDataDB _context;
-    private static readonly HashSet<string> ValidTypes = new() { "ecg", "holter", "smad", "lab", "para" };
+    /// <summary>
+    /// Tashxis yozish mumkin bo'lgan yozuv turlari.
+    ///
+    /// `combined` — kompleks (ko'p tahlilli) AI xulosasi. Unga tashxisni
+    /// faqat SHU xulosani yaratgan shifokor yozadi (`IsDoctorAssigned`).
+    /// </summary>
+    private static readonly HashSet<string> ValidTypes =
+        new() { "ecg", "holter", "smad", "lab", "para", "combined" };
 
     public AnalysisDiagnosisController(MedDataDB context)
     {
@@ -231,6 +238,10 @@ public class AnalysisDiagnosisController : ControllerBase
                 .AnyAsync(d => d.LabAnalysesId == analysisId && d.DoctorId == doctorId),
             "para" => await _context.ParasitologyAnalysisDoctors
                 .AnyAsync(d => d.ParasitologyAnalysisId == analysisId && d.DoctorId == doctorId),
+            // Kompleks xulosada "biriktirilgan shifokor" tushunchasi yo'q —
+            // uni YARATGAN shifokor xulosa yozadi (foydalanuvchi so'rovi)
+            "combined" => await _context.CombinedAnalyses
+                .AnyAsync(c => c.Id == analysisId && c.CreatedDoctorId == doctorId),
             _ => false,
         };
     }

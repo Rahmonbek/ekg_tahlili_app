@@ -151,3 +151,39 @@ def translation_request(**overrides) -> dict:
     }
     params.update(overrides)
     return params
+
+
+# ─── Kompleks (ko'p tahlilli) xulosa ─────────────────────────────────────
+#: Bemorning bir nechta tahlilini BIRGALIKDA tahlil qiluvchi model.
+#:
+#: Nima uchun eng kuchli model (`gpt-5.6-sol`):
+#:  * bu bosqichda fayldan raqam o'qilmaydi — tayyor xulosalar
+#:    bir-biriga bog'lanadi, ya'ni vazifa sof MULOHAZA;
+#:  * chaqiruv kam bo'ladi (bemorga bir marta, har bir tahlilga emas),
+#:    shuning uchun umumiy xarajatdagi ulushi kichik;
+#:  * bu zanjirning OXIRGI bo'g'ini — bu yerdagi xato hech qayerda
+#:    tuzatilmaydi, to'g'ridan-to'g'ri shifokor ko'radigan xulosaga tushadi;
+#:  * `deep` rejimda EKG rasmlari ham yuboriladi, ya'ni vizual model shart.
+COMBINED_MODEL: str = os.getenv("AI_COMBINED_MODEL", "gpt-5.6-sol")
+
+#: Javob byudjeti. Chegara ATAYLAB tor: kompleks xulosa qisqa bo'lishi
+#: kerak (faqat patologiya, maydonlar bo'yicha gap soni chegaralangan) —
+#: byudjet keng bo'lsa model bo'sh joyni suv gaplar bilan to'ldiradi.
+#: Fikrlash (reasoning) tokenlari ham shu byudjetdan olinadi, shuning
+#: uchun uni haddan tashqari kichik qilib bo'lmaydi.
+COMBINED_MAX_OUTPUT_TOKENS: int = int(os.getenv("AI_COMBINED_MAX_OUTPUT_TOKENS", "8000"))
+
+#: `deep` rejimda AI ga yuboriladigan EKG rasmlari soni CHEGARASI.
+#: Har bir rasm ~2-3k token — cheklanmasa narx bir necha barobar oshadi.
+COMBINED_MAX_IMAGES: int = int(os.getenv("AI_COMBINED_MAX_IMAGES", "3"))
+
+
+def combined_request(**overrides) -> dict:
+    """Kompleks xulosa so'rovi uchun parametrlar."""
+    params = {
+        "model": COMBINED_MODEL,
+        "reasoning": {"effort": REASONING_EFFORT},
+        "max_output_tokens": COMBINED_MAX_OUTPUT_TOKENS,
+    }
+    params.update(overrides)
+    return params

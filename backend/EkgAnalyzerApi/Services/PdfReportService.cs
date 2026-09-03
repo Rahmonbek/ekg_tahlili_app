@@ -232,6 +232,214 @@ public class PdfReportService
              });
      }
 
+    /// <summary>
+    /// Kompleks (ko'p tahlilli) AI xulosasi uchun PDF.
+    ///
+    /// <see cref="GenerateCombinedReport"/> dan farqi: u BEMORNING barcha
+    /// tahlillarini bitta hujjatga yig'adi, bu esa AI tanlangan tahlillarni
+    /// birgalikda ko'rib chiqib chiqargan YAGONA xulosani chop etadi.
+    /// </summary>
+    public async Task<byte[]> GenerateCombinedAiReport(int combinedId, string lang)
+    {
+        var tr = PdfTranslations.Get(lang);
+
+        var row = await _context.CombinedAnalyses
+            .Include(c => c.Items)
+            .Include(c => c.Patient)
+            .Include(c => c.CreatedDoctor)
+            .FirstOrDefaultAsync(c => c.Id == combinedId)
+            ?? throw new KeyNotFoundException($"Kompleks xulosa #{combinedId}");
+
+        if (row.Patient == null)
+            throw new KeyNotFoundException($"Kompleks xulosa #{combinedId} bemori topilmadi");
+
+        // Klinika — so'rovni yuborgan xodimning klinikasi (blank sarlavhasi uchun)
+        var clinic = await _context.Clinics
+            .Include(c => c.ClinicDetail).ThenInclude(d => d!.District).ThenInclude(d => d!.Region)
+            .Include(c => c.ClinicPhoneNumber)
+            .FirstOrDefaultAsync(c => c.Id == row.ClinicId);
+
+        var docNum = DocNum("KAI", row.CreatedAt, combinedId);
+        var result = ParseCombinedAi(row.AIAnswerData);
+
+        // Shifokor xulosalari `analysis_diagnoses` da (`analysis_type = "combined"`)
+        var notes = await _context.AnalysisDiagnoses
+            .Where(d => d.AnalysisType == "combined" && d.AnalysisId == combinedId)
+            .Include(d => d.Doctor)
+            .OrderBy(d => d.CreatedAt)
+            .ToListAsync();
+
+        return Build(tr, docNum, row.CreatedAt, clinic, row.Patient,
+            tr["combined_ai_title"], row.CreatedAt,
+            tr["combined_ai_type"],
+            row.CreatedDoctor,
+            null,
+            null,
+            "combined", combinedId,
+            doc =>
+            {
+                AddCombinedSources(doc, tr, row.Items);
+                AddCombinedAiBlock(doc, tr, result);
+                AddCombinedDoctorNotes(doc, tr, notes);
+            });
+    }
+
+    /// <summary>Kompleks xulosaning JSON javobini o'qiydi (sxemasi boshqacha).</summary>
+    private static JsonElement? ParseCombinedAi(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return null;
+        try
+        {
+            using var d = JsonDocument.Parse(json);
+            return d.RootElement.Clone();
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>JSON dan satr maydonini xavfsiz o'qiydi.</summary>
+    private static string? CombinedStr(JsonElement? root, string name) =>
+        root is { } r && r.ValueKind == JsonValueKind.Object
+            && r.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String
+                ? v.GetString()
+                : null;
+
+    /// <summary>Xulosaga kirgan tahlillar ro'yxati.</summary>
+    private void AddCombinedSources(Document doc, Dictionary<string, string> tr,
+        List<CombinedAnalysisItem> items)
+    {
+        var fonts = BuildFonts();
+        ComposeSectionHeader(doc, fonts, tr["combined_sources"], CL_DarkBlue);
+
+        var table = new PdfPTable(2) { WidthPercentage = 100, SpacingBefore = 4, SpacingAfter = 6 };
+        table.SetWidths(new[] { 60f, 40f });
+
+        foreach (var item in items.OrderBy(i => i.SnapshotDate))
+        {
+            table.AddCell(new PdfPCell(new Phrase(GetAnalysisTypeName(tr, item.AnalysisType), fonts["td9"]))
+                { Border = Rectangle.BOX, BorderColor = CL_Border, Padding = 5 });
+            table.AddCell(new PdfPCell(new Phrase(
+                    item.SnapshotDate?.ToString("dd.MM.yyyy") ?? "-", fonts["td9"]))
+                { Border = Rectangle.BOX, BorderColor = CL_Border, Padding = 5 });
+        }
+
+        doc.Add(table);
+    }
+
+    /// <summary>AI xulosasining matnli bo'limlari.</summary>
+    private void AddCombinedAiBlock(Document doc, Dictionary<string, string> tr, JsonElement? ai)
+    {
+        var fonts = BuildFonts();
+        ComposeSectionHeader(doc, fonts, tr["ai_section_title"], CL_Green);
+
+        if (ai == null)
+        {
+            doc.Add(new Paragraph($"[ {tr["not_analyzed"]} ]", fonts["p9gray"])
+                { SpacingBefore = 4, SpacingAfter = 4 });
+            return;
+        }
+
+        var summary = CombinedStr(ai, "final_summary");
+        if (!string.IsNullOrWhiteSpace(summary))
+            AddAiTextBlock(doc, fonts, summary.Trim());
+
+        // Jiddiylik darajasi
+        if (ai.Value.TryGetProperty("automatic_analysis_bool", out var sev)
+            && sev.ValueKind == JsonValueKind.Number
+            && sev.TryGetInt32(out var severity) && severity > 0)
+        {
+            doc.Add(ComposeSeverityWidget(tr, fonts, severity));
+        }
+
+        AddLabeledTextIfAny(doc, fonts, tr["combined_cross"], CombinedStr(ai, "cross_findings"));
+        AddLabeledTextIfAny(doc, fonts, tr["combined_findings"], CombinedStr(ai, "automatic_analysis"));
+
+        AddCombinedList(doc, fonts, tr["combined_red_flags"], ai, "red_flags");
+        AddCombinedDifferential(doc, fonts, tr, ai);
+
+        AddLabeledTextIfAny(doc, fonts, tr["recommendations"], CombinedStr(ai, "AI_recommendations"));
+    }
+
+    private static void AddLabeledTextIfAny(Document doc, Dictionary<string, Font> fonts,
+        string label, string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return;
+        AddLabeledText(doc, fonts, label, text);
+    }
+
+    /// <summary>Matnlar massivini punktli ro'yxat qilib chiqaradi.</summary>
+    private static void AddCombinedList(Document doc, Dictionary<string, Font> fonts,
+        string label, JsonElement? ai, string property)
+    {
+        if (ai is not { } root || !root.TryGetProperty(property, out var arr)
+            || arr.ValueKind != JsonValueKind.Array || arr.GetArrayLength() == 0)
+            return;
+
+        doc.Add(new Paragraph($"{label}:", fonts["p9label"]) { SpacingBefore = 6, SpacingAfter = 2 });
+        foreach (var element in arr.EnumerateArray())
+        {
+            if (element.ValueKind != JsonValueKind.String) continue;
+            doc.Add(new Paragraph($"• {element.GetString()}", fonts["p8"]) { SpacingAfter = 2 });
+        }
+    }
+
+    /// <summary>Ehtimoliy tashxislar jadvali.</summary>
+    private void AddCombinedDifferential(Document doc, Dictionary<string, Font> fonts,
+        Dictionary<string, string> tr, JsonElement? ai)
+    {
+        if (ai is not { } root || !root.TryGetProperty("differential_diagnosis", out var arr)
+            || arr.ValueKind != JsonValueKind.Array || arr.GetArrayLength() == 0)
+            return;
+
+        // Alohida sarlavha-paragraf QO'YILMAYDI: iTextSharp uni jadval
+        // buferidan oldin chiqarib yuborar va u boshqa bo'limning ustida
+        // paydo bo'lardi. Nom jadvalning birinchi ustun sarlavhasida.
+        var table = new PdfPTable(3)
+            { WidthPercentage = 100, SpacingBefore = 8, SpacingAfter = 6 };
+        table.SetWidths(new[] { 35f, 20f, 45f });
+
+        foreach (var header in new[]
+                 { tr["combined_differential"], tr["combined_probability"], tr["combined_evidence"] })
+        {
+            table.AddCell(new PdfPCell(new Phrase(header, fonts["th9"]))
+                { BackgroundColor = CL_RowAlt, Border = Rectangle.BOX, BorderColor = CL_Border, Padding = 5 });
+        }
+
+        foreach (var element in arr.EnumerateArray())
+        {
+            if (element.ValueKind != JsonValueKind.Object) continue;
+            foreach (var key in new[] { "diagnosis", "probability", "evidence" })
+            {
+                var value = element.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.String
+                    ? v.GetString() : "-";
+                table.AddCell(new PdfPCell(new Phrase(value, fonts["td9"]))
+                    { Border = Rectangle.BOX, BorderColor = CL_Border, Padding = 5 });
+            }
+        }
+
+        doc.Add(table);
+    }
+
+    /// <summary>Shifokor(lar) qo'lda yozgan xulosalar.</summary>
+    private void AddCombinedDoctorNotes(Document doc, Dictionary<string, string> tr,
+        List<AnalysisDiagnosis> notes)
+    {
+        if (notes.Count == 0) return;
+
+        var fonts = BuildFonts();
+        ComposeSectionHeader(doc, fonts, tr["combined_doctor_note"], CL_DarkBlue);
+
+        foreach (var note in notes)
+        {
+            var author = note.Doctor == null
+                ? "-"
+                : $"{note.Doctor.LastName} {note.Doctor.FirstName}".Trim();
+            AddLabeledText(doc, fonts, author, note.DiagnosisText);
+        }
+    }
+
     public async Task<byte[]> GenerateCombinedReport(int patientId, string lang)
     {
         var tr = PdfTranslations.Get(lang);

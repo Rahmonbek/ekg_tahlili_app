@@ -8,36 +8,39 @@ using Microsoft.EntityFrameworkCore;
 namespace EkgAnalyzerApi.Controllers;
 
 /// <summary>
-/// Tibbiy fayllarni berish. **Autentifikatsiya majburiy.**
+/// Tibbiy fayllarni berish.
 ///
-/// Ilgari ikkala metod ham <c>[AllowAnonymous]</c> edi — bemorning EKG rasmlari,
-/// Holter/SMAD/Laboratoriya PDF fayllari va generatsiya qilingan grafiklar
-/// URL ni bilgan har kimga ochiq edi. Fayl nomlari esa taxmin qilinardi
-/// (<c>ecg_96.png</c>, <c>ecg_97.png</c>, ...).
+/// **Autentifikatsiya va klinika tekshiruvi loyiha egasining qarori bo'yicha
+/// O'CHIRILGAN.** Ilgari bu yerda token talab qilinardi va so'ralayotgan fayl
+/// foydalanuvchi klinikasiga tegishli tahlilga bog'liqligi tekshirilardi.
 ///
-/// Endi: token talab qilinadi va so'ralayotgan fayl foydalanuvchining
-/// klinikasiga tegishli tahlilga bog'liqligi tekshiriladi.
+/// Sabab: `&lt;img&gt;`, `&lt;iframe&gt;` va PDF ko'ruvchilar Authorization
+/// sarlavhasini yubora olmaydi, token esa URL da yurganda brauzer tarixiga va
+/// server loglariga tushib qolardi.
+///
+/// Endi yagona himoya — yo'lning taxmin qilib bo'lmasligi: fayllar
+/// <c>/uploads/{tur}/{yil}/{oy}/{uuid}.{kengaytma}</c> ko'rinishida saqlanadi
+/// (<see cref="IFileStorage"/>). Yo'ldan tashqariga chiqish (path traversal)
+/// himoyasi <see cref="IFileStorage.ResolveUpload"/> ichida qoladi — bu
+/// endpoint faqat saqlash ildizi ichidagi fayllarni bera oladi.
 /// </summary>
 [ApiController]
 [Route("api/files")]
-[Authorize]
+[AllowAnonymous]
 public class FileProxyController : ControllerBase
 {
     private readonly IFileStorage _storage;
     private readonly MedDataDB _context;
-    private readonly ICurrentUser _currentUser;
     private readonly ILogger<FileProxyController> _logger;
     private readonly FileExtensionContentTypeProvider _contentTypes = new();
 
     public FileProxyController(
         IFileStorage storage,
         MedDataDB context,
-        ICurrentUser currentUser,
         ILogger<FileProxyController> logger)
     {
         _storage = storage;
         _context = context;
-        _currentUser = currentUser;
         _logger = logger;
     }
 
@@ -48,46 +51,28 @@ public class FileProxyController : ControllerBase
     [HttpGet("uploads/{**relativePath}")]
     public async Task<IActionResult> GetUpload(string relativePath)
     {
-        var clinicId = await _currentUser.GetClinicIdAsync();
-        if (clinicId == null)
-            return Unauthorized(new { message = "Klinika aniqlanmadi" });
-
-        // Bazadagi havolalar `/uploads/...` bilan boshlanadi
-        var dbLink = "/uploads/" + relativePath.Replace('\\', '/').TrimStart('/');
-
-        var (found, originalName) = await FindAsync(dbLink, clinicId.Value);
-        if (!found)
-        {
-            _logger.LogWarning(
-                "Faylga ruxsatsiz murojaat. userId={UserId} clinicId={ClinicId}",
-                _currentUser.UserId, clinicId);
-            return NotFound(new { message = "Fayl topilmadi yoki ruxsat yo'q" });
-        }
-
         var fullPath = _storage.ResolveUpload(relativePath);
         if (fullPath == null)
             return BadRequest(new { message = "Fayl yo'li noto'g'ri" });
 
-        // Diskdagi nom UUID (T-101) — saqlashda asl nom taklif qilinadi
+        if (!System.IO.File.Exists(fullPath))
+            return NotFound(new { message = "Fayl topilmadi" });
+
+        // Diskdagi nom UUID (T-101) — saqlashda asl nom taklif qilinadi.
+        // Bu qidiruv faqat NOM uchun; ruxsat tekshiruvi emas.
+        var dbLink = "/uploads/" + relativePath.Replace('\\', '/').TrimStart('/');
+        var originalName = await FindOriginalNameAsync(dbLink);
+
         return PhysicalFileOrNotFound(fullPath, originalName);
     }
 
     /// <summary>
-    /// .NET wwwroot dagi ommaviy statik fayllar: klinika logotipi, shifokor avatari.
-    /// Bular tibbiy ma'lumot emas, lekin baribir autentifikatsiya talab qilinadi.
+    /// .NET wwwroot dagi ommaviy statik fayllar: klinika logotipi, shifokor avatari,
+    /// litsenziya hujjatlari.
     /// </summary>
     [HttpGet("{**relativePath}")]
     public IActionResult GetBackendFile(string relativePath)
     {
-        // Litsenziya fayllari tibbiy bo'lmasa ham maxfiy hujjat — faqat o'z klinikasi
-        if (relativePath.StartsWith("clinic_licenses", StringComparison.OrdinalIgnoreCase)
-            && _currentUser.RoleId is not (Constants.RoleConstants.Admin
-                                           or Constants.RoleConstants.Director
-                                           or Constants.RoleConstants.SuperAdmin))
-        {
-            return Forbid();
-        }
-
         var fullPath = _storage.ResolveWebRoot(relativePath);
         if (fullPath == null)
             return BadRequest(new { message = "Fayl yo'li noto'g'ri" });
@@ -96,53 +81,44 @@ public class FileProxyController : ControllerBase
     }
 
     /// <summary>
-    /// So'ralgan fayl foydalanuvchi klinikasiga tegishli biror tahlilga
-    /// bog'liqmi va bog'liq bo'lsa uning asl nomi qanday?
+    /// Fayl yo'liga bog'langan yozuvning asl fayl nomini topadi.
+    /// Topilmasa <c>null</c> — fayl baribir beriladi, faqat nomsiz.
     /// </summary>
-    /// <remarks>
-    /// Asl nom aynan shu yerda olinadi: yozuv allaqachon topilgan, uni
-    /// nom uchun ikkinchi marta qidirish keraksiz so'rov bo'lardi.
-    /// Har bir tur uchun bitta so'rov ishlatiladi — `Found` bayrog'i
-    /// yozuv topilganini, `Name` esa nomni bildiradi (nom `null`
-    /// bo'lishi mumkin: eski yozuvlarda va biz yaratgan fayllarda).
-    /// </remarks>
-    private async Task<(bool Found, string? Name)> FindAsync(string link, int clinicId)
+    private async Task<string?> FindOriginalNameAsync(string link)
     {
-        var ecg = await _context.ECGAnalyse
-            .Where(e => e.ClinicId == clinicId
-                && (e.AnalyseFileLink == link
-                    || e.GeneratedFileLink == link
-                    || e.GeneratedShortFileLink == link))
-            .Select(e => new { e.OriginalFilename, e.AnalyseFileLink })
-            .FirstOrDefaultAsync();
-        if (ecg != null)
+        try
         {
-            // Generatsiya qilingan fayllarning asl nomi yo'q — ular
-            // yuklanmagan, biz yaratganmiz
-            return (true, ecg.AnalyseFileLink == link ? ecg.OriginalFilename : null);
+            var ecg = await _context.ECGAnalyse.AsNoTracking()
+                .Where(e => e.AnalyseFileLink == link)
+                .Select(e => e.OriginalFilename).FirstOrDefaultAsync();
+            if (ecg != null) return ecg;
+
+            var lab = await _context.LabAnalyse.AsNoTracking()
+                .Where(e => e.AnalyseFileLink == link)
+                .Select(e => e.OriginalFilename).FirstOrDefaultAsync();
+            if (lab != null) return lab;
+
+            var holter = await _context.HolterAnalyses.AsNoTracking()
+                .Where(e => e.AnalyseFileLink == link)
+                .Select(e => e.OriginalFilename).FirstOrDefaultAsync();
+            if (holter != null) return holter;
+
+            var smad = await _context.SmadAnalyses.AsNoTracking()
+                .Where(e => e.AnalyseFileLink == link)
+                .Select(e => e.OriginalFilename).FirstOrDefaultAsync();
+            if (smad != null) return smad;
+
+            var diag = await _context.MedicalDiagnose.AsNoTracking()
+                .Where(e => e.DiagnoseFileLink == link)
+                .Select(e => e.OriginalFilename).FirstOrDefaultAsync();
+            return diag;
         }
-
-        var lab = await _context.LabAnalyse
-            .Where(e => e.ClinicId == clinicId && e.AnalyseFileLink == link)
-            .Select(e => new { e.OriginalFilename }).FirstOrDefaultAsync();
-        if (lab != null) return (true, lab.OriginalFilename);
-
-        var holter = await _context.HolterAnalyses
-            .Where(e => e.ClinicId == clinicId && e.AnalyseFileLink == link)
-            .Select(e => new { e.OriginalFilename }).FirstOrDefaultAsync();
-        if (holter != null) return (true, holter.OriginalFilename);
-
-        var smad = await _context.SmadAnalyses
-            .Where(e => e.ClinicId == clinicId && e.AnalyseFileLink == link)
-            .Select(e => new { e.OriginalFilename }).FirstOrDefaultAsync();
-        if (smad != null) return (true, smad.OriginalFilename);
-
-        var diag = await _context.MedicalDiagnose
-            .Where(e => e.ClinicId == clinicId && e.DiagnoseFileLink == link)
-            .Select(e => new { e.OriginalFilename }).FirstOrDefaultAsync();
-        if (diag != null) return (true, diag.OriginalFilename);
-
-        return (false, null);
+        catch (Exception ex)
+        {
+            // Nom — qulaylik, majburiyat emas: baza javob bermasa ham fayl beriladi
+            _logger.LogWarning(ex, "Fayl asl nomini o'qib bo'lmadi: {Link}", link);
+            return null;
+        }
     }
 
     private IActionResult PhysicalFileOrNotFound(string fullPath, string? originalName = null)

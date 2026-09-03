@@ -308,3 +308,48 @@ class LabAnalyseCategories(Base):
     category_id = Column(Integer)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class CombinedAnalyses(Base):
+    """Bemorning bir nechta tahlilini birgalikda tahlil qilgan AI xulosasi.
+
+    Jadval .NET tomondagi EF Core migratsiyasi bilan yaratiladi
+    (`20260906000000_AddCombinedAnalyses`) — bu yerda faqat mavjud
+    jadval aks ettiriladi (loyiha qoidasi: sxemani Python o'zgartirmaydi).
+    """
+    __tablename__ = "combined_analyses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer)
+    clinic_id = Column(Integer)
+    created_doctor_id = Column(Integer)
+
+    #: 0 = yaratildi, 1 = AI kutmoqda, 2 = tayyor, -1 = xatolik
+    status = Column(Integer, default=0)
+
+    #: "summary" (faqat xulosalar) yoki "deep" (EKG rasmlari bilan)
+    mode = Column(String(10), default="summary")
+
+    ai_answer_data = Column(Text, nullable=True)
+    ai_lang = Column(String(5), nullable=True)
+    model_used = Column(String(50), nullable=True)
+    input_tokens = Column(Integer, nullable=True)
+    output_tokens = Column(Integer, nullable=True)
+    source_fingerprint = Column(String(64), nullable=True)
+
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class CombinedAnalysisItems(Base):
+    """Kompleks xulosaga kirgan bitta tahlilga havola (polimorf)."""
+    __tablename__ = "combined_analysis_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    combined_analysis_id = Column(Integer)
+
+    #: "ecg" | "holter" | "smad" | "lab"
+    analysis_type = Column(String(20))
+    analysis_id = Column(Integer)
+
+    snapshot_date = Column(DateTime, nullable=True)
+    snapshot_severity = Column(Integer, nullable=True)

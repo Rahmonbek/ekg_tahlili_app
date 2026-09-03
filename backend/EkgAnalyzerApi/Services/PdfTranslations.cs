@@ -146,6 +146,18 @@ public static class PdfTranslations
         // Boshqalar
         ["no_info"]                 = "Ma'lumot mavjud emas",
         ["combined_title"]          = "BARCHA TAHLILLAR YIG'MA HISOBOTI",
+
+        // Kompleks (ko'p tahlilli) AI xulosasi
+        ["combined_ai_title"]       = "KOMPLEKS SUN'IY INTELLEKT XULOSASI",
+        ["combined_ai_type"]        = "Kompleks AI xulosasi",
+        ["combined_sources"]        = "Xulosaga kirgan tahlillar",
+        ["combined_cross"]          = "Tahlillar orasidagi bog'liqliklar",
+        ["combined_findings"]       = "Aniqlangan holatlar",
+        ["combined_red_flags"]      = "Shoshilinch e'tibor talab qiladi",
+        ["combined_differential"]   = "Ehtimoliy tashxislar",
+        ["combined_probability"]    = "Ehtimollik",
+        ["combined_evidence"]       = "Asos",
+        ["combined_doctor_note"]    = "Shifokor xulosasi",
     };
 
     // ──────────────────────────────────────────────────────────────
@@ -266,6 +278,18 @@ public static class PdfTranslations
 
         ["no_info"]                 = "Информация недоступна",
         ["combined_title"]          = "СВОДНЫЙ ОТЧЁТ ПО ВСЕМ АНАЛИЗАМ",
+
+        // Комплексное заключение ИИ
+        ["combined_ai_title"]       = "КОМПЛЕКСНОЕ ЗАКЛЮЧЕНИЕ ИСКУССТВЕННОГО ИНТЕЛЛЕКТА",
+        ["combined_ai_type"]        = "Комплексное заключение ИИ",
+        ["combined_sources"]        = "Анализы, вошедшие в заключение",
+        ["combined_cross"]          = "Связи между анализами",
+        ["combined_findings"]       = "Выявленные состояния",
+        ["combined_red_flags"]      = "Требует срочного внимания",
+        ["combined_differential"]   = "Вероятные диагнозы",
+        ["combined_probability"]    = "Вероятность",
+        ["combined_evidence"]       = "Основание",
+        ["combined_doctor_note"]    = "Заключение врача",
     };
 
     // ──────────────────────────────────────────────────────────────
@@ -386,5 +410,17 @@ public static class PdfTranslations
 
         ["no_info"]                 = "Information not available",
         ["combined_title"]          = "COMBINED REPORT — ALL ANALYSES",
+
+        // Combined (multi-analysis) AI report
+        ["combined_ai_title"]       = "COMBINED ARTIFICIAL INTELLIGENCE REPORT",
+        ["combined_ai_type"]        = "Combined AI report",
+        ["combined_sources"]        = "Analyses included in the report",
+        ["combined_cross"]          = "Cross-analysis findings",
+        ["combined_findings"]       = "Identified conditions",
+        ["combined_red_flags"]      = "Requires urgent attention",
+        ["combined_differential"]   = "Differential diagnoses",
+        ["combined_probability"]    = "Probability",
+        ["combined_evidence"]       = "Evidence",
+        ["combined_doctor_note"]    = "Physician conclusion",
     };
 }

@@ -42,43 +42,9 @@ namespace EkgAnalyzerApi.Services
 
             IQueryable<Patcient> patcientsQuery = _context.Patcients.AsNoTracking();
 
-            IQueryable<int> visibleIds;
-
-            if (user.RoleId == RoleConstants.Doctor && user.Doctor != null)
-            {
-                // Shifokor: faqat o'ziga biriktirilgan tahlillarning bemorlari
-                var doctorId = user.Doctor.Id;
-                visibleIds = _context.ECGAnalyseDoctor
-                        .Where(x => x.DoctorId == doctorId)
-                        .Select(x => x.ECGAnalyse.PatcientId)
-                    .Union(_context.LabAnalyseDoctor
-                        .Where(x => x.DoctorId == doctorId)
-                        .Select(x => x.LabAnalyse.PatcientId))
-                    .Union(_context.HolterAnalyseDoctor
-                        .Where(x => x.DoctorId == doctorId)
-                        .Select(x => x.HolterAnalyse.PatcientId))
-                    .Union(_context.SmadAnalyseDoctor
-                        .Where(x => x.DoctorId == doctorId)
-                        .Select(x => x.SmadAnalyse.PatcientId))
-                    .Union(_context.MedicalDiagnose
-                        .Where(x => x.MainDoctorId == doctorId)
-                        .Select(x => x.PatcientId));
-            }
-            else
-            {
-                // Admin / direktor / hamshira: klinikaning barcha bemorlari
-                var clinicId = user.ClinicId;
-                visibleIds = _context.ECGAnalyse
-                        .Where(x => x.ClinicId == clinicId).Select(x => x.PatcientId)
-                    .Union(_context.LabAnalyse
-                        .Where(x => x.ClinicId == clinicId).Select(x => x.PatcientId))
-                    .Union(_context.HolterAnalyses
-                        .Where(x => x.ClinicId == clinicId).Select(x => x.PatcientId))
-                    .Union(_context.SmadAnalyses
-                        .Where(x => x.ClinicId == clinicId).Select(x => x.PatcientId))
-                    .Union(_context.MedicalDiagnose
-                        .Where(x => x.ClinicId == clinicId).Select(x => x.PatcientId));
-            }
+            // Rol bo'yicha ko'rinish qoidasi bitta joyda — kompleks
+            // xulosalar ro'yxati ham aynan shu qoidaga tayanadi
+            var visibleIds = PatientVisibility.VisiblePatientIds(_context, user);
 
             patcientsQuery = patcientsQuery.Where(p => visibleIds.Contains(p.Id));
 
@@ -98,8 +64,9 @@ namespace EkgAnalyzerApi.Services
             var totalpatcients = await patcientsQuery.CountAsync();
             var totalPages = (int)Math.Ceiling(totalpatcients / (double)pageSize);
 
-            var ownClinicId = user.ClinicId;
-
+            // Tahlil sonlari va oxirgi tahlil sanasi KLINIKA BO'YICHA
+            // FILTRLANMAYDI: bemor kartasi ham bazadagi barcha tahlillarni
+            // ko'rsatadi, ro'yxatdagi son undan farq qilsa chalkashlik bo'lardi.
             var rows = await patcientsQuery
                 .Select(p => new
                 {
@@ -119,15 +86,15 @@ namespace EkgAnalyzerApi.Services
                     DistrictRu = p.District != null ? p.District.NameRu : null,
                     DistrictEn = p.District != null ? p.District.NameEn : null,
 
-                    EcgCount = _context.ECGAnalyse.Count(a => a.PatcientId == p.Id && a.ClinicId == ownClinicId),
-                    LabCount = _context.LabAnalyse.Count(a => a.PatcientId == p.Id && a.ClinicId == ownClinicId),
-                    HolterCount = _context.HolterAnalyses.Count(a => a.PatcientId == p.Id && a.ClinicId == ownClinicId),
-                    SmadCount = _context.SmadAnalyses.Count(a => a.PatcientId == p.Id && a.ClinicId == ownClinicId),
+                    EcgCount = _context.ECGAnalyse.Count(a => a.PatcientId == p.Id),
+                    LabCount = _context.LabAnalyse.Count(a => a.PatcientId == p.Id),
+                    HolterCount = _context.HolterAnalyses.Count(a => a.PatcientId == p.Id),
+                    SmadCount = _context.SmadAnalyses.Count(a => a.PatcientId == p.Id),
 
-                    LastEcg = _context.ECGAnalyse.Where(a => a.PatcientId == p.Id && a.ClinicId == ownClinicId).Max(a => a.CreatedAt),
-                    LastLab = _context.LabAnalyse.Where(a => a.PatcientId == p.Id && a.ClinicId == ownClinicId).Max(a => a.CreatedAt),
-                    LastHolter = _context.HolterAnalyses.Where(a => a.PatcientId == p.Id && a.ClinicId == ownClinicId).Max(a => a.CreatedAt),
-                    LastSmad = _context.SmadAnalyses.Where(a => a.PatcientId == p.Id && a.ClinicId == ownClinicId).Max(a => a.CreatedAt),
+                    LastEcg = _context.ECGAnalyse.Where(a => a.PatcientId == p.Id).Max(a => a.CreatedAt),
+                    LastLab = _context.LabAnalyse.Where(a => a.PatcientId == p.Id).Max(a => a.CreatedAt),
+                    LastHolter = _context.HolterAnalyses.Where(a => a.PatcientId == p.Id).Max(a => a.CreatedAt),
+                    LastSmad = _context.SmadAnalyses.Where(a => a.PatcientId == p.Id).Max(a => a.CreatedAt),
                 })
                 .ToListAsync();
 
@@ -172,6 +139,107 @@ namespace EkgAnalyzerApi.Services
         }
 
         /// <summary>
+        /// Passport seriyasi + tug'ilgan sana bo'yicha bemor(lar)ni qidiradi.
+        ///
+        /// Klinika va rol filtri YO'Q — to'rttala rol ham bazadagi istalgan
+        /// bemorni topa oladi (loyiha egasining qarori). Bu alohida, ataylab
+        /// tor endpoint: `search` bilan bemor bazasini "kezib" chiqib
+        /// bo'lmaydi, faqat passportni to'liq biladigan xodim topa oladi.
+        ///
+        /// Nega in-memory taqqoslash: passport AES-256 CBC bilan TASODIFIY IV
+        /// orqali shifrlangan bo'lishi mumkin — bir xil matn har safar boshqa
+        /// shifrmatn beradi va SQL `LIKE` ishlamaydi. Shuning uchun avval
+        /// tug'ilgan sana bo'yicha (arzon, indeksli) toraytiriladi, keyin
+        /// qolgan bir nechta yozuv deshifrlanib solishtiriladi.
+        /// </summary>
+        /// <param name="passport">Passport seriyasi va raqami, masalan "AB 1234567".</param>
+        /// <param name="birthDate">Tug'ilgan sana — qidiruvni cheklaydi va majburiy.</param>
+        public async Task<List<PatcientListItemDTO>> SearchByPassportAsync(
+            string passport, DateOnly birthDate, string lang = "uz")
+        {
+            var normalized = NormalizeSeries(passport);
+            if (normalized.Length < 5) return new List<PatcientListItemDTO>();
+
+            var candidates = await _context.Patcients.AsNoTracking()
+                .Include(p => p.District!).ThenInclude(d => d.Region!)
+                .Where(p => p.BirthDate == birthDate)
+                .ToListAsync();
+
+            var matched = candidates
+                .Where(p => NormalizeSeries(TryDecrypt(p.Passport)) == normalized)
+                .ToList();
+
+            if (matched.Count == 0) return new List<PatcientListItemDTO>();
+
+            var ids = matched.Select(p => p.Id).ToList();
+
+            // Tahlil sonlari: har bir tur bo'yicha bitta GROUP BY so'rovi —
+            // bemor boshiga alohida so'rov yuborilmaydi
+            var ecg = await _context.ECGAnalyse.AsNoTracking()
+                .Where(a => ids.Contains(a.PatcientId))
+                .GroupBy(a => a.PatcientId)
+                .Select(g => new { PatientId = g.Key, Count = g.Count(), Last = g.Max(x => x.CreatedAt) })
+                .ToListAsync();
+            var lab = await _context.LabAnalyse.AsNoTracking()
+                .Where(a => ids.Contains(a.PatcientId))
+                .GroupBy(a => a.PatcientId)
+                .Select(g => new { PatientId = g.Key, Count = g.Count(), Last = g.Max(x => x.CreatedAt) })
+                .ToListAsync();
+            var holter = await _context.HolterAnalyses.AsNoTracking()
+                .Where(a => ids.Contains(a.PatcientId))
+                .GroupBy(a => a.PatcientId)
+                .Select(g => new { PatientId = g.Key, Count = g.Count(), Last = g.Max(x => x.CreatedAt) })
+                .ToListAsync();
+            var smad = await _context.SmadAnalyses.AsNoTracking()
+                .Where(a => ids.Contains(a.PatcientId))
+                .GroupBy(a => a.PatcientId)
+                .Select(g => new { PatientId = g.Key, Count = g.Count(), Last = g.Max(x => x.CreatedAt) })
+                .ToListAsync();
+
+            var stats = ecg.Concat(lab).Concat(holter).Concat(smad)
+                .GroupBy(x => x.PatientId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => (
+                        Count: g.Sum(x => x.Count),
+                        Last: g.Select(x => x.Last).Max()));
+
+            return matched.Select(p =>
+            {
+                var hasStats = stats.TryGetValue(p.Id, out var stat);
+
+                return new PatcientListItemDTO
+                {
+                    Id = p.Id,
+                    FirstName = p.FirstName,
+                    LastName = p.LastName,
+                    SureName = p.SureName,
+                    PassportMasked = MaskPassport(TryDecrypt(p.Passport)),
+                    BirthDate = p.BirthDate,
+                    Gender = p.Gender,
+                    Phone = p.Phone,
+                    Address = p.Address,
+                    RegionName = p.District == null ? null
+                        : Localized(lang, p.District.Region.NameUz, p.District.Region.NameRu, p.District.Region.NameEn),
+                    DistrictName = p.District == null ? null
+                        : Localized(lang, p.District.NameUz, p.District.NameRu, p.District.NameEn),
+                    AnalysesCount = hasStats ? stat.Count : 0,
+                    LastAnalysisAt = hasStats ? stat.Last : null,
+                };
+            })
+            .OrderByDescending(x => x.LastAnalysisAt ?? DateTime.MinValue)
+            .ToList();
+        }
+
+        /// <summary>Bo'shliq, defis, nuqta va slashlarni olib tashlab katta harfga o'tkazadi.</summary>
+        private static string NormalizeSeries(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+            return System.Text.RegularExpressions.Regex.Replace(
+                value.Trim().ToUpperInvariant(), @"[\s\-\/\.]", string.Empty);
+        }
+
+        /// <summary>
         /// Bitta bemorning kartasi: shaxsiy ma'lumotlar + EKG/Holter/SMAD/Laboratoriya/
         /// shifokor xulosalari yagona xronologik lentada.
         ///
@@ -185,10 +253,10 @@ namespace EkgAnalyzerApi.Services
                 .FirstOrDefaultAsync(x => x.Id == user_id);
             if (user == null) return null;
 
-            // Bemor tarixida ROL FILTRI YO'Q: bemorga tegishli klinikadagi
-            // BARCHA tahlillar barcha foydalanuvchilarga ko'rinadi (foydalanuvchi so'rovi).
-            var clinicId = user.ClinicId;
-
+            // Bemor tarixida ROL VA KLINIKA FILTRI YO'Q: bazadagi shu bemorga
+            // tegishli BARCHA tahlillar to'rttala rolga ham ko'rinadi
+            // (loyiha egasining qarori). Ro'yxat sahifasidagi cheklov
+            // qaysi bemor ko'rinishini belgilaydi, kartaning ichini emas.
             var patient = await _context.Patcients.AsNoTracking()
                 .Include(p => p.District!).ThenInclude(d => d.Region!)
                 .FirstOrDefaultAsync(p => p.Id == patientId);
@@ -197,7 +265,8 @@ namespace EkgAnalyzerApi.Services
             var timeline = new List<PatientTimelineItemDTO>();
 
             var ecg = await _context.ECGAnalyse.AsNoTracking()
-                .Where(a => a.PatcientId == patientId && a.ClinicId == clinicId)                .Select(a => new { a.Id, a.DocumentNumber, a.CreatedAt, a.AnalysisDate, a.Status, a.AIAnswerData,
+                .Where(a => a.PatcientId == patientId)
+                .Select(a => new { a.Id, a.DocumentNumber, a.CreatedAt, a.AnalysisDate, a.Status, a.AIAnswerData,
                     Doctor = a.CreatedDoctor.LastName + " " + a.CreatedDoctor.FirstName })
                 .ToListAsync();
             timeline.AddRange(ecg.Select(a => new PatientTimelineItemDTO
@@ -208,7 +277,8 @@ namespace EkgAnalyzerApi.Services
             }));
 
             var holter = await _context.HolterAnalyses.AsNoTracking()
-                .Where(a => a.PatcientId == patientId && a.ClinicId == clinicId)                .Select(a => new { a.Id, a.DocumentNumber, a.CreatedAt, a.AnalysisDate, a.Status, a.AIAnswerData,
+                .Where(a => a.PatcientId == patientId)
+                .Select(a => new { a.Id, a.DocumentNumber, a.CreatedAt, a.AnalysisDate, a.Status, a.AIAnswerData,
                     Doctor = a.CreatedDoctor.LastName + " " + a.CreatedDoctor.FirstName })
                 .ToListAsync();
             timeline.AddRange(holter.Select(a => new PatientTimelineItemDTO
@@ -219,7 +289,8 @@ namespace EkgAnalyzerApi.Services
             }));
 
             var smad = await _context.SmadAnalyses.AsNoTracking()
-                .Where(a => a.PatcientId == patientId && a.ClinicId == clinicId)                .Select(a => new { a.Id, a.DocumentNumber, a.CreatedAt, a.AnalysisDate, a.Status, a.AIAnswerData,
+                .Where(a => a.PatcientId == patientId)
+                .Select(a => new { a.Id, a.DocumentNumber, a.CreatedAt, a.AnalysisDate, a.Status, a.AIAnswerData,
                     Doctor = a.CreatedDoctor.LastName + " " + a.CreatedDoctor.FirstName })
                 .ToListAsync();
             timeline.AddRange(smad.Select(a => new PatientTimelineItemDTO
@@ -230,7 +301,8 @@ namespace EkgAnalyzerApi.Services
             }));
 
             var lab = await _context.LabAnalyse.AsNoTracking()
-                .Where(a => a.PatcientId == patientId && a.ClinicId == clinicId)                .Select(a => new { a.Id, a.DocumentNumber, a.CreatedAt, a.AnalysisDate, a.Status, a.AIAnswerData,
+                .Where(a => a.PatcientId == patientId)
+                .Select(a => new { a.Id, a.DocumentNumber, a.CreatedAt, a.AnalysisDate, a.Status, a.AIAnswerData,
                     Doctor = a.CreatedDoctor.LastName + " " + a.CreatedDoctor.FirstName })
                 .ToListAsync();
             timeline.AddRange(lab.Select(a => new PatientTimelineItemDTO
@@ -241,7 +313,7 @@ namespace EkgAnalyzerApi.Services
             }));
 
             var diagnoses = await _context.MedicalDiagnose.AsNoTracking()
-                .Where(a => a.PatcientId == patientId && a.ClinicId == clinicId)
+                .Where(a => a.PatcientId == patientId)
                 .Select(a => new { a.Id, a.CreatedAt,
                     Doctor = a.MainDoctor.LastName + " " + a.MainDoctor.FirstName })
                 .ToListAsync();
@@ -250,9 +322,9 @@ namespace EkgAnalyzerApi.Services
                 Type = "diagnose", Id = a.Id, CreatedAt = a.CreatedAt, DoctorName = a.Doctor
             }));
 
-            // Bemor bu foydalanuvchiga umuman ko'rinmasa — mavjud emas deb hisoblaymiz.
-            // Aks holda ID ni terib boshqa klinika bemorining F.I.SH ini bilib olish mumkin edi.
-            if (timeline.Count == 0) return null;
+            // Tahlili yo'q bemor ham ochiladi: passport bo'yicha qidiruvdan
+            // kelgan foydalanuvchi bemor kartasini ko'rishi kerak, hatto unda
+            // hali birorta tahlil bo'lmasa ham.
 
             return new PatientCardDTO
             {

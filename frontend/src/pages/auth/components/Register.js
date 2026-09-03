@@ -9,7 +9,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { registration, verify_code } from '../../../host/requests/AuthRequest';
 import { dangerAlert, successAlert } from '../../../tools/Alerts';
 import { useStore } from '../../../store/Store';
-import Cookies from 'js-cookie';
+import { setTokenAccess } from '../../../host/Host';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import PhoneInput from '../../../components/shared/PhoneInput';
 import { formatPhoneNumber } from '../../../tools/formatters';
@@ -66,12 +66,9 @@ export default function Register() {
         clearInterval(timerRef.current);
         successAlert(t(res.data.message));
         setuser_id(res.data.userId);
-        Cookies.set('NMED_token', res.data.token, {
-          expires: 1,
-          path: '/',
-          secure: true,
-          sameSite: 'strict'
-        });
+        // Cookie muddati backend token muddati bilan bir joydan
+        // (`Host.js: TOKEN_TTL_HOURS`, hozir 3 soat)
+        setTokenAccess(res.data.token);
         navigate('/cabinet');
       }
     } catch (err) {

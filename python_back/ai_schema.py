@@ -363,3 +363,204 @@ def normalize(parsed: dict) -> dict:
         "AI_recommendations": parsed.get("AI_recommendations") or "",
         "final_summary": parsed.get("final_summary") or "",
     }
+
+
+# ─── Kompleks (ko'p tahlilli) xulosa ────────────────────────────────────────
+#
+# Bemorning bir nechta tahlili (masalan ikkita EKG, laboratoriya, SMAD va
+# Holter) BIRGALIKDA tahlil qilinganda ishlatiladi.
+#
+# Nima uchun alohida sxema: bu yerda modeldan fayldan raqam o'qish emas,
+# TAYYOR xulosalarni bir-biriga bog'lash so'raladi. Shuning uchun
+# `digital_measurements` yo'q, uning o'rniga modullar orasidagi
+# bog'liqliklar (`cross_findings`) bor.
+#
+# QISQALIK — sxemaning ajralmas qismi (loyiha egasining talabi). Model
+# uzun matn yozishga moyil: normal ko'rsatkichlarni sanaydi, bir xil
+# fikrni to'rt maydonda takrorlaydi. Shifokor esa bunday xulosani
+# o'qimaydi. Shuning uchun har bir maydon tavsifida GAP SONI chegarasi
+# aniq ko'rsatilgan va "faqat patologiya" qoidasi takrorlangan.
+#
+# `timeline_summary` (dinamika) maydoni OLIB TASHLANDI: uning mazmuni
+# baribir `automatic_analysis` va `cross_findings` bilan takrorlanardi.
+#
+# `automatic_analysis_bool` va `final_summary` nomlari ATAYLAB saqlangan:
+# frontenddagi `severityColor`/`severityLabel` va backenddagi
+# `AiSeverity.Parse` shu nomlarga tayanadi va o'zgartirishsiz ishlaydi.
+
+COMBINED_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "cross_findings": {
+            "type": "string",
+            "description": (
+                "ENG MUHIM MAYDON. Turli tahlillardagi PATOLOGIK topilmalar "
+                "orasidagi bog'liqlik. Masalan laboratoriyadagi elektrolit "
+                "siljishi va EKG dagi QT o'zgarishi. "
+                "ENG KO'PI BILAN 3 GAP. Normal topilmalarni bog'lama. "
+                "Bog'liqlik yo'q bo'lsa faqat bitta qisqa gap yoz."
+            ),
+        },
+        "automatic_analysis": {
+            "type": "string",
+            "description": (
+                "FAQAT patologik topilmalar va sog'liq muammolari — lekin "
+                "har birini BATAFSIL yoz. Bu maydon eng mazmunli bo'lishi kerak. "
+                "Har bir topilma ALOHIDA QATORDA va quyidagilarni o'z ichiga olsin: "
+                "1) topilmaning nomi; "
+                "2) uni tasdiqlaydigan ANIQ RAQAMLAR yoki tavsif "
+                "(masalan 'tungi SBP 148/92, tungi pasayish -4%'); "
+                "3) qaysi tahlildan va qachonligi qavs ichida; "
+                "4) klinik ma'nosi — bu nimani anglatadi va qanchalik jiddiy. "
+                "Har bir topilma uchun 2-4 gap. ENG KO'PI BILAN 5 TA topilma. "
+                "NORMAL ko'rsatkichlarni va topilmagan holatlarni UMUMAN "
+                "sanab o'tirma — ular bu maydonda bo'lmasin. "
+                "Patologiya topilmasa faqat 'Patologik topilma aniqlanmadi' deb yoz."
+            ),
+        },
+        "automatic_analysis_bool": {
+            "type": ["integer", "null"],
+            "enum": [1, 2, 3, None],
+            "description": (
+                "Umumiy holat jiddiyligi: 1 = normal, 2 = e'tibor talab "
+                "qiladi, 3 = shoshilinch. Bu ALOHIDA tahlillarning eng "
+                "yuqorisidan past bo'la olmaydi."
+            ),
+        },
+        "differential_diagnosis": {
+            "type": "array",
+            "description": (
+                "Ehtimoliy tashxislar, ehtimolligi bo'yicha kamayish tartibida. "
+                "IKKI XIL tashxisni ham ko'rib chiq: "
+                "(a) bitta tahlildagi patologiyadan kelib chiqadigan tashxis; "
+                "(b) TAHLILLAR JAMLANMASIDAN kelib chiqadigan tashxis — "
+                "alohida olganda har bir topilma unchalik ma'no bermasligi "
+                "mumkin, lekin BIRGALIKDA ma'lum bir kasallik yoki sindromga "
+                "ishora qilishi mumkin (masalan bir nechta a'zo tizimidagi "
+                "o'zgarishlar bitta tizimli kasallikka mos kelsa). "
+                "Bunday tashxisni O'TKAZIB YUBORMA — u eng qimmatlisi, "
+                "chunki alohida tahlil qilganda ko'rinmaydi. Uning `evidence` "
+                "maydonida qaysi tahlillardagi qaysi topilmalar birgalikda "
+                "shu xulosaga olib kelganini KO'RSAT. "
+                "ENG KO'PI BILAN 4 TA. Faqat haqiqiy asosi bo'lganini yoz — "
+                "asos bo'lmasa BO'SH massiv qaytar."
+            ),
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "diagnosis": {"type": "string", "description": "Tashxis nomi"},
+                    "probability": {
+                        "type": "string",
+                        "enum": ["yuqori", "o'rtacha", "past"],
+                        "description": "Mavjud ma'lumotlarga asoslangan ehtimollik",
+                    },
+                    "evidence": {
+                        "type": "string",
+                        "description": (
+                            "Qaysi tahlildagi qaysi topilma bu tashxisni "
+                            "qo'llab-quvvatlaydi. BITTA qisqa gap."
+                        ),
+                    },
+                },
+                "required": ["diagnosis", "probability", "evidence"],
+            },
+        },
+        "red_flags": {
+            "type": "array",
+            "description": (
+                "Shoshilinch e'tibor talab qiladigan topilmalar. "
+                "Har biri BITTA qisqa gap. Bunday topilma bo'lmasa "
+                "BO'SH massiv — 'yo'q' deb yozma."
+            ),
+            "items": {"type": "string"},
+        },
+        "AI_recommendations": {
+            "type": "string",
+            "description": (
+                "Faqat ANIQLANGAN muammodan kelib chiqadigan keyingi qadamlar: "
+                "qanday tekshiruv kerak va shifokorga qachon murojaat qilish "
+                "kerak. Har biri alohida qatorda, qisqa. "
+                "ENG KO'PI BILAN 4 TA punkt. "
+                "Umumiy turmush tarzi maslahatlarini (ovqatlanish, uyqu, sport) "
+                "aniqlangan patologiya bilan bevosita bog'liq bo'lmasa yozma. "
+                "Aniq dori dozasi yozma. Bu maydon bo'sh qolmasin."
+            ),
+        },
+        "final_summary": {
+            "type": "string",
+            "description": (
+                "Yakuniy tibbiy xulosa: asosiy muammo nima va u qanchalik "
+                "jiddiy. ENG KO'PI BILAN 3 GAP. "
+                "Yuqoridagi maydonlarni aynan takrorlama."
+            ),
+        },
+        "analiz_mumkinmi": {
+            "type": "boolean",
+            "description": (
+                "Berilgan ma'lumotlar kompleks xulosa chiqarishga yetarli "
+                "bo'lsa true."
+            ),
+        },
+        "analiz_mumkin_emas_sababi": {
+            "type": ["string", "null"],
+            "description": "analiz_mumkinmi false bo'lsa sababi, aks holda null.",
+        },
+    },
+    "required": [
+        "cross_findings",
+        "automatic_analysis",
+        "automatic_analysis_bool",
+        "differential_diagnosis",
+        "red_flags",
+        "AI_recommendations",
+        "final_summary",
+        "analiz_mumkinmi",
+        "analiz_mumkin_emas_sababi",
+    ],
+}
+
+SCHEMAS["combined"] = COMBINED_SCHEMA
+
+#: Kompleks xulosaning maydonlari — bazaga yozishda ishlatiladi
+COMBINED_RESULT_FIELDS = tuple(COMBINED_SCHEMA["required"])
+
+
+def normalize_combined(parsed: dict) -> dict:
+    """Kompleks xulosani bazaga yoziladigan ko'rinishga keltiradi.
+
+    `normalize()` dan alohida: maydonlar to'plami boshqacha va bu yerda
+    `digital_measurements` yo'q. Jiddiylik darajasi bo'yicha qoida esa
+    bir xil — tahlil imkonsiz bo'lsa daraja ko'rsatilmaydi (T-092).
+    """
+    if not isinstance(parsed, dict):
+        return {field: None for field in COMBINED_RESULT_FIELDS}
+
+    level = parsed.get("automatic_analysis_bool")
+    if level is not None:
+        try:
+            level = int(level)
+        except (ValueError, TypeError):
+            level = None
+        else:
+            if level not in (1, 2, 3):
+                level = None
+
+    if parsed.get("analiz_mumkinmi") is False:
+        level = None
+
+    def _list(value):
+        return value if isinstance(value, list) else []
+
+    return {
+        "cross_findings": parsed.get("cross_findings") or "",
+        "automatic_analysis": parsed.get("automatic_analysis") or "",
+        "automatic_analysis_bool": level,
+        "differential_diagnosis": _list(parsed.get("differential_diagnosis")),
+        "red_flags": _list(parsed.get("red_flags")),
+        "AI_recommendations": parsed.get("AI_recommendations") or "",
+        "final_summary": parsed.get("final_summary") or "",
+        "analiz_mumkinmi": parsed.get("analiz_mumkinmi"),
+        "analiz_mumkin_emas_sababi": parsed.get("analiz_mumkin_emas_sababi"),
+    }

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Input, Table, Tag, Tooltip, Typography } from 'antd'
+import { Button, Input, Table, Tag, Tooltip, Typography } from 'antd'
+import { IdcardOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { FaUserInjured } from 'react-icons/fa'
@@ -146,15 +147,27 @@ export default function Patcients() {
                     <span>{t('patcients', { defaultValue: 'Bemorlar' })}</span>
                 </h1>
                 <div className="main_card_content big_card_content">
-                    <div data-tour="patients-search" style={{ marginBottom: 16 }}>
+                    <div
+                        data-tour="patients-search"
+                        style={{ marginBottom: 16, display: 'flex', gap: 12, flexWrap: 'wrap' }}
+                    >
                         <Input.Search
                             allowClear
                             placeholder={t('search_patient_placeholder', { defaultValue: 'Ism, familiya yoki telefon bo\'yicha qidirish' })}
                             onSearch={handleSearch}
                             // Boshqa ro'yxat sahifalaridagi kabi yozuvli tugma
                             enterButton={t('search', { defaultValue: 'Qidirish' })}
-                            style={{ maxWidth: 460 }}
+                            style={{ maxWidth: 460, flex: '1 1 320px' }}
                         />
+                        {/* Ro'yxat rol bo'yicha cheklangan — bu tugma bazadagi
+                            ISTALGAN bemorni passport bo'yicha topish uchun.
+                            To'rttala rolda ham ko'rinadi. */}
+                        <Button
+                            icon={<IdcardOutlined />}
+                            onClick={() => navigate('/patcients/search')}
+                        >
+                            {t('search_by_passport', { defaultValue: 'Passport ma\'lumotlari bilan qidirish' })}
+                        </Button>
                     </div>
                     <div className="doctors_table" data-tour="patients-table">
                         <Table

@@ -37,6 +37,7 @@ builder.Services.AddHostedService<AiProviderWatchdog>();
 builder.Services.AddScoped<LabAnalyseService>();
 builder.Services.AddScoped<DoctorService>();
 builder.Services.AddScoped<ECGAnalyseService>();
+builder.Services.AddScoped<CombinedAnalysisService>();
 builder.Services.AddScoped<MedicalDiagnoseService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -120,11 +121,13 @@ builder.Services.AddAuthentication(options =>
             var accessToken = context.Request.Query["access_token"];
             var path = context.HttpContext.Request.Path;
 
-            // SignalR WebSocket va <img>/<a> orqali ochiladigan fayllar uchun
-            // tokenni query string dan qabul qilamiz — brauzer bu holatlarda
-            // Authorization sarlavhasini yubora olmaydi.
-            if (!string.IsNullOrEmpty(accessToken)
-                && (path.StartsWithSegments("/hubs") || path.StartsWithSegments("/api/files")))
+            // SignalR WebSocket uchun tokenni query string dan qabul qilamiz —
+            // brauzer WebSocket ulanishida Authorization sarlavhasini yubora olmaydi.
+            //
+            // `/api/files` bu ro'yxatdan OLIB TASHLANDI: u endi
+            // `[AllowAnonymous]` va token talab qilmaydi, frontend ham
+            // havolaga token qo'shmaydi (Host.js:buildFileUrl).
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
             {
                 context.Token = accessToken;
             }

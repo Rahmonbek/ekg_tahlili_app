@@ -55,6 +55,7 @@ public class AnalysisProgressTracker : BackgroundService
                 analysisId,
                 status = "removed",
                 listPath = ListPath(t),
+                viewPath = ViewPath(t, analysisId),
                 label = Label(t)
             });
         }
@@ -75,6 +76,7 @@ public class AnalysisProgressTracker : BackgroundService
                 analysisId = p.AnalysisId,
                 status = p.Status,
                 listPath = ListPath(p.Type),
+                viewPath = ViewPath(p.Type, p.AnalysisId),
                 label = Label(p.Type),
             })
             .ToList();
@@ -137,6 +139,7 @@ public class AnalysisProgressTracker : BackgroundService
                     analysisId = item.AnalysisId,
                     status = "removed",
                     listPath = ListPath(item.Type),
+                    viewPath = ViewPath(item.Type, item.AnalysisId),
                     label = Label(item.Type)
                 }, ct);
                 continue;
@@ -154,6 +157,7 @@ public class AnalysisProgressTracker : BackgroundService
                 analysisId = item.AnalysisId,
                 status,
                 listPath = ListPath(item.Type),
+                viewPath = ViewPath(item.Type, item.AnalysisId),
                 label = Label(item.Type)
             }, ct);
         }
@@ -195,6 +199,11 @@ public class AnalysisProgressTracker : BackgroundService
                 var row = await db.LabAnalyse.Where(x => x.Id == id).Select(x => new { x.Status }).FirstOrDefaultAsync(ct);
                 return row is null ? Gone : ToProgress(row.Status);
             }
+            case "combined":
+            {
+                var row = await db.CombinedAnalyses.Where(x => x.Id == id).Select(x => new { x.Status }).FirstOrDefaultAsync(ct);
+                return row is null ? Gone : ToProgress(row.Status);
+            }
             case "parasitology":
             case "para":
             {
@@ -229,7 +238,29 @@ public class AnalysisProgressTracker : BackgroundService
         "holter" => "/holter-analyses",
         "lab" => "/lab-analyses",
         "parasitology" or "para" => "/parasitology-analyses",
+        // Kompleks xulosaning alohida ro'yxat sahifasi yo'q — u bemor
+        // kartasi ichida ko'rsatiladi
+        "combined" => "/patcients",
         _ => "/"
+    };
+
+    /// <summary>
+    /// AYNAN SHU tahlilni ochadigan sahifa manzili.
+    ///
+    /// Ilgari xabarda faqat <see cref="ListPath"/> bor edi va "Ko'rish"
+    /// tugmasi foydalanuvchini RO'YXAT sahifasiga olib borardi — u yerdan
+    /// tahlilni yana qo'lda qidirish kerak bo'lardi. Endi to'g'ridan-to'g'ri
+    /// tahlil ochiladi.
+    /// </summary>
+    private static string ViewPath(string type, int analysisId) => type switch
+    {
+        "ecg" => $"/ecg-analyses/view/{analysisId}",
+        "smad" => $"/smad-analyses/view/{analysisId}",
+        "holter" => $"/holter-analyses/view/{analysisId}",
+        "lab" => $"/lab-analyses/view/{analysisId}",
+        "parasitology" or "para" => $"/parasitology-analyses/view/{analysisId}",
+        "combined" => $"/combined-analyses/view/{analysisId}",
+        _ => ListPath(type)
     };
 
     private static string Label(string type) => type switch
@@ -239,6 +270,7 @@ public class AnalysisProgressTracker : BackgroundService
         "holter" => "Holter AI tahlil",
         "lab" => "Laboratoriya AI tahlil",
         "parasitology" or "para" => "Parazitologiya AI tahlil",
+        "combined" => "Kompleks AI xulosa",
         _ => "Tahlil"
     };
 

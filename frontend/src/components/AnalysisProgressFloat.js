@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { notification } from 'antd';
 import { useStore } from '../store/Store';
@@ -33,6 +33,18 @@ export default function AnalysisProgressFloat() {
     const navigate = useNavigate();
     const notifiedKeys = useRef(new Set());
 
+    /**
+     * "Ko'rish" bosilganda AYNAN SHU tahlilni ochadi.
+     *
+     * Ilgari `listPath` ishlatilardi — u ro'yxat sahifasi (`/ecg-analyses`),
+     * ya'ni foydalanuvchi tahlilni yana qo'lda qidirishi kerak edi.
+     * `viewPath` server tomondan keladi (`AnalysisProgressTracker`); eski
+     * yozuvlarda u bo'lmasligi mumkin, shunda ro'yxatga qaytiladi.
+     */
+    const openAnalysis = useCallback((item) => {
+        navigate(item.viewPath || item.listPath || '/');
+    }, [navigate]);
+
     useEffect(() => {
         pendingAnalyses.forEach((item) => {
             if (item.status === 'loading') return;
@@ -45,7 +57,7 @@ export default function AnalysisProgressFloat() {
                     description: (
                         <span
                             style={{ color: '#0f766e', cursor: 'pointer', textDecoration: 'underline' }}
-                            onClick={() => { navigate(item.listPath); notification.destroy(item.key); }}
+                            onClick={() => { openAnalysis(item); notification.destroy(item.key); }}
                         >
                             Natijalarni ko'rish →
                         </span>
@@ -53,7 +65,10 @@ export default function AnalysisProgressFloat() {
                     key: item.key,
                     duration: 10,
                 });
-                setTimeout(() => removePendingAnalysis(item.key), 12000);
+                // Ro'yxatdan AVTOMATIK o'chirilmaydi: ilgari 12 soniyadan
+                // keyin element yo'qolardi va foydalanuvchi "Ko'rish"
+                // tugmasini bosishga ulgurmasdi — tugma bosilmayotgandek
+                // ko'rinardi. Endi u "Ko'rish" yoki "✕" bosilguncha turadi.
             } else if (item.status === 'error') {
                 notification.error({
                     message: `${item.label} xatolik bilan tugadi`,
@@ -61,10 +76,10 @@ export default function AnalysisProgressFloat() {
                     key: item.key,
                     duration: 8,
                 });
-                setTimeout(() => removePendingAnalysis(item.key), 8000);
+                // Xatolik ham o'zi yo'qolmaydi — sababini o'qishga vaqt kerak
             }
         });
-    }, [pendingAnalyses, navigate]);
+    }, [pendingAnalyses, openAnalysis, removePendingAnalysis]);
 
     const visible = pendingAnalyses.length > 0;
     if (!visible) return null;
@@ -108,11 +123,22 @@ export default function AnalysisProgressFloat() {
                                     : 'davom etmoqda...'}
                             </span>
                         ) : item.status === 'done' ? (
-                            <span
-                                style={{ fontSize: 12, color: '#0f766e', cursor: 'pointer', textDecoration: 'underline' }}
-                                onClick={() => { navigate(item.listPath); removePendingAnalysis(item.key); }}
-                            >
-                                Ko'rish
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span
+                                    style={{ fontSize: 12, color: '#0f766e', cursor: 'pointer', textDecoration: 'underline' }}
+                                    onClick={() => { openAnalysis(item); removePendingAnalysis(item.key); }}
+                                >
+                                    Ko'rish
+                                </span>
+                                {/* Ko'rmasdan yopish imkoniyati — aks holda
+                                    element abadiy osilib turardi */}
+                                <span
+                                    title="Yopish"
+                                    style={{ fontSize: 13, color: '#bbb', cursor: 'pointer', lineHeight: 1 }}
+                                    onClick={() => removePendingAnalysis(item.key)}
+                                >
+                                    ✕
+                                </span>
                             </span>
                         ) : (
                             <span

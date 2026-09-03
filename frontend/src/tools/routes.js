@@ -4,8 +4,12 @@ import { IoIosCard, IoIosPeople, IoMdSettings } from "react-icons/io";
 import { MdOutlineMedicalInformation } from "react-icons/md";
 import { GiTestTubes } from "react-icons/gi";
 import { RiPulseLine } from 'react-icons/ri';
-import { GiMicroscope } from 'react-icons/gi';
+import { GiMicroscope, GiBrain } from 'react-icons/gi';
 import { VideoCameraOutlined, TeamOutlined, MedicineBoxOutlined, SafetyCertificateOutlined, DashboardOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+// Yon paneldagi nomlar ATAYLAB alohida kalitlarda (`nav_*`).
+// `analyse_ecg` kabi kalitlar sahifa sarlavhalarida, teglarda va jadval
+// ustunlarida ham ishlatiladi — ularni qisqartirish o'sha joylarni ham
+// o'zgartirib yuborardi (masalan bemor kartasidagi "EKG tahlillari" tegi).
 export const routers = [
     {
         path: '/doctor',
@@ -20,7 +24,7 @@ export const routers = [
     {
         path: '/ecg-analyses',
         icon: <FaHeartbeat />,
-        title: "analyse_ecg",
+        title: "nav_ecg",
         tools: "ecg-analyses",
         role_id: [],
         unread_key: 'ecg_unread',
@@ -29,7 +33,7 @@ export const routers = [
     {
         path: '/holter-analyses',
         icon: <RiPulseLine />,
-        title: "analyse_holter",
+        title: "nav_holter",
         tools: "holter-analyses",
         role_id: [],
         unread_key: 'holter_unread',
@@ -38,7 +42,7 @@ export const routers = [
     {
         path: '/smad-analyses',
         icon: <FaChartLine />,
-        title: "analyse_smad",
+        title: "nav_smad",
         tools: "smad-analyses",
         role_id: [],
         unread_key: 'smad_unread',
@@ -47,7 +51,7 @@ export const routers = [
     {
         path: '/lab-analyses',
         icon: <GiTestTubes />,
-        title: "analyse_lab",
+        title: "nav_lab",
         tools: "lab-analyses",
         role_id: [],
         unread_key: 'lab_unread',
@@ -71,6 +75,18 @@ export const routers = [
     //     unread_key: null,
     //     requires_active: true
     // },
+    {
+        // Kompleks (ko'p tahlilli) AI xulosalari — to'rttala rol uchun ham.
+        // Ro'yxat rol bo'yicha cheklangan: foydalanuvchi bemorlar
+        // ro'yxatida ko'radigan bemorlarning xulosalari chiqadi.
+        path: '/combined-analyses',
+        icon: <GiBrain />,
+        title: "nav_combined",
+        tools: "combined-analyses",
+        role_id: [],
+        unread_key: null,
+        requires_active: true
+    },
     {
         // Bemorlar ro'yxati: shifokor/hamshira uchun ham kerak — tahlil
         // yaratishdan oldin bemor allaqachon bazada bor-yo'qligini ko'rish uchun.

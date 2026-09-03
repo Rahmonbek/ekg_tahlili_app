@@ -5,7 +5,7 @@ import Auth from './pages/auth/Auth'
 import './locale/i18next'
 import { useStore } from './store/Store'
 import Main from './pages/cabinet/Main'
-import { getTokenAccess } from './host/Host'
+import { getTokenAccess, LOGIN_PATH } from './host/Host'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { get_user_data } from './host/requests/UserRequest';
 import Loader from './components/Loader';
@@ -57,7 +57,10 @@ export default function App() {
       }
     } else {
       if (!isPublicPath) {
-        navigate("/")
+        // Token yo'q (muddati tugagan yoki chiqib ketilgan) — landing
+        // sahifa emas, KIRISH sahifasi ochiladi: foydalanuvchi kabinetda
+        // ishlayotgan edi, unga kirish tugmasini qidirtirish kerak emas
+        navigate(`${LOGIN_PATH}?session=expired`)
       }
       setfirst_load(true)
     }
@@ -119,10 +122,12 @@ export default function App() {
         fetchConsultationBadgeCounts()
       }
     } catch (err) {
-      // Faqat boshlang'ich yuklashda token muammosi bo'lsa — loginга yo'naltir
+      // Faqat boshlang'ich yuklashda token muammosi bo'lsa — kirish
+      // sahifasiga yo'naltir (401 bo'lsa interceptor buni allaqachon
+      // qiladi; bu yerda tarmoq uzilishi kabi holatlar qoladi)
       if (!isRefresh) {
         if (!isPublicPath) {
-          navigate("/")
+          navigate(LOGIN_PATH)
         }
         setfirst_load(true)
       }

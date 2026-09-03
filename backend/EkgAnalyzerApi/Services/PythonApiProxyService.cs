@@ -94,6 +94,41 @@ namespace EkgAnalyzerApi.Services
             }
         }
 
+        /// <summary>
+        /// JSON so'rovni Python API ga yuboradi.
+        ///
+        /// Kompleks tahlil uchun kerak: u yerda fayl yuklanmaydi, faqat
+        /// yozuv identifikatorlari uzatiladi — multipart ortiqcha bo'lardi.
+        /// </summary>
+        public async Task<HttpResponseMessage> ProxyJsonAsync(
+            string pythonEndpoint,
+            object payload,
+            string? jwtToken = null)
+        {
+            var client = _httpClientFactory.CreateClient("PythonApi");
+
+            if (!string.IsNullOrEmpty(jwtToken))
+            {
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", jwtToken);
+            }
+
+            var json = System.Text.Json.JsonSerializer.Serialize(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            _logger.LogInformation("Proxying JSON request to Python API: {Endpoint}", pythonEndpoint);
+
+            try
+            {
+                return await client.PostAsync(pythonEndpoint, content);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Python API proxy xatolik: {Endpoint}", pythonEndpoint);
+                throw;
+            }
+        }
+
         private static string NormalizeFileName(string? fileName, string? contentType)
         {
             var rawFileName = string.IsNullOrWhiteSpace(fileName) ? "upload" : fileName.Trim();

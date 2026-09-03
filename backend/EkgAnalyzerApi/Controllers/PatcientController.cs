@@ -67,6 +67,43 @@ public class PatcientController : ControllerBase
         return Ok(card);
     }
 
+    /// <summary>
+    /// Passport ma'lumotlari bo'yicha bemor QIDIRUVI (ro'yxat qaytaradi).
+    ///
+    /// GET api/patcient/search-by-passport?passport=AB1234567&amp;birthdate=1972-03-11
+    ///
+    /// `get-patient-by-passport` dan farqi: u tahlil yuklash sahifasi uchun
+    /// bitta bemor obyektini qaytaradi va o'zgartirilmadi. Bu esa bemorlar
+    /// sahifasidagi "Passport ma'lumotlari bilan qidirish" oynasi uchun —
+    /// ro'yxat, tahlillar soni va oxirgi tahlil sanasi bilan.
+    ///
+    /// Klinika/rol filtri YO'Q: to'rttala rol ham bazadagi istalgan bemorni
+    /// topa oladi. Buning xavfsizlik asosi — passportni to'liq bilish talabi.
+    /// </summary>
+    [HttpGet("search-by-passport")]
+    public async Task<IActionResult> SearchByPassport(
+        [FromQuery] string? passport,
+        [FromQuery] string? birthdate,
+        [FromQuery] string lang = "uz")
+    {
+        if (!_currentUser.IsAuthenticated)
+            return Unauthorized(new { message = "Token invalid" });
+
+        if (string.IsNullOrWhiteSpace(passport))
+            return BadRequest(new { message = "Passport seriyasi kiritilmagan" });
+
+        if (!DateOnly.TryParse(birthdate, out var birthDate))
+            return BadRequest(new { message = "Tug'ilgan sana noto'g'ri formatda" });
+
+        var items = await _patcientService.SearchByPassportAsync(passport, birthDate, lang);
+        return Ok(new PatcientListDTO
+        {
+            data = items,
+            TotalCount = items.Count,
+            TotalPages = 1
+        });
+    }
+
     [HttpGet("get-patient-by-passport")]
     public async Task<IActionResult> GetPatientByPassport(string passport, string birthdate)
     {

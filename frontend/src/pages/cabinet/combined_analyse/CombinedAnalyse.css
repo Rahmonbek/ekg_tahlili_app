@@ -1,0 +1,289 @@
+/**
+ * Kompleks (ko'p tahlilli) AI xulosasi — ko'rish sahifasi.
+ *
+ * Nima uchun alohida fayl: sahifa oddiy `Card` lar ustma-ust taxlangan
+ * ro'yxat edi — hamma bo'lim bir xil ko'rinardi va shifokor eng muhim
+ * xulosani darhol topa olmasdi. Endi har bir bo'limning o'z vizual
+ * roli bor: yakuniy xulosa — ajratilgan "hero" blok, topilmalar —
+ * raqamlangan qatorlar, shoshilinch topilmalar — qizil blok.
+ *
+ * Ranglar `theme.js` dagi qiymatlar bilan bir xil (`colors.*`).
+ * Oraliqlar 4 px shkalasida.
+ */
+
+/* ── Umumiy bo'lim ─────────────────────────────────────────────── */
+
+.cai-section {
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+
+.cai-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.cai-section-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.cai-section-title {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.cai-text {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: #334155;
+  white-space: pre-wrap;
+}
+
+/* ── Yakuniy xulosa — sahifadagi asosiy blok ───────────────────── */
+
+.cai-hero {
+  border: 1px solid #d7f0e9;
+  border-left: 4px solid #00b39a;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f4fdfa 0%, #ffffff 70%);
+  padding: 18px 20px;
+  margin-bottom: 12px;
+}
+
+/* Jiddiylik darajasiga qarab chap chiziq rangi o'zgaradi — shifokor
+   sahifani ochishi bilanoq holatning og'irligini ko'radi */
+.cai-hero.is-normal  { border-left-color: #16a34a; border-color: #d9f2e2; background: linear-gradient(180deg, #f4fdf7 0%, #fff 70%); }
+.cai-hero.is-average { border-left-color: #f59e0b; border-color: #fbeccd; background: linear-gradient(180deg, #fffbf2 0%, #fff 70%); }
+.cai-hero.is-danger  { border-left-color: #dc2626; border-color: #f7d9d9; background: linear-gradient(180deg, #fff6f5 0%, #fff 70%); }
+
+.cai-hero-text {
+  margin: 0;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: #0f172a;
+  font-weight: 500;
+  white-space: pre-wrap;
+}
+
+/* ── Aniqlangan holatlar — raqamlangan qatorlar ────────────────── */
+
+.cai-finding {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #f1f5f9;
+}
+
+.cai-finding:first-of-type {
+  border-top: none;
+  padding-top: 4px;
+}
+
+.cai-finding-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #eef7f5;
+  color: #00806f;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.cai-finding-text {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #1e293b;
+}
+
+/* ── Shoshilinch topilmalar ────────────────────────────────────── */
+
+.cai-section.is-alarm {
+  border-color: #f7d9d9;
+  background: #fff8f7;
+}
+
+.cai-alarm-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 0;
+  color: #b91c1c;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+/* ── Ehtimoliy tashxislar — jadval emas, kartochkalar ──────────── */
+
+.cai-dx {
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  background: #fcfdfe;
+}
+
+.cai-dx:last-child { margin-bottom: 0; }
+
+.cai-dx-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.cai-dx-name {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.cai-dx-prob {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.cai-dx-prob.is-high { background: #fdecec; color: #b91c1c; }
+.cai-dx-prob.is-mid  { background: #fdf3e2; color: #b45309; }
+.cai-dx-prob.is-low  { background: #eef2f7; color: #475569; }
+
+.cai-dx-evidence {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: #64748b;
+}
+
+/* ── Tavsiyalar — belgilangan ro'yxat ──────────────────────────── */
+
+.cai-rec {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-top: 1px solid #f1f5f9;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.cai-rec:first-of-type { border-top: none; }
+
+.cai-rec-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #00b39a;
+  flex-shrink: 0;
+  margin-top: 9px;
+}
+
+/* ── Xulosaga kirgan tahlillar — jadval emas, chiplar ──────────── */
+
+.cai-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cai-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e6ecf3;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.cai-source:hover {
+  border-color: #cfe0f0;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.07);
+  transform: translateY(-1px);
+}
+
+.cai-source.is-gone {
+  cursor: default;
+  opacity: 0.55;
+  background: #f8fafc;
+}
+
+.cai-source.is-gone:hover {
+  border-color: #e6ecf3;
+  box-shadow: none;
+  transform: none;
+}
+
+.cai-source-bar {
+  width: 3px;
+  align-self: stretch;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.cai-source-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.cai-source-date {
+  font-size: 0.6875rem;
+  color: #94a3b8;
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+.cai-source-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+/* ── Bemor kartasi ichida (qator ochilganda) ──────────────────── */
+
+/* Ichkarida sahifa foni yo'q — bloklar tor joyga siqilmasin */
+.cai-embedded .cai-section,
+.cai-embedded .cai-hero {
+  margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+  .cai-section { padding: 14px; }
+  .cai-hero { padding: 14px 16px; }
+  .cai-hero-text { font-size: 1rem; }
+}

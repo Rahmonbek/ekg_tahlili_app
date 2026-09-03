@@ -8,7 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { login, verify_code, send_reset_code } from '../../../host/requests/AuthRequest';
 import { dangerAlert, successAlert, warningAlert } from '../../../tools/Alerts';
 import { useStore } from '../../../store/Store';
-import Cookies from "js-cookie";
+import { setTokenAccess } from '../../../host/Host';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import PhoneInput from '../../../components/shared/PhoneInput';
 import { formatPhoneNumber } from '../../../tools/formatters';
@@ -35,6 +35,20 @@ export default function Login() {
 
   useEffect(() => () => clearInterval(timerRef.current), []);
 
+  // Sessiya tugagani sababli bu yerga qaytarilgan bo'lsa, sababini
+  // aytamiz — aks holda foydalanuvchi "nega meni chiqarib yubordi?"
+  // degan savol bilan qoladi. Xabar bir marta ko'rsatiladi va
+  // manzildagi belgi tozalanadi (sahifa yangilansa takrorlanmasin).
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('session') !== 'expired') return;
+
+    warningAlert(t('session_expired', {
+      defaultValue: "Sessiya muddati tugadi. Iltimos, qaytadan kiring."
+    }));
+    window.history.replaceState(null, '', window.location.pathname);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const startResendTimer = () => {
     setResend(RESEND_SECONDS);
     clearInterval(timerRef.current);
@@ -54,12 +68,9 @@ export default function Login() {
   };
 
   const applyLoginSuccess = (data) => {
-    Cookies.set("NMED_token", data.token, {
-      expires: 1,
-      path: "/",
-      secure: true,
-      sameSite: 'strict'
-    });
+    // Cookie muddati backenddagi token muddati bilan bir joydan olinadi
+    // (`Host.js: TOKEN_TTL_HOURS`, hozir 3 soat)
+    setTokenAccess(data.token);
     setuser_id(data.userId);
 
     if (data.mustChangePassword) {

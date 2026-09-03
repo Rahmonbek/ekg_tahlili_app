@@ -7,6 +7,20 @@ using System.Text;
 
 public class TokenService
 {
+    /// <summary>
+    /// Token amal qilish muddati — soatlarda. `Jwt:ExpiresHours` sozlamasi
+    /// bilan o'zgartiriladi.
+    ///
+    /// Ilgari qotirilgan 24 soat edi: o'g'irlangan yoki umumiy kompyuterda
+    /// qolib ketgan token bir sutka davomida ishlayverardi. 3 soat — ish
+    /// smenasiga yetadi, lekin qoldirilgan sessiya kechgacha ochiq turmaydi.
+    ///
+    /// Frontenddagi cookie muddati ham shu qiymatga mos bo'lishi kerak
+    /// (`Host.js: TOKEN_TTL_HOURS`), aks holda cookie tirik bo'lgani holda
+    /// token o'lik bo'lib, har bir so'rov 401 qaytaradi.
+    /// </summary>
+    public const int DefaultExpiresHours = 3;
+
     private readonly IConfiguration _configuration;
     public TokenService(IConfiguration configuration)
     {
@@ -40,11 +54,19 @@ public class TokenService
 
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+        // Noto'g'ri yoki musbat bo'lmagan qiymat sozlamada qolib ketsa —
+        // standartga qaytamiz. Aks holda `expires` o'tmishda bo'lib,
+        // hech kim tizimga kira olmasdi.
+        var expiresHours = int.TryParse(_configuration["Jwt:ExpiresHours"], out var configured)
+            && configured > 0
+                ? configured
+                : DefaultExpiresHours;
+
         var token = new JwtSecurityToken(
             issuer: _configuration["Jwt:Issuer"],
             audience: _configuration["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(24),
+            expires: DateTime.UtcNow.AddHours(expiresHours),
             signingCredentials: creds
         );
 

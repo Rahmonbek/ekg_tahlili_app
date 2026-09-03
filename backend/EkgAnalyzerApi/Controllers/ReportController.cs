@@ -149,6 +149,26 @@ public class ReportController : ControllerBase
             $"nmed_combined_{patientId}_{DateTime.Now:ddMMyyyy}.pdf");
     }
 
+    /// <summary>
+    /// Kompleks (ko'p tahlilli) AI xulosasi PDF.
+    /// GET /api/report/combined-ai/{combinedId}?lang=uz
+    /// </summary>
+    /// <remarks>
+    /// Klinika tekshiruvi ATAYLAB yo'q — kompleks xulosaning o'zi ham
+    /// to'rttala rolga ochiq (bemor kartasi klinika bo'yicha cheklanmagan).
+    /// Autentifikatsiya esa talab qilinadi.
+    /// </remarks>
+    [HttpGet("combined-ai/{combinedId:int}")]
+    public async Task<IActionResult> DownloadCombinedAi(int combinedId, [FromQuery] string lang = "uz")
+    {
+        var exists = await _context.CombinedAnalyses.AnyAsync(c => c.Id == combinedId);
+        if (!exists) return NotFound(new { message = "Kompleks xulosa topilmadi" });
+
+        return await BuildPdfResponse(
+            () => _pdf.GenerateCombinedAiReport(combinedId, lang),
+            $"nmed_kompleks_ai_{combinedId}_{DateTime.Now:ddMMyyyy}.pdf");
+    }
+
     [HttpGet("consultation/{id:int}")]
     public async Task<IActionResult> DownloadConsultation(int id, [FromQuery] string lang = "uz")
     {

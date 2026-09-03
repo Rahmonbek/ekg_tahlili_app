@@ -4,37 +4,63 @@ import Cookies from "js-cookie";
 export const api = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 export const imgApi = process.env.REACT_APP_IMG_URL || "http://localhost:5000";
 
+/** Autentifikatsiya cookie'sining nomi — bitta joyda. */
+export const TOKEN_COOKIE = "NMED_token"
+
+/**
+ * Cookie qancha yashaydi — soatlarda.
+ *
+ * Backenddagi `Jwt:ExpiresHours` (standart 3) bilan BIR XIL bo'lishi
+ * SHART. Cookie uzoqroq yashasa, foydalanuvchi "kirgan" ko'rinadi-yu,
+ * har bir so'rov 401 qaytaradi; qisqaroq yashasa, hali amal qiladigan
+ * token sababsiz yo'qoladi.
+ */
+export const TOKEN_TTL_HOURS = 3
+
+/** Tizimga kirish sahifasi — sessiya tugaganda shu yerga qaytariladi. */
+export const LOGIN_PATH = "/login"
+
 export const getTokenAccess = () => {
-    var token = Cookies.get("NMED_token")
+    var token = Cookies.get(TOKEN_COOKIE)
     return (token)
+}
+
+/**
+ * Tokenni saqlaydi. Muddat `TOKEN_TTL_HOURS` — js-cookie `expires` ni
+ * KUNLARDA oladi, shuning uchun soat 24 ga bo'linadi.
+ */
+export const setTokenAccess = (token) => {
+    Cookies.set(TOKEN_COOKIE, token, {
+        expires: TOKEN_TTL_HOURS / 24,
+        path: "/",
+        secure: window.location.protocol === "https:",
+        sameSite: "strict",
+    })
 }
 
 /**
  * Tahlil fayli (EKG rasmi, Holter/SMAD/Lab PDF) uchun to'liq manzil quradi.
  *
- * Ilgari bu fayllar Python backenddan to'g'ridan-to'g'ri olinardi
- * (`https://analyse.nmed.uz/uploads/...`) va u yerda hech qanday himoya yo'q edi —
- * URL ni bilgan har kim bemorning EKG rasmini yuklab olardi.
+ * Fayllar .NET API orqali beriladi (`/api/files/...`), Python backendga
+ * to'g'ridan-to'g'ri murojaat qilinmaydi.
  *
- * Endi fayllar .NET API orqali beriladi va u foydalanuvchi shifoxonasiga
- * tegishliligini tekshiradi. `<img>` va `<a>` teglari Authorization sarlavhasini
- * yubora olmagani uchun token query parametrida uzatiladi (loyihada SignalR
- * uchun allaqachon ishlatilayotgan naqsh).
+ * Token QO'SHILMAYDI: `/api/files` endpointi loyiha egasining qarori bo'yicha
+ * autentifikatsiyasiz ochiq. Token URL da yurganda u brauzer tarixiga,
+ * proksi va server loglariga tushardi — endpoint baribir tekshirmagach,
+ * uni yuborishning ma'nosi yo'q, zarari bor.
  *
  * @param {string} link bazadagi havola, masalan `/uploads/ecg_analyse_files/x.jpg`
  * @returns {string} to'liq manzil yoki bo'sh satr
  */
 export const buildFileUrl = (link) => {
     if (!link) return '';
-    const token = getTokenAccess();
     const path = String(link).startsWith('/') ? link : `/${link}`;
-    const url = `${imgApi}/api/files${path}`;
-    return token ? `${url}?access_token=${encodeURIComponent(token)}` : url;
+    return `${imgApi}/api/files${path}`;
 }
 
 
 export const deleteTokenAccess = () => {
-    Cookies.remove("NMED_token")
+    Cookies.remove(TOKEN_COOKIE, { path: "/" })
 }
 
 export const httpPostRequest = async (url, data) => {

@@ -48,6 +48,8 @@ namespace EkgAnalyzerApi.Data
         public DbSet<ParasitologyAnalysisDoctors> ParasitologyAnalysisDoctors { get; set; }
         public DbSet<ParasitologyResults> ParasitologyResults { get; set; }
         public DbSet<AnalysisDiagnosis> AnalysisDiagnoses { get; set; }
+        public DbSet<CombinedAnalysis> CombinedAnalyses { get; set; }
+        public DbSet<CombinedAnalysisItem> CombinedAnalysisItems { get; set; }
         public DbSet<VideoCallSession> VideoCallSessions { get; set; }
         public DbSet<VideoConference> VideoConferences { get; set; }
         public DbSet<VideoConferenceParticipant> VideoConferenceParticipants { get; set; }
@@ -148,6 +150,41 @@ namespace EkgAnalyzerApi.Data
             // AnalysisDiagnosis — composite index
             modelBuilder.Entity<AnalysisDiagnosis>()
                 .HasIndex(d => new { d.AnalysisType, d.AnalysisId });
+
+            // Kompleks (ko'p tahlilli) AI xulosasi
+            modelBuilder.Entity<CombinedAnalysis>()
+                .HasIndex(c => c.PatientId);
+
+            modelBuilder.Entity<CombinedAnalysis>()
+                .HasIndex(c => c.SourceFingerprint);
+
+            modelBuilder.Entity<CombinedAnalysis>()
+                .HasOne(c => c.Patient)
+                .WithMany()
+                .HasForeignKey(c => c.PatientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CombinedAnalysis>()
+                .HasOne(c => c.CreatedDoctor)
+                .WithMany()
+                .HasForeignKey(c => c.CreatedDoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Tarkib xulosa bilan birga o'chadi
+            modelBuilder.Entity<CombinedAnalysisItem>()
+                .HasOne(i => i.CombinedAnalysis)
+                .WithMany(c => c.Items)
+                .HasForeignKey(i => i.CombinedAnalysisId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // "Bu tahlil qaysi kompleks xulosalarga kirgan?" so'rovi uchun
+            modelBuilder.Entity<CombinedAnalysisItem>()
+                .HasIndex(i => new { i.AnalysisType, i.AnalysisId });
+
+            // Bitta xulosada bitta tahlil ikki marta bo'lmasin
+            modelBuilder.Entity<CombinedAnalysisItem>()
+                .HasIndex(i => new { i.CombinedAnalysisId, i.AnalysisType, i.AnalysisId })
+                .IsUnique();
 
             // ConsultantInvitations — UNIQUE (ClinicId, DoctorId)
             modelBuilder.Entity<ConsultantInvitation>()
