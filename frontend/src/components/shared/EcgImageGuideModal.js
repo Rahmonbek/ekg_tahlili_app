@@ -14,8 +14,8 @@ import ecgWrongSample from '../../images/ecg_wrong_sample.svg';
  * Ushbu modal to'g'ri va noto'g'ri holatlarni SVG bilan ko'rsatadi.
  *
  * Birinchi marta tahlil qilayotgan foydalanuvchida avtomatik ochiladi
- * (EcgAnalyzer localStorage bayrog'iga qaraydi); keyin faqat `.alert_icon`
- * bosilganda ochiladi.
+ * (EcgAnalyzer localStorage bayrog'iga qaraydi); keyin faqat EKG fayli
+ * qadamidagi "Qanday rasm kerak?" havolasi bosilganda ochiladi.
  */
 export default function EcgImageGuideModal({ open, onClose }) {
     const { t } = useTranslation();

@@ -72,9 +72,33 @@ def find_duplicate(db: Session, kind: str, patcient_id: int, digest: str):
         days=DUPLICATE_WINDOW_DAYS
     )
 
-    row = db.execute(
-        text(
-            f"""
+    if kind == "lab":
+        # Laboratoriya tahlilida bir nechta fayl bo'lishi mumkin — har
+        # birining xeshi `lab_analysis_files` da. `lab_analyses.file_hash`
+        # (birinchi fayl) ham tekshiriladi: fayllar jadvaliga ko'chirilmay
+        # qolgan eski yozuvlar uchun.
+        sql = """
+            SELECT id, document_number, created_at FROM (
+                SELECT l.id, l.document_number, l.created_at
+                  FROM lab_analysis_files f
+                  JOIN lab_analyses l ON l.id = f.lab_analysis_id
+                 WHERE l.patient_id = :pid
+                   AND f.file_hash  = :digest
+                   AND l.deleted_at IS NULL
+                   AND l.created_at >= :since
+                UNION
+                SELECT id, document_number, created_at
+                  FROM lab_analyses
+                 WHERE patient_id = :pid
+                   AND file_hash  = :digest
+                   AND deleted_at IS NULL
+                   AND created_at >= :since
+            ) AS found
+             ORDER BY created_at DESC
+             LIMIT 1
+            """
+    else:
+        sql = f"""
             SELECT id, document_number, created_at
               FROM {table}
              WHERE patient_id = :pid   -- baza ustuni tuzatildi (T-068)
@@ -84,7 +108,9 @@ def find_duplicate(db: Session, kind: str, patcient_id: int, digest: str):
              ORDER BY created_at DESC
              LIMIT 1
             """
-        ),
+
+    row = db.execute(
+        text(sql),
         {"pid": patcient_id, "digest": digest, "since": since},
     ).first()
 
@@ -141,3 +167,14 @@ def check(db: Session, kind: str, patcient_id: int, content: bytes,
             "existing": existing,
         },
     )
+
+
+def check_many(db: Session, kind: str, patcient_id: int, contents: list[bytes],
+               force: bool = False) -> list[str]:
+    """Bir nechta fayl (laboratoriya) uchun `check` — har biri tekshiriladi.
+
+    Fayllardan BIRORTASI shu bemorga allaqachon yuklangan bo'lsa 409
+    qaytariladi (javob tanasi `check` niki bilan bir xil). Xeshlar
+    fayllar tartibida qaytariladi.
+    """
+    return [check(db, kind, patcient_id, content, force) for content in contents]

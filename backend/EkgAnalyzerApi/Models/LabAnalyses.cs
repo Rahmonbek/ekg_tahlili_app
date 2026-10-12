@@ -328,6 +328,9 @@ namespace EkgAnalyzerApi.Models
         public List<LabAnalyseCategories>? Categories { get; set; }
         public List<LabAnalyseDoctors>? Doctors { get; set; }
 
+        /// <summary>Biriktirilgan fayllar (bitta yoki bir nechta) — `lab_analysis_files`.</summary>
+        public List<LabAnalysisFile>? Files { get; set; }
+
         // ── Yumshoq o'chirish (T-027) ──────────────────────────────────────
         // Tibbiy yozuv fizik o'chirilmaydi: kim, qachon va nima sababdan
         // o'chirgani auditda saqlanishi shart. `deleted_at IS NULL` bo'lgan

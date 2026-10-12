@@ -1900,6 +1900,22 @@ public class PdfReportService
         if (!string.IsNullOrWhiteSpace(text))
             AddAiTextBlock(doc, fonts, text.Trim());
 
+        // Holter/SMAD: har bir patologik epizod — alohida qator
+        var episodes = ai.PathologyEpisodes?
+            .Where(e => !string.IsNullOrWhiteSpace(e.Finding))
+            .ToList();
+        if (episodes is { Count: > 0 })
+        {
+            doc.Add(new Paragraph(tr["pathology_episodes"] + ":", fonts["p9label"])
+                { SpacingBefore = 4, SpacingAfter = 2 });
+            foreach (var e in episodes)
+            {
+                var time = string.IsNullOrWhiteSpace(e.Time) ? "" : $"{e.Time!.Trim()} — ";
+                doc.Add(new Paragraph($"• {time}{e.Finding!.Trim()}", fonts["p8"])
+                    { SpacingBefore = 1, IndentationLeft = 6 });
+            }
+        }
+
         // Jiddiylik va tavsiyalar — 2 ustunli blok
         var severityRaw = ai.AutomaticAnalysisBool?.ToString() ?? "0";
         int.TryParse(severityRaw, out var severityInt);

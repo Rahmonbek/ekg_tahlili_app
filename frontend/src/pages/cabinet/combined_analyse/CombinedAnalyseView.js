@@ -1,18 +1,19 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Button, Skeleton, Tag } from 'antd'
-import { FilePdfOutlined } from '@ant-design/icons'
+import { Alert, Button, Skeleton, Tag } from 'antd'
+import { FilePdfOutlined, ReloadOutlined } from '@ant-design/icons'
 import { IoArrowBack } from 'react-icons/io5'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { FaUserInjured } from 'react-icons/fa'
-import { get_combined_analysis } from '../../../host/requests/CombinedAnalysisRequest'
+import { create_combined_analysis, get_combined_analysis } from '../../../host/requests/CombinedAnalysisRequest'
 import { calculateAge, formatDate, formatDateTime, personName } from '../../../tools/formatters'
 import { severityColor, severityLabel } from '../../../tools/severity'
 import EmptyState from '../../../components/shared/EmptyState'
-import CombinedResult from '../../../components/results/CombinedResult'
+import CombinedResult, { CombinedAutoBadge } from '../../../components/results/CombinedResult'
 import { downloadReport } from '../../../host/requests/ReportRequest'
 import { dangerAlert } from '../../../tools/Alerts'
 import useDocumentTitle from '../../../tools/useDocumentTitle'
+import AiLanguageNotice from '../../../components/shared/AiLanguageNotice'
 import './CombinedAnalyse.css'
 
 /**
@@ -49,6 +50,7 @@ export default function CombinedAnalyseView() {
     const [loading, setLoading] = useState(true)
     const [notFound, setNotFound] = useState(false)
     const [pdfLoading, setPdfLoading] = useState(false)
+    const [refreshing, setRefreshing] = useState(false)
 
     const lang = t('data_lang') === 'Ru' ? 'ru' : t('data_lang') === 'En' ? 'en' : 'uz'
 
@@ -75,6 +77,33 @@ export default function CombinedAnalyseView() {
         const timer = setInterval(fetchData, POLL_MS)
         return () => clearInterval(timer)
     }, [data, fetchData])
+
+    /**
+     * Eskirgan xulosani yangilash: o'sha tahlillar to'plami qayta yuboriladi.
+     * Backend manbalar o'zgarganini (barmoq izi) ko'rib, YANGI xulosa yaratadi;
+     * eskisi tarix sifatida qoladi.
+     */
+    const refreshStale = async () => {
+        setRefreshing(true)
+        try {
+            const res = await create_combined_analysis({
+                patientId: data.patientId,
+                items: (data.items || [])
+                    .filter((item) => item.exists)
+                    .map((item) => ({ type: item.type, id: item.analysisId })),
+                lang,
+            })
+            const newId = res?.data?.combined_id
+            if (newId && String(newId) !== String(id)) navigate(`/combined-analyses/view/${newId}`)
+        } catch (err) {
+            dangerAlert(
+                err?.response?.data?.message
+                || t('combined_failed', { defaultValue: 'Kompleks tahlil bajarilmadi. Qayta urinib ko\'ring.' })
+            )
+        } finally {
+            setRefreshing(false)
+        }
+    }
 
     const downloadPdf = async () => {
         setPdfLoading(true)
@@ -204,7 +233,9 @@ export default function CombinedAnalyseView() {
                                 )}
                             </div>
                             <p className="analysis-view-meta-sub">
-                                {t('combined_analysis', { defaultValue: 'Kompleks AI xulosa' })}
+                                {data.isAuto
+                                    ? <CombinedAutoBadge isAuto />
+                                    : t('combined_manual', { defaultValue: 'Shifokor tanlagan tahlillar' })}
                             </p>
                         </div>
 
@@ -219,6 +250,39 @@ export default function CombinedAnalyseView() {
                         </div>
                     </div>
                 </div>
+
+                {/* Manba tahlillardan biri keyinroq QAYTA TAHLIL qilingan —
+                    bu xulosa eski natijalarga asoslangan */}
+                {data.status === 2 && data.isStale && (
+                    <Alert
+                        type="warning"
+                        showIcon
+                        style={{ marginBottom: 16 }}
+                        message={t('combined_stale', { defaultValue: 'Xulosa eskirgan bo\'lishi mumkin' })}
+                        description={t('combined_stale_desc', {
+                            defaultValue: 'Bu xulosa yaratilgandan keyin undagi tahlillardan biri qayta tahlil qilingan. Yangilangan natijalar bilan qayta tahlil qilish tavsiya etiladi.',
+                        })}
+                        action={(
+                            <Button size="small" type="primary" icon={<ReloadOutlined />} loading={refreshing} onClick={refreshStale}>
+                                {t('combined_refresh', { defaultValue: 'Qayta tahlil qilish' })}
+                            </Button>
+                        )}
+                    />
+                )}
+
+                {/* AI xulosasi boshqa tilda yaratilgan bo'lsa — tarjima (T-059).
+                    Tarjima serverda keshlanadi, asl matn o'zgarmaydi */}
+                {data.status === 2 && (
+                    <AiLanguageNotice
+                        aiLang={data.aiLang}
+                        kind="combined"
+                        analysisId={data.id}
+                        onTranslated={(translated) => setData({
+                            ...data,
+                            aiAnswerData: JSON.stringify(translated),
+                        })}
+                    />
+                )}
 
                 {/* ── Manba tahlillar: jadval emas, bosiladigan chiplar ──
                     Jadvalda to'rt ustundan uchtasi deyarli bo'sh edi va

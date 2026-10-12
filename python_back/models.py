@@ -5,6 +5,9 @@ import datetime
 class ECGAnalyse(Base):
     __tablename__ = "ecg_analyses" # Bazadagi mavjud jadval nomi
 
+    # Yumshoq o'chirish (T-027) — EF migratsiyasida yaratilgan; faqat o'qish uchun
+    deleted_at = Column(DateTime, nullable=True)
+
     id = Column(Integer, primary_key=True, index=True)
     # Python atributi eski nomda qoladi — u API form maydoni va
     # boshqa modullar bilan bog'langan. Bazadagi ustun esa
@@ -37,6 +40,9 @@ class ECGAnalyse(Base):
 
 class LabAnalyses(Base):
     __tablename__ = "lab_analyses"
+
+    # Yumshoq o'chirish (T-027) — EF migratsiyasida yaratilgan; faqat o'qish uchun
+    deleted_at = Column(DateTime, nullable=True)
 
     id = Column(Integer, primary_key=True, index=True)
     clinic_id = Column(Integer)
@@ -169,6 +175,9 @@ class LabAnalyses(Base):
 class HolterAnalyses(Base):
     __tablename__ = "holter_analyses"
 
+    # Yumshoq o'chirish (T-027) — EF migratsiyasida yaratilgan; faqat o'qish uchun
+    deleted_at = Column(DateTime, nullable=True)
+
     id = Column(Integer, primary_key=True, index=True)
     clinic_id = Column(Integer)
     # Python atributi eski nomda qoladi — u API form maydoni va
@@ -204,6 +213,9 @@ class HolterAnalyses(Base):
 
 class SmadAnalyses(Base):
     __tablename__ = "smad_analyses"
+
+    # Yumshoq o'chirish (T-027) — EF migratsiyasida yaratilgan; faqat o'qish uchun
+    deleted_at = Column(DateTime, nullable=True)
 
     id = Column(Integer, primary_key=True, index=True)
     clinic_id = Column(Integer)
@@ -299,6 +311,20 @@ class ECGAnalyseComplaints(Base):
     complaint_id = Column(Integer)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class LabAnalysisFiles(Base):
+    # Laboratoriya tahliliga biriktirilgan fayllar (bitta yoki bir nechta).
+    # Jadval EF Core migratsiyasida yaratiladi (20260907000000_AddLabAnalysisFiles);
+    # bu yerda faqat mavjud jadvalga moslashtirilgan model.
+    __tablename__ = "lab_analysis_files"
+
+    id = Column(Integer, primary_key=True, index=True)
+    lab_analysis_id = Column(Integer)
+    file_link = Column(String)
+    original_filename = Column(String)
+    file_hash = Column(String)
+    position = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class LabAnalyseCategories(Base):
     __tablename__ = "lab_analyse_categories" # Bazadagi mavjud jadval nomi

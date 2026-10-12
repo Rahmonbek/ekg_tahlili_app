@@ -82,6 +82,13 @@ function AnalysisFiles({ type, data, t }) {
         }
     } else if (type === 'Parasit') {
         if (data?.filePath) files.push({ label: t('analysis_file', { defaultValue: 'Tahlil fayli' }), url: joinUrl(imgApi, data.filePath), image: true });
+    } else if (Array.isArray(data?.files) && data.files.length > 0) {
+        // Laboratoriya: bir nechta fayl bo'lishi mumkin
+        data.files.forEach((file, index) => files.push({
+            label: file.originalFilename
+                || `${t('analysis_file', { defaultValue: 'Tahlil fayli' })}${data.files.length > 1 ? ` ${index + 1}` : ''}`,
+            url: buildFileUrl(file.fileLink),
+        }));
     } else if (data?.analyseFileLink) {
         files.push({ label: t('analysis_file', { defaultValue: 'Tahlil fayli' }), url: buildFileUrl(data.analyseFileLink) });
     }

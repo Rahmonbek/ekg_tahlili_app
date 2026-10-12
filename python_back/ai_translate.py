@@ -36,6 +36,7 @@ _LANGUAGE_NAMES = {
 #: `automatic_analysis_bool`) — mantiqiy qiymatlar, ular tilga bog'liq emas.
 _TRANSLATABLE = (
     "automatic_analysis",
+    "cross_findings",          # kompleks xulosa: tahlillar orasidagi bog'liqliklar
     "AI_recommendations",
     "final_summary",
     "analiz_mumkin_emas_sababi",
@@ -57,16 +58,34 @@ def _prompt(target_lang: str) -> str:
     )
 
 
-def translate(ai_answer_data: str, target_lang: str) -> dict | None:
-    """Xulosani `target_lang` ga o'giradi. Muvaffaqiyatsiz bo'lsa `None`."""
+#: Kompleks xulosadagi ehtimollik darajasi (sxemada o'zbekcha enum) —
+#: tarjimasi qat'iy: frontend rangni shu so'zlarga qarab tanlaydi
+_PROBABILITY = {
+    "ru": {"yuqori": "высокая", "o'rtacha": "средняя", "past": "низкая"},
+    "en": {"yuqori": "high", "o'rtacha": "medium", "past": "low"},
+    "uz": {},
+}
+
+
+def translate(ai_answer_data, target_lang: str) -> dict | None:
+    """Xulosani `target_lang` ga o'giradi. Muvaffaqiyatsiz bo'lsa `None`.
+
+    `ai_answer_data` — matn YOKI lug'at. Ustun `jsonb` ga o'tgach
+    (20260902000000_AiAnswerDataToJsonb) drayver uni lug'at qilib
+    qaytaradi; ilgari bu yerda faqat matn kutilardi va `json.loads(dict)`
+    xatosi tufayli tarjima barcha tahlil turlarida jimgina ishlamay qolgan edi.
+    """
     if target_lang not in SUPPORTED:
         raise ValueError(f"qo'llab-quvvatlanmaydigan til: {target_lang}")
 
-    try:
-        source = json.loads(ai_answer_data)
-    except (TypeError, ValueError):
-        logger.warning("Tarjima: `ai_answer_data` JSON emas")
-        return None
+    if isinstance(ai_answer_data, dict):
+        source = ai_answer_data
+    else:
+        try:
+            source = json.loads(ai_answer_data)
+        except (TypeError, ValueError):
+            logger.warning("Tarjima: `ai_answer_data` JSON emas")
+            return None
 
     if not isinstance(source, dict):
         return None
@@ -85,6 +104,27 @@ def translate(ai_answer_data: str, target_lang: str) -> dict | None:
             key: value for key, value in measurements.items()
             if isinstance(value, str) and value.strip()
         }
+
+    # Kompleks xulosa: shoshilinch belgilar (matnlar ro'yxati) va ehtimoliy
+    # tashxislar — faqat nomi va asosi; ehtimollik darajasi kod bilan
+    # (`_PROBABILITY`) o'giriladi, model uni boshqacha so'z bilan yozib,
+    # rang mantig'ini buzmasligi uchun
+    red_flags = source.get("red_flags")
+    if isinstance(red_flags, list) and red_flags:
+        payload["red_flags"] = [str(item) for item in red_flags]
+    diagnoses = source.get("differential_diagnosis")
+    if isinstance(diagnoses, list) and diagnoses:
+        payload["differential_diagnosis"] = [
+            {"diagnosis": str(d.get("diagnosis") or ""), "evidence": str(d.get("evidence") or "")}
+            for d in diagnoses if isinstance(d, dict)
+        ]
+
+    # Holter/SMAD epizodlari: faqat `finding` tarjima qilinadi, vaqt o'zgarmaydi
+    episodes = source.get("pathology_episodes")
+    if isinstance(episodes, list) and episodes:
+        payload["pathology_episodes"] = [
+            str(item.get("finding") or "") for item in episodes if isinstance(item, dict)
+        ]
 
     if not payload:
         return None
@@ -120,6 +160,30 @@ def translate(ai_answer_data: str, target_lang: str) -> dict | None:
             merged = dict(measurements or {})
             merged.update(value)
             result[key] = merged
+        elif key == "red_flags" and isinstance(value, list):
+            if len(value) == len(red_flags or []):
+                result[key] = [str(item) for item in value]
+        elif key == "differential_diagnosis" and isinstance(value, list):
+            original = [d for d in (diagnoses or []) if isinstance(d, dict)]
+            if len(value) == len(original):
+                result[key] = [
+                    {
+                        **orig,
+                        "diagnosis": str((new or {}).get("diagnosis") or orig.get("diagnosis") or ""),
+                        "evidence": str((new or {}).get("evidence") or orig.get("evidence") or ""),
+                        "probability": _PROBABILITY.get(target_lang, {}).get(
+                            str(orig.get("probability") or "").lower(), orig.get("probability")),
+                    }
+                    for orig, new in zip(original, value)
+                ]
+        elif key == "pathology_episodes" and isinstance(value, list):
+            # Soni mos kelmasa tarjima ishonchsiz — asl epizodlar qoladi
+            original = [item for item in (episodes or []) if isinstance(item, dict)]
+            if len(value) == len(original):
+                result[key] = [
+                    {"time": item.get("time", ""), "finding": str(text)}
+                    for item, text in zip(original, value)
+                ]
         elif key in _TRANSLATABLE:
             result[key] = value
 

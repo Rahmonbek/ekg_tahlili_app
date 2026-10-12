@@ -11,7 +11,13 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db, SessionLocal
 from lab_analyse_categories import create_lab_analyse_category
-from lab_analyse import get_lab_analyse_by_id, create_lab_analyse, update_lab_analyse
+from lab_analyse import (
+    get_lab_analyse_by_id,
+    create_lab_analyse,
+    update_lab_analyse,
+    set_lab_analysis_files,
+    get_lab_analysis_file_links,
+)
 from lab_analyse_doctors import create_lab_analyse_doctor
 from openai import OpenAI
 from config import OPENAI_API_KEY
@@ -22,6 +28,7 @@ import ai_result_guard
 import storage
 import reference_validator
 import duplicate_guard
+import lab_units
 from document_classifier import (
     classify_document,
     STATUS_DONE,
@@ -43,6 +50,14 @@ router = APIRouter(
 
 UPLOAD_DIR1 = BASE_DIR / "uploads" / "lab_analyse_files"
 UPLOAD_DIR1.mkdir(parents=True, exist_ok=True)
+
+# Bitta laboratoriya tahliliga biriktiriladigan fayllar chegarasi.
+# Klinikalar bitta topshiriq natijasini bir necha varaqda berishi mumkin
+# (qon, siydik, biokimyo alohida). Har bir fayl `validate_upload` da
+# alohida (25 MB gacha) tekshiriladi; jami hajm ham cheklanadi — .NET
+# proksisi 60 MB dan katta so'rovni qabul qilmaydi.
+MAX_LAB_FILES = 10
+MAX_LAB_TOTAL_BYTES = 50 * 1024 * 1024
 
 def get_unique_filename(directory: Path, filename: str) -> str:
     safe_name = filename.replace(" ", "_")
@@ -205,6 +220,11 @@ yozishning hojati yo'q. Har bir maydonga nima yozilishi:
 - **digital_measurements** — fayldan o'qib olingan ko'rsatkichlar
   ro'yxati. Har bir element: `column_name` (yuqoridagi ro'yxatdan),
   `value` (raqam) va `unit` (birlik).
+  ❗️`value` va `unit` ni FAYLDA QANDAY YOZILGAN BO'LSA SHUNDAY yoz.
+  Birlikni boshqa birlikka O'GIRMA va qiymatni QAYTA HISOBLAMA (masalan
+  faylda "5.5 mg/dL" bo'lsa — 5.5 va "mg/dL"). Yuqoridagi qavs ichidagi
+  birlik — faqat ma'lumot uchun; aylantirishni tizim o'zi bajaradi.
+  `unit` ni hech qachon taxmin qilib yozma — faylda birlik bo'lmasa `null`.
   ❗️FAQAT faylda haqiqatan bor ko'rsatkichlarni yoz. Yo'q
   ko'rsatkichni ro'yxatga QO'SHMA — qiymatini taxmin qilish tibbiy
   xato demakdir. Raqamni o'qib bo'lmasa `value` ni `null` qoldir.
@@ -228,32 +248,54 @@ yozishning hojati yo'q. Har bir maydonga nima yozilishi:
     return prompt_header
 
 # ─── Sinxron OpenAI chaqiruvi (thread pool da ishlaydi) ──────────────────────
-def _sync_lab_openai(content: bytes, fname: str, age: int, gender: str, lang: str) -> dict:
-    """OpenAI ga sinxron so'rov — asyncio.to_thread() orqali chaqiriladi."""
-    client = OpenAI(api_key=OPENAI_API_KEY)
-    fname = prepare_upload_filename(fname, content, default_stem="lab_upload").lower()
+def _multi_file_note(count: int) -> str:
+    """Bir nechta fayl yuborilganda promptga qo'shiladigan izoh."""
+    return (
+        f"\n\n❗️DIQQAT: {count} ta fayl biriktirilgan. Ularning HAMMASI bitta "
+        "bemorning bitta laboratoriya topshirig'i natijalari — klinika ularni "
+        "bir necha varaqqa (faylga) bo'lib bergan. Barcha fayllardagi "
+        "ko'rsatkichlarni BIRGALIKDA o'qing va yagona xulosa bering. Bitta "
+        "ko'rsatkich bir necha faylda takrorlansa, uni bir marta yozing. "
+        "Biror fayl o'qilmasa, qolganlari bo'yicha tahlil qiling va buni "
+        "`automatic_analysis` da qisqa ayting."
+    )
 
-    # 1. Faylni OpenAI ga yuklash
-    fobj = io.BytesIO(content)
-    fobj.name = fname
-    uploaded = client.files.create(file=fobj, purpose="user_data")
-    file_id = uploaded.id
+
+def _sync_lab_openai(files: list[tuple[bytes, str]], age: int, gender: str, lang: str) -> dict:
+    """OpenAI ga sinxron so'rov — asyncio.to_thread() orqali chaqiriladi.
+
+    `files` — `(baytlar, fayl nomi)` ro'yxati, yuklangan tartibda. Barcha
+    fayllar BITTA so'rovda yuboriladi: AI natijalarni alohida emas,
+    bitta topshiriq sifatida ko'rishi kerak.
+    """
+    client = OpenAI(api_key=OPENAI_API_KEY)
+
+    prompt = compose_prompt_for_openai(age, gender, lang)
+    if len(files) > 1:
+        prompt += _multi_file_note(len(files))
+
+    content_parts = [{"type": "input_text", "text": prompt}]
+    for index, (content, fname) in enumerate(files, start=1):
+        fname = prepare_upload_filename(fname, content, default_stem="lab_upload").lower()
+
+        # 1. Faylni OpenAI ga yuklash
+        fobj = io.BytesIO(content)
+        fobj.name = fname
+        uploaded = client.files.create(file=fobj, purpose="user_data")
+
+        is_image = fname.endswith(('.png', '.jpg', '.jpeg'))
+        if len(files) > 1:
+            content_parts.append({"type": "input_text", "text": f"Fayl {index}/{len(files)}:"})
+        content_parts.append({
+            "type": "input_image" if is_image else "input_file",
+            "file_id": uploaded.id,
+        })
 
     # 2. AI tahlil
-    is_image = fname.endswith(('.png', '.jpg', '.jpeg'))
-    ai_type = "input_image" if is_image else "input_file"
-    prompt = compose_prompt_for_openai(age, gender, lang)
-
     resp = client.responses.create(
         # Model va fikrlash chuqurligi bitta joyda (A-11)
         **ai_config.holter_smad_lab_request(),
-        input=[{
-            "role": "user",
-            "content": [
-                {"type": "input_text", "text": prompt},
-                {"type": ai_type, "file_id": file_id}
-            ]
-        }],
+        input=[{"role": "user", "content": content_parts}],
         # Qat'iy JSON sxema (A-7). Ko'rsatkichlar massiv sifatida
         # qaytadi va `column_name` `enum` bilan cheklangan — model
         # mavjud bo'lmagan ustun nomini o'ylab topa olmaydi.
@@ -307,34 +349,47 @@ def _measurements_to_dict(raw) -> dict:
 # ─── Fon rejimidagi AI tahlil ─────────────────────────────────────────────────
 async def _lab_ai_background(
     analyse_id: int,
-    content: bytes,
-    fname: str,
+    files: list[tuple[bytes, str]],
     age: int,
     gender: str,
     lang: str
 ) -> None:
-    """Browser yopilsa ham davom etadigan AI tahlil — mustaqil DB sessiyasi."""
+    """Browser yopilsa ham davom etadigan AI tahlil — mustaqil DB sessiyasi.
+
+    `files` — `(baytlar, fayl nomi)` ro'yxati (bitta yoki bir nechta).
+    """
     db = SessionLocal()
     try:
-        # Fayl laboratoriya tahliliga mos kelishini asosiy tahlildan oldin tekshirish.
-        # Mos kelmasa qimmat tahlil umuman yuborilmaydi va natija "baholanmagan" bo'lib qoladi.
-        mismatch = await asyncio.to_thread(
-            classify_document, content, fname, "laboratoriya"
-        )
-        if mismatch:
+        # Har bir fayl laboratoriya tahliliga mos kelishi asosiy tahlildan
+        # oldin (parallel) tekshiriladi. BIRORTASI mos kelmasa qimmat tahlil
+        # yuborilmaydi: begona hujjat xulosani buzadi.
+        mismatches = await asyncio.gather(*(
+            asyncio.to_thread(classify_document, content, fname, "laboratoriya")
+            for content, fname in files
+        ))
+        for index, mismatch in enumerate(mismatches):
+            if not mismatch:
+                continue
+            answer = mismatch.to_ai_answer(lang)
+            if len(files) > 1:
+                # Qaysi fayl mos kelmagani — banner buni ko'rsatadi
+                data = json.loads(answer)
+                data["fayl_raqami"] = index + 1
+                data["fayllar_soni"] = len(files)
+                answer = json.dumps(data, ensure_ascii=False)
             update_lab_analyse(
                 session=db,
                 analyse_id=analyse_id,
                 status=STATUS_FILE_MISMATCH,
-                ai_answer_data=mismatch.to_ai_answer(lang),
+                ai_answer_data=answer,
             )
             logger.info(
-                "Lab: fayl turi mos emas (aniqlangan=%s), tahlil to'xtatildi: analyse_id=%d",
-                mismatch.detected, analyse_id,
+                "Lab: %d/%d-fayl turi mos emas (aniqlangan=%s), tahlil to'xtatildi: analyse_id=%d",
+                index + 1, len(files), mismatch.detected, analyse_id,
             )
             return
 
-        parsed = await asyncio.to_thread(_sync_lab_openai, content, fname, age, gender, lang)
+        parsed = await asyncio.to_thread(_sync_lab_openai, files, age, gender, lang)
 
         # Sxema bo'yicha `digital_measurements` — massiv (A-7). Qolgan
         # kod (bazaga yozish, frontend, PDF) lug'at kutadi, shuning
@@ -343,6 +398,9 @@ async def _lab_ai_background(
         digital_measurements = _measurements_to_dict(
             parsed.get("digital_measurements") if isinstance(parsed, dict) else None
         )
+        # Fayldagi birlik (mg/dL, g/dL, …) me'yor birligiga keltiriladi —
+        # aks holda solishtirish, PDF va dinamika noto'g'ri bo'ladi
+        digital_measurements = lab_units.harmonize_all(db, digital_measurements)
         automatic_analysis_text = parsed.get("automatic_analysis", "") if isinstance(parsed, dict) else ""
         final_summary = parsed.get("final_summary", "") if isinstance(parsed, dict) else ""
         try:
@@ -350,11 +408,8 @@ async def _lab_ai_background(
         except (ValueError, TypeError):
             automatic_analysis_bool = 0
 
-        digital_values = {
-            k: v["value"]
-            for k, v in digital_measurements.items()
-            if isinstance(v, dict) and "value" in v
-        }
+        # Birligi mos kelmagan (aylantirib bo'lmagan) ko'rsatkich ustunga yozilmaydi
+        digital_values = lab_units.column_values(digital_measurements)
         ai_data_str = json.dumps({
             # Ko'rsatkichlar ilgari faqat `lab_analyses` ustunlariga yozilardi
             # va natija sahifasida umuman ko'rinmasdi
@@ -399,11 +454,94 @@ async def _lab_ai_background(
         db.close()
 
 
+class _LabUpload:
+    """Tekshirilgan bitta yuklangan fayl."""
+    __slots__ = ("content", "fname", "original_filename")
+
+    def __init__(self, content: bytes, fname: str, original_filename: str | None):
+        self.content = content
+        self.fname = fname
+        self.original_filename = original_filename
+
+
+async def _read_lab_uploads(
+    uploads: list[UploadFile],
+    original_names: list[str] | None,
+    lang: str,
+) -> list[_LabUpload]:
+    """Yuklangan fayllarni o'qiydi va tekshiradi (yozuv yaratilishidan OLDIN).
+
+    * soni: 1..`MAX_LAB_FILES`, jami hajm `MAX_LAB_TOTAL_BYTES` gacha;
+    * har biri turi, hajmi va (rasm bo'lsa) sifati bo'yicha;
+    * bir so'rovda AYNAN bir xil fayl ikki marta tanlangan bo'lsa,
+      takrori jimgina tashlab yuboriladi (xodim xatosi, xato emas).
+
+    Asl nomlar .NET proksisidan `original_filenames` maydonida fayllar
+    bilan bir xil tartibda keladi (T-101).
+    """
+    uploads = [u for u in (uploads or []) if u is not None]
+    if not uploads:
+        raise HTTPException(status_code=400, detail="Fayl yuklanmadi")
+    if len(uploads) > MAX_LAB_FILES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Bitta tahlilga ko'pi bilan {MAX_LAB_FILES} ta fayl biriktirish mumkin.",
+        )
+
+    result: list[_LabUpload] = []
+    seen_hashes: set[str] = set()
+    total = 0
+    for index, upload in enumerate(uploads):
+        content = await upload.read()
+        total += len(content)
+        if total > MAX_LAB_TOTAL_BYTES:
+            mb = MAX_LAB_TOTAL_BYTES // (1024 * 1024)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Fayllarning umumiy hajmi {mb} MB dan oshmasligi kerak.",
+            )
+        if not content:
+            raise HTTPException(status_code=400, detail="Yuklangan fayl bo'sh")
+
+        original = None
+        if original_names and index < len(original_names):
+            original = (original_names[index] or "").strip() or None
+        original = (original or upload.filename or "")[:255] or None
+
+        fname = prepare_upload_filename(
+            upload.filename or "upload", content, default_stem="lab_upload"
+        ).lower()
+        try:
+            validate_upload(fname, content, "lab", lang)
+        except FileValidationError as file_exc:
+            # Bir nechta fayl bo'lsa qaysi biri ekani aytiladi
+            prefix = f"«{original}»: " if len(uploads) > 1 and original else ""
+            raise HTTPException(status_code=400, detail=prefix + file_exc.message)
+
+        digest = duplicate_guard.file_hash(content)
+        if digest in seen_hashes:
+            logger.info("Lab: bir so'rovdagi takroriy fayl tashlab yuborildi (%s)", digest[:12])
+            continue
+        seen_hashes.add(digest)
+        result.append(_LabUpload(content, fname, original))
+    return result
+
+
+def _start_lab_ai(analyse_id: int, uploads: list[_LabUpload], age: int, gender: str, lang: str) -> None:
+    """Fon rejimida AI tahlilni ishga tushiradi (browser yopilsa ham davom etadi)."""
+    task = asyncio.create_task(_lab_ai_background(
+        analyse_id, [(u.content, u.fname) for u in uploads], age, gender, lang
+    ))
+    _bg_tasks.add(task)
+    task.add_done_callback(_bg_tasks.discard)
+
+
 @router.post("/analyze")
 async def analyze(
     db: Session = Depends(get_db),
     user: dict = Depends(verify_token),
     doctor_id: list[int] | None = Form(None),
+    # Bir yoki bir nechta fayl (1..MAX_LAB_FILES) — bitta topshiriq natijalari
     file: list[UploadFile] = File(...),
     lab_category_id: list[int] | None = Form(None),
     created_doctor_id: int = Form(...),
@@ -416,25 +554,21 @@ async def analyze(
     # Foydalanuvchi takror haqidagi ogohlantirishni ko'rib, ataylab davom
     # etishni tanlaganda frontend buni `true` qilib yuboradi (T-096)
     force_duplicate: bool = Form(False),
-    # Asl fayl nomi. .NET proksisi uni alohida yuboradi, chunki
+    # Asl fayl nomlari. .NET proksisi ularni alohida yuboradi, chunki
     # multipart dagi nom ASCII ga tozalanadi va kirill nomlar
-    # butunlay yo'qolib ketardi (T-101).
-    original_filename: str | None = Form(None)
+    # butunlay yo'qolib ketardi (T-101). `original_filename` — eski
+    # mijozlar uchun (faqat birinchi fayl).
+    original_filename: str | None = Form(None),
+    original_filenames: list[str] | None = Form(None),
 ):
     if not OPENAI_API_KEY:
         raise HTTPException(status_code=400, detail="OPENAI_API_KEY mavjud emas")
 
-    first_file: UploadFile = file[0]
-    content = await first_file.read()
-    fname = prepare_upload_filename(first_file.filename or "upload", content, default_stem="lab_upload").lower()
+    names = original_filenames or ([original_filename] if original_filename else None)
 
-    # Fayl turi tekshiruvi
-    # Fayl turi, hajmi va (rasm bo'lsa) sifati tekshiriladi.
+    # Fayllar soni, turi, hajmi va (rasm bo'lsa) sifati tekshiriladi.
     # Yozuv yaratilishidan OLDIN — foydalanuvchi darhol aniq xabar oladi.
-    try:
-        validate_upload(fname, content, "lab", lang)
-    except FileValidationError as file_exc:
-        raise HTTPException(status_code=400, detail=file_exc.message)
+    uploads = await _read_lab_uploads(file, names, lang)
 
     # Bog'lanishlarni OLDINDAN tekshiramiz (chala yozuv qolmasligi uchun)
     try:
@@ -449,14 +583,21 @@ async def analyze(
     except reference_validator.ReferenceError as ref_exc:
         raise HTTPException(status_code=400, detail=str(ref_exc))
 
-    # Aynan shu mazmunli fayl shu bemorga allaqachon yuklanganmi?
-    # Tekshiruv fayl diskka yozilishidan va yozuv yaratilishidan
-    # OLDIN — takror bo'lsa hech narsa qoldirmasdan to'xtaydi.
-    file_digest = duplicate_guard.check(
-        db, "lab", patcient_id, content, force_duplicate
+    # Fayllardan biri shu bemorga allaqachon yuklanganmi? Tekshiruv
+    # fayllar diskka yozilishidan va yozuv yaratilishidan OLDIN — takror
+    # bo'lsa hech narsa qoldirmasdan to'xtaydi.
+    digests = duplicate_guard.check_many(
+        db, "lab", patcient_id, [u.content for u in uploads], force_duplicate
     )
 
-    analyse_file_path = save_analyse_file(content, fname)
+    saved = [
+        {
+            "file_link": save_analyse_file(u.content, u.fname),
+            "original_filename": u.original_filename,
+            "file_hash": digest,
+        }
+        for u, digest in zip(uploads, digests)
+    ]
 
     # Lab analyse yozuvini yaratish (status=0 — kutmoqda)
     import datetime
@@ -466,41 +607,38 @@ async def analyze(
         created_doctor_id=created_doctor_id,
         clinic_id=clinic_id,
         status=0,
-        analyse_file_link=analyse_file_path,
+        analyse_file_link=saved[0]["file_link"],
         analysis_date=datetime.datetime.fromisoformat(analysis_date.replace("Z", "+00:00")) if analysis_date else None
     )
 
-    lab_analyse.file_hash = file_digest
-    # Diskdagi nom UUID (T-099); asl nom saqlanadi va faylni
-    # yuklab olishda foydalanuvchiga o'sha nom taklif qilinadi (T-101)
-    lab_analyse.original_filename = (original_filename or first_file.filename or "")[:255] or None
     # AI qaysi tilda javob berishi shu yerda qayd etiladi: natija
     # boshqa tilli shifokorga ochilganda sababi tushunarli bo'lsin (T-059)
     lab_analyse.ai_lang = (lang or 'uz')[:5]
     db.commit()
+
+    # Fayllar ro'yxati; birinchisi `analyse_file_link`, `original_filename`
+    # va `file_hash` ustunlariga ham yoziladi (eski kod uchun)
+    set_lab_analysis_files(db, lab_analyse.id, saved)
 
     # Shifokorlarni bog'lash
     if doctor_id:
         for d_id in doctor_id:
             await create_lab_analyse_doctor(session=db, lab_analyse_id=lab_analyse.id, doctor_id=d_id)
 
-    # Kategoriyalarni bog'lash
+    # Kategoriyalarni bog'lash (yangi interfeys yubormaydi; eski mijozlar uchun)
     if lab_category_id:
         for c_id in lab_category_id:
             await create_lab_analyse_category(session=db, lab_analyse_id=lab_analyse.id, category_id=c_id)
 
-    # ── Fon rejimida AI ishga tushirish (browser yopilsa ham davom etadi) ────
-    task = asyncio.create_task(
-        _lab_ai_background(lab_analyse.id, content, fname, age, gender, lang)
-    )
-    _bg_tasks.add(task)
-    task.add_done_callback(_bg_tasks.discard)
+    _start_lab_ai(lab_analyse.id, uploads, age, gender, lang)
+    logger.info("Lab: tahlil yaratildi: analyse_id=%d, fayllar=%d", lab_analyse.id, len(saved))
 
     # Darhol javob qaytarish — frontend formani tozalaydi, list sahifasidan natija ko'rinadi
     return JSONResponse(content={
         "lab_id": lab_analyse.id,
         "status": "processing",
-        "analyse_file_path": analyse_file_path
+        "analyse_file_path": saved[0]["file_link"],
+        "files_count": len(saved),
     })
 
 
@@ -509,15 +647,18 @@ async def replace_file(
     db: Session = Depends(get_db),
     user: dict = Depends(verify_token),
     id: int = Form(...),
-    file: UploadFile = File(...),
+    file: list[UploadFile] = File(...),
     gender: str = Form(...),
     lang: str = Form(...),
     age: int = Form(...),
+    original_filename: str | None = Form(None),
+    original_filenames: list[str] | None = Form(None),
 ):
-    """Mavjud Laboratoriya tahlilining faylini almashtirib, qayta tahlil qilish.
+    """Mavjud Laboratoriya tahlilining fayllarini almashtirib, qayta tahlil qilish.
 
     Foydalanuvchi noto'g'ri fayl yuklaganda (masalan boshqa turdagi hujjat)
-    yangi tahlil yaratmasdan, o'sha yozuvning faylini almashtirish imkonini beradi.
+    yangi tahlil yaratmasdan, o'sha yozuvning fayllarini almashtirish imkonini
+    beradi. Yuborilgan fayllar ESKILARINING HAMMASINI almashtiradi (1..10 ta).
     Bemor, shifokorlar va boshqa bog'lanishlar saqlanib qoladi.
     """
     if not OPENAI_API_KEY:
@@ -527,44 +668,38 @@ async def replace_file(
     if not analyse:
         raise HTTPException(status_code=404, detail="Tahlil topilmadi")
 
-    content = await file.read()
-    fname = prepare_upload_filename(
-        file.filename or "upload", content, default_stem="lab_upload"
-    ).lower()
+    names = original_filenames or ([original_filename] if original_filename else None)
+    uploads = await _read_lab_uploads(file, names, lang)
 
-    # Fayl turi, hajmi va (rasm bo'lsa) sifati tekshiriladi.
-    # Yozuv yaratilishidan OLDIN — foydalanuvchi darhol aniq xabar oladi.
-    try:
-        validate_upload(fname, content, "lab", lang)
-    except FileValidationError as file_exc:
-        raise HTTPException(status_code=400, detail=file_exc.message)
-
-    if not content:
-        raise HTTPException(status_code=400, detail="Yuklangan fayl bo'sh")
-
-    analyse_file_path = save_analyse_file(content, fname)
+    saved = [
+        {
+            "file_link": save_analyse_file(u.content, u.fname),
+            "original_filename": u.original_filename,
+            "file_hash": duplicate_guard.file_hash(u.content),
+        }
+        for u in uploads
+    ]
+    set_lab_analysis_files(db, id, saved)
 
     # Yozuvni qayta tahlilga tayyorlash: eski AI natijasi tozalanadi
     update_lab_analyse(
         session=db,
         analyse_id=id,
         status=0,
-        analyse_file_link=analyse_file_path,
         clear_ai_answer=True,
     )
 
-    task = asyncio.create_task(
-        _lab_ai_background(id, content, fname, age, gender, lang)
+    _start_lab_ai(id, uploads, age, gender, lang)
+    logger.info(
+        "Laboratoriya: fayllar almashtirildi (%d ta) va qayta tahlilga yuborildi: analyse_id=%d",
+        len(saved), id,
     )
-    _bg_tasks.add(task)
-    task.add_done_callback(_bg_tasks.discard)
-
-    logger.info("Laboratoriya: fayl almashtirildi va qayta tahlilga yuborildi: analyse_id=%d", id)
 
     return JSONResponse(content={
         "lab_id": id,
         "status": "processing",
-        "analyse_file_path": analyse_file_path,
+        "analyse_file_path": saved[0]["file_link"],
+        "files_count": len(saved),
     })
 
 
@@ -577,15 +712,15 @@ async def retry_analyse(
     lang: str = Form("uz"),
     age: int = Form(0),
 ):
-    """Xatolik bilan tugagan tahlilni MAVJUD fayl bilan qayta ishga tushirish.
+    """Xatolik bilan tugagan tahlilni MAVJUD fayl(lar) bilan qayta ishga tushirish.
 
     Nima uchun kerak (T-044): ilgari `status = -1` yozuvida foydalanuvchida
     hech qanday harakat imkoniyati yo'q edi — yozuv ro'yxatda abadiy
     "Xatolik" bo'lib turardi va yagona yechim uni o'chirib, bemor,
     shifokorlar va shikoyatlarni qaytadan kiritish edi.
 
-    Fayl almashtirilmaydi — o'sha faylning o'zi qayta yuboriladi. Fayl
-    noto'g'ri bo'lsa `/replace-file` ishlatiladi.
+    Fayllar almashtirilmaydi — tahlilning BARCHA fayllari qayta yuboriladi.
+    Fayl noto'g'ri bo'lsa `/replace-file` ishlatiladi.
     """
     if not OPENAI_API_KEY:
         raise HTTPException(status_code=400, detail="OPENAI_API_KEY mavjud emas")
@@ -594,16 +729,20 @@ async def retry_analyse(
     if not analyse:
         raise HTTPException(status_code=404, detail="Tahlil topilmadi")
 
-    link = getattr(analyse, "analyse_file_link", None) or getattr(analyse, "AnalyseFileLink", None)
-    path = storage.resolve_existing(link)
-    if path is None:
+    uploads: list[_LabUpload] = []
+    for link in get_lab_analysis_file_links(db, analyse):
+        path = storage.resolve_existing(link)
+        if path is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Tahlil fayli topilmadi. Faylni qaytadan yuklang.",
+            )
+        uploads.append(_LabUpload(path.read_bytes(), path.name, None))
+    if not uploads:
         raise HTTPException(
             status_code=400,
             detail="Tahlil fayli topilmadi. Faylni qaytadan yuklang.",
         )
-
-    content = path.read_bytes()
-    fname = path.name
 
     # Yozuvni qayta tahlilga tayyorlash: eski xatolik matni tozalanadi
     update_lab_analyse(
@@ -613,12 +752,7 @@ async def retry_analyse(
         clear_ai_answer=True,
     )
 
-    task = asyncio.create_task(
-        _lab_ai_background(id, content, fname, age, gender, lang)
-    )
-    _bg_tasks.add(task)
-    task.add_done_callback(_bg_tasks.discard)
-
-    logger.info("Laboratoriya: qayta tahlilga yuborildi: analyse_id=%d", id)
+    _start_lab_ai(id, uploads, age, gender, lang)
+    logger.info("Laboratoriya: qayta tahlilga yuborildi: analyse_id=%d, fayllar=%d", id, len(uploads))
 
     return JSONResponse(content={"lab_id": id, "status": "processing"})

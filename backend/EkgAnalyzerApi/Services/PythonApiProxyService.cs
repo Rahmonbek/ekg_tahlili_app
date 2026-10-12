@@ -63,13 +63,19 @@ namespace EkgAnalyzerApi.Services
                     //   "Бемор_Тестов_СМАД_2026.pdf" -> "2026.pdf"
                     // Asl nom alohida maydonda yuboriladi va Python uni
                     // `original_filename` ustuniga yozadi (T-101).
-                    if (!originalNameSent && !string.IsNullOrWhiteSpace(file.FileName))
+                    var original = (file.FileName ?? "").Trim();
+                    if (original.Length > 255) original = original[..255];
+                    if (!originalNameSent && original.Length > 0)
                     {
-                        var original = file.FileName.Trim();
-                        if (original.Length > 255) original = original[..255];
                         formContent.Add(new StringContent(original), "original_filename");
                         originalNameSent = true;
                     }
+
+                    // Bir nechta fayl (laboratoriya): har birining asl nomi
+                    // fayllar bilan BIR XIL tartibda — Python ularni indeks
+                    // bo'yicha moslaydi. Bo'sh nom ham yuboriladi, aks holda
+                    // tartib siljib, nomlar boshqa faylga yopishib qolardi.
+                    formContent.Add(new StringContent(original), "original_filenames");
                 }
             }
 

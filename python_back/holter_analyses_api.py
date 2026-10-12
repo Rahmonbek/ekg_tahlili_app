@@ -120,9 +120,19 @@ qorincha va supraventrikulyar ekstrasistolalar soni,
 QTc, ST segment siljishi va asosiy ritm.
 Aniqlanmagan qiymatlarga null bering.
 
+
+"pathology_episodes":
+Vaqti ko'rsatilgan HAR BIR patologik epizodni ALOHIDA element qilib yozing
+(xronologik tartibda): "time" — vaqt yoki oraliq ("10:27–11:27", "03:02"),
+"finding" — shu vaqtdagi topilma, qisqa ("5 ta yakka SVE").
+Bir nechta vaqtni bitta elementga yoki bitta gapga vergul bilan TIZMANG.
+Vaqti noma'lum topilmalarni bu yerga yozmang. Epizod bo'lmasa — [].
+
 "automatic_analysis":
 Faqat aniqlangan patologik holatlar, ritm buzilishlari va klinik muhim
-topilmalarni qisqa yozing. Ushbu holterdagi aynan qaysi vaqtlarda qanday o'zgarishlar bo'lganini yozing. Faqat PDFdagi topilmalarni yozing, taxmin qilmang.
+topilmalarni qisqa yozing. Har bir topilma — alohida gap. Aniq vaqtlar
+"pathology_episodes" da, bu yerda ularni qayta sanamang.
+Faqat PDFdagi topilmalarni yozing, taxmin qilmang.
 
 "automatic_analysis_bool":
 1 = normal;

@@ -1,51 +1,46 @@
-import React from 'react';
-import { Image, Tag } from 'antd';
-import { CheckCircleOutlined, ExclamationCircleOutlined, CloseCircleOutlined, StarOutlined,
-         ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Image } from 'antd';
+import {
+    CheckCircleFilled, ExclamationCircleFilled, CloseCircleFilled, MinusCircleFilled,
+    ArrowUpOutlined, ArrowDownOutlined, DownOutlined, FileTextOutlined,
+    ClockCircleOutlined, BulbOutlined, SearchOutlined, DashboardOutlined,
+} from '@ant-design/icons';
 import { FaDownload } from 'react-icons/fa6';
 import { useTranslation } from 'react-i18next';
 
 import { buildFileUrl } from '../../host/Host';
 import { useStore } from '../../store/Store';
-import { parseSeverity, SEVERITY } from '../../tools/severity';
-import MeasurementsList from './MeasurementsList';
+import { parseSeverity, SEVERITY, severityLabel } from '../../tools/severity';
+import MeasurementsList, { KeyValueGrid } from './MeasurementsList';
+import { extractEpisodeGroups, splitSentences } from './resultText';
+import './AnalysisResult.css';
 
 /**
  * Tahlil natijasining ko'rinadigan qismi — barcha to'rt tur uchun bitta
  * komponent (T-034).
  *
- * Ilgari bu blok **sakkiz faylda** takrorlanardi: har tur uchun
- * `XResult.js` (tahlil qilingandan keyingi ko'rinish) va
- * `XOldResult.js` (ro'yxatdagi yig'iluvchi kartochka). Natijada ular
- * bir-biridan uzoqlashib ketgandi va bu foydalanuvchiga ko'rinadigan
- * farqlarga olib kelgandi:
+ * Bo'limlar ATAYLAB shu tartibda — shifokor eng muhimini birinchi ko'radi:
  *
- * | | EKG | Holter | SMAD | Lab |
- * |---|---|---|---|---|
- * | Raqamli o'lchovlar | bor | **yo'q** | **yo'q** | bor |
- * | AI tavsiyasi | bor | **yo'q** | **yo'q** | **yo'q** |
- *
- * Ya'ni Holter va SMAD uchun sun'iy intellekt o'lchovlarni ham,
- * tavsiyani ham qaytarardi (`python_back/ai_schema.py` da 11 va 13 ta
- * ko'rsatkich), lekin ekranda ular **hech qachon ko'rsatilmasdi** —
- * hisoblab, keyin tashlab yuborilardi.
- *
- * Endi bitta joy: bir marta tuzatilgan xato hamma yerda tuzaladi.
+ *  1. **Yakuniy xulosa** — jiddiylik rangi bilan ajratilgan blok. Ilgari u
+ *     eng pastda, oddiy paragraf edi, daraja esa kichik yorliqda.
+ *  2. **Aniqlangan o'zgarishlar** — har bir topilma alohida qatorda
+ *     (ilgari bitta uzun paragraf).
+ *  3. **Vaqt bo'yicha epizodlar** (Holter/SMAD) — har bir epizod alohida
+ *     qator: vaqt + topilma. Ilgari AI ularni vergul bilan bitta gapga
+ *     tizardi. Yangi natijalarda `pathology_episodes` maydoni, eski
+ *     natijalarda matndan ishonchli holatdagina ajratib olinadi.
+ *  4. **Ko'rsatkichlar** — laboratoriyada me'yordan tashqarilari birinchi,
+ *     me'yordagilari yig'ilgan holda.
+ *  5. **AI tavsiyalari** — ro'yxat.
+ *  6. **Yuklangan fayl(lar)**.
  */
 
-const SEVERITY_TAG = {
-    [SEVERITY.NORMAL]: <Tag color="success" icon={<CheckCircleOutlined />}>Normal</Tag>,
-    [SEVERITY.AVERAGE]: <Tag color="warning" icon={<ExclamationCircleOutlined />}>O'rtacha</Tag>,
-    [SEVERITY.DANGER]: <Tag color="error" icon={<CloseCircleOutlined />}>Xavfli</Tag>,
+const SEVERITY_META = {
+    [SEVERITY.NORMAL]: { mod: 'normal', icon: <CheckCircleFilled /> },
+    [SEVERITY.AVERAGE]: { mod: 'average', icon: <ExclamationCircleFilled /> },
+    [SEVERITY.DANGER]: { mod: 'danger', icon: <CloseCircleFilled /> },
+    [SEVERITY.UNKNOWN]: { mod: 'unknown', icon: <MinusCircleFilled /> },
 };
-
-function SeverityTag({ value }) {
-    // Qat'iy raqamli taqqoslash — `tools/severity.js` bilan bir xil mantiq.
-    // Noaniq qiymatda ATAYLAB kulrang "Baholanmadi", yashil emas: shifokor
-    // "normal" deb o'ylab, tekshirmay o'tib ketmasligi kerak.
-    return SEVERITY_TAG[parseSeverity(value)]
-        ?? <Tag icon={<StarOutlined />} color="default">Baholanmadi</Tag>;
-}
 
 /** Fayl havolasi yorlig'i — turga qarab. */
 const FILE_LABEL = {
@@ -75,34 +70,35 @@ const ECG_LABELS = {
     P_QRS_T_morphology: ['p_qrs_t_morphology', 'P/QRS/T morfologiyasi'],
 };
 
+/** Bo'lim: ikonka + sarlavha + ichki qism. */
+function Section({ icon, title, count, children, className = '', tour }) {
+    return (
+        <section className={`arb-section ${className}`} data-tour={tour}>
+            <header className="arb-section-head">
+                <span className="arb-section-icon" aria-hidden="true">{icon}</span>
+                <h3 className="arb-section-title">{title}</h3>
+                {count != null && <span className="arb-section-count">{count}</span>}
+            </header>
+            {children}
+        </section>
+    );
+}
+
 function EcgMeasurements({ measurements }) {
     const { t } = useTranslation();
     if (!measurements || typeof measurements !== 'object') return null;
 
-    const rows = Object.keys(ECG_LABELS).filter((k) => {
-        const v = measurements[k];
-        return v !== null && v !== undefined && String(v).trim() !== '';
-    });
-    if (rows.length === 0) return null;
-
-    return (
-        <>
-            <div className="ekg-item-text">
-                <b>⭐ {t('digital_measurements', { defaultValue: "Raqamli o'lchovlar" })}: </b>
-            </div>
-            <ul>
-                {rows.map((key) => {
-                    const [tKey, fallback] = ECG_LABELS[key];
-                    return (
-                        <li key={key}>
-                            <b>{tKey ? t(tKey, { defaultValue: fallback }) : fallback}</b>
-                            <span> — {String(measurements[key])}</span>
-                        </li>
-                    );
-                })}
-            </ul>
-        </>
-    );
+    const rows = Object.keys(ECG_LABELS)
+        .filter((k) => {
+            const v = measurements[k];
+            return v !== null && v !== undefined && String(v).trim() !== '';
+        })
+        .map((key) => {
+            const [tKey, fallback] = ECG_LABELS[key];
+            return { key, label: tKey ? t(tKey, { defaultValue: fallback }) : fallback, value: measurements[key] };
+        });
+    // EKG: har bir o'lchov alohida qatorda
+    return <KeyValueGrid rows={rows} stacked />;
 }
 
 /**
@@ -144,72 +140,170 @@ function evaluate(value, type, gender) {
     return { status: 'normal', min, max };
 }
 
-function RangeHint({ min, max, unit }) {
-    if (min == null && max == null) return null;
-    const text = min != null && max != null ? `${min}–${max}`
-        : min != null ? `≥ ${min}`
-        : `≤ ${max}`;
-    return <span className="lab-range"> (norma: {text}{unit ? ` ${unit}` : ''})</span>;
+/**
+ * Birlik matnini taqqoslash uchun yagona ko'rinishga keltiradi —
+ * `python_back/lab_units.norm_unit` ning qisqa nusxasi. Backend natijani
+ * allaqachon me'yor birligiga keltiradi; bu — tuzatilmagan eski yozuvlar
+ * uchun himoya: birlik boshqacha bo'lsa ko'rsatkich BAHOLANMAYDI
+ * (ilgari 5.5 mg/dL siydik kislotasi µmol/L me'yori bilan solishtirilib
+ * "past" deb ko'rsatilardi).
+ */
+function normUnit(unit) {
+    if (unit == null) return '';
+    // Ruscha "birlik" yozuvlarida katta-kichik harf ma'no beradi
+    // ("мЕ/л" — milli, "МЕ/л" — xalqaro), shuning uchun avval shular
+    const s = String(unit).trim()
+        .replace(/мкМЕ|мкЕ[дД]?|МкМЕ|МкЕ/g, 'µiu').replace(/мМЕ|мЕ[дД]?/g, 'miu')
+        .replace(/МЕ/g, 'iu').replace(/Е[дД]/g, 'u')
+        .toLowerCase()
+        .replace(/μ/g, 'µ').replace(/мкмоль/g, 'µmol').replace(/ммоль/g, 'mmol')
+        .replace(/мкг/g, 'µg').replace(/мг/g, 'mg').replace(/нг/g, 'ng').replace(/пг/g, 'pg')
+        .replace(/мм/g, 'mm').replace(/час|ч/g, 'h')
+        .replace(/дл/g, 'dl').replace(/мл/g, 'ml').replace(/л/g, 'l').replace(/г/g, 'g')
+        .replace(/(mc|mk|u)(mol|g)/g, 'µ$2')
+        .replace(/\s+/g, '').replace(/×/g, 'x').replace(/\*/g, '^')
+        .replace(/⁹/g, '^9').replace(/¹²/g, '^12').replace(/\^\^/g, '^')
+        .replace(/^x?10\^?(9|12)/, '10^$1');
+    const same = {
+        'miu/l': 'µiu/ml', 'mu/l': 'µiu/ml', 'iu/l': 'u/l', 'µg/l': 'ng/ml',
+        'mg/l': 'µg/ml', 'mm/soat': 'mm/h', 'mm/hr': 'mm/h',
+    };
+    return same[s] ?? s;
 }
 
+function unitsMatch(cellUnit, measure) {
+    if (!cellUnit || !measure) return true; // birlik noma'lum — avvalgidek baholanadi
+    return normUnit(cellUnit) === normUnit(measure);
+}
+
+function LabCard({ row }) {
+    const { t } = useTranslation();
+    const { cell, verdict, status, unit, name } = row;
+    const rangeText = verdict && (verdict.min != null || verdict.max != null)
+        ? (verdict.min != null && verdict.max != null ? `${verdict.min}–${verdict.max}`
+            : verdict.min != null ? `≥ ${verdict.min}` : `≤ ${verdict.max}`)
+        : null;
+    return (
+        <div className={`lab-card lab-card--${status}`}>
+            <div className="lab-card-top">
+                <span className="lab-card-name">{name}</span>
+                {status === 'high' && (
+                    <span className="lab-card-pill lab-card-pill--high">
+                        <ArrowUpOutlined /> {t('above_normal', { defaultValue: 'Yuqori' })}
+                    </span>
+                )}
+                {status === 'low' && (
+                    <span className="lab-card-pill lab-card-pill--low">
+                        <ArrowDownOutlined /> {t('below_normal', { defaultValue: 'Past' })}
+                    </span>
+                )}
+                {status === 'normal' && (
+                    <span className="lab-card-pill lab-card-pill--normal">
+                        {t('normal', { defaultValue: 'Norma' })}
+                    </span>
+                )}
+                {status === 'unit' && (
+                    <span className="lab-card-pill lab-card-pill--unit">
+                        {t('lab_not_assessed', { defaultValue: 'Baholanmadi' })}
+                    </span>
+                )}
+            </div>
+            <div className="lab-card-value">
+                {cell.value}{unit ? <span className="lab-card-unit"> {unit}</span> : null}
+            </div>
+            {/* Qiymat boshqa birlikdan aylantirilgan — asl yozuv ko'rinib tursin */}
+            {cell.original && (
+                <div className="lab-card-original">
+                    {t('lab_in_file', { defaultValue: 'faylda' })}: {cell.original.value} {cell.original.unit}
+                </div>
+            )}
+            {status === 'unit' && (
+                <div className="lab-card-original">
+                    {t('lab_unit_differs', {
+                        unit: row.measure,
+                        defaultValue: `Me'yor ${row.measure} da berilgan — birlik boshqa`,
+                    })}
+                </div>
+            )}
+            {rangeText && (
+                <div className="lab-card-range">
+                    {t('norm', { defaultValue: 'norma' })}: {rangeText}{unit ? ` ${unit}` : ''}
+                </div>
+            )}
+        </div>
+    );
+}
+
+/**
+ * Laboratoriya ko'rsatkichlari: me'yordan TASHQARIDAGILARI birinchi va
+ * doim ochiq; me'yordagilari yig'ilgan (bitta bosish bilan ochiladi).
+ * Ilgari 15–20 ta kartochka aralash turardi va 2 ta muhim chetlanishni
+ * ular orasidan qidirish kerak edi.
+ */
 function LabMeasurements({ measurements, gender }) {
     const { t } = useTranslation();
     const { lab_values } = useStore();
+    const [showNormal, setShowNormal] = useState(false);
     if (!measurements || typeof measurements !== 'object') return null;
 
     // Laboratoriya ko'rsatkichlari bazadan keladi (`lab_values`), shuning
     // uchun ular qattiq ro'yxat emas — nomlar tilga qarab tanlanadi.
-    const rows = (lab_values ?? []).filter(
-        (v) => measurements[v.columnName] != null);
+    const rows = (lab_values ?? [])
+        .filter((v) => measurements[v.columnName] != null)
+        .map((v) => {
+            const cell = measurements[v.columnName];
+            // Birlik me'yor birligidan farq qilsa solishtirib bo'lmaydi
+            const comparable = !cell.unit_mismatch && unitsMatch(cell.unit, v.measure);
+            const verdict = comparable ? evaluate(cell.value, v, gender) : null;
+            return {
+                id: v.id,
+                cell,
+                verdict,
+                status: comparable ? (verdict?.status || 'na') : 'unit',
+                unit: cell.unit ?? v.measure,
+                measure: v.measure,
+                name: v[`name${t('data_lang')}`],
+            };
+        });
     if (rows.length === 0) return null;
+
+    const abnormal = rows.filter((r) => r.status === 'high' || r.status === 'low');
+    const other = rows.filter((r) => r.status !== 'high' && r.status !== 'low');
+    // Chetlanish bo'lmasa yig'ishning ma'nosi yo'q — hammasi ko'rinadi
+    const normalOpen = showNormal || abnormal.length === 0;
 
     return (
         <>
-            <div className="ekg-item-text">
-                <b>⭐ {t('digital_measurements', { defaultValue: "Raqamli o'lchovlar" })}: </b>
-            </div>
-            <div className="lab-grid">
-                {rows.map((v) => {
-                    const cell = measurements[v.columnName];
-                    const verdict = evaluate(cell.value, v, gender);
-                    const status = verdict?.status || 'na';
-                    const unit = cell.unit ?? v.measure;
-                    const rangeText = verdict && (verdict.min != null || verdict.max != null)
-                        ? (verdict.min != null && verdict.max != null ? `${verdict.min}–${verdict.max}`
-                            : verdict.min != null ? `≥ ${verdict.min}` : `≤ ${verdict.max}`)
-                        : null;
-                    return (
-                        <div key={v.id} className={`lab-card lab-card--${status}`}>
-                            <div className="lab-card-top">
-                                <span className="lab-card-name">{v[`name${t('data_lang')}`]}</span>
-                                {status === 'high' && (
-                                    <span className="lab-card-pill lab-card-pill--high">
-                                        <ArrowUpOutlined /> {t('above_normal', { defaultValue: 'Yuqori' })}
-                                    </span>
-                                )}
-                                {status === 'low' && (
-                                    <span className="lab-card-pill lab-card-pill--low">
-                                        <ArrowDownOutlined /> {t('below_normal', { defaultValue: 'Past' })}
-                                    </span>
-                                )}
-                                {status === 'normal' && (
-                                    <span className="lab-card-pill lab-card-pill--normal">
-                                        {t('normal', { defaultValue: 'Norma' })}
-                                    </span>
-                                )}
-                            </div>
-                            <div className="lab-card-value">
-                                {cell.value}{unit ? <span className="lab-card-unit"> {unit}</span> : null}
-                            </div>
-                            {rangeText && (
-                                <div className="lab-card-range">
-                                    {t('norm', { defaultValue: 'norma' })}: {rangeText}{unit ? ` ${unit}` : ''}
-                                </div>
-                            )}
+            {abnormal.length > 0 && (
+                <>
+                    <div className="arb-subtitle arb-subtitle--alert">
+                        {t('out_of_range', { defaultValue: "Me'yordan tashqari" })} ({abnormal.length})
+                    </div>
+                    <div className="lab-grid">
+                        {abnormal.map((row) => <LabCard key={row.id} row={row} />)}
+                    </div>
+                </>
+            )}
+            {other.length > 0 && (
+                <>
+                    {abnormal.length > 0 && (
+                        <button
+                            type="button"
+                            className="arb-toggle"
+                            aria-expanded={normalOpen}
+                            onClick={() => setShowNormal((v) => !v)}
+                        >
+                            {t('within_range', { defaultValue: "Me'yordagi ko'rsatkichlar" })} ({other.length})
+                            <DownOutlined className={`arb-toggle-chevron ${normalOpen ? 'is-open' : ''}`} />
+                        </button>
+                    )}
+                    {normalOpen && (
+                        <div className="lab-grid">
+                            {other.map((row) => <LabCard key={row.id} row={row} />)}
                         </div>
-                    );
-                })}
-            </div>
+                    )}
+                </>
+            )}
         </>
     );
 }
@@ -217,27 +311,57 @@ function LabMeasurements({ measurements, gender }) {
 function Measurements({ kind, measurements, gender }) {
     if (kind === 'ecg') return <EcgMeasurements measurements={measurements} />;
     if (kind === 'lab') return <LabMeasurements measurements={measurements} gender={gender} />;
-    return <MeasurementsList measurements={measurements} />;
+    return <MeasurementsList measurements={measurements} kind={kind} />;
+}
+
+/** O'lchovlar bo'limida ko'rsatadigan narsa bormi (bo'sh sarlavha chiqmasin). */
+function hasMeasurements(measurements) {
+    if (!measurements || typeof measurements !== 'object') return false;
+    return Object.values(measurements).some((v) => {
+        if (v == null) return false;
+        if (typeof v === 'object') return v.value != null;
+        return String(v).trim() !== '';
+    });
+}
+
+/** Vaqt bo'yicha epizodlar ro'yxati. */
+function EpisodeList({ episodes }) {
+    return (
+        <ol className="arb-episodes">
+            {episodes.map((episode, index) => (
+                <li key={`${episode.time}-${index}`} className="arb-episode">
+                    <span className="arb-episode-time">
+                        <ClockCircleOutlined /> {episode.time || '—'}
+                    </span>
+                    <span className="arb-episode-text">{episode.finding}</span>
+                </li>
+            ))}
+        </ol>
+    );
 }
 
 /**
  * @param {'ecg'|'holter'|'smad'|'lab'} kind  tahlil turi
  * @param {object|string|null} result         o'qilgan AI javobi
  * @param {string|null} image                 asl fayl havolasi
+ * @param {Array<{fileLink:string, originalFilename?:string}>} [files]
+ *        bir nechta fayl (laboratoriya). Berilsa `image` o'rniga
+ *        hammasi asl nomlari bilan ro'yxat qilib ko'rsatiladi.
  * @param {string|null} imageShort            EKG eskizi (faqat `ecg`)
  * @param {string|null} error                 xatolik matni
  * @param {boolean|undefined} gender          bemor jinsi (referens diapazoni uchun)
  */
-export default function AnalysisResultBody({ kind, result, image, imageShort, error, gender }) {
+export default function AnalysisResultBody({ kind, result, image, imageShort, error, gender, files }) {
     const { t } = useTranslation();
     const [labelKey, labelFallback] = FILE_LABEL[kind] ?? FILE_LABEL.ecg;
 
     if (error) {
         return (
-            <div className="ekg-error">
-                <Tag color="error" icon={<CloseCircleOutlined />}>
-                    {t('error', { defaultValue: 'Xatolik' })}: {error}
-                </Tag>
+            <div className="arb-hero arb-hero--danger">
+                <div className="arb-hero-head">
+                    <CloseCircleFilled /> {t('error', { defaultValue: 'Xatolik' })}
+                </div>
+                <p className="arb-hero-text">{error}</p>
             </div>
         );
     }
@@ -248,17 +372,46 @@ export default function AnalysisResultBody({ kind, result, image, imageShort, er
     // yuborgandan ko'ra shundayligicha ko'rsatgan yaxshiroq.
     if (typeof result === 'string') {
         return (
-            <div className="ekg-result">
-                <div className="ekg-item-text"><span>{result}</span></div>
+            <div className="arb">
+                <section className="arb-section"><p className="arb-plain">{result}</p></section>
             </div>
         );
     }
 
+    const severity = parseSeverity(result.automatic_analysis_bool);
+    const meta = SEVERITY_META[severity] ?? SEVERITY_META[SEVERITY.UNKNOWN];
+
+    // Topilmalar va epizodlar. Yangi natijalarda epizodlar alohida maydonda;
+    // eskilarida matndan (faqat ishonchli holatda) ajratib olinadi.
+    const structured = Array.isArray(result.pathology_episodes)
+        ? result.pathology_episodes.filter((e) => e && String(e.finding || '').trim())
+        : null;
+    let findings;
+    let episodeGroups = [];
+    if (structured) {
+        findings = splitSentences(result.automatic_analysis);
+        if (structured.length > 0) episodeGroups = [{ intro: '', episodes: structured }];
+    } else if (kind === 'holter' || kind === 'smad') {
+        const parsed = extractEpisodeGroups(result.automatic_analysis);
+        findings = parsed.sentences;
+        episodeGroups = parsed.groups;
+    } else {
+        findings = splitSentences(result.automatic_analysis);
+    }
+    const episodeCount = episodeGroups.reduce((n, g) => n + g.episodes.length, 0);
+    const recommendations = splitSentences(result.AI_recommendations);
+    // Yakuniy xulosa bo'lmasa — hero blokda topilmalarning birinchisi
+    const summary = result.final_summary || '';
+
+    const fileList = files?.length > 0
+        ? files
+        : (kind !== 'ecg' && image ? [{ fileLink: image, originalFilename: null }] : []);
+
     return (
-        <div className="ekg-result" data-tour="view-measurements">
+        <div className="arb" data-tour="view-measurements">
 
             {kind === 'ecg' && image != null && (
-                <div className="ekg-image">
+                <div className="ekg-image arb-ecg-image">
                     {/* To'liq rasm ko'rsatiladi: eskiz 500 px bo'lgani uchun
                         cho'zilganda EKG intervallari o'qilmasdi. Eskiz esa
                         yuklanish davomida joy egallab turadi. */}
@@ -274,53 +427,118 @@ export default function AnalysisResultBody({ kind, result, image, imageShort, er
                             />
                         ) : undefined}
                     />
-                    {/* Telefonda tasma 335 px ga siqiladi — to'lqinlarni
-                        o'qib bo'lmaydi. Kattalashtirish mavjud, lekin antd
-                        uni faqat sichqoncha ustiga kelganda ko'rsatadi;
-                        sensorli ekranda hech qanday ishora yo'q. */}
+                    {/* Telefonda tasma 335 px ga siqiladi — sensorli ekranda
+                        kattalashtirish haqida hech qanday ishora yo'q edi */}
                     <div className="ekg-image-hint">
                         {t('tap_to_zoom', { defaultValue: "Kattalashtirish uchun rasmni bosing" })}
                     </div>
                 </div>
             )}
 
-            {kind !== 'ecg' && image != null && (
-                <div className="ekg-item-text">
-                    <b>⭐ {t(labelKey, { defaultValue: labelFallback })}: </b>
-                    <a className="see_diagnoses" href={buildFileUrl(image)}
-                       target="_blank" rel="noreferrer">
-                        <FaDownload />
-                    </a>
+            {/* ── 1. Yakuniy xulosa ── */}
+            <div className={`arb-hero arb-hero--${meta.mod}`} data-tour="view-severity">
+                <div className="arb-hero-head">
+                    <span className="arb-hero-badge">{meta.icon} {severityLabel(result.automatic_analysis_bool, t)}</span>
+                    <span className="arb-hero-label">{t('final_summary', { defaultValue: 'Yakuniy xulosa' })}</span>
                 </div>
-            )}
-
-            <Measurements kind={kind} measurements={result.digital_measurements} gender={gender} />
-
-            {result.automatic_analysis ? (
-                <div className="ekg-item-text" data-tour="view-severity">
-                    <b><SeverityTag value={result.automatic_analysis_bool} />{' '}
-                        {t('automatic_analysis', { defaultValue: 'Avtomatik tahlil (AI xulosasi)' })}: </b>
-                    <span>{result.automatic_analysis}</span>
-                </div>
-            ) : null}
-
-            {/* Bo'lim doim ko'rsatiladi: ilgari maydon bo'sh bo'lsa u jimgina
-                yo'qolardi va shifokor bunday bo'lim yo'q deb o'ylardi */}
-            <div className="ekg-item-text">
-                <b>⭐ {t('ai_recommendations', { defaultValue: 'AI tavsiyasi' })}: </b>
-                {result.AI_recommendations
-                    ? <span>{result.AI_recommendations}</span>
-                    : <span className="ekg-item-empty">
-                        {t('ai_no_recommendation', { defaultValue: 'AI bu tahlil uchun tavsiya bermadi' })}
-                      </span>}
+                {summary
+                    ? <p className="arb-hero-text">{summary}</p>
+                    : <p className="arb-hero-text arb-muted">{t('ai_no_summary', { defaultValue: 'AI yakuniy xulosa bermadi' })}</p>}
             </div>
 
-            {result.final_summary ? (
-                <div className="ekg-item-text">
-                    <b>⭐ {t('final_summary', { defaultValue: 'Xulosa' })}: </b>
-                    <span>{result.final_summary}</span>
-                </div>
-            ) : null}
+            {/* ── 2. Aniqlangan o'zgarishlar ── */}
+            {findings.length > 0 && (
+                <Section
+                    icon={<SearchOutlined />}
+                    title={t('ai_findings', { defaultValue: "Aniqlangan o'zgarishlar" })}
+                >
+                    {findings.length === 1
+                        ? <p className="arb-plain">{findings[0]}</p>
+                        : (
+                            <ol className="arb-findings">
+                                {findings.map((text, index) => (
+                                    <li key={index} className="arb-finding">
+                                        <span className="arb-finding-num">{index + 1}</span>
+                                        <span>{text}</span>
+                                    </li>
+                                ))}
+                            </ol>
+                        )}
+                </Section>
+            )}
+
+            {/* ── 3. Vaqt bo'yicha epizodlar (Holter / SMAD) ── */}
+            {episodeCount > 0 && (
+                <Section
+                    icon={<ClockCircleOutlined />}
+                    title={t('pathology_episodes', { defaultValue: "Vaqt bo'yicha patologik epizodlar" })}
+                    count={episodeCount}
+                >
+                    {episodeGroups.map((group, index) => (
+                        <div key={index} className="arb-episode-group">
+                            {group.intro && <p className="arb-episode-intro">{group.intro}:</p>}
+                            <EpisodeList episodes={group.episodes} />
+                        </div>
+                    ))}
+                </Section>
+            )}
+
+            {/* ── 4. Ko'rsatkichlar ── */}
+            {hasMeasurements(result.digital_measurements) && (
+                <Section
+                    icon={<DashboardOutlined />}
+                    title={t('digital_measurements', { defaultValue: "Raqamli o'lchovlar" })}
+                >
+                    <Measurements kind={kind} measurements={result.digital_measurements} gender={gender} />
+                </Section>
+            )}
+
+            {/* ── 5. Tavsiyalar ── bo'lim doim ko'rsatiladi: ilgari maydon bo'sh
+                bo'lsa u jimgina yo'qolardi va shifokor bunday bo'lim yo'q deb o'ylardi */}
+            <Section icon={<BulbOutlined />} title={t('ai_recommendations', { defaultValue: 'AI tavsiyasi' })}>
+                {recommendations.length === 0 && (
+                    <p className="arb-plain arb-muted">
+                        {t('ai_no_recommendation', { defaultValue: 'AI bu tahlil uchun tavsiya bermadi' })}
+                    </p>
+                )}
+                {recommendations.length === 1 && <p className="arb-plain">{recommendations[0]}</p>}
+                {recommendations.length > 1 && (
+                    <ul className="arb-recs">
+                        {recommendations.map((text, index) => <li key={index}>{text}</li>)}
+                    </ul>
+                )}
+            </Section>
+
+            {/* ── 6. Fayllar ── */}
+            {fileList.length > 0 && (
+                <Section
+                    icon={<FileTextOutlined />}
+                    title={fileList.length > 1
+                        ? t('lab_result_files', { defaultValue: 'Natija fayllari' })
+                        : t(labelKey, { defaultValue: labelFallback })}
+                    count={fileList.length > 1 ? fileList.length : null}
+                >
+                    <div className="arb-files">
+                        {fileList.map((file, index) => (
+                            <a
+                                key={file.fileLink}
+                                className="arb-file"
+                                href={buildFileUrl(file.fileLink)}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                <FaDownload />
+                                <span>
+                                    {file.originalFilename
+                                        || (fileList.length > 1
+                                            ? `${t('file', { defaultValue: 'Fayl' })} ${index + 1}`
+                                            : t('download', { defaultValue: 'Yuklab olish' }))}
+                                </span>
+                            </a>
+                        ))}
+                    </div>
+                </Section>
+            )}
         </div>
     );
 }

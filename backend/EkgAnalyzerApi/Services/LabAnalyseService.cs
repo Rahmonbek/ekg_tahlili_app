@@ -51,6 +51,10 @@ namespace EkgAnalyzerApi.Services
                     AnalysisDate = e.AnalysisDate,
                     CreatedAt = e.CreatedAt,
                     AnalyseFileLink = e.AnalyseFileLink,
+                    Files = e.Files!
+                        .OrderBy(f => f.Position).ThenBy(f => f.Id)
+                        .Select(f => new LabAnalysisFileDTO { FileLink = f.FileLink, OriginalFilename = f.OriginalFilename })
+                        .ToList(),
                     Status = e.Status,
                     hb = e.hb,
                     rbc = e.rbc,
@@ -665,6 +669,7 @@ namespace EkgAnalyzerApi.Services
                 .Include(e => e.CreatedDoctor!).ThenInclude(d => d.User!).ThenInclude(u => u.Role!)
                 .Include(e => e.Categories).ThenInclude(c => c.LabCategory)
                 .Include(e => e.Doctors!).ThenInclude(d => d.Doctor!).ThenInclude(d => d.User!).ThenInclude(u => u.Role!)
+                .Include(e => e.Files)
                 .FirstOrDefaultAsync(x => x.Id == id
                     // Klinika izolyatsiyasi: boshqa klinikaning tahlili qaytarilmaydi
                     && (clinicId == null || x.ClinicId == clinicId));
@@ -680,6 +685,10 @@ namespace EkgAnalyzerApi.Services
                 AnalysisDate = e.AnalysisDate,
                 CreatedAt = e.CreatedAt,
                 AnalyseFileLink = e.AnalyseFileLink,
+                Files = e.Files?
+                    .OrderBy(f => f.Position).ThenBy(f => f.Id)
+                    .Select(f => new LabAnalysisFileDTO { FileLink = f.FileLink, OriginalFilename = f.OriginalFilename })
+                    .ToList(),
                 Status = e.Status,
                 hb = e.hb,
                 rbc = e.rbc,

@@ -1,8 +1,14 @@
 import React, { useMemo } from 'react'
 import { Alert, Spin, Typography } from 'antd'
+import {
+    AlertFilled, BranchesOutlined, BulbOutlined, CheckCircleFilled, CloseCircleFilled,
+    ExclamationCircleFilled, MinusCircleFilled, QuestionCircleOutlined, SearchOutlined,
+    ThunderboltFilled,
+} from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import DoctorDiagnosisBlock from './DoctorDiagnosisBlock'
-import { parseSeverity, SEVERITY } from '../../tools/severity'
+import { parseSeverity, SEVERITY, severityLabel } from '../../tools/severity'
+import './AnalysisResult.css'
 import '../../pages/cabinet/combined_analyse/CombinedAnalyse.css'
 
 const { Text } = Typography
@@ -12,20 +18,32 @@ const { Text } = Typography
  *
  * Ikki joyda ishlatiladi va shuning uchun alohida komponent:
  *  * `/combined-analyses/view/:id` — to'liq sahifa;
- *  * bemor kartasidagi ro'yxat — qatorni ochganda O'SHA sahifaning
- *    o'zida.
+ *  * bemor kartasidagi ro'yxat — kartochkani ochganda O'SHA sahifaning
+ *    o'zida (`embedded`).
  *
- * Dizayn qoidasi: har bir bo'limning O'Z vizual roli bor. Ilgari
- * hammasi bir xil `Card` edi va shifokor eng muhim xulosani darhol
- * ajrata olmasdi:
- *   * yakuniy xulosa — jiddiylik rangi bilan ajratilgan "hero" blok;
- *   * aniqlangan holatlar — raqamlangan qatorlar (har biri alohida);
- *   * shoshilinch topilmalar — qizil blok;
- *   * ehtimoliy tashxislar — kartochkalar (jadval emas: "Asos" ustuni
- *     tor jadvalda siqilib, o'qib bo'lmasdi).
+ * Vizual til alohida tahlil natijalari (`AnalysisResultBody`, `arb-*`)
+ * bilan BIR XIL — shifokor ikkala sahifada bir xil joyda bir xil narsani
+ * ko'radi. Bo'limlar tartibi muhimlik bo'yicha:
+ *
+ *   1. Yakuniy xulosa — jiddiylik darajasi YOZIB ko'rsatiladi (ilgari faqat
+ *      rang bilan, rang ajrata olmaydigan foydalanuvchi uchun ko'rinmasdi);
+ *   2. Shoshilinch belgilar — darhol xulosadan keyin (ilgari topilmalar
+ *      ro'yxatidan keyin, sahifa pastida qolib ketardi);
+ *   3. Aniqlangan holatlar — raqamlangan qatorlar;
+ *   4. Tahlillar orasidagi bog'liqliklar — kompleks tahlilning asosiy qiymati;
+ *   5. Ehtimoliy tashxislar — ehtimollik bo'yicha saralangan, o'lchagich bilan;
+ *   6. AI tavsiyalari.
  *
  * `data` — `GET /api/combined-analyses/{id}` javobi.
  */
+
+const SEVERITY_META = {
+    [SEVERITY.NORMAL]: { mod: 'normal', icon: <CheckCircleFilled /> },
+    [SEVERITY.AVERAGE]: { mod: 'average', icon: <ExclamationCircleFilled /> },
+    [SEVERITY.DANGER]: { mod: 'danger', icon: <CloseCircleFilled /> },
+    [SEVERITY.UNKNOWN]: { mod: 'unknown', icon: <MinusCircleFilled /> },
+}
+
 export default function CombinedResult({ data, showDiagnosis = true, embedded = false }) {
     const { t } = useTranslation()
 
@@ -56,131 +74,144 @@ export default function CombinedResult({ data, showDiagnosis = true, embedded = 
 
     if (data.status === 0 || data.status === 1) {
         return (
-            <div style={{ textAlign: 'center', padding: 32 }}>
+            <div className="cai-pending">
                 <Spin />
-                <div style={{ marginTop: 12 }}>
-                    <Text type="secondary">
-                        {t('combined_processing', {
-                            defaultValue: 'AI tahlil qilmoqda. Natija tayyor bo\'lgach shu yerda ko\'rinadi.',
-                        })}
-                    </Text>
-                </div>
+                <Text type="secondary">
+                    {t('combined_processing', {
+                        defaultValue: 'AI tahlil qilmoqda. Natija tayyor bo\'lgach shu yerda ko\'rinadi.',
+                    })}
+                </Text>
             </div>
         )
     }
 
     if (!result) return null
 
-    const heroClass = {
-        [SEVERITY.NORMAL]: 'is-normal',
-        [SEVERITY.AVERAGE]: 'is-average',
-        [SEVERITY.DANGER]: 'is-danger',
-    }[parseSeverity(result.automatic_analysis_bool)] || ''
-
+    const severity = parseSeverity(result.automatic_analysis_bool)
+    const meta = SEVERITY_META[severity] ?? SEVERITY_META[SEVERITY.UNKNOWN]
     const findings = splitLines(result.automatic_analysis)
+    const crossFindings = splitLines(result.cross_findings)
     const recommendations = splitLines(result.AI_recommendations)
-    const redFlags = Array.isArray(result.red_flags) ? result.red_flags : []
-    const diagnoses = Array.isArray(result.differential_diagnosis) ? result.differential_diagnosis : []
+    const redFlags = (Array.isArray(result.red_flags) ? result.red_flags : []).filter(hasText)
+    const diagnoses = (Array.isArray(result.differential_diagnosis) ? result.differential_diagnosis : [])
+        .filter((item) => hasText(item?.diagnosis))
+        .sort((a, b) => probabilityRank(b?.probability) - probabilityRank(a?.probability))
 
     return (
-        <div className={embedded ? 'cai-embedded' : undefined}>
+        <div className={`arb ${embedded ? 'cai-embedded' : ''}`}>
 
-            {/* Yakuniy xulosa — sahifaning eng muhim bloki, shuning uchun
-                eng yuqorida va jiddiylik rangi bilan ajratilgan */}
-            {hasText(result.final_summary) && (
-                <div className={`cai-hero ${heroClass}`}>
-                    <div className="cai-section-head">
-                        <span className="cai-section-icon" style={{ background: '#e6f7f4', color: '#00806f' }}>◆</span>
-                        <p className="cai-section-title">
-                            {t('combined_final_summary', { defaultValue: 'Yakuniy xulosa' })}
-                        </p>
-                    </div>
-                    <p className="cai-hero-text">{result.final_summary}</p>
+            {/* ── 1. Yakuniy xulosa ── */}
+            <div className={`arb-hero arb-hero--${meta.mod}`}>
+                <div className="arb-hero-head">
+                    <span className="arb-hero-badge">
+                        {meta.icon} {severityLabel(result.automatic_analysis_bool, t)}
+                    </span>
+                    <span className="arb-hero-label">
+                        {t('combined_final_summary', { defaultValue: 'Yakuniy xulosa' })}
+                    </span>
+                    {data.itemCount > 0 && (
+                        <span className="cai-hero-note">
+                            {t('combined_based_on', {
+                                count: data.itemCount,
+                                defaultValue: `${data.itemCount} ta tahlil asosida`,
+                            })}
+                        </span>
+                    )}
                 </div>
+                {hasText(result.final_summary)
+                    ? <p className="arb-hero-text">{result.final_summary}</p>
+                    : <p className="arb-hero-text arb-muted">{t('ai_no_summary', { defaultValue: 'AI yakuniy xulosa bermadi' })}</p>}
+            </div>
+
+            {/* ── 2. Shoshilinch belgilar — xulosadan keyin DARHOL ── */}
+            {redFlags.length > 0 && (
+                <section className="arb-section cai-alarm">
+                    <header className="arb-section-head">
+                        <span className="arb-section-icon cai-icon--alarm"><AlertFilled /></span>
+                        <h3 className="arb-section-title">
+                            {t('combined_red_flags', { defaultValue: 'Shoshilinch e\'tibor talab qiladi' })}
+                        </h3>
+                        <span className="arb-section-count">{redFlags.length}</span>
+                    </header>
+                    <ul className="cai-alarm-list">
+                        {redFlags.map((flag, index) => <li key={index}>{flag}</li>)}
+                    </ul>
+                </section>
             )}
 
-            {/* Aniqlangan holatlar — har bir topilma alohida raqamlangan
-                qator: ilgari uzun bitta paragraf edi va topilmalarni
-                bir-biridan ajratish qiyin edi */}
+            {/* ── 3. Aniqlangan holatlar ── */}
             {findings.length > 0 && (
                 <Section
-                    icon="!"
-                    iconStyle={{ background: '#fdf3e2', color: '#b45309' }}
+                    icon={<SearchOutlined />}
                     title={t('automatic_analysis', { defaultValue: 'Aniqlangan holatlar' })}
+                    count={findings.length > 1 ? findings.length : null}
                 >
-                    {findings.map((line, index) => (
-                        <div className="cai-finding" key={index}>
-                            <span className="cai-finding-num">{index + 1}</span>
-                            <p className="cai-finding-text">{line}</p>
-                        </div>
-                    ))}
+                    {findings.length === 1
+                        ? <p className="arb-plain">{findings[0]}</p>
+                        : (
+                            <ol className="arb-findings">
+                                {findings.map((line, index) => (
+                                    <li key={index} className="arb-finding">
+                                        <span className="arb-finding-num">{index + 1}</span>
+                                        <span>{line}</span>
+                                    </li>
+                                ))}
+                            </ol>
+                        )}
                 </Section>
             )}
 
-            {/* Shoshilinch topilmalar — qizil, aniqlangan holatlardan
-                keyin darhol ko'zga tashlanadi */}
-            {redFlags.length > 0 && (
+            {/* ── 4. Tahlillar orasidagi bog'liqliklar ── */}
+            {crossFindings.length > 0 && (
                 <Section
-                    className="is-alarm"
-                    icon="⚠"
-                    iconStyle={{ background: '#fdecec', color: '#b91c1c' }}
-                    title={t('combined_red_flags', { defaultValue: 'Shoshilinch e\'tibor talab qiladi' })}
-                >
-                    {redFlags.map((flag, index) => (
-                        <div className="cai-alarm-item" key={index}>
-                            <span>•</span>
-                            <span>{flag}</span>
-                        </div>
-                    ))}
-                </Section>
-            )}
-
-            {/* Tahlillar orasidagi bog'liqliklar — kompleks tahlilning
-                asosiy qiymati, shuning uchun alohida bo'lim */}
-            {hasText(result.cross_findings) && (
-                <Section
-                    icon="⇄"
-                    iconStyle={{ background: '#ebf2fe', color: '#1a65d1' }}
+                    icon={<BranchesOutlined />}
+                    iconClass="cai-icon--link"
                     title={t('combined_cross_findings', { defaultValue: 'Tahlillar orasidagi bog\'liqliklar' })}
                 >
-                    <p className="cai-text">{result.cross_findings}</p>
+                    {crossFindings.length === 1
+                        ? <p className="arb-plain">{crossFindings[0]}</p>
+                        : <ul className="arb-recs cai-links">{crossFindings.map((line, i) => <li key={i}>{line}</li>)}</ul>}
                 </Section>
             )}
 
-            {/* Ehtimoliy tashxislar — kartochkalar */}
+            {/* ── 5. Ehtimoliy tashxislar ── */}
             {diagnoses.length > 0 && (
                 <Section
-                    icon="?"
-                    iconStyle={{ background: '#f3eefe', color: '#6d28d9' }}
+                    icon={<QuestionCircleOutlined />}
+                    iconClass="cai-icon--dx"
                     title={t('combined_differential', { defaultValue: 'Ehtimoliy tashxislar' })}
+                    count={diagnoses.length}
                 >
-                    {diagnoses.map((item, index) => (
-                        <div className="cai-dx" key={index}>
-                            <div className="cai-dx-head">
-                                <p className="cai-dx-name">{item?.diagnosis}</p>
-                                <span className={`cai-dx-prob ${probabilityClass(item?.probability)}`}>
-                                    {item?.probability}
-                                </span>
-                            </div>
-                            {item?.evidence && <p className="cai-dx-evidence">{item.evidence}</p>}
-                        </div>
-                    ))}
+                    <div className="cai-dx-list">
+                        {diagnoses.map((item, index) => {
+                            const rank = probabilityRank(item?.probability)
+                            return (
+                                <div className={`cai-dx cai-dx--${rank === 3 ? 'high' : rank === 1 ? 'low' : 'mid'}`} key={index}>
+                                    <div className="cai-dx-head">
+                                        <p className="cai-dx-name">{item.diagnosis}</p>
+                                        <span className="cai-dx-prob">
+                                            <span className="cai-meter" aria-hidden="true">
+                                                {[1, 2, 3].map((step) => (
+                                                    <span key={step} className={step <= rank ? 'is-on' : ''} />
+                                                ))}
+                                            </span>
+                                            {item.probability}
+                                        </span>
+                                    </div>
+                                    {hasText(item.evidence) && <p className="cai-dx-evidence">{item.evidence}</p>}
+                                </div>
+                            )
+                        })}
+                    </div>
                 </Section>
             )}
 
-            {/* AI tavsiyalari — bajariladigan qadamlar ro'yxati */}
+            {/* ── 6. AI tavsiyalari ── */}
             {recommendations.length > 0 && (
-                <Section
-                    icon="✓"
-                    iconStyle={{ background: '#e6f7f4', color: '#00806f' }}
-                    title={t('ai_recommendations', { defaultValue: 'AI tavsiyalari' })}
-                >
-                    {recommendations.map((line, index) => (
-                        <div className="cai-rec" key={index}>
-                            <span className="cai-rec-dot" />
-                            <span>{line}</span>
-                        </div>
-                    ))}
+                <Section icon={<BulbOutlined />} title={t('ai_recommendations', { defaultValue: 'AI tavsiyalari' })}>
+                    {recommendations.length === 1
+                        ? <p className="arb-plain">{recommendations[0]}</p>
+                        : <ul className="arb-recs">{recommendations.map((line, i) => <li key={i}>{line}</li>)}</ul>}
                 </Section>
             )}
 
@@ -188,7 +219,6 @@ export default function CombinedResult({ data, showDiagnosis = true, embedded = 
                 <Alert
                     type="warning"
                     showIcon
-                    style={{ marginBottom: 12 }}
                     message={t('analysis_not_possible', { defaultValue: 'Tahlil qilib bo\'lmadi' })}
                     description={result.analiz_mumkin_emas_sababi}
                 />
@@ -202,16 +232,36 @@ export default function CombinedResult({ data, showDiagnosis = true, embedded = 
     )
 }
 
-/** Sarlavhasi ikonka bilan belgilangan bo'lim. */
-function Section({ icon, iconStyle, title, className = '', children }) {
+/** Sarlavhasi ikonka bilan belgilangan bo'lim (`arb-*` bilan bir xil). */
+function Section({ icon, iconClass = '', title, count, children }) {
     return (
-        <div className={`cai-section ${className}`}>
-            <div className="cai-section-head">
-                <span className="cai-section-icon" style={iconStyle}>{icon}</span>
-                <p className="cai-section-title">{title}</p>
-            </div>
+        <section className="arb-section">
+            <header className="arb-section-head">
+                <span className={`arb-section-icon ${iconClass}`} aria-hidden="true">{icon}</span>
+                <h3 className="arb-section-title">{title}</h3>
+                {count != null && <span className="arb-section-count">{count}</span>}
+            </header>
             {children}
-        </div>
+        </section>
+    )
+}
+
+/**
+ * "Avtomatik" belgisi — yangi tahlil tugaganda tizim o'zi yaratgan
+ * kompleks xulosa (`isAuto`). Shifokor uni o'zi tanlaganidan ajratsin.
+ */
+export function CombinedAutoBadge({ isAuto }) {
+    const { t } = useTranslation()
+    if (!isAuto) return null
+    return (
+        <span
+            className="cai-auto-badge"
+            title={t('combined_auto_hint', {
+                defaultValue: 'Yangi tahlil tugaganda bemorning barcha tahlillaridan tizim avtomatik yaratgan',
+            })}
+        >
+            <ThunderboltFilled /> {t('combined_auto', { defaultValue: 'Avtomatik' })}
+        </span>
     )
 }
 
@@ -232,10 +282,10 @@ function splitLines(value) {
         .filter(Boolean)
 }
 
-/** Ehtimollik so'zi (uz/ru/en) → rang klassi. */
-function probabilityClass(probability) {
+/** Ehtimollik so'zi (uz/ru/en) → 3 (yuqori), 2 (o'rtacha), 1 (past). */
+function probabilityRank(probability) {
     const value = String(probability || '').toLowerCase()
-    if (value.includes('yuqori') || value.includes('высок') || value.includes('high')) return 'is-high'
-    if (value.includes('past') || value.includes('низк') || value.includes('low')) return 'is-low'
-    return 'is-mid'
+    if (value.includes('yuqori') || value.includes('высок') || value.includes('high')) return 3
+    if (value.includes('past') || value.includes('низк') || value.includes('low')) return 1
+    return 2
 }

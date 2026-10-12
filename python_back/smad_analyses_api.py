@@ -124,9 +124,18 @@ PDFdan quyidagilarni o'qing:
 - o'rtacha yurak urish tezligi.
 Aniqlanmagan qiymatlarga null bering.
 
+
+"pathology_episodes":
+Vaqti ko'rsatilgan HAR BIR patologik epizodni ALOHIDA element qilib yozing
+(xronologik tartibda): "time" — vaqt yoki oraliq ("10:27–11:27", "03:02"),
+"finding" — shu vaqtdagi topilma, qisqa ("AB 229/205 mmHg").
+Bir nechta vaqtni bitta elementga yoki bitta gapga vergul bilan TIZMANG.
+Vaqti noma'lum topilmalarni bu yerga yozmang. Epizod bo'lmasa — [].
+
 "automatic_analysis":
 Faqat SMAD natijasida aniqlangan patologik holatlar va klinik muhim
-topilmalarni qisqa yozing.
+topilmalarni qisqa yozing. Har bir topilma — alohida gap. Aniq vaqtlar
+"pathology_episodes" da, bu yerda ularni qayta sanamang.
 
 "automatic_analysis_bool":
 1 = normal;

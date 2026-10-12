@@ -1,0 +1,560 @@
+/**
+ * Bemor kartasi (`/patcients/:id`) — `ptc-*` klasslari.
+ *
+ * Ranglar `theme.js` dagi `colors.*` bilan bir xil; tahlil turlari
+ * ro'yxat sahifalaridagi teglar bilan mos (EKG — qizil, Holter — to'q
+ * sariq, SMAD — ko'k, Lab — yashil, xulosa — binafsha).
+ * Oraliqlar 4 px shkalasida.
+ */
+
+.ptc {
+  --ptc-primary: #00B39A;
+  --ptc-primary-soft: #E6F7F4;
+  --ptc-text: #0F172A;
+  --ptc-text-2: #475569;
+  --ptc-muted: #94A3B8;
+  --ptc-border: #E2E8F0;
+  --ptc-surface: #FFFFFF;
+  --ptc-soft: #F8FAFC;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 32px;
+}
+
+.ptc *,
+.ptc *::before,
+.ptc *::after {
+  box-sizing: border-box;
+}
+
+/* ── Panel ───────────────────────────────────────────────────── */
+
+.ptc-panel {
+  background: var(--ptc-surface);
+  border: 1px solid var(--ptc-border);
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.ptc-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 14px;
+}
+
+.ptc-panel-title {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ptc-text);
+}
+
+.ptc-panel-title .anticon {
+  color: var(--ptc-primary);
+}
+
+.ptc-count {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--ptc-soft);
+  border: 1px solid var(--ptc-border);
+  color: var(--ptc-text-2);
+}
+
+.ptc-filter-tag {
+  margin: 0;
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+/* ── 1. Profil ───────────────────────────────────────────────── */
+
+.ptc-profile {
+  position: relative;
+  background: linear-gradient(135deg, #F0FBF8 0%, #FFFFFF 60%);
+}
+
+.ptc-back {
+  margin: -6px 0 8px -8px;
+  color: var(--ptc-text-2);
+}
+
+.ptc-profile-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ptc-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #00B39A, #2DD4BF);
+  box-shadow: 0 6px 16px rgba(0, 179, 154, 0.25);
+}
+
+.ptc-profile-text {
+  min-width: 0;
+}
+
+.ptc-name {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ptc-text);
+  overflow-wrap: anywhere;
+}
+
+.ptc-sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 0;
+  margin-top: 4px;
+  font-size: 0.875rem;
+  color: var(--ptc-text-2);
+}
+
+.ptc-sub span + span::before {
+  content: "·";
+  margin: 0 8px;
+  color: var(--ptc-muted);
+}
+
+.ptc-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.ptc-fact {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--ptc-surface);
+  border: 1px solid var(--ptc-border);
+  font-size: 0.8125rem;
+  color: var(--ptc-text);
+  overflow-wrap: anywhere;
+}
+
+.ptc-fact .anticon {
+  color: var(--ptc-primary);
+  flex-shrink: 0;
+}
+
+/* ── 2. Tahlil turlari (filtr) ───────────────────────────────── */
+
+.ptc-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ptc-stat {
+  --tone: var(--ptc-primary);
+  --tone-soft: var(--ptc-primary-soft);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1.5px solid var(--ptc-border);
+  border-radius: 14px;
+  background: var(--ptc-surface);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.ptc-stat:hover {
+  border-color: var(--tone);
+  transform: translateY(-1px);
+}
+
+.ptc-stat.is-active {
+  border-color: var(--tone);
+  background: var(--tone-soft);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+.ptc-stat:focus-visible {
+  outline: 2px solid var(--tone);
+  outline-offset: 2px;
+}
+
+.ptc-stat-icon {
+  grid-row: 1 / 3;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--tone);
+  background: var(--tone-soft);
+}
+
+.ptc-stat-value {
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ptc-text);
+}
+
+.ptc-stat-label {
+  font-size: 0.75rem;
+  color: var(--ptc-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Tur ranglari */
+.ptc-stat--ecg, .ptc-type--ecg, .ptc-mini--ecg { --tone: #DC2626; --tone-soft: #FEF2F2; }
+.ptc-stat--holter, .ptc-type--holter, .ptc-mini--holter { --tone: #EA580C; --tone-soft: #FFF7ED; }
+.ptc-stat--smad, .ptc-type--smad, .ptc-mini--smad { --tone: #2563EB; --tone-soft: #EFF6FF; }
+.ptc-stat--lab, .ptc-type--lab, .ptc-mini--lab { --tone: #16A34A; --tone-soft: #F0FDF4; }
+.ptc-stat--diagnose, .ptc-type--diagnose, .ptc-mini--diagnose { --tone: #7C3AED; --tone-soft: #F5F3FF; }
+.ptc-type--ai { --tone: #00B39A; --tone-soft: #E6F7F4; }
+
+/* ── Kompleks AI tanlov paneli ───────────────────────────────── */
+
+.ptc-combine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border: 1px dashed var(--ptc-border);
+  border-radius: 12px;
+  background: var(--ptc-soft);
+}
+
+/* Tanlash boshlanganda panel ro'yxatni aylantirganda ham ko'rinib turadi */
+.ptc-combine.is-active {
+  position: sticky;
+  top: 8px;
+  z-index: 3;
+  border: 1px solid var(--ptc-primary);
+  background: var(--ptc-primary-soft);
+  box-shadow: 0 6px 18px rgba(0, 179, 154, 0.15);
+}
+
+.ptc-combine-icon {
+  font-size: 18px;
+  color: var(--ptc-primary);
+}
+
+.ptc-combine-text {
+  flex: 1 1 220px;
+  font-size: 0.875rem;
+  color: var(--ptc-text-2);
+}
+
+.ptc-combine.is-active .ptc-combine-text {
+  font-weight: 600;
+  color: var(--ptc-text);
+}
+
+/* ── 3. Tahlillar ro'yxati ──────────────────────────────────── */
+
+.ptc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ptc-row {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--ptc-border);
+  border-radius: 12px;
+  background: var(--ptc-surface);
+  overflow: hidden;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.ptc-row:hover {
+  border-color: #CBD5E1;
+}
+
+.ptc-row.is-selected {
+  border-color: var(--ptc-primary);
+  background: var(--ptc-primary-soft);
+}
+
+.ptc-check {
+  flex-shrink: 0;
+  width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-right: 1px solid var(--ptc-border);
+  background: var(--ptc-soft);
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ptc-check::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid var(--ptc-muted);
+  background: var(--ptc-surface);
+}
+
+.ptc-check[aria-pressed="true"]::before {
+  display: none;
+}
+
+.ptc-check[aria-pressed="true"] {
+  background: var(--ptc-primary);
+}
+
+.ptc-check:disabled {
+  cursor: not-allowed;
+}
+
+.ptc-check:disabled::before {
+  opacity: 0.35;
+}
+
+.ptc-check:focus-visible,
+.ptc-row-main:focus-visible {
+  outline: 2px solid var(--ptc-primary);
+  outline-offset: -2px;
+}
+
+.ptc-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ptc-type {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--tone);
+  background: var(--tone-soft);
+}
+
+.ptc-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ptc-row-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ptc-text);
+}
+
+.ptc-row-doc {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ptc-text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.ptc-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  font-size: 0.8125rem;
+  color: var(--ptc-text-2);
+}
+
+.ptc-row-meta .anticon {
+  color: var(--ptc-muted);
+}
+
+.ptc-row-side {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ptc-row-arrow {
+  font-size: 12px;
+  color: var(--ptc-muted);
+  transition: transform 0.2s ease;
+}
+
+.ptc-row-arrow.is-open {
+  transform: rotate(180deg);
+}
+
+.ptc-pill {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.ptc-pill--normal { color: #16A34A; background: #F0FDF4; border-color: #BBF7D0; }
+.ptc-pill--average { color: #B45309; background: #FFFBEB; border-color: #FDE68A; }
+.ptc-pill--danger { color: #DC2626; background: #FEF2F2; border-color: #FECACA; }
+.ptc-pill--warning { color: #B45309; background: #FFFBEB; border-color: #FDE68A; }
+.ptc-pill--progress { color: #2563EB; background: #EFF6FF; border-color: #BFDBFE; }
+.ptc-pill--unknown { color: #64748B; background: #F8FAFC; border-color: #E2E8F0; }
+
+.ptc-more {
+  display: block;
+  margin: 12px auto 0;
+}
+
+/* ── 4. Kompleks AI xulosalari ──────────────────────────────── */
+
+.ptc-combined {
+  border: 1px solid var(--ptc-border);
+  border-radius: 12px;
+  background: var(--ptc-surface);
+  overflow: hidden;
+}
+
+.ptc-combined.is-open {
+  border-color: var(--ptc-primary);
+}
+
+.ptc-type-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.ptc-mini {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--tone);
+  background: var(--tone-soft);
+}
+
+.ptc-combined-body {
+  padding: 4px 14px 14px;
+  border-top: 1px solid var(--ptc-border);
+  background: var(--ptc-soft);
+}
+
+.ptc-combined-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+/* ── Moslashuvchanlik ───────────────────────────────────────── */
+
+@media (max-width: 1200px) {
+  .ptc-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .ptc-panel {
+    padding: 14px;
+  }
+
+  .ptc-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .ptc-stat {
+    padding: 10px 12px;
+  }
+
+  .ptc-name {
+    font-size: 1.1875rem;
+  }
+
+  .ptc-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .ptc-row-main {
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    padding: 10px 12px;
+  }
+
+  .ptc-row-side {
+    width: 100%;
+    justify-content: space-between;
+    padding-left: 46px;
+  }
+
+  .ptc-check {
+    width: 38px;
+  }
+
+  .ptc-combine .ant-btn-primary {
+    width: 100%;
+  }
+}

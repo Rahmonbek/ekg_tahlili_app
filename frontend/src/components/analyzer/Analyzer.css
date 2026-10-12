@@ -1,0 +1,915 @@
+/**
+ * Tahlil yuklash sahifalari — umumiy uslublar (`AnalyzerUI.js`).
+ *
+ * EKG, Holter, SMAD, Laboratoriya va Kompleks AI sahifalari ishlatadi.
+ * Barcha klasslar `anz-` prefiksi bilan — `App.css` dagi eski analyzer
+ * klasslari bilan to'qnashmaydi. Ranglar `theme.js` dagi `colors.*`
+ * bilan bir xil. Oraliqlar 4 px shkalasida.
+ */
+
+.anz-page {
+  --anz-primary: #00B39A;
+  --anz-primary-hover: #009E88;
+  --anz-primary-soft: #E6F7F4;
+  --anz-text: #0F172A;
+  --anz-text-2: #64748B;
+  --anz-muted: #94A3B8;
+  --anz-border: #E2E8F0;
+  --anz-surface: #FFFFFF;
+  --anz-bg-soft: #F8FAFC;
+
+  width: 100%;
+  padding-bottom: 48px;
+}
+
+.anz-page *,
+.anz-page *::before,
+.anz-page *::after {
+  box-sizing: border-box;
+}
+
+.anz-hidden {
+  display: none;
+}
+
+/* ── Sarlavha ─────────────────────────────────────────────────── */
+
+.anz-header {
+  margin-bottom: 20px;
+}
+
+.anz-title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--anz-text);
+}
+
+.anz-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: var(--anz-text-2);
+}
+
+/* ── Asosiy joylashuv: qadamlar + tayyorlik paneli ────────────── */
+
+.anz-layout {
+  display: grid;
+  /* Asosiy ustun butun bo'sh kenglikni oladi, panel qat'iy kenglikda */
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+.anz-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* ── Qadam kartochkasi ────────────────────────────────────────── */
+
+.anz-step {
+  background: var(--anz-surface);
+  border: 1px solid var(--anz-border);
+  border-radius: 14px;
+  padding: 20px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.anz-step--active {
+  border-color: var(--anz-primary);
+  box-shadow: 0 4px 16px rgba(0, 179, 154, 0.08);
+}
+
+.anz-step--locked {
+  background: var(--anz-bg-soft);
+  padding: 16px 20px;
+}
+
+.anz-step-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.anz-step-num {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  background: var(--anz-primary);
+  color: #fff;
+}
+
+.anz-step--done .anz-step-num {
+  background: var(--anz-primary-soft);
+  color: var(--anz-primary);
+  font-size: 1.125rem;
+}
+
+.anz-step--locked .anz-step-num {
+  background: var(--anz-border);
+  color: var(--anz-muted);
+  font-size: 0.875rem;
+}
+
+.anz-step-titles {
+  flex: 1;
+  min-width: 0;
+  padding-top: 4px;
+}
+
+.anz-step-title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--anz-text);
+  line-height: 1.3;
+}
+
+.anz-step--locked .anz-step-title {
+  color: var(--anz-muted);
+}
+
+.anz-step-hint {
+  margin: 2px 0 0;
+  font-size: 0.8125rem;
+  color: var(--anz-text-2);
+}
+
+.anz-step-action {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.anz-step-action .ant-btn-link {
+  padding: 4px 8px;
+  color: var(--anz-primary);
+}
+
+.anz-step-body {
+  margin-top: 16px;
+  padding-left: 44px;
+}
+
+/* Umumiy `main_col` paddinglari qadam ichida ortiqcha */
+.anz-step-body .main_col {
+  padding-left: 0;
+}
+
+/* ── Bemor ────────────────────────────────────────────────────── */
+
+.anz-patient-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--anz-bg-soft);
+  border: 1px solid var(--anz-border);
+}
+
+.anz-patient-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--anz-primary-soft);
+  color: var(--anz-primary);
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.anz-patient-info {
+  min-width: 0;
+}
+
+.anz-patient-name {
+  font-weight: 600;
+  color: var(--anz-text);
+  font-size: 0.9375rem;
+  overflow-wrap: anywhere;
+}
+
+.anz-patient-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 0.8125rem;
+  color: var(--anz-text-2);
+  margin-top: 2px;
+}
+
+.anz-new-patient-alert {
+  margin: 4px 0 12px;
+}
+
+.anz-patient-form {
+  margin-top: 4px;
+}
+
+/* ── Fayl ─────────────────────────────────────────────────────── */
+
+.anz-dragger.ant-upload-wrapper .ant-upload-drag {
+  border-radius: 12px;
+  background: var(--anz-bg-soft);
+}
+
+.anz-dragger .ant-upload-text {
+  font-size: 0.875rem !important;
+}
+
+/* ── Maydonlar ────────────────────────────────────────────────── */
+
+.anz-field {
+  margin-bottom: 20px;
+}
+
+.anz-field:last-child {
+  margin-bottom: 0;
+}
+
+.anz-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--anz-text);
+  margin-bottom: 8px;
+}
+
+.anz-label--inline {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.anz-required {
+  color: #DC2626;
+  margin-left: 4px;
+}
+
+.anz-optional {
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: var(--anz-muted);
+}
+
+.anz-note {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: var(--anz-text-2);
+}
+
+.anz-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.anz-row .anz-field {
+  margin-bottom: 0;
+}
+
+/* ── Tahlil usuli (segment) ───────────────────────────────────── */
+
+.anz-segment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.anz-segment-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--anz-border);
+  border-radius: 12px;
+  background: var(--anz-surface);
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.anz-segment-item > .anticon {
+  font-size: 20px;
+  color: var(--anz-muted);
+  flex-shrink: 0;
+}
+
+.anz-segment-item strong {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--anz-text);
+}
+
+.anz-segment-item small {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--anz-text-2);
+  margin-top: 1px;
+}
+
+.anz-segment-item:hover {
+  border-color: var(--anz-primary);
+}
+
+.anz-segment-item.is-active {
+  border-color: var(--anz-primary);
+  background: var(--anz-primary-soft);
+}
+
+.anz-segment-item.is-active > .anticon {
+  color: var(--anz-primary);
+}
+
+.anz-segment-item:focus-visible,
+.anz-chip:focus-visible,
+.anz-collapse-head:focus-visible {
+  outline: 2px solid var(--anz-primary);
+  outline-offset: 2px;
+}
+
+/* ── Chip'lar (shifokor, shikoyat) ────────────────────────────── */
+
+.anz-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.anz-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 1px solid var(--anz-border);
+  border-radius: 999px;
+  background: var(--anz-surface);
+  color: var(--anz-text);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.anz-chip:hover {
+  border-color: var(--anz-primary);
+}
+
+.anz-chip.is-selected {
+  border-color: var(--anz-primary);
+  background: var(--anz-primary-soft);
+  color: var(--anz-primary-hover);
+  font-weight: 600;
+}
+
+.anz-chip-check {
+  font-size: 13px;
+}
+
+.anz-chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.anz-chip:disabled:hover {
+  border-color: var(--anz-border);
+}
+
+.anz-chip-count {
+  font-weight: 400;
+  color: var(--anz-muted);
+}
+
+/* ── Ochib-yopiladigan bo'lim (shikoyatlar) ───────────────────── */
+
+.anz-collapsible {
+  border-top: 1px solid var(--anz-border);
+  padding-top: 14px;
+}
+
+.anz-collapse-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  margin-bottom: 4px;
+  background: none;
+  border: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.anz-collapse-body {
+  margin-top: 10px;
+}
+
+/* Guruhlangan chip'lar (laboratoriya kategoriyalari) */
+.anz-group + .anz-group {
+  margin-top: 14px;
+}
+
+.anz-group-title {
+  margin: 0 0 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--anz-text-2);
+}
+
+.anz-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--anz-primary);
+  color: #fff;
+}
+
+.anz-chevron {
+  font-size: 12px;
+  color: var(--anz-text-2);
+  transition: transform 0.2s ease;
+}
+
+.anz-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+/* ── Tayyorlik paneli ─────────────────────────────────────────── */
+
+.anz-summary {
+  position: sticky;
+  top: 16px;
+}
+
+.anz-summary-card {
+  background: var(--anz-surface);
+  border: 1px solid var(--anz-border);
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.anz-summary-title {
+  margin: 0 0 12px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--anz-text);
+}
+
+.anz-checklist {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.anz-checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.anz-check-icon {
+  font-size: 18px;
+  color: var(--anz-border);
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.anz-checklist li.is-ok .anz-check-icon {
+  color: var(--anz-primary);
+}
+
+.anz-check-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.anz-check-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--anz-muted);
+}
+
+.anz-checklist li.is-ok .anz-check-label {
+  color: var(--anz-text);
+}
+
+.anz-check-value {
+  font-size: 0.75rem;
+  color: var(--anz-text-2);
+  overflow-wrap: anywhere;
+}
+
+.anz-summary-mode {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  background: var(--anz-bg-soft);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--anz-text);
+}
+
+.anz-summary-mode .anticon {
+  color: var(--anz-primary);
+}
+
+.anz-missing {
+  margin: 10px 0 0;
+  font-size: 0.8125rem;
+  color: #B45309;
+  text-align: center;
+}
+
+/* ── Oldingi tahlillar ────────────────────────────────────────── */
+
+.anz-history {
+  margin-top: 32px;
+}
+
+.anz-history-title {
+  margin: 0 0 12px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--anz-text);
+}
+
+.anz-more {
+  display: block;
+  margin: 8px auto 0;
+}
+
+/* ── Tahlillarni tanlash ro'yxati (Kompleks AI) ──────────────── */
+
+.anz-pick-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.anz-pick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.anz-pick {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--anz-border);
+  border-radius: 12px;
+  background: var(--anz-surface);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.anz-pick:hover:not(:disabled) {
+  border-color: var(--anz-primary);
+}
+
+.anz-pick.is-selected {
+  border-color: var(--anz-primary);
+  background: var(--anz-primary-soft);
+}
+
+.anz-pick:disabled {
+  cursor: not-allowed;
+  background: var(--anz-bg-soft);
+}
+
+.anz-pick:disabled .anz-pick-main {
+  opacity: 0.55;
+}
+
+.anz-pick:focus-visible {
+  outline: 2px solid var(--anz-primary);
+  outline-offset: 2px;
+}
+
+.anz-pick-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid var(--anz-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 12px;
+}
+
+.anz-pick.is-selected .anz-pick-box {
+  background: var(--anz-primary);
+  border-color: var(--anz-primary);
+}
+
+.anz-pick-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.anz-pick-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.anz-pick-top .ant-tag {
+  margin: 0;
+}
+
+.anz-pick-doc {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--anz-text);
+  overflow-wrap: anywhere;
+}
+
+.anz-pick-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  font-size: 0.75rem;
+  color: var(--anz-text-2);
+}
+
+.anz-pick-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: right;
+}
+
+.anz-pick-side .ant-tag {
+  margin: 0;
+}
+
+.anz-pick-reason {
+  font-size: 0.75rem;
+  color: var(--anz-muted);
+}
+
+.anz-pick-empty {
+  padding: 24px 0;
+}
+
+.anz-pick-loading {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+/* ── Moslashuvchanlik ─────────────────────────────────────────── */
+
+/* Katta monitor: panel kengroq, qadamlar ichida ko'proq havo */
+@media (min-width: 1600px) {
+  .anz-layout {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 24px;
+  }
+
+  .anz-step {
+    padding: 24px 28px;
+  }
+}
+
+/* Kichik noutbuk (1280–1366): panel torroq, qadamlarga ko'proq joy */
+@media (max-width: 1366px) {
+  .anz-layout {
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+}
+
+/*
+ * Kichik noutbuk, planshet va telefon: bitta ustun. Sidebar bilan
+ * 1200 px dan tor ekranda yon panel qadamlarni ~500 px gacha siqib
+ * qo'yardi. Tayyorlik paneli ekran pastiga yopishgan ixcham panelga
+ * aylanadi — yuborish tugmasi doim ko'rinadi.
+ */
+@media (max-width: 1200px) {
+  .anz-step-body {
+    padding-left: 0;
+  }
+
+  .anz-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  /* Manfiy `bottom` = `.content` padding'i (App.css) — panel ekran
+     chetiga tegib turadi, ostidan kontent ko'rinib qolmaydi */
+  .anz-summary {
+    position: sticky;
+    top: auto;
+    bottom: -14px;
+    z-index: 5;
+  }
+
+  .anz-summary-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    padding: 12px 16px;
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -6px 20px rgba(15, 23, 42, 0.08);
+  }
+
+  .anz-summary-title,
+  .anz-summary-mode,
+  .anz-check-value {
+    display: none;
+  }
+
+  .anz-checklist {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin: 0;
+    flex: 1 1 auto;
+  }
+
+  .anz-checklist li {
+    align-items: center;
+    gap: 6px;
+  }
+
+  .anz-check-icon {
+    font-size: 16px;
+    margin-top: 0;
+  }
+
+  .anz-summary-card > .ant-btn {
+    width: auto;
+    flex: 0 0 auto;
+    min-width: 200px;
+  }
+
+  .anz-missing,
+  .anz-summary-card > .anz-note {
+    flex-basis: 100%;
+    margin: 0;
+    text-align: left;
+  }
+}
+
+@media (max-width: 1024px) {
+  .anz-summary {
+    bottom: -12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .anz-summary {
+    bottom: -10px;
+  }
+
+  .anz-header {
+    margin-bottom: 16px;
+  }
+
+  .anz-title {
+    font-size: 1.1875rem;
+  }
+
+  .anz-step {
+    padding: 16px;
+  }
+
+  .anz-step-num {
+    width: 28px;
+    height: 28px;
+    font-size: 0.875rem;
+  }
+
+  .anz-step-body {
+    margin-top: 14px;
+  }
+
+  .anz-history {
+    margin-top: 24px;
+  }
+}
+
+@media (max-width: 576px) {
+  .anz-step {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .anz-step-head {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* Amal tugmalari sarlavha ostiga, raqam bilan bir chiziqda */
+  .anz-step-action {
+    width: 100%;
+    justify-content: flex-start;
+    padding-left: 30px;
+    margin-top: -4px;
+  }
+
+  .anz-step-action .ant-btn-link {
+    padding: 0 8px 0 0;
+    height: auto;
+  }
+
+  .anz-row,
+  .anz-segment {
+    grid-template-columns: 1fr;
+  }
+
+  .anz-pick {
+    grid-template-columns: 22px minmax(0, 1fr);
+    padding: 10px 12px;
+  }
+
+  .anz-pick-side {
+    grid-column: 2;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    text-align: left;
+  }
+
+  .anz-segment-item {
+    padding: 10px 12px;
+  }
+
+  .anz-chip {
+    min-height: 36px;
+  }
+
+  .anz-patient-card {
+    padding: 10px 12px;
+  }
+
+  .anz-summary {
+    bottom: -8px;
+  }
+
+  /* Pastki panel: ro'yxat tepada, tugma butun kenglikda */
+  .anz-summary-card {
+    padding: 10px 12px;
+  }
+
+  .anz-checklist {
+    flex-basis: 100%;
+  }
+
+  .anz-summary-card > .ant-btn {
+    width: 100%;
+    min-width: 0;
+  }
+}

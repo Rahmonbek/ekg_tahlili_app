@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models import LabAnalyses
+from models import LabAnalyses, LabAnalysisFiles
 import datetime
 from typing import Optional
 
@@ -190,3 +190,55 @@ def update_lab_analyse(
     session.commit()
     session.refresh(lab)
     return lab
+
+
+def set_lab_analysis_files(session: Session, analyse_id: int, files: list[dict]) -> None:
+    """Tahlilning fayllar ro'yxatini to'liq almashtiradi (`lab_analysis_files`).
+
+    `files` — yuklangan tartibda: `{"file_link", "original_filename", "file_hash"}`.
+    Birinchi fayl `lab_analyses.analyse_file_link` ga ham yoziladi: shu
+    ustunga tayanadigan eski kod (PDF, konsultatsiya) buzilmasligi uchun.
+
+    Bitta tranzaksiyada: eski qatorlar o'chiriladi va yangilari yoziladi —
+    yarim yangilangan ro'yxat qolmaydi.
+    """
+    session.query(LabAnalysisFiles).filter(
+        LabAnalysisFiles.lab_analysis_id == analyse_id
+    ).delete(synchronize_session=False)
+    now = datetime.datetime.utcnow()
+    for position, item in enumerate(files):
+        session.add(LabAnalysisFiles(
+            lab_analysis_id=analyse_id,
+            file_link=item["file_link"],
+            original_filename=item.get("original_filename"),
+            file_hash=item.get("file_hash"),
+            position=position,
+            created_at=now,
+        ))
+    if files:
+        lab = session.query(LabAnalyses).filter(LabAnalyses.id == analyse_id).first()
+        if lab is not None:
+            first = files[0]
+            lab.analyse_file_link = first["file_link"]
+            lab.original_filename = first.get("original_filename")
+            lab.file_hash = first.get("file_hash")
+            lab.updated_at = now
+    session.commit()
+
+
+def get_lab_analysis_file_links(session: Session, lab: LabAnalyses) -> list[str]:
+    """Tahlil fayllari yo'llari, yuklangan tartibda.
+
+    Migratsiyadan oldin yaratilgan va ko'chirilmay qolgan yozuv uchun
+    `analyse_file_link` ga qaytadi.
+    """
+    rows = (
+        session.query(LabAnalysisFiles.file_link)
+        .filter(LabAnalysisFiles.lab_analysis_id == lab.id)
+        .order_by(LabAnalysisFiles.position, LabAnalysisFiles.id)
+        .all()
+    )
+    links = [row[0] for row in rows if row[0]]
+    if not links and lab.analyse_file_link:
+        links = [lab.analyse_file_link]
+    return links

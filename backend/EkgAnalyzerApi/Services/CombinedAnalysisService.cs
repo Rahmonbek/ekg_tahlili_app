@@ -70,12 +70,32 @@ public class CombinedAnalysisService
         if (user?.ClinicId == null)
             return new CreateResult(null, "Klinika aniqlanmadi", false);
 
-        var patientExists = await _context.Patcients.AnyAsync(p => p.Id == request.PatientId, ct);
+        return await CreateCoreAsync(
+            request.PatientId, request.Items, doctor.Id, user.ClinicId.Value, request.Lang,
+            isAuto: false, ct);
+    }
+
+    /// <summary>
+    /// Avtomatik kompleks tahlil (<see cref="AutoCombinedAnalysisWorker"/>):
+    /// foydalanuvchi so'rovi yo'q — shifokor va klinika yangi tahlilni
+    /// yuklagan xodimdan olinadi. Tekshiruv va takrorni oldini olish
+    /// qo'lda yaratish bilan AYNAN bir xil.
+    /// </summary>
+    public Task<CreateResult> CreateAutoAsync(
+        int patientId, List<CombinedAnalysisItemRefDTO> items, int doctorId, int clinicId,
+        string? lang, CancellationToken ct = default)
+        => CreateCoreAsync(patientId, items, doctorId, clinicId, lang, isAuto: true, ct);
+
+    private async Task<CreateResult> CreateCoreAsync(
+        int patientId, List<CombinedAnalysisItemRefDTO>? items, int doctorId, int clinicId,
+        string? langRaw, bool isAuto, CancellationToken ct)
+    {
+        var patientExists = await _context.Patcients.AnyAsync(p => p.Id == patientId, ct);
         if (!patientExists)
             return new CreateResult(null, "Bemor topilmadi", false);
 
         // Takrorlarni olib tashlaymiz: bir tahlil ikki marta tanlangan bo'lishi mumkin
-        var refs = (request.Items ?? new List<CombinedAnalysisItemRefDTO>())
+        var refs = (items ?? new List<CombinedAnalysisItemRefDTO>())
             .Where(i => !string.IsNullOrWhiteSpace(i.Type) && i.Id > 0)
             .Select(i => new CombinedAnalysisItemRefDTO { Type = i.Type.Trim().ToLowerInvariant(), Id = i.Id })
             .GroupBy(i => (i.Type, i.Id))
@@ -99,7 +119,7 @@ public class CombinedAnalysisService
         foreach (var r in refs)
         {
             var src = await LoadSourceAsync(r.Type, r.Id, ct);
-            if (src == null || src.PatientId != request.PatientId)
+            if (src == null || src.PatientId != patientId)
                 return new CreateResult(null,
                     $"Tahlil topilmadi yoki bu bemorga tegishli emas: {r.Type}#{r.Id}", false);
 
@@ -116,7 +136,7 @@ public class CombinedAnalysisService
         // EKG rasm fayllari ham yuboriladi. Ustun saqlanadi, chunki eski
         // yozuvlarda `summary` qiymati bor va ular o'zgarmasligi kerak.
         const string mode = "deep";
-        var lang = NormalizeLang(request.Lang);
+        var lang = NormalizeLang(langRaw);
         var fingerprint = Fingerprint(loaded);
 
         // TAKRORNI OLDINI OLISH.
@@ -136,31 +156,41 @@ public class CombinedAnalysisService
         var candidates = await _context.CombinedAnalyses
             .Include(c => c.Items)
             .Include(c => c.CreatedDoctor)
-            .Where(c => c.PatientId == request.PatientId
+            .Where(c => c.PatientId == patientId
                 && c.Status >= 0
                 && c.Items.Count == wanted.Count)
             .OrderByDescending(c => c.Id)
             .ToListAsync(ct);
 
-        var existing = candidates.FirstOrDefault(c =>
-            c.Items.Select(i => $"{i.AnalysisType}#{i.AnalysisId}").ToHashSet().SetEquals(wanted));
-
+        var sameSet = candidates.Where(c =>
+            c.Items.Select(i => $"{i.AnalysisType}#{i.AnalysisId}").ToHashSet().SetEquals(wanted)).ToList();
+        // ESKIRGAN xulosa qayta ishlatilmaydi: to'plam o'sha, lekin manba
+        // tahlillardan biri keyinroq QAYTA TAHLIL qilingan (AI natijasi
+        // o'zgargan) — eski xulosa endi haqiqatni aks ettirmaydi.
+        var existing = sameSet.FirstOrDefault(c => !IsStale(c.SourceFingerprint, fingerprint));
+        if (existing == null && sameSet.Count > 0)
+        {
+            _logger.LogInformation(
+                "Kompleks tahlil: to'plam o'sha, lekin manbalar o'zgargan (eskirgan #{Id}) — yangisi yaratiladi",
+                sameSet[0].Id);
+        }
         if (existing != null)
         {
             _logger.LogInformation(
                 "Kompleks tahlil allaqachon mavjud: id={Id} bemor={PatientId} tahlillar={Items}",
-                existing.Id, request.PatientId, string.Join(",", wanted.OrderBy(x => x)));
+                existing.Id, patientId, string.Join(",", wanted.OrderBy(x => x)));
             return new CreateResult(existing, null, true);
         }
 
         var now = DateTime.UtcNow;
         var entity = new CombinedAnalysis
         {
-            PatientId = request.PatientId,
-            ClinicId = user.ClinicId.Value,
-            CreatedDoctorId = doctor.Id,
+            PatientId = patientId,
+            ClinicId = clinicId,
+            CreatedDoctorId = doctorId,
             Status = 0,
             Mode = mode,
+            IsAuto = isAuto,
             AiLang = lang,
             SourceFingerprint = fingerprint,
             CreatedAt = now,
@@ -262,6 +292,7 @@ public class CombinedAnalysisService
                 AiSummary = basic.AiSummary,
                 ErrorReason = basic.ErrorReason,
                 ItemCount = basic.ItemCount,
+                IsAuto = basic.IsAuto,
                 DoctorName = basic.DoctorName,
                 Items = basic.Items,
                 PatientId = c.PatientId,
@@ -304,6 +335,7 @@ public class CombinedAnalysisService
             AiSummary = basic.AiSummary,
             ErrorReason = basic.ErrorReason,
             ItemCount = basic.ItemCount,
+            IsAuto = basic.IsAuto,
             DoctorName = basic.DoctorName,
             Items = basic.Items,
             PatientId = c.PatientId,
@@ -318,8 +350,18 @@ public class CombinedAnalysisService
 
         // Manba tahlil o'chirilganmi? Snapshot saqlangan, lekin havola
         // ishlamasligini frontend bilishi kerak (tugmani o'chirib qo'yadi).
+        var current = new List<SourceAnalysis>();
         foreach (var item in dto.Items)
-            item.Exists = await SourceExistsAsync(item.Type, item.AnalysisId, ct);
+        {
+            var src = await LoadSourceAsync(item.Type, item.AnalysisId, ct);
+            item.Exists = src != null;
+            if (src != null) current.Add(src);
+        }
+        // Barcha manbalar mavjud bo'lsagina solishtiriladi: o'chirilgani
+        // bo'lsa barmoq izi baribir farq qiladi, lekin bu "qayta tahlil
+        // qilingan" degani emas (o'chirilgani `Exists = false` bilan ko'rinadi)
+        dto.IsStale = current.Count == dto.Items.Count
+            && IsStale(c.SourceFingerprint, Fingerprint(current));
 
         return dto;
     }
@@ -354,6 +396,7 @@ public class CombinedAnalysisService
             AiSummary = AiSeverity.Conclusion(c.AIAnswerData),
             ErrorReason = status == -1 ? AiSeverity.ExtractErrorMessage(c.AIAnswerData) : null,
             ItemCount = c.Items?.Count ?? 0,
+            IsAuto = c.IsAuto,
             DoctorName = c.CreatedDoctor == null
                 ? null
                 : $"{c.CreatedDoctor.LastName} {c.CreatedDoctor.FirstName}".Trim(),
@@ -403,31 +446,67 @@ public class CombinedAnalysisService
         }
     }
 
-    private async Task<bool> SourceExistsAsync(string type, int id, CancellationToken ct) => type switch
-    {
-        "ecg" => await _context.ECGAnalyse.AnyAsync(a => a.Id == id, ct),
-        "holter" => await _context.HolterAnalyses.AnyAsync(a => a.Id == id, ct),
-        "smad" => await _context.SmadAnalyses.AnyAsync(a => a.Id == id, ct),
-        "lab" => await _context.LabAnalyse.AnyAsync(a => a.Id == id, ct),
-        _ => false,
-    };
+    /// <summary>Joriy barmoq izi formati (eski yozuvlarda prefiks yo'q).</summary>
+    private const string FingerprintVersion = "v2:";
 
     /// <summary>
-    /// To'plamning MAZMUN barmoq izi: qaysi tahlillar va ular oxirgi
-    /// marta qachon yangilangani.
+    /// To'plamning MAZMUN barmoq izi: qaysi tahlillar va ularning AI
+    /// natijasi (`ai_answer_data`) mazmuni.
     ///
-    /// Takrorni aniqlashda ISHLATILMAYDI (u to'plamning o'zi bo'yicha
-    /// qidiradi) — bu qiymat diagnostika uchun: manba tahlil qayta
-    /// tahlil qilingan bo'lsa, barmoq izi mavjud xulosanikidan farq
-    /// qiladi va xulosa eskirganini ko'rsatadi.
+    /// Ilgari `updated_at` ishlatilardi — u natijaga aloqasi yo'q sabablar
+    /// bilan ham o'zgaradi (masalan tarjima keshi yozilganda). Endi faqat
+    /// AI natijasi o'zgarsa (qayta tahlil, fayl almashtirish) barmoq izi
+    /// o'zgaradi. Kim, qachon va qaysi tilda so'ragani ta'sir qilmaydi.
     /// </summary>
     private static string Fingerprint(IEnumerable<SourceAnalysis> items)
     {
         var payload = string.Join("|", items
             .OrderBy(i => i.Type, StringComparer.Ordinal).ThenBy(i => i.Id)
-            .Select(i => $"{i.Type}:{i.Id}:{i.UpdatedAt?.Ticks ?? 0}"));
+            .Select(i => $"{i.Type}:{i.Id}:{Sha256(i.AiAnswerData ?? "")}"));
+        // `source_fingerprint` ustuni varchar(64): prefiks + xeshning boshi
+        // aynan 64 belgi (244 bit — to'qnashuv amalda imkonsiz)
+        return FingerprintVersion + Sha256(payload)[..(64 - FingerprintVersion.Length)];
+    }
 
-        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload))).ToLowerInvariant();
+    private static string Sha256(string value) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
+
+    /// <summary>
+    /// Xulosa eskirganmi: saqlangan barmoq izi joriy formatda va manbalar
+    /// mazmuni o'zgargan. Eski formatdagi (prefikssiz) yozuvlarni
+    /// solishtirib bo'lmaydi — ular avvalgidek "yangi" hisoblanadi, aks
+    /// holda barcha eski xulosalar birdan qayta hisoblanib, AI xarajati chiqardi.
+    /// </summary>
+    private static bool IsStale(string? stored, string current) =>
+        stored != null
+        && stored.StartsWith(FingerprintVersion, StringComparison.Ordinal)
+        && stored != current;
+
+    /// <summary>
+    /// Kompleks xulosani o'chirishga huquq: yaratgan shifokor, o'sha
+    /// klinikaning admini/direktori yoki SuperAdmin. Ilgari tizimga kirgan
+    /// IXTIYORIY foydalanuvchi istalgan klinikaning xulosasini o'chira olardi.
+    /// Qaytaradi: `null` — topilmadi, `true/false` — ruxsat.
+    /// </summary>
+    public async Task<bool?> CanDeleteAsync(int id, int userId, int roleId, CancellationToken ct = default)
+    {
+        var entity = await _context.CombinedAnalyses.AsNoTracking()
+            .Where(c => c.Id == id)
+            .Select(c => new { c.ClinicId, c.CreatedDoctorId })
+            .FirstOrDefaultAsync(ct);
+        if (entity == null) return null;
+
+        if (roleId == Constants.RoleConstants.SuperAdmin) return true;
+
+        var user = await _context.Users.AsNoTracking()
+            .Where(u => u.Id == userId)
+            .Select(u => new { u.ClinicId, DoctorId = (int?)u.Doctor!.Id })
+            .FirstOrDefaultAsync(ct);
+        if (user == null) return false;
+
+        if (user.DoctorId == entity.CreatedDoctorId) return true;
+        return (roleId == Constants.RoleConstants.Admin || roleId == Constants.RoleConstants.Director)
+            && user.ClinicId == entity.ClinicId;
     }
 
     private static string NormalizeLang(string? lang) => lang?.Trim().ToLowerInvariant() switch

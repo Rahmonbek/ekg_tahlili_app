@@ -161,7 +161,39 @@ ECG_MEASUREMENTS = {
 #: Shuning uchun laboratoriya uchun mavjud kalitli lug'at shakli saqlanadi,
 #: yetishmayotgan `AI_recommendations` esa prompt orqali qo'shiladi.
 
-def _schema(name: str, subject: str, measurements) -> dict:
+#: Holter va SMAD: vaqti ko'rsatilgan patologik epizodlar.
+#:
+#: Ilgari model ularni `automatic_analysis` ichida vergul bilan tizib
+#: yozardi ("20:27–21:27 da 1 ta, 10:27–11:27 da 5 ta, … va 18:27–19:27
+#: da 4 ta") — shifokor qaysi vaqtda nima bo'lganini bitta uzun gapdan
+#: ajratib o'qishga majbur edi. Endi har bir epizod alohida element va
+#: interfeys/PDF da alohida qatorda chiqadi.
+EPISODES_PROPERTY = {
+    "type": "array",
+    "description": (
+        "Vaqti ko'rsatilgan HAR BIR patologik epizod — alohida element, "
+        "xronologik tartibda. Vaqtsiz umumiy topilmalar bu yerga yozilmaydi. "
+        "Epizod bo'lmasa bo'sh massiv."
+    ),
+    "items": {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "time": {
+                "type": "string",
+                "description": "Vaqt yoki oraliq, QISQA: '10:27–11:27' yoki '03:02'",
+            },
+            "finding": {
+                "type": "string",
+                "description": "Shu vaqtdagi topilma, QISQA: '5 ta yakka SVE' yoki 'AB 229/205 mmHg'",
+            },
+        },
+        "required": ["time", "finding"],
+    },
+}
+
+
+def _schema(name: str, subject: str, measurements, episodes: bool = False) -> dict:
     """Tur uchun to'liq sxema quradi.
 
     `measurements` ikki ko'rinishda bo'lishi mumkin:
@@ -190,6 +222,8 @@ def _schema(name: str, subject: str, measurements) -> dict:
         digital = measurements
 
     properties = {"digital_measurements": digital}
+    if episodes:
+        properties["pathology_episodes"] = EPISODES_PROPERTY
     properties.update(_common_properties(subject))
 
     return {
@@ -296,8 +330,8 @@ LAB_MEASUREMENTS = {
 
 SCHEMAS = {
     "ecg": _schema("ecg_analysis", "EKG yozuvi", ECG_MEASUREMENTS),
-    "holter": _schema("holter_analysis", "Holter monitoring yozuvi", HOLTER_MEASUREMENTS),
-    "smad": _schema("smad_analysis", "Sutkalik arterial bosim monitoringi (SMAD)", SMAD_MEASUREMENTS),
+    "holter": _schema("holter_analysis", "Holter monitoring yozuvi", HOLTER_MEASUREMENTS, episodes=True),
+    "smad": _schema("smad_analysis", "Sutkalik arterial bosim monitoringi (SMAD)", SMAD_MEASUREMENTS, episodes=True),
     "lab": _schema("lab_analysis", "Laboratoriya tahlili", LAB_MEASUREMENTS),
 }
 
@@ -354,7 +388,7 @@ def normalize(parsed: dict) -> dict:
     if parsed.get("analiz_mumkinmi") is False:
         level = None
 
-    return {
+    result = {
         "digital_measurements": parsed.get("digital_measurements"),
         "automatic_analysis": parsed.get("automatic_analysis") or "",
         "analiz_mumkinmi": parsed.get("analiz_mumkinmi"),
@@ -363,6 +397,30 @@ def normalize(parsed: dict) -> dict:
         "AI_recommendations": parsed.get("AI_recommendations") or "",
         "final_summary": parsed.get("final_summary") or "",
     }
+    # Faqat Holter/SMAD sxemasida bor — boshqa turlarga bo'sh kalit qo'shilmaydi
+    if "pathology_episodes" in parsed:
+        result["pathology_episodes"] = normalize_episodes(parsed.get("pathology_episodes"))
+    return result
+
+
+def normalize_episodes(raw) -> list:
+    """Epizodlar ro'yxatini tozalaydi: faqat `time` va `finding` matnlari.
+
+    Bo'sh yoki noto'g'ri elementlar tashlab yuboriladi — interfeysda
+    bo'sh qator chiqishidan ko'ra yo'q bo'lgani yaxshi.
+    """
+    if not isinstance(raw, list):
+        return []
+    out = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        time = str(item.get("time") or "").strip()
+        finding = str(item.get("finding") or "").strip()
+        if not finding:
+            continue
+        out.append({"time": time, "finding": finding})
+    return out
 
 
 # ─── Kompleks (ko'p tahlilli) xulosa ────────────────────────────────────────

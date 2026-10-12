@@ -208,6 +208,11 @@ def _build_dossier(db: Session, items) -> tuple[list[dict], list[tuple[str, byte
         model, label = source
 
         row = db.query(model).filter(model.id == item.analysis_id).first()
+        # Yumshoq o'chirilgan tahlil ham "yo'q" hisoblanadi: u xulosa
+        # yaratilgandan KEYIN o'chirilgan bo'lishi mumkin (.NET faqat
+        # yaratish paytida tekshiradi)
+        if row is not None and getattr(row, "deleted_at", None) is not None:
+            row = None
         if row is None:
             # Tahlil o'chirilgan — snapshot bor, lekin mazmun yo'q.
             # Uni AI ga yubormaymiz, xulosa qolgan tahlillar bo'yicha chiqadi.
@@ -231,6 +236,13 @@ def _build_dossier(db: Session, items) -> tuple[list[dict], list[tuple[str, byte
             "recommendations": _clip(ai.get("AI_recommendations")),
             "summary": _clip(ai.get("final_summary")),
         }
+        # Holter/SMAD: vaqti ko'rsatilgan patologik epizodlar (alohida
+        # maydon) — kompleks tahlilda vaqt bo'yicha bog'liqlikni ko'rish
+        # uchun muhim (masalan SMAD dagi tungi bosim ko'tarilishi va
+        # Holter dagi o'sha vaqtdagi aritmiya)
+        episodes = ai.get("pathology_episodes")
+        if isinstance(episodes, list) and episodes:
+            entry["episodes"] = episodes[:30]
 
         # Shifokorning SHU tahlilga yozgan xulosasi — AI ko'rmaydigan
         # klinik kontekst (bemor shikoyatlari, dorilar, kasallik tarixi).

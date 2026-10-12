@@ -304,3 +304,113 @@
 @media (min-width: 1600px) {
   .cai-source-tags { max-width: 420px; }
 }
+
+/* ══ Yangi natija ko'rinishi (`CombinedResult`, `arb-*` asosida) ══════════ */
+
+.cai-pending {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 16px;
+  text-align: center;
+}
+
+.cai-hero-note {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+/* Shoshilinch belgilar — qizil blok, xulosadan keyin darhol */
+.arb-section.cai-alarm {
+  border-color: #fecaca;
+  border-left: 5px solid #dc2626;
+  background: #fef2f2;
+}
+
+.cai-alarm .arb-section-title {
+  color: #b91c1c;
+}
+
+.cai-icon--alarm { background: #fee2e2 !important; color: #dc2626 !important; }
+.cai-icon--link  { background: #eff6ff !important; color: #2563eb !important; }
+.cai-icon--dx    { background: #f5f3ff !important; color: #7c3aed !important; }
+
+.cai-alarm-list {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cai-alarm-list li {
+  display: list-item;
+  list-style: disc outside;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.55;
+  color: #991b1b;
+}
+
+.cai-links li::marker {
+  color: #2563eb;
+}
+
+/* Ehtimoliy tashxislar — chap chiziq rangi ehtimollikka qarab */
+.cai-dx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cai-dx-list .cai-dx {
+  margin-bottom: 0;
+  border-left-width: 4px;
+}
+
+.cai-dx--high { border-left-color: #dc2626; }
+.cai-dx--mid  { border-left-color: #f59e0b; }
+.cai-dx--low  { border-left-color: #94a3b8; }
+
+.cai-dx-list .cai-dx-prob {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  background: none;
+  color: #475569;
+}
+
+.cai-meter {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.cai-meter span {
+  width: 14px;
+  height: 6px;
+  border-radius: 3px;
+  background: #e2e8f0;
+}
+
+.cai-dx--high .cai-meter .is-on { background: #dc2626; }
+.cai-dx--mid  .cai-meter .is-on { background: #f59e0b; }
+.cai-dx--low  .cai-meter .is-on { background: #94a3b8; }
+
+/* Avtomatik yaratilgan xulosa belgisi (ro'yxat, bemor kartasi, sahifa) */
+.cai-auto-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #0e7490;
+  background: #ecfeff;
+  border: 1px solid #a5f3fc;
+  white-space: nowrap;
+}

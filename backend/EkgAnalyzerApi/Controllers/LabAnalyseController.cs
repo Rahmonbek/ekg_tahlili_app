@@ -15,6 +15,9 @@ using Microsoft.AspNetCore.RateLimiting;
 [Authorize]
 public class LabAnalyseController : ControllerBase
 {
+    /// <summary>Laboratoriya yuklash so'rovining eng katta hajmi (60 MB).</summary>
+    private const long LabUploadLimitBytes = 60L * 1024 * 1024;
+
     private readonly MedDataDB _context;
     private readonly LabAnalyseService _labService;
     private readonly PythonApiProxyService _proxyService;
@@ -49,6 +52,11 @@ public class LabAnalyseController : ControllerBase
     /// </summary>
     [HttpPost("analyze")]
     [EnableRateLimiting("ai-analysis")]
+    // Laboratoriyada bir nechta fayl (10 tagacha, jami 50 MB gacha — Python
+    // `lab_analyses_api` da tekshiriladi) yuboriladi. Kestrelning standart
+    // 30 MB chegarasi bunga yetmasdi; multipart sarlavhalari uchun zaxira bilan.
+    [RequestSizeLimit(LabUploadLimitBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = LabUploadLimitBytes)]
     public async Task<IActionResult> Analyze()
     {
         var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
@@ -216,11 +224,17 @@ public class LabAnalyseController : ControllerBase
 
     /// <summary>
     /// Noto'g'ri yuklangan faylni almashtirib, tahlilni qayta ishga tushirish.
-    /// POST api/lab-analyses/replace-file   (multipart: id, file, age, gender, lang)
+    /// POST api/lab-analyses/replace-file   (multipart: id, file[1..10], age, gender, lang)
+    /// Bir nechta fayl yuborilsa, tahlilning BARCHA fayllari shular bilan almashtiriladi.
     /// Yangi tahlil yaratilmaydi — mavjud yozuvning fayli almashtiriladi.
     /// </summary>
     [HttpPost("replace-file")]
     [EnableRateLimiting("ai-analysis")]
+    // Laboratoriyada bir nechta fayl (10 tagacha, jami 50 MB gacha — Python
+    // `lab_analyses_api` da tekshiriladi) yuboriladi. Kestrelning standart
+    // 30 MB chegarasi bunga yetmasdi; multipart sarlavhalari uchun zaxira bilan.
+    [RequestSizeLimit(LabUploadLimitBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = LabUploadLimitBytes)]
     public async Task<IActionResult> ReplaceFile()
     {
         var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");

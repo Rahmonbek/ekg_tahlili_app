@@ -79,12 +79,41 @@ public class StuckAnalysisWatchdog : BackgroundService
         total += await MarkStuckAsync(context, context.LabAnalyse, cutoff, "lab", token);
         total += await MarkStuckAsync(context, context.HolterAnalyses, cutoff, "holter", token);
         total += await MarkStuckAsync(context, context.SmadAnalyses, cutoff, "smad", token);
+        total += await MarkStuckCombinedAsync(context, cutoff, token);
 
         if (total > 0)
         {
             await context.SaveChangesAsync(token);
             _logger.LogWarning("{Count} ta muzlab qolgan tahlil xatolik holatiga o'tkazildi", total);
         }
+    }
+
+    /// <summary>
+    /// Kompleks AI xulosalari. Ular ayniqsa xavfli edi: muzlagan (0/1)
+    /// yozuv takror tekshiruvida "mavjud" hisoblanadi, ya'ni AYNAN SHU
+    /// to'plam uchun yangi xulosa so'rab bo'lmasdi — sahifada cheksiz
+    /// yuklanish belgisi turardi. Yozuv `updated_at` bo'yicha baholanadi:
+    /// AI ga yuborilganda (status 1) u yangilanadi.
+    /// </summary>
+    private async Task<int> MarkStuckCombinedAsync(MedDataDB context, DateTime cutoff, CancellationToken token)
+    {
+        var stuck = await context.CombinedAnalyses
+            .Where(c => (c.Status == 0 || c.Status == 1) && (c.UpdatedAt ?? c.CreatedAt) < cutoff)
+            .ToListAsync(token);
+        foreach (var item in stuck)
+        {
+            item.Status = -1;
+            item.UpdatedAt = DateTime.UtcNow;
+            if (string.IsNullOrWhiteSpace(item.AIAnswerData))
+            {
+                item.AIAnswerData =
+                    "{\"xato\":\"tahlil_muzlab_qoldi\"," +
+                    "\"xabar\":\"Kompleks tahlil belgilangan vaqt ichida tugamadi. " +
+                    "Qayta urinib ko'ring.\"}";
+            }
+            _logger.LogWarning("Muzlab qolgan kompleks tahlil: combined#{Id}", item.Id);
+        }
+        return stuck.Count;
     }
 
     /// <summary>

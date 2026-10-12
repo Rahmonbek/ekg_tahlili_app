@@ -56,6 +56,22 @@ xulosa beradi.
   emas: "Asos" ustuni tor jadvalda o'qib bo'lmasdi). Sarlavha va meta
   kartochkalar boshqa tahlil ko'rish sahifalari bilan bir xil
   (`analysis-view-*`, `App.css`).
+* **AVTOMATIK kompleks tahlil** (`Services/AutoCombinedAnalysisWorker.cs`,
+  `combined_analyses.is_auto`): yangi tahlil (EKG/Holter/SMAD/Lab) AI
+  natijasi tayyor bo'lgach, tizim bemorning BARCHA yaroqli tahlillaridan
+  (eng yangi 10 tasi) kompleks yaratib AI ga yuboradi. Nomzod — `status = 2`,
+  jiddiylik 1..3 (AI "tahlil qila olmadi" degani olinmaydi), HECH BIR
+  kompleksga kirmagan va oxirgi `LookbackHours` ichida tugagan tahlil.
+  `SettleMinutes` kutiladi va bemorning boshqa tahlili ishlanayotgan
+  bo'lsa kutiladi — bir vaqtda yuklangan tahlillar BITTA xulosa beradi.
+  Python ga ichki token (`TokenService.GenerateServiceToken`, audience
+  `…-internal` — .NET uni qabul QILMAYDI) bilan murojaat qiladi; tayyor
+  bo'lganda yuklagan xodimga SignalR xabari. Sozlamalar `AutoCombined:*`:
+  `Enabled` (true), `IntervalSeconds` (60), `SettleMinutes` (3),
+  `LookbackHours` (24 — birinchi ishga tushishda butun tarix uchun AI
+  chaqirilmasin), `MaxPerCycle` (5). Muzlagan (0/1) kompleks yozuvni
+  `StuckAnalysisWatchdog` xatolikka o'tkazadi — aks holda takror
+  tekshiruvi shu to'plamni abadiy bloklardi.
 * **PDF**: `GET /api/report/combined-ai/{id}` →
   `PdfReportService.GenerateCombinedAiReport`. Mavjud
   `GenerateCombinedReport(patientId)` bilan ADASHTIRMANG — u bemorning
@@ -64,6 +80,54 @@ xulosa beradi.
   `analysis_diagnoses` jadvali `analysis_type = "combined"` bilan
   ishlatiladi. Yozish huquqi: xulosani YARATGAN shifokorda
   (`AnalysisDiagnosisController.IsDoctorAssigned`).
+
+**Laboratoriya — bir nechta fayl** (`lab_analysis_files`, migratsiya
+`20260907000000_AddLabAnalysisFiles`): klinikalar bitta topshiriq
+natijasini ko'pincha bir necha varaqda beradi, shuning uchun bitta lab
+tahliliga 1..10 ta fayl (jami ≤ 50 MB) biriktiriladi va ular BITTA
+so'rovda AI ga yuboriladi.
+
+* `lab_analyses.analyse_file_link` / `original_filename` / `file_hash` —
+  BIRINCHI fayl (eski kod uchun saqlanadi); to'liq ro'yxat —
+  `lab_analysis_files` (`position` tartibida), DTO da `Files`.
+* Chegaralar ikki joyda mos bo'lishi SHART: Python
+  `lab_analyses_api.MAX_LAB_FILES` va frontend `LabAnalyzer.MAX_LAB_FILES`;
+  .NET `LabAnalyseController.LabUploadLimitBytes` (60 MB) jami hajmdan katta.
+* Takror tekshiruvi (`duplicate_guard`) HAR BIR faylni tekshiradi;
+  `retry` barcha fayllarni qayta yuboradi; `replace-file` yuborilgan
+  fayllar bilan BUTUN ro'yxatni almashtiradi.
+* "Qaysi tahlillar topshirilgani" (kategoriyalar) yuklash sahifasidan
+  olib tashlangan; `lab_category_id` backendda ixtiyoriy bo'lib qoladi.
+
+**Holter/SMAD — patologik epizodlar** (`pathology_episodes`): AI javobida
+alohida maydon — `[{time, finding}]`, har bir vaqtli epizod alohida
+element (ilgari `automatic_analysis` ichida vergul bilan tizilardi).
+`ai_schema.EPISODES_PROPERTY` (faqat holter/smad sxemasida),
+`normalize_episodes`, promptlarda "TIZMANG" qoidasi, `ai_translate`
+faqat `finding` ni tarjima qiladi, .NET `AIAnswerDataDTO.PathologyEpisodes`
+→ PDF da alohida qatorlar. Eski yozuvlarda maydon yo'q — frontend
+`components/results/resultText.extractEpisodeGroups` matndan faqat
+ishonchli holatda (gapda ≥2 vaqt va har bo'lakda vaqt) ajratadi.
+
+**Natija ko'rinishi** (`components/results/`): `AnalysisResultBody`
+(bo'limlar tartibi: yakuniy xulosa → topilmalar → epizodlar →
+ko'rsatkichlar → tavsiyalar → fayllar; uslub `AnalysisResult.css`,
+`arb-*`) va `ResultCard` (yig'iluvchi kartochka, `rcard-*`).
+`Ecg/Holter/Smad/LabOldResult` — `ResultCard` ustidagi yupqa o'ramalar;
+"AI orqali tekshirish" har tur uchun O'Z `/retry` endpoint'iga boradi
+(ilgari Holter/SMAD/Lab ham EKG `analyze-retry` ni chaqirardi).
+
+**Laboratoriya birliklari** (`python_back/lab_units.py`): AI qiymat va
+birlikni FAYLDAGIDEK qaytaradi (promptda aylantirish taqiqlangan), kod
+ularni `lab_value_types.measure` birligiga DETERMINISTIK keltiradi
+(prefiks + molyar massa; `original` da asl yozuv saqlanadi). Natija
+fiziologik mumkinlik (`PLAUSIBLE`) bilan tekshiriladi — faqat birlik nomi
+xato yozilgan holat ("4.7 µmol/L mochevina") shunday ajratiladi.
+Aylantirib bo'lmasa `unit_mismatch: true` — baholanmaydi va raqamli
+ustunga yozilmaydi. Ruscha "мЕ/л" va "МЕ/л" (1000× farq) — katta-kichik
+harf bilan, `lower()` dan OLDIN taniladi. Frontend
+`AnalysisResultBody.normUnit` — tuzatilmagan yozuvlar uchun himoya.
+Eski yozuvlar: `python repair_lab_units.py [--apply]`.
 
 ---
 

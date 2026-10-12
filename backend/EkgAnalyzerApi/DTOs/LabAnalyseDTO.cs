@@ -6,6 +6,13 @@ namespace EkgAnalyzerApi.DTOs;
 
 
 
+/// <summary>Laboratoriya tahliliga biriktirilgan fayl (`lab_analysis_files`).</summary>
+public class LabAnalysisFileDTO
+{
+    public string FileLink { get; set; } = null!;
+    public string? OriginalFilename { get; set; }
+}
+
 public class LabAnalyseDTO
 {
     /// <summary>Hujjat raqami (masalan NMED-EKG-00000096).</summary>
@@ -22,7 +29,11 @@ public class LabAnalyseDTO
 
     public int? Status { get; set; } = 0;
 
+    /// <summary>Birinchi fayl — eski kod (PDF, konsultatsiya) uchun saqlanadi.</summary>
     public string? AnalyseFileLink { get; set; }
+
+    /// <summary>Barcha biriktirilgan fayllar, yuklangan tartibda.</summary>
+    public List<LabAnalysisFileDTO>? Files { get; set; }
 
     public string? AIAnswerData { get; set; }
 

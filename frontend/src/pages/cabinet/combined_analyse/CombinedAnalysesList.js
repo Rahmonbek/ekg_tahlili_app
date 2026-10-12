@@ -7,6 +7,7 @@ import { get_combined_analyses_list } from '../../../host/requests/CombinedAnaly
 import { calculateAge, formatDateTime, rowNumber } from '../../../tools/formatters'
 import { severityColor, severityLabel } from '../../../tools/severity'
 import EmptyState from '../../../components/shared/EmptyState'
+import { CombinedAutoBadge } from '../../../components/results/CombinedResult'
 import useDocumentTitle from '../../../tools/useDocumentTitle'
 import './CombinedAnalyse.css'
 
@@ -140,6 +141,7 @@ export default function CombinedAnalysesList() {
             width: SOURCES_MAX_WIDTH,
             render: (_, row) => (
                 <div className="cai-source-tags">
+                    <CombinedAutoBadge isAuto={row.isAuto} />
                     {(row.items ?? []).map((item) => {
                         const meta = TYPE_META[item.type]
                         return (

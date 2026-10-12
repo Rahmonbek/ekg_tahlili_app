@@ -37,6 +37,7 @@ namespace EkgAnalyzerApi.Data
         public DbSet<HolterAnalyseDoctors> HolterAnalyseDoctor { get; set; }
         public DbSet<ECGAnalyseComplaints> ECGAnalyseComplaint { get; set; }
         public DbSet<LabAnalyseCategories> LabAnalyseCategories { get; set; }
+        public DbSet<LabAnalysisFile> LabAnalysisFiles { get; set; }
         public DbSet<ClinicDetail> ClinicDetails { get; set; }
         public DbSet<Patcient> Patcients { get; set; }
         public DbSet<Complaints> Complaints { get; set; }
@@ -116,6 +117,7 @@ namespace EkgAnalyzerApi.Data
             modelBuilder.Entity<SmadAnalyseDoctors>().HasQueryFilter(x => x.SmadAnalyse.DeletedAt == null);
             modelBuilder.Entity<ECGAnalyseComplaints>().HasQueryFilter(x => x.ECGAnalyse.DeletedAt == null);
             modelBuilder.Entity<LabAnalyseCategories>().HasQueryFilter(x => x.LabAnalyse.DeletedAt == null);
+            modelBuilder.Entity<LabAnalysisFile>().HasQueryFilter(x => x.LabAnalysis.DeletedAt == null);
 
             // User - Doctor (1:1)
             modelBuilder.Entity<User>()

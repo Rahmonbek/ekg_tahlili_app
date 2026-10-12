@@ -42,6 +42,8 @@ public class CombinedAnalysisListItemDTO
     public string? AiSummary { get; set; }
     public string? ErrorReason { get; set; }
     public int ItemCount { get; set; }
+    /// <summary>Tizim avtomatik yaratgan (yangi tahlil tugaganda).</summary>
+    public bool IsAuto { get; set; }
     public string? DoctorName { get; set; }
     public List<CombinedAnalysisItemDTO> Items { get; set; } = new();
 }
@@ -69,6 +71,12 @@ public class CombinedAnalysisDetailDTO : CombinedAnalysisListItemDTO
     public DateOnly? PatientBirthDate { get; set; }
     public bool PatientGender { get; set; }
     public string? ModelUsed { get; set; }
+
+    /// <summary>
+    /// Manba tahlillardan biri xulosa yaratilgandan keyin QAYTA TAHLIL
+    /// qilingan — xulosa eskirgan, qayta yaratish mumkin.
+    /// </summary>
+    public bool IsStale { get; set; }
 
     /// <summary>AI javobi — JSON matn (frontend uni o'zi parse qiladi).</summary>
     public string? AIAnswerData { get; set; }

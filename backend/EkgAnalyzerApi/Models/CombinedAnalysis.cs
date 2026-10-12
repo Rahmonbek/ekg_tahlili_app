@@ -79,6 +79,13 @@ namespace EkgAnalyzerApi.Models
         /// Aynan shu to'plam qayta so'ralganda AI ga ikkinchi marta pul
         /// to'lamaslik uchun ishlatiladi.
         /// </summary>
+        /// <summary>
+        /// `true` — yangi tahlil tugaganda tizim avtomatik yaratgan
+        /// (<c>AutoCombinedAnalysisWorker</c>); `false` — shifokor qo'lda tanlagan.
+        /// </summary>
+        [Column("is_auto")]
+        public bool IsAuto { get; set; }
+
         [Column("source_fingerprint")]
         [MaxLength(64)]
         public string? SourceFingerprint { get; set; }

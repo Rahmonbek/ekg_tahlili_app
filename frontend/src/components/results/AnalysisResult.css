@@ -1,0 +1,733 @@
+/**
+ * Tahlil natijasi — `AnalysisResultBody` (`arb-*`) va `ResultCard` (`rcard-*`).
+ *
+ * Har bir bo'limning o'z vizual roli bor (Kompleks AI `cai-*` bilan bir
+ * xil yondashuv): yakuniy xulosa — jiddiylik rangi bilan ajratilgan blok,
+ * topilmalar — raqamlangan qatorlar, epizodlar — vaqt yorlig'i bilan
+ * qatorlar, ko'rsatkichlar — kartochkalar to'ri.
+ *
+ * Ranglar `theme.js` dagi `colors.*` bilan bir xil. Oraliqlar 4 px shkalasida.
+ */
+
+.arb,
+.rcard {
+  --arb-primary: #00B39A;
+  --arb-primary-soft: #E6F7F4;
+  --arb-text: #0F172A;
+  --arb-text-2: #475569;
+  --arb-muted: #94A3B8;
+  --arb-border: #E2E8F0;
+  --arb-surface: #FFFFFF;
+  --arb-soft: #F8FAFC;
+
+  --arb-normal: #16A34A;
+  --arb-normal-bg: #F0FDF4;
+  --arb-normal-border: #BBF7D0;
+  --arb-average: #B45309;
+  --arb-average-bg: #FFFBEB;
+  --arb-average-border: #FDE68A;
+  --arb-danger: #DC2626;
+  --arb-danger-bg: #FEF2F2;
+  --arb-danger-border: #FECACA;
+  --arb-unknown: #64748B;
+  --arb-unknown-bg: #F8FAFC;
+  --arb-unknown-border: #E2E8F0;
+}
+
+.arb {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.arb *,
+.rcard * {
+  box-sizing: border-box;
+}
+
+.arb-muted {
+  color: var(--arb-muted) !important;
+}
+
+.arb-ecg-image {
+  margin-bottom: 4px;
+}
+
+/* ── 1. Yakuniy xulosa (hero) ─────────────────────────────────── */
+
+.arb-hero {
+  border: 1px solid var(--arb-unknown-border);
+  border-left-width: 5px;
+  border-radius: 14px;
+  background: var(--arb-unknown-bg);
+  padding: 14px 18px 16px;
+}
+
+.arb-hero--normal { background: var(--arb-normal-bg); border-color: var(--arb-normal-border); border-left-color: var(--arb-normal); }
+.arb-hero--average { background: var(--arb-average-bg); border-color: var(--arb-average-border); border-left-color: #F59E0B; }
+.arb-hero--danger { background: var(--arb-danger-bg); border-color: var(--arb-danger-border); border-left-color: var(--arb-danger); }
+.arb-hero--unknown { border-left-color: var(--arb-unknown); }
+
+.arb-hero-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--arb-text);
+}
+
+.arb-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--arb-unknown);
+}
+
+.arb-hero--normal .arb-hero-badge { background: var(--arb-normal); }
+.arb-hero--average .arb-hero-badge { background: #F59E0B; }
+.arb-hero--danger .arb-hero-badge { background: var(--arb-danger); }
+
+.arb-hero-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--arb-text-2);
+}
+
+.arb-hero-text {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--arb-text);
+}
+
+/* ── Bo'lim ───────────────────────────────────────────────────── */
+
+.arb-section {
+  border: 1px solid var(--arb-border);
+  border-radius: 14px;
+  background: var(--arb-surface);
+  padding: 14px 18px 16px;
+}
+
+.arb-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.arb-section-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+  background: var(--arb-primary-soft);
+  color: var(--arb-primary);
+}
+
+.arb-section-title {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--arb-text-2);
+}
+
+.arb-section-count {
+  margin-left: auto;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--arb-soft);
+  color: var(--arb-text-2);
+  border: 1px solid var(--arb-border);
+}
+
+.arb-plain {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--arb-text);
+}
+
+.arb-subtitle {
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--arb-text-2);
+}
+
+.arb-subtitle--alert {
+  color: var(--arb-danger);
+}
+
+/* ── 2. Topilmalar — raqamlangan qatorlar ─────────────────────── */
+
+.arb-findings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.arb-finding {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--arb-text);
+}
+
+.arb-finding + .arb-finding {
+  border-top: 1px dashed var(--arb-border);
+}
+
+.arb-finding-num {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--arb-soft);
+  border: 1px solid var(--arb-border);
+  color: var(--arb-text-2);
+  margin-top: 1px;
+}
+
+/* ── 3. Vaqt bo'yicha epizodlar ───────────────────────────────── */
+
+.arb-episode-group + .arb-episode-group {
+  margin-top: 12px;
+}
+
+.arb-episode-intro {
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--arb-text);
+}
+
+.arb-episodes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.arb-episode {
+  display: grid;
+  grid-template-columns: minmax(118px, max-content) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--arb-soft);
+  border: 1px solid var(--arb-border);
+}
+
+.arb-episode-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--arb-primary);
+  white-space: nowrap;
+}
+
+.arb-episode-text {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--arb-text);
+}
+
+/* ── 4. Ko'rsatkichlar ────────────────────────────────────────── */
+
+.arb-kv {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+}
+
+.arb-kv-item {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--arb-soft);
+  border: 1px solid var(--arb-border);
+}
+
+.arb-kv-item--wide {
+  grid-column: 1 / -1;
+}
+
+.arb-kv-item dt {
+  font-size: 0.75rem;
+  color: var(--arb-text-2);
+  margin-bottom: 2px;
+}
+
+.arb-kv-item dd {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--arb-text);
+  overflow-wrap: anywhere;
+}
+
+.arb-kv-item--wide dd {
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* EKG: har bir o'lchov — bitta to'liq qator, HAMMASI bir xil tuzilishda:
+   chapda nom (bir xil kenglikdagi ustun), o'ngda qiymat va izoh */
+.arb-kv--stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--arb-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.arb-kv-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 16px;
+  padding: 10px 14px;
+  background: var(--arb-surface);
+}
+
+.arb-kv-row:nth-child(even) {
+  background: var(--arb-soft);
+}
+
+.arb-kv-row + .arb-kv-row {
+  border-top: 1px solid var(--arb-border);
+}
+
+.arb-kv-row dt {
+  font-size: 0.8125rem;
+  color: var(--arb-text-2);
+}
+
+.arb-kv-row dd {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--arb-text);
+  overflow-wrap: anywhere;
+}
+
+.arb-kv-main {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.arb-kv-note {
+  color: var(--arb-text-2);
+}
+
+.arb-kv-main + .arb-kv-note::before {
+  content: " — ";
+  color: var(--arb-muted);
+}
+
+/* SMAD: o'rtacha bosim jadvali (davr × sistolik/diastolik) */
+.arb-bp {
+  width: 100%;
+  margin-bottom: 10px;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--arb-border);
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 0.875rem;
+}
+
+.arb-bp th,
+.arb-bp td {
+  padding: 9px 14px;
+  text-align: left;
+  border-top: 1px solid var(--arb-border);
+}
+
+.arb-bp thead th {
+  border-top: none;
+  background: var(--arb-soft);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--arb-text-2);
+}
+
+.arb-bp tbody th {
+  width: 30%;
+  font-weight: 500;
+  color: var(--arb-text-2);
+}
+
+.arb-bp-value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--arb-text);
+}
+
+.arb-bp-unit {
+  color: var(--arb-text-2);
+}
+
+.arb-bp-limit {
+  width: 22%;
+  color: var(--arb-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.arb-bp tr.is-high {
+  background: var(--arb-danger-bg);
+}
+
+.arb-bp tr.is-high .arb-bp-value {
+  color: var(--arb-danger);
+}
+
+.arb-bp-flag {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--arb-danger);
+  background: #fff;
+  border: 1px solid var(--arb-danger-border);
+}
+
+.arb-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 12px 0 8px;
+  padding: 8px 12px;
+  border: 1px dashed var(--arb-border);
+  border-radius: 10px;
+  background: var(--arb-surface);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--arb-text-2);
+  cursor: pointer;
+}
+
+.arb-toggle:hover {
+  border-color: var(--arb-primary);
+  color: var(--arb-primary);
+}
+
+.arb-toggle-chevron {
+  font-size: 11px;
+  transition: transform 0.2s ease;
+}
+
+.arb-toggle-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+/* Laboratoriya: aylantirilgan qiymatning asl yozuvi / birlik farqi */
+.lab-card-original {
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: var(--arb-muted);
+}
+
+.lab-card-pill--unit {
+  color: var(--arb-unknown);
+  background: var(--arb-unknown-bg);
+  border: 1px solid var(--arb-unknown-border);
+}
+
+/* ── 5. Tavsiyalar ───────────────────────────────────────────── */
+
+.arb-recs {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--arb-text);
+}
+
+/* App.css dagi umumiy `li` qoidasi belgini o'chiradi — aniq qaytariladi */
+.arb-recs li {
+  display: list-item;
+  list-style: disc outside;
+}
+
+.arb-recs li::marker {
+  color: var(--arb-primary);
+}
+
+/* ── 6. Fayllar ──────────────────────────────────────────────── */
+
+.arb-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.arb-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--arb-border);
+  background: var(--arb-soft);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--arb-primary);
+  overflow-wrap: anywhere;
+}
+
+.arb-file:hover {
+  border-color: var(--arb-primary);
+  color: var(--arb-primary);
+  background: var(--arb-primary-soft);
+}
+
+/* ── Natija kartochkasi (ResultCard) ─────────────────────────── */
+
+.rcard {
+  background: var(--arb-surface);
+  border: 1px solid var(--arb-border);
+  border-left: 4px solid var(--arb-unknown-border);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.rcard--normal { border-left-color: var(--arb-normal); }
+.rcard--average { border-left-color: #F59E0B; }
+.rcard--danger { border-left-color: var(--arb-danger); }
+.rcard--unknown { border-left-color: var(--arb-muted); }
+
+.rcard--bare {
+  border: none;
+  background: transparent;
+  margin-bottom: 24px;
+  overflow: visible;
+}
+
+.rcard-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rcard-head:hover {
+  background: var(--arb-soft);
+}
+
+.rcard-head:focus-visible {
+  outline: 2px solid var(--arb-primary);
+  outline-offset: -2px;
+}
+
+.rcard-head-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  min-width: 0;
+}
+
+.rcard-date {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--arb-text);
+}
+
+.rcard-doc {
+  font-size: 0.75rem;
+  color: var(--arb-text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.rcard-head-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.rcard-pill {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--arb-unknown-bg);
+  color: var(--arb-unknown);
+  border: 1px solid var(--arb-unknown-border);
+}
+
+.rcard-pill--normal { background: var(--arb-normal-bg); color: var(--arb-normal); border-color: var(--arb-normal-border); }
+.rcard-pill--average { background: var(--arb-average-bg); color: var(--arb-average); border-color: var(--arb-average-border); }
+.rcard-pill--danger { background: var(--arb-danger-bg); color: var(--arb-danger); border-color: var(--arb-danger-border); }
+
+.rcard-chevron {
+  font-size: 12px;
+  color: var(--arb-text-2);
+  transition: transform 0.2s ease;
+}
+
+.rcard-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.rcard-body {
+  padding: 4px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rcard--bare .rcard-body {
+  padding: 0;
+}
+
+/* Ko'rish sahifasida kartochka ramkasi yo'q — qo'shimcha ma'lumot
+   qatorlari alohida oq blok bo'lib turadi (fon bilan qo'shilib ketmasin) */
+.rcard--bare .rcard-meta {
+  background: var(--arb-surface);
+  border: 1px solid var(--arb-border);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.rcard-meta {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--arb-soft);
+}
+
+.rcard-meta-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) minmax(0, 1fr);
+  gap: 12px;
+  font-size: 0.8125rem;
+}
+
+.rcard-meta-row dt {
+  color: var(--arb-text-2);
+}
+
+.rcard-meta-row dd {
+  margin: 0;
+  font-weight: 500;
+  color: var(--arb-text);
+  overflow-wrap: anywhere;
+}
+
+.rcard-empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px dashed var(--arb-border);
+  font-size: 0.875rem;
+  color: var(--arb-text-2);
+}
+
+/* ── Moslashuvchanlik ────────────────────────────────────────── */
+
+@media (max-width: 576px) {
+  .arb-hero,
+  .arb-section {
+    padding: 12px 14px 14px;
+  }
+
+  .arb-hero-text {
+    font-size: 0.875rem;
+  }
+
+  .arb-episode {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .arb-kv {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Telefonda: nom tepada, qiymat ostida — barcha qatorlarda bir xil */
+  .arb-kv-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+    padding: 9px 12px;
+  }
+
+  .rcard-head {
+    padding: 10px 12px;
+  }
+
+  .rcard-body {
+    padding: 4px 12px 12px;
+  }
+
+  .rcard-meta-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

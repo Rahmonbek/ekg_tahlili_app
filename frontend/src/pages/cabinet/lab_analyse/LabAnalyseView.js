@@ -142,6 +142,7 @@ export default function LabAnalyseView() {
                 analysisId={data.id}
                 onReplace={replaceLabFile}
                 accept=".pdf,.png,.jpg,.jpeg"
+                multiple
                 meta={{
                     age: data.patcient?.birthDate ? calculateAge(data.patcient.birthDate) : 0,
                     gender: data.patcient?.gender ? 'erkak' : 'ayol',

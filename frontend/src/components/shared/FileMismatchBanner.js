@@ -22,6 +22,8 @@ const { Text } = Typography;
  * @param {object}   meta      { age, gender, lang } — qayta tahlil uchun kerak
  * @param {function} onSuccess fayl almashtirilgandan keyin chaqiriladi (ma'lumotni qayta yuklash)
  * @param {string}   accept    input accept atributi
+ * @param {boolean}  multiple  bir nechta fayl (laboratoriya) — tanlanganlar
+ *                             tahlilning BARCHA fayllarini almashtiradi
  */
 export default function FileMismatchBanner({
     info,
@@ -30,6 +32,7 @@ export default function FileMismatchBanner({
     meta = {},
     onSuccess,
     accept = '.pdf,.png,.jpg,.jpeg',
+    multiple = false,
 }) {
     const { t } = useTranslation();
     const [uploading, setUploading] = useState(false);
@@ -37,13 +40,14 @@ export default function FileMismatchBanner({
 
     if (!info) return null;
 
-    const handleFile = async (file) => {
-        if (!file) return;
+    const handleFiles = async (fileList) => {
+        const files = Array.from(fileList || []);
+        if (files.length === 0) return;
         setUploading(true);
         try {
             const formData = new FormData();
             formData.append('id', analysisId);
-            formData.append('file', file);
+            files.forEach((file) => formData.append('file', file));
             formData.append('age', meta.age ?? 0);
             formData.append('gender', meta.gender ?? 'erkak');
             formData.append('lang', meta.lang ?? 'uz');
@@ -67,6 +71,16 @@ export default function FileMismatchBanner({
 
     const description = (
         <Space direction="vertical" size={10} style={{ width: '100%' }}>
+            {/* Bir nechta fayl bo'lsa — aynan qaysi biri mos kelmagani */}
+            {info.fayl_raqami && info.fayllar_soni > 1 ? (
+                <Text strong>
+                    {t('mismatch_file_number', {
+                        index: info.fayl_raqami,
+                        count: info.fayllar_soni,
+                        defaultValue: `${info.fayllar_soni} ta fayldan ${info.fayl_raqami}-fayl`,
+                    })}
+                </Text>
+            ) : null}
             <Text>{info.xabar}</Text>
 
             {info.izoh ? (
@@ -82,10 +96,14 @@ export default function FileMismatchBanner({
                     loading={uploading}
                     onClick={() => fileRef.current?.click()}
                 >
-                    {t('replace_file', { defaultValue: 'Faylni almashtirish' })}
+                    {multiple
+                        ? t('replace_files', { defaultValue: 'Fayllarni almashtirish' })
+                        : t('replace_file', { defaultValue: 'Faylni almashtirish' })}
                 </Button>
                 <Text type="secondary" style={{ fontSize: 12 }}>
-                    {t('replace_file_hint', { defaultValue: 'Yangi tahlil yaratilmaydi — shu yozuvning fayli almashtiriladi va qayta tahlil qilinadi.' })}
+                    {multiple
+                        ? t('replace_files_hint', { defaultValue: "Yangi tahlil yaratilmaydi — tanlangan fayllar shu tahlilning barcha fayllari o'rniga qo'yiladi va qayta tahlil qilinadi. To'g'ri fayllarning hammasini birga tanlang." })
+                        : t('replace_file_hint', { defaultValue: 'Yangi tahlil yaratilmaydi — shu yozuvning fayli almashtiriladi va qayta tahlil qilinadi.' })}
                 </Text>
             </Space>
 
@@ -99,6 +117,7 @@ export default function FileMismatchBanner({
             ref={fileRef}
             type="file"
             accept={accept}
+            multiple={multiple}
             hidden
             aria-hidden="true"
             tabIndex={-1}
@@ -112,7 +131,7 @@ export default function FileMismatchBanner({
                 pointerEvents: 'none',
                 left: -9999,
             }}
-            onChange={(e) => handleFile(e.target.files?.[0])}
+            onChange={(e) => handleFiles(e.target.files)}
         />
     );
 

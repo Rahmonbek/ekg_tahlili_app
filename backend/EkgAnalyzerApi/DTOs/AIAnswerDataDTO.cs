@@ -6,6 +6,16 @@ namespace EkgAnalyzerApi.DTOs;
 /// Python AI API dan kelgan ai_answer_data JSON ni parse qilish uchun DTO.
 /// Barcha modullar (EKG, Lab, Holter, SMAD) uchun universal schema.
 /// </summary>
+/// <summary>Bitta patologik epizod: vaqt (yoki oraliq) va topilma.</summary>
+public class PathologyEpisodeDTO
+{
+    [JsonPropertyName("time")]
+    public string? Time { get; set; }
+
+    [JsonPropertyName("finding")]
+    public string? Finding { get; set; }
+}
+
 public class AIAnswerDataDTO
 {
     /// <summary>
@@ -39,6 +49,14 @@ public class AIAnswerDataDTO
     /// </summary>
     [JsonPropertyName("final_summary")]
     public string? FinalSummary { get; set; }
+
+    /// <summary>
+    /// Holter/SMAD: vaqti ko'rsatilgan patologik epizodlar — har biri
+    /// alohida qatorda chiqariladi (ilgari matn ichida vergul bilan
+    /// tizilardi). Eski yozuvlarda yo'q.
+    /// </summary>
+    [JsonPropertyName("pathology_episodes")]
+    public List<PathologyEpisodeDTO>? PathologyEpisodes { get; set; }
 
     /// <summary>
     /// Parse bo'lmagan xom javob (agar GPT JSON formatda qaytarmasa).

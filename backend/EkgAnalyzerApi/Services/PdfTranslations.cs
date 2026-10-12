@@ -72,6 +72,7 @@ public static class PdfTranslations
         ["recommendations"]         = "Shifokorga tavsiyalar",
         ["ai_analysis"]             = "Tahlil xulosasi",
         ["final_summary"]           = "Yakuniy xulosa",
+        ["pathology_episodes"]      = "Patologik epizodlar (vaqt bo'yicha)",
         ["not_analyzed"]            = "Tahlil hali amalga oshirilmagan",
 
         // EKG parametrlar
@@ -213,6 +214,7 @@ public static class PdfTranslations
         ["recommendations"]         = "Рекомендации врачу",
         ["ai_analysis"]             = "Заключение анализа",
         ["final_summary"]           = "Итоговое заключение",
+        ["pathology_episodes"]      = "Патологические эпизоды (по времени)",
         ["not_analyzed"]            = "Анализ ещё не выполнен",
 
         ["hr"]                      = "Частота сердечных сокращений",
@@ -345,6 +347,7 @@ public static class PdfTranslations
         ["recommendations"]         = "Recommendations for Physician",
         ["ai_analysis"]             = "Analysis Summary",
         ["final_summary"]           = "Final Conclusion",
+        ["pathology_episodes"]      = "Pathological episodes (by time)",
         ["not_analyzed"]            = "Analysis has not been performed yet",
 
         ["hr"]                      = "Heart Rate",

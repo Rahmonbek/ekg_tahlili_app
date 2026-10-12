@@ -14,6 +14,11 @@ export function getTodayDateInputValue() {
     return `${yyyy}-${mm}-${dd}`;
 }
 
+/** Faylni bir xil tanlanganini aniqlash uchun kalit (nom + hajm + sana). */
+export function fileKey(file) {
+    return `${file.name}|${file.size}|${file.lastModified}`;
+}
+
 const initialState = {
     result: null,
     error: null,
@@ -48,6 +53,20 @@ function analyzerReducer(state, action) {
                 totalPage: 0,
                 page: 1,
             };
+
+        // Bir nechta fayl rejimi (laboratoriya): fayl ro'yxatga QO'SHILADI.
+        // Bir vaqtda bir nechta fayl tanlanganda har biri alohida va
+        // asinxron tekshiriladi — shuning uchun holat funksional
+        // yangilanadi (eskirgan `state.files` ustiga yozib yubormaslik uchun).
+        case 'ADD_FILE': {
+            const key = fileKey(action.file);
+            if (state.files.some((f) => fileKey(f) === key)) return state;
+            if (action.max && state.files.length >= action.max) return state;
+            return { ...state, files: [...state.files, action.file], showBtn: true };
+        }
+
+        case 'REMOVE_FILE':
+            return { ...state, files: state.files.filter((f) => f !== action.file) };
 
         case 'SUBMIT_START':
             return {

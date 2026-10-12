@@ -1,0 +1,412 @@
+/**
+ * Tashkilot ma'lumotlari (`/settings`) — `stg-*` klasslari.
+ *
+ * Ranglar `theme.js` dagi `colors.*` bilan bir xil. Oraliqlar 4 px shkalasida.
+ */
+
+.stg {
+  --stg-primary: #00B39A;
+  --stg-primary-soft: #E6F7F4;
+  --stg-text: #0F172A;
+  --stg-text-2: #475569;
+  --stg-muted: #94A3B8;
+  --stg-border: #E2E8F0;
+  --stg-surface: #FFFFFF;
+  --stg-soft: #F8FAFC;
+
+  padding-bottom: 80px; /* pastdagi "saqlanmagan" paneli uchun joy */
+}
+
+.stg *,
+.stg *::before,
+.stg *::after {
+  box-sizing: border-box;
+}
+
+.stg-header {
+  margin-bottom: 20px;
+}
+
+.stg-title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--stg-text);
+}
+
+.stg-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: var(--stg-text-2);
+}
+
+.stg-layout {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.stg-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* ── Jonli ko'rinish ─────────────────────────────────────────── */
+
+.stg-preview {
+  position: sticky;
+  top: 16px;
+}
+
+.stg-preview-card {
+  border: 1px solid var(--stg-border);
+  border-radius: 14px;
+  background: linear-gradient(160deg, #F0FBF8 0%, #FFFFFF 55%);
+  padding: 18px;
+}
+
+.stg-preview-label {
+  margin: 0 0 14px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--stg-text-2);
+}
+
+.stg-preview-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--stg-border);
+}
+
+.stg-preview-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--stg-border);
+  background: var(--stg-surface);
+  color: var(--stg-muted);
+  font-size: 22px;
+}
+
+.stg-preview-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.stg-preview-name {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--stg-text);
+  overflow-wrap: anywhere;
+}
+
+.stg-preview-facts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stg-preview-facts li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--stg-text);
+  overflow-wrap: anywhere;
+}
+
+.stg-preview-facts li > svg,
+.stg-preview-facts li > .anticon {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--stg-primary);
+}
+
+.stg-preview-facts em {
+  font-style: normal;
+  color: var(--stg-muted);
+}
+
+.stg-ok {
+  color: #16A34A !important;
+}
+
+/* ── Bo'lim kartochkasi ──────────────────────────────────────── */
+
+.stg-card {
+  border: 1px solid var(--stg-border);
+  border-radius: 14px;
+  background: var(--stg-surface);
+  padding: 18px 20px;
+}
+
+.stg-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stg-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--stg-primary);
+  background: var(--stg-primary-soft);
+}
+
+.stg-card-titles {
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.stg-card-title {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--stg-text);
+}
+
+.stg-card-hint {
+  margin: 2px 0 0;
+  font-size: 0.8125rem;
+  color: var(--stg-text-2);
+}
+
+.stg-dirty {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #B45309;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+}
+
+.stg-card-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--stg-border);
+}
+
+.stg-card .ant-form-item {
+  margin-bottom: 14px;
+}
+
+/* ── Logotip ─────────────────────────────────────────────────── */
+
+.stg-logo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stg-logo-drop {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+  border: 1.5px dashed #CBD5E1;
+  border-radius: 14px;
+  background: var(--stg-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.stg-logo-drop:hover {
+  border-color: var(--stg-primary);
+}
+
+.stg-logo-drop input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.stg-logo-drop img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.stg-logo-empty {
+  font-size: 22px;
+  color: var(--stg-muted);
+}
+
+.stg-logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8125rem;
+  color: var(--stg-text-2);
+}
+
+.stg-logo-text b {
+  font-size: 0.875rem;
+  color: var(--stg-text);
+}
+
+/* ── Telefonlar ──────────────────────────────────────────────── */
+
+.stg-phone-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.stg-phone-input {
+  flex: 1;
+}
+
+.stg-phone-row > .ant-btn {
+  margin-top: 4px;
+}
+
+/* ── Rekvizitlar ─────────────────────────────────────────────── */
+
+.stg-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--stg-text-2);
+}
+
+.stg-group:not(:first-child) {
+  margin-top: 10px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--stg-border);
+}
+
+.stg-group svg,
+.stg-group .anticon {
+  color: var(--stg-primary);
+}
+
+.stg-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+}
+
+.stg-span {
+  grid-column: 1 / -1;
+}
+
+/* ── Litsenziya ──────────────────────────────────────────────── */
+
+.stg-license {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--stg-border);
+  border-radius: 12px;
+  background: var(--stg-soft);
+}
+
+.stg-license-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stg-text);
+}
+
+.stg-license-info > .anticon {
+  font-size: 22px;
+  color: var(--stg-muted);
+}
+
+.stg-license-info span {
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: anywhere;
+}
+
+.stg-license-info small {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--stg-text-2);
+}
+
+.stg-license-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ── Moslashuvchanlik ────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .stg-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stg-preview {
+    position: static;
+  }
+}
+
+@media (max-width: 576px) {
+  .stg-card {
+    padding: 14px;
+  }
+
+  .stg-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stg-logo {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stg-card-foot .ant-btn {
+    width: 100%;
+  }
+}

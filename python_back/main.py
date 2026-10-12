@@ -2097,6 +2097,8 @@ _TRANSLATABLE_TABLES = {
     "holter": "holter_analyses",
     "smad": "smad_analyses",
     "lab": "lab_analyses",
+    # Kompleks AI xulosasi — ustun 20260909000000_AddCombinedAiTranslations da
+    "combined": "combined_analyses",
 }
 
 
@@ -2139,7 +2141,9 @@ async def translate_analysis(
 
     # Asl til so'ralgan bilan bir xil bo'lsa tarjima kerak emas
     if source_lang and source_lang[:2] == target_lang:
-        return JSONResponse(content={"result": json.loads(answer), "cached": True})
+        # `jsonb` ustuni drayverdan lug'at bo'lib keladi (eski matn ham bo'lishi mumkin)
+        result = answer if isinstance(answer, dict) else json.loads(answer)
+        return JSONResponse(content={"result": result, "cached": True})
 
     existing = ai_translate.cached(translations, target_lang)
     if existing is not None:

@@ -156,11 +156,22 @@ public class CombinedAnalysisController : ControllerBase
     /// Kompleks xulosani o'chirish.
     /// DELETE api/combined-analyses/{id}
     /// </summary>
+    /// <remarks>
+    /// Faqat yaratgan shifokor, o'sha klinika admini/direktori yoki SuperAdmin.
+    /// </remarks>
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        if (!_currentUser.IsAuthenticated)
+        if (!_currentUser.IsAuthenticated || _currentUser.UserId <= 0)
             return Unauthorized(new { message = "Token invalid" });
+
+        var allowed = await _service.CanDeleteAsync(id, _currentUser.UserId, _currentUser.RoleId);
+        if (allowed == null) return NotFound(new { message = "Kompleks xulosa topilmadi" });
+        if (allowed == false)
+        {
+            _logger.LogWarning("Kompleks xulosani o'chirish rad etildi: id={Id} user={UserId}", id, _currentUser.UserId);
+            return StatusCode(403, new { message = "Bu xulosani o'chirishga ruxsat yo'q" });
+        }
 
         var deleted = await _service.DeleteAsync(id);
         if (!deleted) return NotFound(new { message = "Kompleks xulosa topilmadi" });

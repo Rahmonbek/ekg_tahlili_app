@@ -72,4 +72,39 @@ public class TokenService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    /// <summary>
+    /// Fon servislari uchun QISQA muddatli ichki token (5 daqiqa).
+    ///
+    /// <c>AutoCombinedAnalysisWorker</c> Python API ga foydalanuvchi so'rovisiz
+    /// murojaat qiladi, Python esa har bir so'rovda JWT talab qiladi. Token
+    /// foydalanuvchiga tegishli emas (`NameIdentifier = 0`, rol `System`).
+    ///
+    /// Audience ATAYLAB boshqa (`…-internal`): .NET audience ni tekshiradi
+    /// va bu tokenni o'zining hech bir endpointida qabul qilmaydi — token
+    /// tashqariga chiqib qolsa ham API ga kirish kaliti bo'la olmaydi.
+    /// Python audience ni tekshirmaydi, shuning uchun u yerda ishlaydi.
+    /// </summary>
+    public string GenerateServiceToken(string purpose)
+    {
+        var jwtKey = _configuration["Jwt:Key"];
+        if (string.IsNullOrWhiteSpace(jwtKey))
+            throw new InvalidOperationException("Jwt:Key sozlanmagan — token imzolab bo'lmaydi");
+
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, "0"),
+            new Claim(ClaimTypes.Name, $"system:{purpose}"),
+            new Claim(ClaimTypes.Role, "System"),
+        };
+        var creds = new SigningCredentials(
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)), SecurityAlgorithms.HmacSha256);
+        var token = new JwtSecurityToken(
+            issuer: _configuration["Jwt:Issuer"],
+            audience: $"{_configuration["Jwt:Audience"]}-internal",
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(5),
+            signingCredentials: creds);
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
 }

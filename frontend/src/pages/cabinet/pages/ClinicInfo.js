@@ -1,8 +1,8 @@
-import { Button, Col, Form, Input, Row, Select, Upload } from 'antd';
+import { Button, Form, Input, Select, Upload } from 'antd';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaBuilding, FaLocationDot, FaPlus } from 'react-icons/fa6';
-import { MinusCircleOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PhoneOutlined, PlusOutlined, SafetyCertificateOutlined, UploadOutlined } from '@ant-design/icons';
 import InputMask from 'react-input-mask';
 import { AiOutlineFieldNumber } from 'react-icons/ai';
 import { BsBank2 } from 'react-icons/bs';
@@ -11,15 +11,28 @@ import i18n from '../../../locale/i18next';
 import { useStore } from '../../../store/Store';
 import { get_clinic_by_id, send_clinic_detail, send_clinic_info, send_clinic_phone } from '../../../host/requests/ClinicRequest';
 import { get_districts_data, get_region_data } from '../../../host/requests/RegionRequest';
-import { api, imgApi } from '../../../host/Host';
+import { imgApi } from '../../../host/Host';
 import { dangerAlert, successAlert } from '../../../tools/Alerts';
 import { formatPhoneNumber, formatPhoneNumberForForm } from '../../../tools/formatters';
 import { clinicInfoTour } from '../../../tools/tourSteps'
 import { usePageTour } from '../../../components/shared/TourProvider';
 import useDocumentTitle from '../../../tools/useDocumentTitle';
+import './ClinicInfo.css';
 
 const formatBankAccount = (value) => (value ? value.replace(/(.{4})/g, '$1 ').trim() : '');
 
+/**
+ * Tashkilot ma'lumotlari (`/settings`).
+ *
+ * Uch mustaqil forma (asosiy, telefonlar, rekvizitlar) — har biri o'z
+ * endpointiga saqlanadi. Ko'rinish:
+ *  * chapda JONLI ko'rinish kartochkasi — kiritilgan ma'lumot PDF hisobot
+ *    sarlavhasida qanday chiqishini darhol ko'rsatadi;
+ *  * o'ngda bo'limlar; har birida "Saqlanmagan" belgisi (T-077);
+ *  * rekvizitlar mantiqiy guruhlarga bo'lingan: manzil, bank, litsenziya.
+ *
+ * Uslublar: `ClinicInfo.css` (`stg-*`).
+ */
 export default function ClinicInfo() {
     // Qo'llanma qadamlari ro'yxatdan o'tkaziladi; tugma header'da
     usePageTour(clinicInfoTour);
@@ -282,7 +295,10 @@ export default function ClinicInfo() {
       return;
     }
 
-    const fullUrl = `${api.replace('/api', '')}${licenseUrl}`;
+    // Logo bilan bir xil manba (`imgApi`). Ilgari `api.replace('/api', '')`
+    // ishlatilardi va `https://api.x.uz/api` kabi manzilda birinchi "/api"
+    // (domen ichidagisi) o'chib, havola buzilardi.
+    const fullUrl = `${imgApi}${licenseUrl}`;
     try {
       const response = await fetch(fullUrl);
       if (!response.ok) {
@@ -302,23 +318,106 @@ export default function ClinicInfo() {
     }
   };
 
+  // ── Jonli ko'rinish (o'ng/chap panel): forma qiymatlari yozilishi bilan ──
+  const watchName = Form.useWatch('clinicName', mainForm);
+  const watchPhones = Form.useWatch('phone_numbers', phoneForm);
+  const watchAddress = Form.useWatch('address', detailForm);
+  const watchInn = Form.useWatch('inn', detailForm);
+  const watchRegion = Form.useWatch('regionId', detailForm);
+  const watchDistrict = Form.useWatch('districtId', detailForm);
+
   if (!clinic) {
     return null;
   }
 
-  return (
-    <div>
-      <Row>
-        <Col className="main_col" lg={8} xs={24} sm={24} md={12}>
-          <div className="main_card" data-tour="clinic-main">
-            <h1>
-              <span>{t('main_info')}</span>
-            </h1>
+  const logoSrc = logoPreview || (clinic?.clinicLogo ? imgApi + clinic.clinicLogo : null);
+  const regionLabel = regionOptions.find((r) => r.value === watchRegion)?.label;
+  const districtLabel = watchDistrict?.label
+    ?? districtOptions.find((d) => d.value === (watchDistrict?.value ?? watchDistrict))?.label;
+  const previewAddress = [regionLabel, districtLabel, watchAddress].filter(Boolean).join(', ');
+  const previewPhones = (watchPhones || []).map((p) => p?.phoneNumber).filter((p) => p && p.length >= 10);
+  const hasLicense = !!clinic?.clinicDetail?.license;
 
-            <div className="main_card_content">
-              <Form form={mainForm} layout="vertical" onFinish={handleMainSubmit} onValuesChange={() => markDirty('main')}>
-                <Form.Item name="clinicLogo" label={t('clinic_logo')} data-tour="clinic-logo">
-                  <div className="input_img_box">
+  /** Bo'lim sarlavhasi: ikonka, nom, izoh va "saqlanmagan" belgisi. */
+  const SectionHead = ({ icon, title, hint, dirty }) => (
+    <header className="stg-card-head">
+      <span className="stg-card-icon" aria-hidden="true">{icon}</span>
+      <div className="stg-card-titles">
+        <h2 className="stg-card-title">
+          {title}
+          {dirty && <span className="stg-dirty">{t('unsaved', { defaultValue: 'Saqlanmagan' })}</span>}
+        </h2>
+        {hint && <p className="stg-card-hint">{hint}</p>}
+      </div>
+    </header>
+  );
+
+  return (
+    <div className="stg">
+      <div className="stg-header">
+        <h1 className="stg-title">{t('main_info', { defaultValue: "Tashkilot ma'lumotlari" })}</h1>
+        <p className="stg-subtitle">
+          {t('clinic_settings_subtitle', {
+            defaultValue: "Bu ma'lumotlar tahlil hisobotlari (PDF) sarlavhasida va bemorlarga ko'rinadigan joylarda chiqadi.",
+          })}
+        </p>
+      </div>
+
+      <div className="stg-layout">
+        {/* ═══════ Jonli ko'rinish ═══════ */}
+        <aside className="stg-preview">
+          <div className="stg-preview-card">
+            <p className="stg-preview-label">
+              {t('clinic_preview', { defaultValue: 'Hisobotlarda shunday ko\'rinadi' })}
+            </p>
+            <div className="stg-preview-brand">
+              <div className="stg-preview-logo">
+                {logoSrc ? <img alt="" src={logoSrc} /> : <FaBuilding />}
+              </div>
+              <div className="stg-preview-name">
+                {watchName || clinic.clinicName || t('clinic_name', { defaultValue: 'Klinika nomi' })}
+              </div>
+            </div>
+            <ul className="stg-preview-facts">
+              <li>
+                <FaLocationDot />
+                <span>{previewAddress || <em>{t('not_filled', { defaultValue: 'Kiritilmagan' })}</em>}</span>
+              </li>
+              <li>
+                <PhoneOutlined />
+                <span>{previewPhones.length ? previewPhones.join(' · ') : <em>{t('not_filled', { defaultValue: 'Kiritilmagan' })}</em>}</span>
+              </li>
+              <li>
+                <AiOutlineFieldNumber />
+                <span>
+                  {t('inn', { defaultValue: 'STIR' })}: {watchInn || <em>{t('not_filled', { defaultValue: 'Kiritilmagan' })}</em>}
+                </span>
+              </li>
+              <li>
+                <SafetyCertificateOutlined />
+                <span>
+                  {t('license', { defaultValue: 'Litsenziya' })}:{' '}
+                  {licenseFile || hasLicense
+                    ? <b className="stg-ok">{t('uploaded', { defaultValue: 'Yuklangan' })}</b>
+                    : <em>{t('not_uploaded', { defaultValue: 'Yuklanmagan' })}</em>}
+                </span>
+              </li>
+            </ul>
+          </div>
+        </aside>
+
+        <div className="stg-main">
+          {/* ═══════ 1. Asosiy ma'lumotlar ═══════ */}
+          <section className="stg-card" data-tour="clinic-main">
+            <SectionHead
+              icon={<FaBuilding />}
+              title={t('main_info', { defaultValue: "Asosiy ma'lumotlar" })}
+              dirty={dirtyBlocks.main}
+            />
+            <Form form={mainForm} layout="vertical" onFinish={handleMainSubmit} onValuesChange={() => markDirty('main')}>
+              <Form.Item name="clinicLogo" label={t('clinic_logo')} data-tour="clinic-logo">
+                <div className="stg-logo">
+                  <label className="stg-logo-drop">
                     <input
                       type="file"
                       accept="image/*"
@@ -329,232 +428,221 @@ export default function ClinicInfo() {
                         }
                         setClinicLogoFile(file);
                         setLogoPreview(URL.createObjectURL(file));
+                        markDirty('main');
                       }}
                     />
+                    {logoSrc
+                      ? <img alt="clinic logo" src={logoSrc} />
+                      : <span className="stg-logo-empty"><FaPlus /></span>}
+                  </label>
+                  <div className="stg-logo-text">
+                    <b>{logoSrc
+                      ? t('change_logo', { defaultValue: 'Logotipni almashtirish' })
+                      : t('upload_logo', { defaultValue: 'Logotip yuklash' })}</b>
+                    <span>{t('logo_hint', { defaultValue: 'PNG yoki JPG, kvadrat shaklda (masalan 512×512). Hisobot sarlavhasida chiqadi.' })}</span>
+                  </div>
+                </div>
+              </Form.Item>
 
-                    {logoPreview ? (
-                      <img alt="clinic logo preview" src={logoPreview} />
-                    ) : clinic?.clinicLogo ? (
-                      <img alt="clinic logo" src={imgApi + clinic.clinicLogo} />
-                    ) : (
-                      <div className="input_img_icon">
-                        <FaPlus />
+              <Form.Item
+                name="clinicName"
+                label={t('clinic_name')}
+                rules={[{ required: true, message: t('not_empty') }]}
+              >
+                <Input prefix={<FaBuilding />} placeholder={t('enter_clinic_name')} />
+              </Form.Item>
+
+              <footer className="stg-card-foot">
+                <Button type="primary" loading={loadingMain} htmlType="submit">
+                  {t('save_data')}
+                </Button>
+              </footer>
+            </Form>
+          </section>
+
+          {/* ═══════ 2. Telefon raqamlar ═══════ */}
+          <section className="stg-card" data-tour="clinic-phones">
+            <SectionHead
+              icon={<PhoneOutlined />}
+              title={t('phone_numbers')}
+              hint={t('phones_hint', { defaultValue: 'Bemorlar va hamkorlar bog\'lanadigan raqamlar. Hisobotda hammasi ko\'rsatiladi.' })}
+              dirty={dirtyBlocks.phones}
+            />
+            <Form form={phoneForm} layout="vertical" onFinish={handlePhonesSubmit} onValuesChange={() => markDirty('phones')}>
+              <Form.List name="phone_numbers">
+                {(fields, { add, remove }) => (
+                  <>
+                    {fields.map(({ key, name, ...restField }) => (
+                      <div key={key} className="stg-phone-row">
+                        <Form.Item {...restField} name={[name, 'id']} hidden>
+                          <Input />
+                        </Form.Item>
+
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'phoneNumber']}
+                          rules={[{ required: true, message: t('field_required') }, { len: 19, message: t('phone_incomplete', { defaultValue: "Telefon raqamni to'liq kiriting" }) }]}
+                          className="stg-phone-input"
+                        >
+                          <InputMask mask="+\9\9\8 (99) 999-99-99" maskChar={null}>
+                            {(props) => (
+                              <Input
+                                {...props}
+                                prefix={<PhoneOutlined />}
+                                placeholder="+998 (__) ___-__-__"
+                              />
+                            )}
+                          </InputMask>
+                        </Form.Item>
+
+                        <Button
+                          type="text"
+                          danger
+                          icon={<DeleteOutlined />}
+                          aria-label={t('delete', { defaultValue: "O'chirish" })}
+                          disabled={fields.length === 1}
+                          onClick={() => { remove(name); markDirty('phones'); }}
+                        />
                       </div>
+                    ))}
+
+                    <Button type="dashed" block icon={<PlusOutlined />} onClick={() => add({ id: null, phoneNumber: '' })}>
+                      {t('add_phone', { defaultValue: "Telefon qo'shish" })}
+                    </Button>
+                  </>
+                )}
+              </Form.List>
+
+              <footer className="stg-card-foot">
+                <Button type="primary" loading={loadingPhones} htmlType="submit">
+                  {t('save_data')}
+                </Button>
+              </footer>
+            </Form>
+          </section>
+
+          {/* ═══════ 3. Rekvizitlar: manzil, bank, litsenziya ═══════ */}
+          <section className="stg-card">
+            <SectionHead
+              icon={<BsBank2 />}
+              title={t('bank_info')}
+              hint={t('details_hint', { defaultValue: 'Rasmiy rekvizitlar — hujjatlar va hisob-kitoblar uchun.' })}
+              dirty={dirtyBlocks.detail}
+            />
+            <Form form={detailForm} layout="vertical" onFinish={handleDetailSubmit} onValuesChange={() => markDirty('detail')}>
+              <h3 className="stg-group"><FaLocationDot /> {t('address', { defaultValue: 'Manzil' })}</h3>
+              <div className="stg-grid">
+                <Form.Item name="regionId" label={t('region')} rules={[{ required: true, message: t('field_required') }]}>
+                  <Select
+                    placeholder={t('enter_region_clinic')}
+                    onChange={handleRegionChange}
+                    options={regionOptions}
+                  />
+                </Form.Item>
+                <Form.Item name="districtId" label={t('district')} rules={[{ required: true, message: t('field_required') }]}>
+                  <Select
+                    placeholder={t('enter_district_clinic')}
+                    labelInValue
+                    options={districtOptions}
+                    disabled={districts.length === 0}
+                  />
+                </Form.Item>
+                <Form.Item className="stg-span" name="address" label={t('address')} rules={[{ required: true, message: t('field_required') }]}>
+                  <Input prefix={<FaLocationDot />} placeholder={t('enter_address')} />
+                </Form.Item>
+              </div>
+
+              <h3 className="stg-group"><BsBank2 /> {t('bank_requisites', { defaultValue: 'Bank rekvizitlari' })}</h3>
+              <div className="stg-grid">
+                <Form.Item name="inn" label={t('inn')} rules={[{ required: true, message: t('field_required', { defaultValue: 'Maydonni to\'ldiring' }) }, { validator: (_, v) => (!v || String(v).replace(/\D/g, '').length === 9) ? Promise.resolve() : Promise.reject(new Error(t('digits_required', { defaultValue: '{{count}} ta raqam bo\'lishi kerak', count: 9 }))) }]}>
+                  <InputMask mask="999999999" maskChar={null}>
+                    {(props) => <Input {...props} prefix={<AiOutlineFieldNumber />} placeholder={t('enter_inn')} />}
+                  </InputMask>
+                </Form.Item>
+                <Form.Item name="mfo" label={t('mfo')} rules={[{ required: true, message: t('field_required', { defaultValue: 'Maydonni to\'ldiring' }) }, { validator: (_, v) => (!v || String(v).replace(/\D/g, '').length === 5) ? Promise.resolve() : Promise.reject(new Error(t('digits_required', { defaultValue: '{{count}} ta raqam bo\'lishi kerak', count: 5 }))) }]}>
+                  <InputMask mask="99999" maskChar={null}>
+                    {(props) => <Input {...props} prefix={<AiOutlineFieldNumber />} placeholder={t('enter_mfo')} />}
+                  </InputMask>
+                </Form.Item>
+                <Form.Item className="stg-span" name="bankAccount" label={t('bank_account')} rules={[{ required: true, message: t('field_required', { defaultValue: 'Maydonni to\'ldiring' }) }, { validator: (_, v) => (!v || String(v).replace(/\D/g, '').length === 20) ? Promise.resolve() : Promise.reject(new Error(t('digits_required', { defaultValue: '{{count}} ta raqam bo\'lishi kerak', count: 20 }))) }]}>
+                  <InputMask mask="9999 9999 9999 9999 9999" maskChar={null}>
+                    {(props) => <Input {...props} prefix={<AiOutlineFieldNumber />} placeholder={t('enter_bank_account')} />}
+                  </InputMask>
+                </Form.Item>
+                <Form.Item className="stg-span" name="bankName" label={t('bankName')} rules={[{ required: true, message: t('field_required') }]}>
+                  <Input prefix={<BsBank2 />} placeholder={t('enter_bankName')} />
+                </Form.Item>
+              </div>
+
+              <h3 className="stg-group"><SafetyCertificateOutlined /> {t('license')}</h3>
+              <Form.Item name="license" rules={[{ required: true, message: t('field_required') }]}>
+                {/* Tug'ma `<input type="file">` brauzer tiliga bo'ysunardi:
+                    o'zbek interfeysda "Выберите файл / Файл не выбран" chiqardi
+                    va dizayn tizimiga mos kelmasdi. */}
+                <div className="stg-license">
+                  <div className="stg-license-info">
+                    <SafetyCertificateOutlined className={hasLicense || licenseFile ? 'stg-ok' : ''} />
+                    <span>
+                      {licenseFile
+                        ? licenseFile.name
+                        : hasLicense
+                          ? t('license_uploaded', { defaultValue: 'Litsenziya nusxasi yuklangan' })
+                          : t('license_missing', { defaultValue: 'Litsenziya nusxasi hali yuklanmagan' })}
+                      <small>{t('license_hint', { defaultValue: 'PDF yoki rasm, 10 MB gacha' })}</small>
+                    </span>
+                  </div>
+                  <div className="stg-license-actions">
+                    {hasLicense && !licenseFile && (
+                      <Button icon={<LiaDownloadSolid />} onClick={downloadLicense}>
+                        {t('download', { defaultValue: 'Yuklab olish' })}
+                      </Button>
+                    )}
+                    <Upload
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      maxCount={1}
+                      showUploadList={false}
+                      beforeUpload={(file) => {
+                        // 10 MB dan katta guvohnoma nusxasi bo'lishi shart emas
+                        if (file.size > 10 * 1024 * 1024) {
+                          dangerAlert(t('file_too_large', { defaultValue: 'Fayl hajmi 10 MB dan oshmasligi kerak' }));
+                          return Upload.LIST_IGNORE;
+                        }
+                        setLicenseFile(file);
+                        detailForm.setFieldValue('license', file.name);
+                        markDirty('detail');
+                        return false;   // avtomatik yuborishni to'xtatamiz
+                      }}
+                    >
+                      <Button icon={<UploadOutlined />}>
+                        {hasLicense || licenseFile
+                          ? t('replace_file', { defaultValue: 'Faylni almashtirish' })
+                          : t('select_file', { defaultValue: 'Faylni tanlash' })}
+                      </Button>
+                    </Upload>
+                    {licenseFile && (
+                      <Button
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => {
+                          setLicenseFile(null);
+                          detailForm.setFieldValue('license', clinic?.clinicDetail?.license || undefined);
+                        }}
+                      />
                     )}
                   </div>
-                </Form.Item>
+                </div>
+              </Form.Item>
 
-                <Form.Item
-                  name="clinicName"
-                  label={t('clinic_name')}
-                  rules={[{ required: true, message: t('not_empty') }]}
-                >
-                  <Input prefix={<FaBuilding />} className="login_input" placeholder={t('enter_clinic_name')} />
-                </Form.Item>
-
-                <Form.Item style={{ marginBottom: '10px' }}>
-                  <Button className="btn_form" loading={loadingMain} htmlType="submit">
-                    {t('save_data')}
-                  </Button>
-                </Form.Item>
-              </Form>
-            </div>
-          </div>
-
-          <div className="main_card" data-tour="clinic-phones">
-            <h1>{t('phone_numbers')}</h1>
-
-            <div className="main_card_content">
-              <Form form={phoneForm} layout="vertical" onFinish={handlePhonesSubmit} onValuesChange={() => markDirty('phones')}>
-                <Form.List name="phone_numbers">
-                  {(fields, { add, remove }) => (
-                    <>
-                      {fields.map(({ key, name, ...restField }) => (
-                        <div key={key} style={{ display: 'flex', width: '100%', alignItems: 'flex-start' }}>
-                          <Form.Item {...restField} name={[name, 'id']} hidden>
-                            <Input />
-                          </Form.Item>
-
-                          <Form.Item
-                            {...restField}
-                            name={[name, 'phoneNumber']}
-                            rules={[{ required: true, message: t('field_required') }, { len: 19, message: t('phone_incomplete', { defaultValue: "Telefon raqamni to'liq kiriting" }) }]}
-                            style={{ width: '95%' }}
-                          >
-                            <InputMask mask="+\9\9\8 (99) 999-99-99" maskChar={null}>
-                              {(props) => (
-                                <Input
-                                  {...props}
-                                  className="login_input"
-                                  placeholder="+998 (__) ___-__-__"
-                                />
-                              )}
-                            </InputMask>
-                          </Form.Item>
-
-                          <MinusCircleOutlined
-                            style={{ marginTop: 10, fontSize: '20px', marginLeft: '5px' }}
-                            onClick={() => remove(name)}
-                          />
-                        </div>
-                      ))}
-
-                      <Form.Item>
-                        <Button type="dashed" block icon={<PlusOutlined />} onClick={() => add({ id: null, phoneNumber: '' })}>
-                          Telefon qo'shish
-                        </Button>
-                      </Form.Item>
-                    </>
-                  )}
-                </Form.List>
-
-                <Form.Item style={{ marginBottom: '10px' }}>
-                  <Button className="btn_form" loading={loadingPhones} htmlType="submit">
-                    {t('save_data')}
-                  </Button>
-                </Form.Item>
-              </Form>
-            </div>
-          </div>
-        </Col>
-
-        <Col className="main_col" lg={16} xs={24} sm={24} md={12}>
-          <div className="main_card">
-            <h1>{t('bank_info')}</h1>
-
-            <div className="main_card_content">
-              <Form form={detailForm} layout="vertical" onFinish={handleDetailSubmit} onValuesChange={() => markDirty('detail')}>
-                <Row>
-                  <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
-                    <Form.Item name="inn" label={t('inn')} rules={[{ required: true, message: t('field_required', { defaultValue: 'Maydonni to\'ldiring' }) }, { validator: (_, v) => (!v || String(v).replace(/\D/g, '').length === 9) ? Promise.resolve() : Promise.reject(new Error(t('digits_required', { defaultValue: '{{count}} ta raqam bo\'lishi kerak', count: 9 }))) }]}>
-                      <InputMask mask="999999999" maskChar={null}>
-                        {(props) => (
-                          <Input
-                            {...props}
-                            prefix={<AiOutlineFieldNumber />}
-                            className="login_input"
-                            placeholder={t('enter_inn')}
-                          />
-                        )}
-                      </InputMask>
-                    </Form.Item>
-                  </Col>
-
-                  <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
-                    <Form.Item name="license" label={t('license')} rules={[{ required: true, message: t('field_required') }]}>
-                      {/* Tug'ma `<input type="file">` brauzer tiliga bo'ysunardi:
-                          o'zbek interfeysda "Выберите файл / Файл не выбран" chiqardi
-                          va dizayn tizimiga mos kelmasdi. */}
-                      <div className="file-input-wrapper">
-                        <Upload
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          maxCount={1}
-                          fileList={licenseFile ? [{ uid: '-1', name: licenseFile.name, status: 'done' }] : []}
-                          beforeUpload={(file) => {
-                            // 10 MB dan katta guvohnoma nusxasi bo'lishi shart emas
-                            if (file.size > 10 * 1024 * 1024) {
-                              dangerAlert(t('file_too_large', { defaultValue: 'Fayl hajmi 10 MB dan oshmasligi kerak' }));
-                              return Upload.LIST_IGNORE;
-                            }
-                            setLicenseFile(file);
-                            detailForm.setFieldValue('license', file.name);
-                            return false;   // avtomatik yuborishni to'xtatamiz
-                          }}
-                          onRemove={() => {
-                            setLicenseFile(null);
-                            detailForm.setFieldValue('license', undefined);
-                          }}
-                        >
-                          <Button icon={<UploadOutlined />}>
-                            {t('select_file', { defaultValue: 'Faylni tanlash' })}
-                          </Button>
-                        </Upload>
-
-                        <div className="download_button">
-                          <button type="button" disabled={!clinic?.clinicDetail?.license} onClick={downloadLicense}>
-                            <LiaDownloadSolid />
-                          </button>
-                        </div>
-                      </div>
-                    </Form.Item>
-                  </Col>
-
-                  <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
-                    <Form.Item name="regionId" label={t('region')} rules={[{ required: true, message: t('field_required') }]}>
-                      <Select
-                        style={{ width: '100%' }}
-                        placeholder={t('enter_region_clinic')}
-                        onChange={handleRegionChange}
-                        options={regionOptions}
-                      />
-                    </Form.Item>
-                  </Col>
-
-                  <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
-                    <Form.Item name="districtId" label={t('district')} rules={[{ required: true, message: t('field_required') }]}>
-                      <Select
-                        style={{ width: '100%' }}
-                        placeholder={t('enter_district_clinic')}
-                        labelInValue
-                        options={districtOptions}
-                        disabled={districts.length === 0}
-                      />
-                    </Form.Item>
-                  </Col>
-
-                  <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
-                    <Form.Item name="address" label={t('address')} rules={[{ required: true, message: t('field_required') }]}>
-                      <Input prefix={<FaLocationDot />} className="login_input" placeholder={t('enter_address')} />
-                    </Form.Item>
-                  </Col>
-
-                  <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
-                    <Form.Item name="bankAccount" label={t('bank_account')} rules={[{ required: true, message: t('field_required', { defaultValue: 'Maydonni to\'ldiring' }) }, { validator: (_, v) => (!v || String(v).replace(/\D/g, '').length === 20) ? Promise.resolve() : Promise.reject(new Error(t('digits_required', { defaultValue: '{{count}} ta raqam bo\'lishi kerak', count: 20 }))) }]}>
-                      <InputMask mask="9999 9999 9999 9999 9999" maskChar={null}>
-                        {(props) => (
-                          <Input
-                            {...props}
-                            prefix={<AiOutlineFieldNumber />}
-                            className="login_input"
-                            placeholder={t('enter_bank_account')}
-                          />
-                        )}
-                      </InputMask>
-                    </Form.Item>
-                  </Col>
-
-                  <Col className="main_col" lg={12} xs={24} sm={24} md={24}>
-                    <Form.Item name="mfo" label={t('mfo')} rules={[{ required: true, message: t('field_required', { defaultValue: 'Maydonni to\'ldiring' }) }, { validator: (_, v) => (!v || String(v).replace(/\D/g, '').length === 5) ? Promise.resolve() : Promise.reject(new Error(t('digits_required', { defaultValue: '{{count}} ta raqam bo\'lishi kerak', count: 5 }))) }]}>
-                      <InputMask mask="99999" maskChar={null}>
-                        {(props) => (
-                          <Input
-                            {...props}
-                            prefix={<AiOutlineFieldNumber />}
-                            className="login_input"
-                            placeholder={t('enter_mfo')}
-                          />
-                        )}
-                      </InputMask>
-                    </Form.Item>
-                  </Col>
-
-                  <Col className="main_col" lg={24} xs={24} sm={24} md={24}>
-                    <Form.Item name="bankName" label={t('bankName')} rules={[{ required: true, message: t('field_required') }]}>
-                      <Input prefix={<BsBank2 />} className="login_input" placeholder={t('enter_bankName')} />
-                    </Form.Item>
-                  </Col>
-                </Row>
-
-                <Form.Item style={{ marginBottom: '10px' }}>
-                  <Button className="btn_form" loading={loadingDetail} htmlType="submit">
-                    {t('save_data')}
-                  </Button>
-                </Form.Item>
-              </Form>
-            </div>
-          </div>
-        </Col>
-      </Row>
+              <footer className="stg-card-foot">
+                <Button type="primary" loading={loadingDetail} htmlType="submit">
+                  {t('save_data')}
+                </Button>
+              </footer>
+            </Form>
+          </section>
+        </div>
+      </div>
 
       {/* Saqlanmagan o'zgarishlar indikatori — sahifa pastida yopishib turadi.
           Ilgari foydalanuvchi uchta blokni tahrirlab, faqat bittasini saqlashi
