@@ -18,7 +18,7 @@ namespace EkgAnalyzerApi.Services;
 /// Rang palitasi: #1D9E75 (NMED yashil) · #2C3E6B (to'q ko'k)
 /// Imzo/muhr yo'q — NMED raqamli tasdiqlash bloki ishlatiladi.
 /// </summary>
-public class PdfReportService
+public partial class PdfReportService
 {
     private readonly MedDataDB          _context;
     private readonly EncryptionService  _encryption;
@@ -27,6 +27,15 @@ public class PdfReportService
     private readonly IConfiguration _config;
     private readonly IFileStorage _storage;
     private readonly ILogger<PdfReportService> _logger;
+    private readonly ICurrentUser _currentUser;
+
+    // Joriy hujjat yozuvchisi — sahifada qancha joy qolganini bilish uchun
+    // (bo'lim sarlavhasi sahifa oxirida yolg'iz qolmasligi kerak).
+    // Servis har so'rov uchun alohida (scoped), shuning uchun maydon xavfsiz.
+    private PdfWriter? _writer;
+
+    // Sarlavha ostida kamida shuncha joy (pt) bo'lmasa, bo'lim yangi sahifadan boshlanadi
+    private const float MinSpaceAfterHeader = 110f;
 
     // Hujjatdagi eng kichik yozuv o'lchami — bundan past shrift ishlatilmaydi.
     private const float MinFontSize = 12f;
@@ -43,22 +52,30 @@ public class PdfReportService
     private const float MrgBottom = 34.02f;  // 12 mm
 
     // ── NMED rang palitasi ───────────────────────────────────────────────
-    private static readonly BaseColor CL_Green       = new( 29, 158, 117); // #1D9E75
-    private static readonly BaseColor CL_DarkBlue    = new( 44,  62, 107); // #2C3E6B
-    private static readonly BaseColor CL_Black       = new( 17,  17,  17); // #111
-    private static readonly BaseColor CL_Gray        = new(102, 102, 102); // #666
-    private static readonly BaseColor CL_LightGray   = new(150, 150, 150); // #999
-    private static readonly BaseColor CL_Border      = new(224, 224, 224); // #E0E0E0
-    private static readonly BaseColor CL_RowAlt      = new(249, 249, 249); // #F9F9F9
+    // Tibbiy hujjat uslubi: asosiy rang — to'q ko'k (sarlavha, chiziqlar),
+    // NMED yashili faqat urg'u sifatida (AI bo'limi, tasdiqlash bloki).
+    // To'liq bo'yalgan rangli polosalar ishlatilmaydi — ular hujjatni
+    // "reklama varaqasi"ga o'xshatib qo'yardi.
+    private static readonly BaseColor CL_Green       = new( 22, 138, 104); // #168A68 — NMED (bosma uchun to'qroq)
+    private static readonly BaseColor CL_DarkBlue    = new( 31,  58,  95); // #1F3A5F — tibbiy to'q ko'k
+    private static readonly BaseColor CL_Black       = new( 26,  31,  41); // #1A1F29
+    private static readonly BaseColor CL_Gray        = new( 91, 100, 114); // #5B6472
+    private static readonly BaseColor CL_LightGray   = new(138, 147, 160); // #8A93A0
+    private static readonly BaseColor CL_Border      = new(217, 223, 231); // #D9DFE7
+    private static readonly BaseColor CL_RowAlt      = new(248, 250, 252); // #F8FAFC
     private static readonly BaseColor CL_White       = new(255, 255, 255);
-    private static readonly BaseColor CL_AiBg        = new(240, 250, 245); // #F0FAF5
-    private static readonly BaseColor CL_DisclBg     = new(255, 245, 245); // #FFF5F5
-    private static readonly BaseColor CL_DisclBorder = new(204,   0,   0); // #CC0000
-    private static readonly BaseColor CL_WarnText    = new(153, 102,   0); // dark amber
-    private static readonly BaseColor CL_GoodText    = new(  0, 120,  60);
-    private static readonly BaseColor CL_BadText     = new(180,   0,   0);
-    private static readonly BaseColor CL_HrvCardBg   = new(245, 245, 245); // #F5F5F5
-    private static readonly BaseColor CL_VerifyBg    = new(250, 250, 250); // #FAFAFA
+    private static readonly BaseColor CL_AiBg        = new(243, 248, 246); // #F3F8F6
+    private static readonly BaseColor CL_DisclBg     = new(255, 248, 235); // #FFF8EB
+    private static readonly BaseColor CL_DisclBorder = new(217, 154,  30); // #D99A1E
+    private static readonly BaseColor CL_DisclText   = new(122,  78,   0); // #7A4E00
+    private static readonly BaseColor CL_WarnText    = new(181,  71,   8); // #B54708
+    private static readonly BaseColor CL_GoodText    = new(  6, 118,  71); // #067647
+    private static readonly BaseColor CL_BadText     = new(180,  35,  24); // #B42318
+    private static readonly BaseColor CL_HrvCardBg   = new(248, 250, 252); // #F8FAFC
+    private static readonly BaseColor CL_VerifyBg    = new(255, 255, 255);
+    private static readonly BaseColor CL_HeadBg      = new(238, 242, 247); // #EEF2F7 — jadval sarlavhasi
+    private static readonly BaseColor CL_PanelBg     = new(247, 249, 251); // #F7F9FB — ma'lumot paneli
+    private static readonly BaseColor CL_TitleBg     = new(236, 242, 248); // #ECF2F8 — hujjat nomi paneli
 
     public PdfReportService(
         MedDataDB context,
@@ -67,8 +84,10 @@ public class PdfReportService
         IWebHostEnvironment env,
         IConfiguration config,
         IFileStorage storage,
-        ILogger<PdfReportService> logger)
+        ILogger<PdfReportService> logger,
+        ICurrentUser currentUser)
     {
+        _currentUser = currentUser;
         _context    = context;
         _encryption = encryption;
         _verification = verification;
@@ -262,13 +281,10 @@ public class PdfReportService
         var docNum = DocNum("KAI", row.CreatedAt, combinedId);
         var result = ParseCombinedAi(row.AIAnswerData);
 
-        // Shifokor xulosalari `analysis_diagnoses` da (`analysis_type = "combined"`)
-        var notes = await _context.AnalysisDiagnoses
-            .Where(d => d.AnalysisType == "combined" && d.AnalysisId == combinedId)
-            .Include(d => d.Doctor)
-            .OrderBy(d => d.CreatedAt)
-            .ToListAsync();
-
+        // Shifokor xulosalari (`analysis_diagnoses`, `analysis_type = "combined"`)
+        // `Build` ichidagi umumiy "SHIFOKOR TASHXISI" bo'limida chiqadi.
+        // Ilgari ular bu yerda alohida ham chizilardi va hujjatda bir xil
+        // matn ikki marta turardi.
         return Build(tr, docNum, row.CreatedAt, clinic, row.Patient,
             tr["combined_ai_title"], row.CreatedAt,
             tr["combined_ai_type"],
@@ -280,8 +296,9 @@ public class PdfReportService
             {
                 AddCombinedSources(doc, tr, row.Items);
                 AddCombinedAiBlock(doc, tr, result);
-                AddCombinedDoctorNotes(doc, tr, notes);
-            });
+            },
+            showResultsHeader: false,
+            showTreatingDoctors: false);
     }
 
     /// <summary>Kompleks xulosaning JSON javobini o'qiydi (sxemasi boshqacha).</summary>
@@ -313,16 +330,17 @@ public class PdfReportService
         var fonts = BuildFonts();
         ComposeSectionHeader(doc, fonts, tr["combined_sources"], CL_DarkBlue);
 
-        var table = new PdfPTable(2) { WidthPercentage = 100, SpacingBefore = 4, SpacingAfter = 6 };
-        table.SetWidths(new[] { 60f, 40f });
+        var table = new PdfPTable(3) { WidthPercentage = 100, SpacingBefore = 4, SpacingAfter = 4 };
+        table.SetWidths(new[] { 8f, 64f, 28f });
 
+        var n = 0;
         foreach (var item in items.OrderBy(i => i.SnapshotDate))
         {
-            table.AddCell(new PdfPCell(new Phrase(GetAnalysisTypeName(tr, item.AnalysisType), fonts["td9"]))
-                { Border = Rectangle.BOX, BorderColor = CL_Border, Padding = 5 });
-            table.AddCell(new PdfPCell(new Phrase(
-                    item.SnapshotDate?.ToString("dd.MM.yyyy") ?? "-", fonts["td9"]))
-                { Border = Rectangle.BOX, BorderColor = CL_Border, Padding = 5 });
+            var bg = n % 2 == 0 ? CL_White : CL_RowAlt;
+            TblCell(table, (++n).ToString(), fonts["td9gray"], bg, Element.ALIGN_CENTER);
+            TblCell(table, GetAnalysisTypeName(tr, item.AnalysisType), fonts["td9"], bg, Element.ALIGN_LEFT);
+            TblCell(table, AppTime.ToLocal(item.SnapshotDate, _config)?.ToString("dd.MM.yyyy") ?? "—",
+                fonts["td9"], bg, Element.ALIGN_CENTER);
         }
 
         doc.Add(table);
@@ -377,12 +395,10 @@ public class PdfReportService
             || arr.ValueKind != JsonValueKind.Array || arr.GetArrayLength() == 0)
             return;
 
-        doc.Add(new Paragraph($"{label}:", fonts["p9label"]) { SpacingBefore = 6, SpacingAfter = 2 });
-        foreach (var element in arr.EnumerateArray())
-        {
-            if (element.ValueKind != JsonValueKind.String) continue;
-            doc.Add(new Paragraph($"• {element.GetString()}", fonts["p8"]) { SpacingAfter = 2 });
-        }
+        var items = arr.EnumerateArray()
+            .Where(e => e.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(e.GetString()))
+            .Select(e => $"•  {e.GetString()!.Trim()}");
+        AddLabeledText(doc, fonts, label, string.Join("\n", items));
     }
 
     /// <summary>Ehtimoliy tashxislar jadvali.</summary>
@@ -397,47 +413,37 @@ public class PdfReportService
         // buferidan oldin chiqarib yuborar va u boshqa bo'limning ustida
         // paydo bo'lardi. Nom jadvalning birinchi ustun sarlavhasida.
         var table = new PdfPTable(3)
-            { WidthPercentage = 100, SpacingBefore = 8, SpacingAfter = 6 };
-        table.SetWidths(new[] { 35f, 20f, 45f });
+            { WidthPercentage = 100, SpacingBefore = 10, SpacingAfter = 6, HeaderRows = 1 };
+        table.SetWidths(new[] { 34f, 16f, 50f });
+        TableHead(table, fonts,
+            tr["combined_differential"], tr["combined_probability"], tr["combined_evidence"]);
 
-        foreach (var header in new[]
-                 { tr["combined_differential"], tr["combined_probability"], tr["combined_evidence"] })
-        {
-            table.AddCell(new PdfPCell(new Phrase(header, fonts["th9"]))
-                { BackgroundColor = CL_RowAlt, Border = Rectangle.BOX, BorderColor = CL_Border, Padding = 5 });
-        }
-
+        var n = 0;
         foreach (var element in arr.EnumerateArray())
         {
             if (element.ValueKind != JsonValueKind.Object) continue;
-            foreach (var key in new[] { "diagnosis", "probability", "evidence" })
+            var bg = n++ % 2 == 0 ? CL_White : CL_RowAlt;
+
+            string Field(string key) =>
+                element.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.String
+                    ? v.GetString() ?? "—" : "—";
+
+            TblCell(table, Field("diagnosis"), fonts["td9bold"], bg, Element.ALIGN_LEFT);
+
+            // Ehtimollik rang bilan: yuqori — qizil, o'rtacha — sariq, past — kulrang
+            var probability = Field("probability");
+            var probColor = probability.ToLowerInvariant() switch
             {
-                var value = element.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.String
-                    ? v.GetString() : "-";
-                table.AddCell(new PdfPCell(new Phrase(value, fonts["td9"]))
-                    { Border = Rectangle.BOX, BorderColor = CL_Border, Padding = 5 });
-            }
+                "yuqori" or "высокая" or "high" => CL_BadText,
+                "o'rtacha" or "o‘rtacha" or "средняя" or "moderate" or "medium" => CL_WarnText,
+                _ => CL_Gray,
+            };
+            TblCell(table, probability, new Font(fonts["td9bold"].BaseFont, MinFontSize, Font.NORMAL, probColor),
+                bg, Element.ALIGN_CENTER);
+            TblCell(table, Field("evidence"), fonts["td9"], bg, Element.ALIGN_LEFT);
         }
 
         doc.Add(table);
-    }
-
-    /// <summary>Shifokor(lar) qo'lda yozgan xulosalar.</summary>
-    private void AddCombinedDoctorNotes(Document doc, Dictionary<string, string> tr,
-        List<AnalysisDiagnosis> notes)
-    {
-        if (notes.Count == 0) return;
-
-        var fonts = BuildFonts();
-        ComposeSectionHeader(doc, fonts, tr["combined_doctor_note"], CL_DarkBlue);
-
-        foreach (var note in notes)
-        {
-            var author = note.Doctor == null
-                ? "-"
-                : $"{note.Doctor.LastName} {note.Doctor.FirstName}".Trim();
-            AddLabeledText(doc, fonts, author, note.DiagnosisText);
-        }
     }
 
     public async Task<byte[]> GenerateCombinedReport(int patientId, string lang)
@@ -450,7 +456,7 @@ public class PdfReportService
 
         var ecgList = await _context.ECGAnalyse
             .Where(e => e.PatcientId == patientId && e.Status == 2)
-            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail).ThenInclude(d => d!.District).ThenInclude(d => d!.Region)
             .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
             .Include(e => e.CreatedDoctor)
             .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
@@ -459,7 +465,7 @@ public class PdfReportService
 
         var smadList = await _context.SmadAnalyses
             .Where(e => e.PatcientId == patientId && e.Status == 2)
-            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail).ThenInclude(d => d!.District).ThenInclude(d => d!.Region)
             .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
             .Include(e => e.CreatedDoctor)
             .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
@@ -467,7 +473,7 @@ public class PdfReportService
 
         var holterList = await _context.HolterAnalyses
             .Where(e => e.PatcientId == patientId && e.Status == 2)
-            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail).ThenInclude(d => d!.District).ThenInclude(d => d!.Region)
             .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
             .Include(e => e.CreatedDoctor)
             .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
@@ -475,7 +481,7 @@ public class PdfReportService
 
         var labList = await _context.LabAnalyse
             .Where(e => e.PatcientId == patientId && e.Status == 2)
-            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail)
+            .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail).ThenInclude(d => d!.District).ThenInclude(d => d!.Region)
             .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
             .Include(e => e.CreatedDoctor)
             .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
@@ -483,7 +489,7 @@ public class PdfReportService
 
         var paraList = await _context.ParasitologyAnalyses
             .Where(e => e.PatcientId == patientId && e.AnalysisStatus == "analyzed")
-            .Include(e => e.Clinic!).ThenInclude(c => c.ClinicDetail!)
+            .Include(e => e.Clinic!).ThenInclude(c => c.ClinicDetail!).ThenInclude(d => d!.District).ThenInclude(d => d!.Region)
             .Include(e => e.Clinic!).ThenInclude(c => c.ClinicPhoneNumber!)
             .Include(e => e.CreatedDoctor)
             .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
@@ -498,21 +504,26 @@ public class PdfReportService
             ?? paraList.FirstOrDefault()?.Clinic;
 
         var ms     = new MemoryStream();
-        var doc    = CreateDoc();
-        var writer = PdfWriter.GetInstance(doc, ms);
         var fonts  = BuildFonts();
-        writer.PageEvent = new FooterEvent(fonts, tr, docNum);
-        doc.Open();
+        var doc    = OpenPdf(ms, tr, fonts, clinic, docNum);
 
-        ComposeHeader(doc, tr, fonts, clinic, docNum, AppTime.LocalNow(_config),
-            tr["combined_title"], tr["combined_title"]);
+        ComposeDocTitle(doc, fonts, tr, tr["doc_title"], tr["combined_title"], docNum, AppTime.LocalNow(_config));
         ComposePatientBlock(doc, tr, fonts, patient, AppTime.LocalNow(_config));
 
+        // Birinchi tahlil bemor ma'lumotlari ostidan davom etadi — ilgari u
+        // ham yangi sahifadan boshlanib, 1-sahifa deyarli bo'sh qolardi
+        var firstSection = true;
         void Divider(string title)
         {
-            doc.NewPage();
-            var p = new Paragraph(title, fonts["h_white"]) { SpacingBefore = 4, SpacingAfter = 6 };
-            p.Alignment = Element.ALIGN_CENTER;
+            if (!firstSection) doc.NewPage();
+            firstSection = false;
+
+            var p = new Paragraph(title, fonts["doc_title"])
+            {
+                Alignment = Element.ALIGN_CENTER,
+                SpacingBefore = 14,
+                SpacingAfter = 2,
+            };
             doc.Add(p);
         }
 
@@ -601,15 +612,11 @@ public class PdfReportService
         var docNum = DocNum("CONS", row.CreatedAt, row.Id);
         var verifyUrl = BuildConsultationVerifyUrl(row.Id);
         var ms = new MemoryStream();
-        var doc = CreateDoc();
-        var writer = PdfWriter.GetInstance(doc, ms);
         var fonts = BuildFonts();
+        var doc = OpenPdf(ms, tr, fonts, row.Clinic, docNum);
 
-        writer.PageEvent = new FooterEvent(fonts, tr, docNum);
-        doc.Open();
-
-        ComposeHeader(doc, tr, fonts, row.Clinic, docNum, AppTime.ToLocal(row.Conclusion.CreatedAt, _config),
-            "Online konsultatsiya xulosasi", "NMED konsultatsiya hujjati");
+        ComposeDocTitle(doc, fonts, tr, "NMED konsultatsiya hujjati", "Online konsultatsiya xulosasi",
+            docNum, AppTime.ToLocal(row.Conclusion.CreatedAt, _config));
 
         if (row.Patient != null)
             ComposePatientBlock(doc, tr, fonts, row.Patient, row.ConsultationDate.ToDateTime(TimeOnly.MinValue));
@@ -651,15 +658,13 @@ public class PdfReportService
         string? analysisType,
         int? analysisId,
         Action<Document> content,
-        Action<Document>? beforeResultsContent = null)
+        Action<Document>? beforeResultsContent = null,
+        bool showResultsHeader = true,
+        bool showTreatingDoctors = true)
     {
         var ms     = new MemoryStream();
-        var doc    = CreateDoc();
-        var writer = PdfWriter.GetInstance(doc, ms);
         var fonts  = BuildFonts();
-
-        writer.PageEvent = new FooterEvent(fonts, tr, docNum);
-        doc.Open();
+        var doc    = OpenPdf(ms, tr, fonts, clinic, docNum);
 
         // Bazadagi vaqtlar UTC da saqlanadi. Hisobotda ular klinika
         // mintaqasida ko'rsatilishi kerak — aks holda ekranda `10:41`,
@@ -668,16 +673,18 @@ public class PdfReportService
         var localCreatedAt = AppTime.ToLocal(createdAt, _config);
         var localAnalysisDate = AppTime.ToLocal(analysisDate, _config);
 
-        ComposeHeader(doc, tr, fonts, clinic, docNum, localCreatedAt,
-            analysisTitle, tr["doc_title"]);
+        ComposeDocTitle(doc, fonts, tr, tr["doc_title"], analysisTitle, docNum, localCreatedAt);
         // Yosh hisoblash uchun mos sana: tahlil sanasi bo'lmasa hujjat sanasi
         ComposePatientBlock(doc, tr, fonts, patient, localAnalysisDate ?? localCreatedAt);
         ComposeAnalysisBlock(doc, tr, fonts, localAnalysisDate, analysisTypeName,
-            createdDoctor, treatingDoctors, complaints);
+            createdDoctor, treatingDoctors, complaints, showTreatingDoctors);
 
         beforeResultsContent?.Invoke(doc);
 
-        ComposeSectionHeader(doc, fonts, tr["results_title"], CL_DarkBlue);
+        // Kontent o'z bo'lim sarlavhasini chizsa, umumiy "NATIJALAR"
+        // sarlavhasi qo'yilmaydi — aks holda ikki sarlavha ketma-ket turardi
+        if (showResultsHeader)
+            ComposeSectionHeader(doc, fonts, tr["results_title"], CL_DarkBlue);
         content(doc);
 
         // Shifokor tashxislari (agar mavjud bo'lsa)
@@ -698,154 +705,328 @@ public class PdfReportService
         new Document(PageSize.A4, MrgSide, MrgSide, MrgTop, MrgBottom);
 
     // ════════════════════════════════════════════════════════════════════
-    //  BLOK 1 — HEADER
+    //  BLOK 1 — SHAPKA VA HUJJAT SARLAVHASI
     // ════════════════════════════════════════════════════════════════════
 
-    private void ComposeHeader(
-        Document doc,
-        Dictionary<string, string> tr,
-        Dictionary<string, Font> fonts,
-        Clinic? clinic,
-        string docNum,
-        DateTime? date,
-        string analysisTitle,
-        string docTitle)
+    /// <summary>
+    /// Hujjatni ochadi va HAR BIR sahifaga shapka (NMED + hujjatni
+    /// chiqarayotgan klinika) hamda kolontitul chizadigan hodisani ulaydi.
+    /// 1-sahifada to'liq shapka, keyingilarida ixcham variant.
+    /// </summary>
+    private Document OpenPdf(MemoryStream ms, Dictionary<string, string> tr,
+        Dictionary<string, Font> fonts, Clinic? documentClinic, string docNum)
     {
-        // ── 2-ustunli jadval: [Klinika | NMED] ─────────────────────────
-        var tbl = new PdfPTable(2) { WidthPercentage = 100 };
-        tbl.SetWidths(new[] { 55f, 45f });
-        tbl.SpacingAfter = 0;
+        var clinic = ResolveIssuerClinic(documentClinic);
+        var (full, compact) = BuildHeaderTables(tr, fonts, clinic);
 
-        // ──── CHAP: klinika logotipi + nomi ──────────────────────────
-        var leftCell = new PdfPCell
-        {
-            Border           = Rectangle.RIGHT_BORDER,
-            BorderColorRight = CL_Border,
-            BorderWidthRight = 0.5f,
-            PaddingRight     = 10,
-            PaddingBottom    = 8,
-            PaddingTop       = 6,
-            BackgroundColor  = new BaseColor(250, 252, 255),
-        };
+        var doc = CreateDoc();
+        doc.SetMargins(MrgSide, MrgSide, PageChromeEvent.TopMarginFor(full), MrgBottom);
 
-        // Klinika logotipi
-        var logoPath = GetLogoPath(clinic);
-        if (logoPath != null)
-        {
-            try
-            {
-                var logo = Image.GetInstance(logoPath);
-                logo.ScaleToFit(110f, 55f);
-                logo.Alignment = Element.ALIGN_LEFT;
-                leftCell.AddElement(logo);
-                leftCell.AddElement(new Phrase(" ", fonts["p8gray"]));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Klinika logotipi yuklanmadi: {p}", logoPath);
-            }
-        }
+        var writer = PdfWriter.GetInstance(doc, ms);
+        _writer = writer;
+        writer.PageEvent = new PageChromeEvent(full, compact, fonts, tr, docNum);
+        doc.Open();
+        return doc;
+    }
 
-        var clinicPhrase = new Phrase();
-        clinicPhrase.Add(new Chunk(clinic?.ClinicName ?? "Shifoxona", fonts["h_13b"]));
+    /// <summary>
+    /// Shapkadagi klinika — hujjatni CHIQARAYOTGAN foydalanuvchining klinikasi
+    /// (loyiha egasining talabi). Foydalanuvchi yoki uning klinikasi
+    /// aniqlanmasa — hujjat yozuvidagi klinika.
+    /// </summary>
+    private Clinic? ResolveIssuerClinic(Clinic? fallback)
+    {
+        var userId = _currentUser.UserId;
+        if (userId <= 0) return fallback;
 
-        // Region va District ko'rsatish
-        var district = clinic?.ClinicDetail?.District;
-        var region   = district?.Region;
-        if (region != null || district != null)
-        {
-            var regionName   = region?.NameUz   ?? region?.NameRu ?? "";
-            var districtName = district?.NameUz ?? district?.NameRu ?? "";
-            var geo = string.Join(", ",
-                new[] { regionName, districtName }
-                    .Where(s => !string.IsNullOrWhiteSpace(s)));
-            if (!string.IsNullOrWhiteSpace(geo))
-                clinicPhrase.Add(new Chunk($"\n{geo}", fonts["p9gray"]));
-        }
+        var clinicId = _context.Users.AsNoTracking()
+            .Where(u => u.Id == userId)
+            .Select(u => u.ClinicId)
+            .FirstOrDefault();
+        if (clinicId == null) return fallback;
+        if (fallback != null && fallback.Id == clinicId && fallback.ClinicPhoneNumber != null)
+            return fallback;
 
-        if (clinic?.ClinicDetail?.Address is { } addr)
-            clinicPhrase.Add(new Chunk($"\n{addr}", fonts["p9gray"]));
+        return _context.Clinics.AsNoTracking()
+            .Include(c => c.ClinicPhoneNumber)
+            .FirstOrDefault(c => c.Id == clinicId) ?? fallback;
+    }
 
-        var clinicPhones = clinic?.ClinicPhoneNumber?
+    /// <summary>"NMED Milliy tibbiy diagnostika platformasi" → "Milliy tibbiy diagnostika platformasi".</summary>
+    private static string PlatformTagline(Dictionary<string, string> tr)
+    {
+        var text = tr["footer_platform"].Trim();
+        return text.StartsWith("NMED ", StringComparison.OrdinalIgnoreCase) ? text[5..] : text;
+    }
+
+    /// <summary>
+    /// Shapka jadvallari: chapda NMED (logotip, nom, platforma, sayt), o'ngda
+    /// hujjatni chiqarayotgan klinika (nom, telefon, logotip). Ular sahifa
+    /// hodisasida (<see cref="PageChromeEvent"/>) har sahifaga chiziladi.
+    /// </summary>
+    private (PdfPTable full, PdfPTable compact) BuildHeaderTables(
+        Dictionary<string, string> tr, Dictionary<string, Font> fonts, Clinic? clinic)
+    {
+        var width = PageSize.A4.Width - MrgSide * 2;
+        var clinicName = string.IsNullOrWhiteSpace(clinic?.ClinicName) ? "—" : clinic!.ClinicName!.Trim();
+        var phones = clinic?.ClinicPhoneNumber?
             .Select(p => p.PhoneNumber?.Trim())
             .Where(p => !string.IsNullOrWhiteSpace(p))
             .Distinct()
-            .ToList();
-
-        if (clinicPhones?.Count > 0)
-        {
-            var phones = string.Join("  |  ", clinicPhones);
-            clinicPhrase.Add(new Chunk($"\n{tr["phone"]}: {phones}", fonts["p9gray"]));
-        }
-
-        leftCell.AddElement(new Paragraph(clinicPhrase) { Leading = 13f });
-        tbl.AddCell(leftCell);
-
-        // ──── O'NG: NMED logotipi + nomed.uz + hujjat ma'lumotlari ───
-        var rightCell = new PdfPCell
-        {
-            Border      = Rectangle.NO_BORDER,
-            PaddingLeft = 10,
-            PaddingBottom = 8,
-            PaddingTop  = 6,
-            BackgroundColor = new BaseColor(247, 252, 249),
-            HorizontalAlignment = Element.ALIGN_RIGHT,
-        };
-
-        // NMED logotipi
+            .ToList() ?? new List<string?>();
+        var phoneText = phones.Count > 0 ? $"{tr["phone"]}: {string.Join(", ", phones)}" : null;
+        var clinicLogoPath = GetLogoPath(clinic);
         var nmedLogoPath = Path.Combine(_env.WebRootPath ?? "", "nmed-logo.png");
-        if (File.Exists(nmedLogoPath))
+
+        // ── To'liq shapka (1-sahifa) ─────────────────────────────────
+        var full = new PdfPTable(3) { TotalWidth = width, LockedWidth = true };
+        full.SetWidths(new[] { 48f, 4f, 48f });
+
+        var nmed = new PdfPTable(2) { WidthPercentage = 100 };
+        nmed.SetWidths(new[] { 21f, 79f });
+        nmed.AddCell(ImageCell(LoadImage(nmedLogoPath), 46f, Element.ALIGN_LEFT) ?? BadgeCell("N", fonts, CL_Green));
+        var nmedText = new PdfPCell
         {
-            try
+            Border = Rectangle.NO_BORDER, Padding = 0, PaddingLeft = 9,
+            VerticalAlignment = Element.ALIGN_MIDDLE,
+        };
+        nmedText.AddElement(new Paragraph("NMED", fonts["hdr_brand"]) { Leading = 18f });
+        nmedText.AddElement(new Paragraph(PlatformTagline(tr), fonts["p9gray"]) { Leading = 14f });
+        nmedText.AddElement(new Paragraph("nmed.uz", fonts["nmed_url"]) { Leading = 14f });
+        nmed.AddCell(nmedText);
+        full.AddCell(new PdfPCell(nmed) { Border = Rectangle.NO_BORDER, Padding = 0, VerticalAlignment = Element.ALIGN_MIDDLE });
+
+        // O'rtadagi ingichka vertikal ajratuvchi
+        full.AddCell(new PdfPCell
+        {
+            Border = Rectangle.NO_BORDER, Padding = 0,
+            CellEvent = new VerticalRuleEvent(CL_Border, 0.8f, 4f),
+        });
+
+        var cl = new PdfPTable(2) { WidthPercentage = 100 };
+        cl.SetWidths(new[] { 79f, 21f });
+        var clText = new PdfPCell
+        {
+            Border = Rectangle.NO_BORDER, Padding = 0, PaddingRight = 9,
+            VerticalAlignment = Element.ALIGN_MIDDLE,
+        };
+        clText.AddElement(new Paragraph(clinicName, fonts["hdr_clinic"]) { Alignment = Element.ALIGN_RIGHT, Leading = 17f });
+        if (phoneText != null)
+            clText.AddElement(new Paragraph(phoneText, fonts["p9gray"]) { Alignment = Element.ALIGN_RIGHT, Leading = 14f });
+        cl.AddCell(clText);
+        cl.AddCell(ImageCell(LoadImage(clinicLogoPath), 46f, Element.ALIGN_RIGHT) ?? BadgeCell(Initials(clinicName), fonts, CL_DarkBlue));
+        full.AddCell(new PdfPCell(cl) { Border = Rectangle.NO_BORDER, Padding = 0, VerticalAlignment = Element.ALIGN_MIDDLE });
+
+        // ── Ixcham shapka (2-sahifadan) ──────────────────────────────
+        var compact = new PdfPTable(2) { TotalWidth = width, LockedWidth = true };
+        compact.SetWidths(new[] { 50f, 50f });
+
+        var cLeft = new PdfPTable(2) { WidthPercentage = 100 };
+        cLeft.SetWidths(new[] { 9f, 91f });
+        cLeft.AddCell(ImageCell(LoadImage(nmedLogoPath), 20f, Element.ALIGN_LEFT) ?? new PdfPCell { Border = Rectangle.NO_BORDER });
+        var brand = new Phrase();
+        brand.Add(new Chunk("NMED", fonts["td9bold"]));
+        brand.Add(new Chunk("  ·  nmed.uz", fonts["p9gray"]));
+        cLeft.AddCell(new PdfPCell(brand)
+        {
+            Border = Rectangle.NO_BORDER, Padding = 0, PaddingLeft = 5,
+            VerticalAlignment = Element.ALIGN_MIDDLE,
+        });
+        compact.AddCell(new PdfPCell(cLeft) { Border = Rectangle.NO_BORDER, Padding = 0, VerticalAlignment = Element.ALIGN_MIDDLE });
+
+        var cRight = new Phrase();
+        cRight.Add(new Chunk(clinicName, fonts["td9bold"]));
+        if (phones.Count > 0) cRight.Add(new Chunk($"  ·  {phones[0]}", fonts["p9gray"]));
+        compact.AddCell(new PdfPCell(cRight)
+        {
+            Border = Rectangle.NO_BORDER, Padding = 0,
+            HorizontalAlignment = Element.ALIGN_RIGHT, VerticalAlignment = Element.ALIGN_MIDDLE,
+        });
+
+        return (full, compact);
+    }
+
+    private Image? LoadImage(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return null;
+        try
+        {
+            return Image.GetInstance(path);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "PDF shapkasi uchun rasm yuklanmadi: {p}", path);
+            return null;
+        }
+    }
+
+    private static PdfPCell? ImageCell(Image? image, float size, int align)
+    {
+        if (image == null) return null;
+        var img = image;
+        img.ScaleToFit(size, size);
+        img.Alignment = align;
+        var cell = new PdfPCell { Border = Rectangle.NO_BORDER, Padding = 0, VerticalAlignment = Element.ALIGN_MIDDLE };
+        cell.AddElement(img);
+        return cell;
+    }
+
+    /// <summary>Logotip yo'q bo'lsa — nomning bosh harflari yozilgan rangli kvadrat.</summary>
+    private static PdfPCell BadgeCell(string text, Dictionary<string, Font> fonts, BaseColor color) =>
+        new(new Phrase(text, fonts["badge"]))
+        {
+            Border = Rectangle.NO_BORDER,
+            FixedHeight = 46f,
+            HorizontalAlignment = Element.ALIGN_CENTER,
+            VerticalAlignment = Element.ALIGN_MIDDLE,
+            PaddingBottom = 5,
+            CellEvent = new RoundedCell(color, null, 9f),
+        };
+
+    private static string Initials(string name)
+    {
+        var parts = name.Split(new[] { ' ', '-', '"', '«', '»' }, StringSplitOptions.RemoveEmptyEntries)
+            .Where(p => char.IsLetterOrDigit(p[0]))
+            .Take(2)
+            .Select(p => char.ToUpperInvariant(p[0]));
+        var initials = string.Concat(parts);
+        return initials.Length > 0 ? initials : "+";
+    }
+
+    /// <summary>
+    /// Hujjat nomi paneli: och fon, chapda NMED yashil urg'u chizig'i;
+    /// chapda turkum va nom, o'ngda hujjat raqami va sanasi.
+    /// </summary>
+    private static void ComposeDocTitle(Document doc, Dictionary<string, Font> fonts,
+        Dictionary<string, string> tr, string? kicker, string title,
+        string? docNum, DateTime? date, string? numberLabel = null, bool dateOnly = false)
+    {
+        var band = new PdfPTable(2) { WidthPercentage = 100 };
+        band.SetWidths(new[] { 70f, 30f });
+
+        var left = new PdfPCell
+        {
+            Border = Rectangle.NO_BORDER,
+            PaddingLeft = 18, PaddingRight = 6, PaddingTop = 8, PaddingBottom = 12,
+            VerticalAlignment = Element.ALIGN_MIDDLE,
+        };
+        if (!string.IsNullOrWhiteSpace(kicker))
+            left.AddElement(new Paragraph(kicker.ToUpperInvariant(), fonts["doc_kicker"]) { Leading = 15f });
+        left.AddElement(new Paragraph(title.ToUpperInvariant(), fonts["title_big"]) { Leading = 21f });
+        band.AddCell(left);
+
+        var right = new PdfPCell
+        {
+            Border = Rectangle.NO_BORDER,
+            PaddingLeft = 6, PaddingRight = 16, PaddingTop = 8, PaddingBottom = 12,
+            VerticalAlignment = Element.ALIGN_MIDDLE,
+        };
+        var meta = new Paragraph { Alignment = Element.ALIGN_RIGHT, Leading = 15f };
+        if (!string.IsNullOrWhiteSpace(docNum))
+        {
+            meta.Add(new Chunk($"{numberLabel ?? tr["doc_number_prefix"]}\n", fonts["doc_kicker"]));
+            meta.Add(new Chunk(docNum, fonts["p10bold"]));
+        }
+        if (date.HasValue)
+        {
+            var dateText = dateOnly ? $"{date:dd.MM.yyyy}" : $"{date:dd.MM.yyyy  HH:mm}";
+            meta.Add(new Chunk((meta.Count > 0 ? "\n" : "") + dateText, fonts["p9gray"]));
+        }
+        right.AddElement(meta);
+        band.AddCell(right);
+
+        var wrap = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 0, SpacingAfter = 4 };
+        wrap.AddCell(new PdfPCell(band)
+        {
+            Border = Rectangle.NO_BORDER,
+            Padding = 0,
+            CellEvent = new RoundedCell(CL_TitleBg, null, 8f, CL_Green),
+        });
+        doc.Add(wrap);
+    }
+
+    /// <summary>Ma'lumot jadvalini yumaloq burchakli och kartochkaga o'raydi.</summary>
+    private static PdfPTable Card(PdfPTable inner)
+    {
+        var wrap = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 2, SpacingAfter = 2 };
+        wrap.AddCell(new PdfPCell(inner)
+        {
+            Border = Rectangle.NO_BORDER,
+            PaddingLeft = 12, PaddingRight = 12, PaddingTop = 3, PaddingBottom = 5,
+            CellEvent = new RoundedCell(CL_PanelBg, CL_Border, 7f),
+        });
+        return wrap;
+    }
+
+    /// <summary>Yumaloq burchakli fon/chegara (ixtiyoriy chap urg'u chizig'i bilan).</summary>
+    private sealed class RoundedCell : IPdfPCellEvent
+    {
+        private readonly BaseColor? _fill;
+        private readonly BaseColor? _stroke;
+        private readonly BaseColor? _accent;
+        private readonly float _radius;
+
+        public RoundedCell(BaseColor? fill, BaseColor? stroke, float radius, BaseColor? accent = null)
+        {
+            _fill = fill; _stroke = stroke; _radius = radius; _accent = accent;
+        }
+
+        public void CellLayout(PdfPCell cell, Rectangle position, PdfContentByte[] canvases)
+        {
+            var cb = canvases[PdfPTable.BACKGROUNDCANVAS];
+            var x = position.Left + 0.5f;
+            var y = position.Bottom + 0.5f;
+            var w = position.Width - 1f;
+            var h = position.Height - 1f;
+
+            cb.SaveState();
+            if (_fill != null)
             {
-                var nmedLogo = Image.GetInstance(nmedLogoPath);
-                nmedLogo.ScaleToFit(104f, 42f);
-                nmedLogo.Alignment = Element.ALIGN_RIGHT;
-                rightCell.AddElement(nmedLogo);
+                cb.SetColorFill(_fill);
+                cb.RoundRectangle(x, y, w, h, _radius);
+                cb.Fill();
             }
-            catch { /* fallback matn */ }
+            if (_accent != null)
+            {
+                cb.SetColorFill(_accent);
+                cb.RoundRectangle(x, y, 4.5f, h, 2.2f);
+                cb.Fill();
+            }
+            if (_stroke != null)
+            {
+                cb.SetColorStroke(_stroke);
+                cb.SetLineWidth(0.7f);
+                cb.RoundRectangle(x, y, w, h, _radius);
+                cb.Stroke();
+            }
+            cb.RestoreState();
         }
-        else
+    }
+
+    /// <summary>Katak o'rtasidan vertikal ingichka chiziq (shapkadagi ajratuvchi).</summary>
+    private sealed class VerticalRuleEvent : IPdfPCellEvent
+    {
+        private readonly BaseColor _color;
+        private readonly float _width;
+        private readonly float _inset;
+
+        public VerticalRuleEvent(BaseColor color, float width, float inset)
         {
-            // Fallback: "NMED" matn + nmed.uz
-            rightCell.AddElement(new Paragraph("NMED", fonts["nmed_logo"]));
+            _color = color; _width = width; _inset = inset;
         }
 
-        var rightPhrase = new Phrase();
-        rightPhrase.Add(new Chunk("nmed.uz", fonts["nmed_url"]));
-        rightPhrase.Add(new Chunk(
-            $"\n{tr["doc_number_prefix"]}: {docNum}",
-            fonts["p9bold"]));
-        // Sarlavhadagi sana — yozuv tizimga kiritilgan vaqt (`created_at`).
-        // Ilgari u ham "Tahlil sanasi" deb nomlanardi va "TAHLIL MA'LUMOTLARI"
-        // bo'limidagi haqiqiy tahlil sanasi bilan chalkashardi.
-        rightPhrase.Add(new Chunk(
-            $"\n{tr["document_date"]}: {date:dd.MM.yyyy}  {date:HH:mm}",
-            fonts["p9gray"]));
-
-        rightCell.AddElement(new Paragraph(rightPhrase) { Alignment = Element.ALIGN_RIGHT, Leading = 13f });
-        tbl.AddCell(rightCell);
-
-        doc.Add(tbl);
-
-        // ── Header osti: #1D9E75 chiziq (2 pt) ───────────────────────
-        HLine(doc, 2f, CL_Green);
-
-        // ── Hujjat sarlavhasi ─────────────────────────────────────────
-        var title1 = new Paragraph(docTitle, fonts["doc_title"])
+        public void CellLayout(PdfPCell cell, Rectangle position, PdfContentByte[] canvases)
         {
-            Alignment    = Element.ALIGN_CENTER,
-            SpacingBefore = 6,
-            SpacingAfter  = 2,
-        };
-        doc.Add(title1);
-
-        var title2 = new Paragraph(analysisTitle, fonts["analysis_title"])
-        {
-            Alignment    = Element.ALIGN_CENTER,
-            SpacingAfter = 8,
-        };
-        doc.Add(title2);
+            var cb = canvases[PdfPTable.LINECANVAS];
+            var x = (position.Left + position.Right) / 2f;
+            cb.SaveState();
+            cb.SetColorStroke(_color);
+            cb.SetLineWidth(_width);
+            cb.MoveTo(x, position.Bottom + _inset);
+            cb.LineTo(x, position.Top - _inset);
+            cb.Stroke();
+            cb.RestoreState();
+        }
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -859,31 +1040,69 @@ public class PdfReportService
         Patcient patient,
         DateTime? refDate)
     {
-        ComposeSectionHeader(doc, fonts, tr["patient_info"], CL_Green);
-
-        var tbl = InfoTable();
+        ComposeSectionHeader(doc, fonts, tr["patient_info"], CL_DarkBlue);
 
         // Sharif chiqarilmaydi — platformadagi barcha ko'rsatish joylari
-        // bilan bir xil qoida
-        var fio = $"{patient.LastName?.ToUpper()} {patient.FirstName}".Trim();
-        InfoRow(tbl, tr["fio"] + ":", fio, fonts, 0);
-
+        // bilan bir xil qoida. Manzil ham ataylab chiqarilmaydi (loyiha
+        // egasi qarori).
         var age = Age(patient.BirthDate, refDate ?? AppTime.LocalNow(_config));
-        InfoRow(tbl, tr["birth_date"] + ":",
-            $"{patient.BirthDate:dd.MM.yyyy}  ({age} {tr["age_suffix"]})", fonts, 1);
-
-        InfoRow(tbl, tr["gender"] + ":",
-            patient.Gender ? tr["gender_male"] : tr["gender_female"], fonts, 0);
-
-        InfoRow(tbl, tr["passport"] + ":",
-            MaskPassport(patient.Passport), fonts, 1);
-
-        // Manzil ataylab chiqarilmaydi (loyiha egasi qarori)
-
+        var pairs = new List<(string, string)>
+        {
+            (tr["fio"], $"{patient.LastName?.ToUpper()} {patient.FirstName}".Trim()),
+            (tr["birth_date"], $"{patient.BirthDate:dd.MM.yyyy}  ({age} {tr["age_suffix"]})"),
+            (tr["gender"], patient.Gender ? tr["gender_male"] : tr["gender_female"]),
+            (tr["passport"], MaskPassport(patient.Passport)),
+        };
         if (!string.IsNullOrWhiteSpace(patient.Phone))
-            InfoRow(tbl, tr["phone"] + ":", patient.Phone, fonts, 1);
+            pairs.Add((tr["phone"], patient.Phone));
 
-        doc.Add(tbl);
+        doc.Add(Card(InfoGrid(pairs, fonts, boldFirstValue: true)));
+    }
+
+    /// <summary>
+    /// Ikki juft ustunli (yorliq | qiymat | yorliq | qiymat) ixcham ma'lumot
+    /// paneli. `wide` juftliklar butun qator bo'ylab chiziladi (uzun matn uchun).
+    /// </summary>
+    private static PdfPTable InfoGrid(List<(string label, string value)> pairs,
+        Dictionary<string, Font> fonts, bool boldFirstValue = false,
+        List<(string label, string value)>? wide = null)
+    {
+        // "Yorliq tepada, qiymat pastda" maydonlari, qatorda 3 tadan.
+        // Ilgari yorliq | qiymat | yorliq | qiymat edi: 12 pt shriftda tor
+        // ustunlarga sig'masdan "Tahlil / o'tkazilgan / sana" bo'lib 3 qatorga
+        // sinardi, bemor ismi ham ikkiga bo'linardi.
+        const int cols = 3;
+        var tbl = new PdfPTable(cols) { WidthPercentage = 100, SpacingBefore = 0, SpacingAfter = 0 };
+
+        PdfPCell Field(string label, string value, bool bold)
+        {
+            var cell = new PdfPCell
+            {
+                Border = Rectangle.NO_BORDER,
+                PaddingLeft = 0, PaddingRight = 10, PaddingTop = 6, PaddingBottom = 6,
+            };
+            cell.AddElement(new Paragraph(label, fonts["th9"]) { Leading = 14f });
+            cell.AddElement(new Paragraph(string.IsNullOrWhiteSpace(value) ? "\u2014" : value,
+                bold ? fonts["td9bold"] : fonts["td9"]) { Leading = 15f });
+            return cell;
+        }
+
+        for (var i = 0; i < pairs.Count; i++)
+            tbl.AddCell(Field(pairs[i].label, pairs[i].value, boldFirstValue && i == 0));
+
+        var rest = pairs.Count % cols;
+        if (rest != 0)
+            for (var i = rest; i < cols; i++)
+                tbl.AddCell(new PdfPCell { Border = Rectangle.NO_BORDER });
+
+        foreach (var (label, value) in wide ?? new())
+        {
+            var cell = Field(label, value, false);
+            cell.Colspan = cols;
+            tbl.AddCell(cell);
+        }
+
+        return tbl;
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -898,38 +1117,36 @@ public class PdfReportService
         string typeName,
         Doctor? createdDoctor,
         string? doctors,
-        string? complaints)
+        string? complaints,
+        bool showTreatingDoctors = true)
     {
         ComposeSectionHeader(doc, fonts, tr["analysis_info"], CL_DarkBlue);
-
-        var tbl = InfoTable();
-        int row = 0;
 
         // Tahlil aslida o'tkazilgan sana. Agar kiritilmagan bo'lsa ATAYLAB
         // `created_at` o'rniga qo'yilmaydi — noto'g'ri sana yozilgan hujjat
         // sud-tibbiy yoki sug'urta masalasida yaroqsiz bo'lib qoladi.
-        InfoRow(tbl, tr["analysis_performed_date"] + ":",
-            date.HasValue
-                ? $"{date:dd.MM.yyyy}  {date:HH:mm}"
-                : tr["date_not_specified"],
-            fonts, row++);
-
-        InfoRow(tbl, tr["analysis_type"] + ":", typeName, fonts, row++);
-
-        InfoRow(tbl, tr["device"] + ":", tr["device_value"], fonts, row++);
+        var pairs = new List<(string, string)>
+        {
+            (tr["analysis_performed_date"],
+                date.HasValue ? $"{date:dd.MM.yyyy}  {date:HH:mm}" : tr["date_not_specified"]),
+            (tr["analysis_type"], typeName),
+            (tr["device"], tr["device_value"]),
+        };
 
         if (createdDoctor != null)
-            InfoRow(tbl, tr["created_by"] + ":",
-                DoctorFullName(createdDoctor), fonts, row++);
+            pairs.Add((tr["created_by"], DoctorFullName(createdDoctor)));
 
-        InfoRow(tbl, tr["treating_doctors"] + ":",
-            string.IsNullOrWhiteSpace(doctors) ? tr["not_assigned"] : doctors,
-            fonts, row++);
+        // Kompleks xulosada "davolovchi shifokor" tushunchasi yo'q —
+        // u yerda "Belgilanmagan" qatori faqat chalg'itardi
+        if (showTreatingDoctors)
+            pairs.Add((tr["treating_doctors"],
+                string.IsNullOrWhiteSpace(doctors) ? tr["not_assigned"] : doctors));
 
-        if (!string.IsNullOrWhiteSpace(complaints))
-            InfoRow(tbl, tr["complaints"] + ":", complaints, fonts, row);
+        var wide = string.IsNullOrWhiteSpace(complaints)
+            ? null
+            : new List<(string, string)> { (tr["complaints"], complaints) };
 
-        doc.Add(tbl);
+        doc.Add(Card(InfoGrid(pairs, fonts, wide: wide)));
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -1012,8 +1229,8 @@ public class PdfReportService
         if (ai?.DigitalMeasurements == null || ai.DigitalMeasurements.Count == 0) return;
 
         var fonts = BuildFonts();
-        var tbl   = new PdfPTable(4) { WidthPercentage = 100, SpacingBefore = 6, SpacingAfter = 4 };
-        tbl.SetWidths(new[] { 38f, 20f, 22f, 20f });
+        var tbl   = new PdfPTable(4) { WidthPercentage = 100, SpacingBefore = 6, SpacingAfter = 4, HeaderRows = 1 };
+        tbl.SetWidths(new[] { 27f, 17f, 17f, 39f });
 
         TableHead(tbl, fonts,
             tr["parameter"], tr["value"], tr["normal_range"], tr["assessment"]);
@@ -1023,52 +1240,93 @@ public class PdfReportService
         {
             if (!FindDmValue(ai.DigitalMeasurements, key, out var rawVal)) continue;
 
-            var valStr = rawVal?.ToString() ?? "-";
-            var (assess, color) = EcgAssess(key, valStr);
+            // AI qiymatni ko'pincha izoh bilan yozadi: "73 bpm — normal yurak
+            // urish tezligi". Ilgari butun satr "Qiymat" ustuniga tiqilardi
+            // (ustiga birlik yana qo'shilib "... bpm bpm"), "Baho" esa doim
+            // "—" edi. Endi qiymat va izoh ajratiladi.
+            var raw = rawVal?.ToString()?.Trim() ?? "";
+            // AI o'lchay olmagan ko'rsatkich chizilmaydi (Holter jadvalidagi
+            // bilan bir xil qoida): "—" qatorlari o'lchov o'tkazilgandek
+            // taassurot qoldiradi
+            if (raw.Length == 0 || raw is "—" or "-" or "null" or "N/A") continue;
+            var sep = raw.IndexOf(" — ", StringComparison.Ordinal);
+            var valuePart = (sep > 0 ? raw[..sep] : raw).Trim();
+            var note = sep > 0 ? raw[(sep + 3)..].Trim() : null;
+            if (valuePart.Length == 0) valuePart = "—";
+            if (!string.IsNullOrEmpty(unit) && Regex.IsMatch(valuePart, @"^[-+]?\d+([.,]\d+)?$"))
+                valuePart = $"{valuePart} {unit}";
+
+            var (assess, color) = EcgAssess(key, valuePart);
             var bg = rowIdx++ % 2 == 0 ? CL_White : CL_RowAlt;
 
-            TblCell(tbl, label,              fonts["td9"],        bg, Element.ALIGN_LEFT);
-            TblCell(tbl, $"{valStr} {unit}", fonts["td9bold"],    bg, Element.ALIGN_CENTER);
-            TblCell(tbl, normal,             fonts["td9gray"],    bg, Element.ALIGN_CENTER);
+            TblCell(tbl, label,     fonts["td9"],     bg, Element.ALIGN_LEFT);
+            TblCell(tbl, valuePart,
+                assess == null || color.Equals(CL_GoodText)
+                    ? fonts["td9bold"]
+                    : new Font(fonts["td9bold"].BaseFont, MinFontSize, Font.NORMAL, color),
+                bg, Element.ALIGN_CENTER);
+            TblCell(tbl, normal,    fonts["td9gray"], bg, Element.ALIGN_CENTER);
 
-            var assessFont = new Font(fonts["td9bold"].BaseFont, MinFontSize, Font.NORMAL, color);
-            var ac = new PdfPCell(new Phrase(assess, assessFont))
+            var assessPhrase = new Phrase();
+            if (assess != null)
+                assessPhrase.Add(new Chunk(assess, color.Equals(CL_GoodText)
+                    ? fonts["td9gray"]
+                    : new Font(fonts["td9bold"].BaseFont, MinFontSize, Font.NORMAL, color)));
+            if (note != null && assess != null
+                && string.Equals(note.Trim().TrimEnd('.'), assess.Trim(), StringComparison.OrdinalIgnoreCase))
+                note = null;
+            if (!string.IsNullOrWhiteSpace(note))
+                assessPhrase.Add(new Chunk((assess != null ? "\n" : "") + Capitalize(note), fonts["td9gray"]));
+            if (assessPhrase.Count == 0)
+                assessPhrase.Add(new Chunk("—", fonts["td9gray"]));
+
+            tbl.AddCell(new PdfPCell(assessPhrase)
             {
-                BackgroundColor     = bg,
-                Border              = Rectangle.BOTTOM_BORDER,
-                BorderColorBottom   = CL_Border,
-                BorderWidthBottom   = 0.3f,
-                Padding             = 4f,
-                HorizontalAlignment = Element.ALIGN_CENTER,
-            };
-            tbl.AddCell(ac);
+                BackgroundColor   = bg,
+                Border            = Rectangle.BOTTOM_BORDER,
+                BorderColorBottom = CL_Border,
+                BorderWidthBottom = 0.5f,
+                PaddingTop        = 5,
+                PaddingBottom     = 6,
+                PaddingLeft       = 6,
+                PaddingRight      = 4,
+                HorizontalAlignment = Element.ALIGN_LEFT,
+            });
         }
 
         doc.Add(tbl);
     }
 
-    private (string text, BaseColor color) EcgAssess(string key, string valStr)
+    private static string Capitalize(string s) =>
+        string.IsNullOrEmpty(s) ? s : char.ToUpper(s[0]) + s[1..];
+
+    /// <summary>
+    /// Raqamli o'lchov bahosi. Matndagi BIRINCHI sonni oladi ("413 ms",
+    /// "Maksimal +0.16 mV"). Son topilmasa — baho yo'q (null).
+    /// </summary>
+    private (string? text, BaseColor color) EcgAssess(string key, string valStr)
     {
-        if (!decimal.TryParse(valStr, System.Globalization.NumberStyles.Any,
+        var m = Regex.Match(valStr ?? "", @"[-+]?\d+(?:[.,]\d+)?");
+        if (!m.Success || !decimal.TryParse(m.Value.Replace(',', '.'), System.Globalization.NumberStyles.Any,
             System.Globalization.CultureInfo.InvariantCulture, out var v))
-            return ("—", CL_LightGray);
+            return (null, CL_LightGray);
 
         return key switch
         {
             "HR"           => v < 60   ? ("↓ Bradikardiya", CL_BadText)
                             : v > 100  ? ("↑ Taxikardiya",  CL_BadText)
-                            :            ("✓ Normal",        CL_GoodText),
+                            :            ("Normal",        CL_GoodText),
             "PR_interval"  => v < 120  ? ("↓ Qisqa",       CL_WarnText)
                             : v > 200  ? ("↑ Uzun",         CL_BadText)
-                            :            ("✓ Normal",        CL_GoodText),
+                            :            ("Normal",        CL_GoodText),
             "QRS_duration" => v > 120  ? ("↑ Keng QRS",    CL_BadText)
-                            :            ("✓ Normal",        CL_GoodText),
-            "QTc_Bazett"   => v > 500  ? ("✗ Juda uzun",   CL_BadText)
-                            : v > 440  ? ("⚠ Uzaygan",      CL_WarnText)
-                            :            ("✓ Normal",        CL_GoodText),
-            "Sokolow_Lyon" => v >= 3.5m? ("⚠ Gipertrofiya", CL_WarnText)
-                            :            ("✓ Normal",        CL_GoodText),
-            _              =>            ("✓ Normal",        CL_GoodText),
+                            :            ("Normal",        CL_GoodText),
+            "QTc_Bazett"   => v > 500  ? ("Juda uzun",   CL_BadText)
+                            : v > 440  ? ("Uzaygan",      CL_WarnText)
+                            :            ("Normal",        CL_GoodText),
+            "Sokolow_Lyon" => v >= 3.5m? ("Gipertrofiya", CL_WarnText)
+                            :            ("Normal",        CL_GoodText),
+            _              =>            ("Normal",        CL_GoodText),
         };
     }
 
@@ -1149,38 +1407,15 @@ public class PdfReportService
             ("QTc",                           "QTc"),
         };
 
-        // Qatorlar ikkiga teng bo'linadi — ro'yxat uzunligi o'zgarsa ham
-        // ustunlar muvozanatda qoladi
-        var half  = (mainKeys.Length + 1) / 2;
-        var left  = mainKeys.Take(half).ToArray();
-        var right = mainKeys.Skip(half).ToArray();
-
-        var tbl2 = new PdfPTable(2) { WidthPercentage = 100, SpacingBefore = 6, SpacingAfter = 4 };
-        tbl2.SetWidths(new[] { 50f, 50f });
-
-        var leftSubTbl  = BuildHolterSubTable(dm, left,  fonts);
-        var rightSubTbl = BuildHolterSubTable(dm, right, fonts);
-
-        var lc = new PdfPCell(leftSubTbl)  { Border = Rectangle.NO_BORDER, PaddingRight = 4 };
-        var rc = new PdfPCell(rightSubTbl) { Border = Rectangle.NO_BORDER, PaddingLeft  = 4 };
-        tbl2.AddCell(lc);
-        tbl2.AddCell(rc);
-        doc.Add(tbl2);
-
-        // ── HRV kartochkalar ──────────────────────────────────────────
-        ComposeHrvCards(doc, dm, fonts);
-    }
-
-    private static PdfPTable BuildHolterSubTable(
-        Dictionary<string, object> dm,
-        (string key, string label)[] rows,
-        Dictionary<string, Font> fonts)
-    {
-        var tbl = new PdfPTable(2) { WidthPercentage = 100 };
-        tbl.SetWidths(new[] { 58f, 42f });
+        // Bitta keng jadval: ilgari ikki ustunli mini-jadvallar edi va uzun
+        // qiymatlar ("17 425 ta JQS; bigeminiya 359 epizod...") tor
+        // katakda 5-6 qatorga sinib ketardi
+        var tbl = new PdfPTable(2) { WidthPercentage = 100, SpacingBefore = 6, SpacingAfter = 4, HeaderRows = 1 };
+        tbl.SetWidths(new[] { 34f, 66f });
+        TableHead(tbl, fonts, tr["parameter"], tr["value"]);
 
         int i = 0;
-        foreach (var (key, label) in rows)
+        foreach (var (key, label) in mainKeys)
         {
             // AI aniqlay olmagan ko'rsatkich uchun qator umuman chizilmaydi:
             // "—" bilan to'ldirilgan jadval o'lchov o'tkazilgandek taassurot
@@ -1189,12 +1424,15 @@ public class PdfReportService
             var val = v.ToString();
             if (string.IsNullOrWhiteSpace(val)) continue;
 
-            var bg  = i++ % 2 == 0 ? CL_White : CL_RowAlt;
+            var bg = i++ % 2 == 0 ? CL_White : CL_RowAlt;
             TblCell(tbl, label, fonts["td9"],     bg, Element.ALIGN_LEFT);
-            TblCell(tbl, val,   fonts["td9bold"], bg, Element.ALIGN_CENTER);
+            TblCell(tbl, val,   fonts["td9bold"], bg, Element.ALIGN_LEFT);
         }
 
-        return tbl;
+        if (i > 0) doc.Add(tbl);
+
+        // ── HRV kartochkalar ──────────────────────────────────────────
+        ComposeHrvCards(doc, dm, fonts);
     }
 
     private static void ComposeHrvCards(
@@ -1241,11 +1479,9 @@ public class PdfReportService
             var outer = new PdfPCell(inner)
             {
                 Border        = Rectangle.BOX,
-                BorderColor   = CL_Border,
-                BorderWidth   = 0.4f,
+                BorderColor   = CL_White,
+                BorderWidth   = 3f,
                 Padding       = 0,
-                PaddingLeft   = 3,
-                PaddingRight  = 3,
             };
             tbl.AddCell(outer);
         }
@@ -1366,24 +1602,20 @@ public class PdfReportService
             var (badge, color, prefix) = LabAssess(val.Value, norm);
             var bg     = rowIdx++ % 2 == 0 ? CL_White : CL_RowAlt;
 
-            var valFont  = new Font(fonts["td9bold"].BaseFont, MinFontSize, Font.NORMAL, color);
-            var badgeFont= new Font(fonts["td9bold"].BaseFont, MinFontSize, Font.NORMAL, color);
+            // Normal qiymat oddiy qora, baho kulrang; faqat normadan og'ganlari
+            // rangli va qalin — ko'z darhol patologiyaga tushadi
+            var isNormal = color.Equals(CL_GoodText);
+            var valFont  = isNormal ? fonts["td9"]
+                : new Font(fonts["td9bold"].BaseFont, MinFontSize, Font.NORMAL, color);
+            var badgeFont= isNormal ? fonts["td9gray"]
+                : new Font(fonts["td9bold"].BaseFont, MinFontSize, Font.NORMAL, color);
 
             TblCell(tbl, name,           fonts["td9"],   bg, Element.ALIGN_LEFT);
             TblCell(tbl, prefix + valStr,valFont,        bg, Element.ALIGN_CENTER);
             TblCell(tbl, unit,           fonts["td9gray"],bg, Element.ALIGN_CENTER);
             TblCell(tbl, norm,           fonts["td9gray"],bg, Element.ALIGN_CENTER);
 
-            var bc = new PdfPCell(new Phrase(badge, badgeFont))
-            {
-                BackgroundColor     = bg,
-                Border              = Rectangle.BOTTOM_BORDER,
-                BorderColorBottom   = CL_Border,
-                BorderWidthBottom   = 0.3f,
-                Padding             = 3,
-                HorizontalAlignment = Element.ALIGN_CENTER,
-            };
-            tbl.AddCell(bc);
+            TblCell(tbl, badge, badgeFont, bg, Element.ALIGN_CENTER);
         }
 
         doc.Add(tbl);
@@ -1398,7 +1630,7 @@ public class PdfReportService
                     System.Globalization.CultureInfo.InvariantCulture, out var up))
                 return val > up
                     ? ("↑ Yuqori", CL_BadText,  "↑ ")
-                    : ("✓ Normal",  CL_GoodText, "");
+                    : ("Normal",  CL_GoodText, "");
 
             // Bir tomonlama pastki chegara (masalan HDL "> 1.0"): qiymat
             // chegaradan past bo'lsa — past, aks holda normal.
@@ -1407,12 +1639,12 @@ public class PdfReportService
                     System.Globalization.CultureInfo.InvariantCulture, out var low))
                 return val < low
                     ? ("↓ Past",   CL_WarnText, "↓ ")
-                    : ("✓ Normal",  CL_GoodText, "");
+                    : ("Normal",  CL_GoodText, "");
 
             if (norm == "0")
                 return val > 0
                     ? ("↑ Aniqlandi", CL_WarnText, "")
-                    : ("✓ Normal",     CL_GoodText, "");
+                    : ("Normal",     CL_GoodText, "");
 
             if (norm.Contains('–') || norm.Contains('-'))
             {
@@ -1426,7 +1658,7 @@ public class PdfReportService
                 {
                     if (val < lo) return ("↓ Past",    CL_WarnText,  "↓ ");
                     if (val > hi) return ("↑ Yuqori",  CL_BadText,   "↑ ");
-                    return              ("✓ Normal",   CL_GoodText,  "");
+                    return              ("Normal",   CL_GoodText,  "");
                 }
             }
         }
@@ -1435,7 +1667,7 @@ public class PdfReportService
             _logger.LogDebug(ex, "Lab norma parsingda xatolik. Norm: {Norm}", norm);
         }
 
-        return ("✓ Normal", CL_GoodText, "");
+        return ("Normal", CL_GoodText, "");
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -1916,72 +2148,45 @@ public class PdfReportService
             }
         }
 
-        // Jiddiylik va tavsiyalar — 2 ustunli blok
+        // Jiddiylik darajasi — ixcham bitta qator
         var severityRaw = ai.AutomaticAnalysisBool?.ToString() ?? "0";
         int.TryParse(severityRaw, out var severityInt);
+        if (severityInt > 0)
+            doc.Add(ComposeSeverityWidget(tr, fonts, severityInt));
 
-        bool hasRecs = !string.IsNullOrWhiteSpace(ai.AIRecommendations);
-
-        if (severityInt > 0 || hasRecs)
+        // Tavsiyalar — punktli ro'yxat (to'liq kenglikda: ilgari tor o'ng
+        // ustunga siqilib, har bir so'z yangi qatorga tushardi)
+        if (!string.IsNullOrWhiteSpace(ai.AIRecommendations))
         {
-            var bottomTbl = new PdfPTable(hasRecs ? 2 : 1)
-            {
-                WidthPercentage = 100,
-                SpacingBefore   = 4,
-                SpacingAfter    = 4,
-            };
-            if (hasRecs) bottomTbl.SetWidths(new[] { 40f, 60f });
-
-            // CHAP: jiddiylik
-            if (severityInt > 0)
-            {
-                var leftContent = new PdfPCell { Border = Rectangle.NO_BORDER, Padding = 0 };
-                leftContent.AddElement(ComposeSeverityWidget(tr, fonts, severityInt));
-
-                bottomTbl.AddCell(leftContent);
-            }
-
-            // O'NG: tavsiyalar
-            if (hasRecs)
-            {
-                var recCell = new PdfPCell { Border = Rectangle.NO_BORDER, PaddingLeft = 6 };
-                recCell.AddElement(new Paragraph(tr["recommendations"] + ":", fonts["p9label"])
-                    { SpacingAfter = 2 });
-
-                foreach (var line in ai.AIRecommendations!
-                             .Split('\n', StringSplitOptions.RemoveEmptyEntries))
-                {
-                    recCell.AddElement(new Paragraph($"• {line.Trim()}", fonts["p8"])
-                        { SpacingBefore = 1 });
-                }
-
-                bottomTbl.AddCell(recCell);
-            }
-
-            doc.Add(bottomTbl);
+            var lines = ai.AIRecommendations!
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                .Select(l => l.Trim().TrimStart('•', '-', '*').Trim())
+                .Where(l => l.Length > 0);
+            AddLabeledText(doc, fonts, tr["recommendations"],
+                string.Join("\n", lines.Select(l => $"•  {l}")));
         }
 
-        // Yakuniy xulosa (ayrı bo'lsa)
+        // Yakuniy xulosa (alohida bo'lsa)
         if (!string.IsNullOrWhiteSpace(ai.FinalSummary) && ai.FinalSummary != text)
-        {
-            doc.Add(new Paragraph(tr["final_summary"] + ":", fonts["p9label"])
-                { SpacingBefore = 4 });
-            doc.Add(new Paragraph(ai.FinalSummary.Trim(), fonts["p8"])
-                { SpacingAfter = 4 });
-        }
+            AddLabeledText(doc, fonts, tr["final_summary"], ai.FinalSummary.Trim());
     }
 
+    /// <summary>AI matni: och fon, chapda NMED yashil chizig'i.</summary>
     private static void AddAiTextBlock(Document doc, Dictionary<string, Font> fonts, string text)
     {
-        var cell = new PdfPCell(new Phrase(text, fonts["p8_ai"]))
+        var cell = new PdfPCell
         {
             BackgroundColor = CL_AiBg,
-            Border          = Rectangle.BOX,
-            BorderColor     = CL_Green,
-            BorderWidth     = 0.8f,
-            Padding         = 8,
+            Border          = Rectangle.LEFT_BORDER,
+            BorderColorLeft = CL_Green,
+            BorderWidthLeft = 2.5f,
+            PaddingLeft     = 11,
+            PaddingRight    = 10,
+            PaddingTop      = 7,
+            PaddingBottom   = 10,
         };
-        var w = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 4, SpacingAfter = 4 };
+        cell.AddElement(new Paragraph(text, fonts["p8_ai"]) { Leading = 16f });
+        var w = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 6, SpacingAfter = 4 };
         w.AddCell(cell);
         doc.Add(w);
     }
@@ -2004,42 +2209,43 @@ public class PdfReportService
             _ => (tr["severity_mild"],     CL_GoodText),
         };
 
-        var barTbl = new PdfPTable(3) { WidthPercentage = 60 };
+        // Bitta qator: [Jiddiylik darajasi] [■■□] [O'RTACHA (2/3)]
+        var barTbl = new PdfPTable(3) { WidthPercentage = 100 };
         barTbl.SetWidths(new[] { 33f, 33f, 34f });
-
         for (int i = 1; i <= 3; i++)
         {
-            var bg = i <= level ? barColor : CL_Border;
-            var c  = new PdfPCell(new Phrase(" "))
+            barTbl.AddCell(new PdfPCell(new Phrase(" "))
             {
-                BackgroundColor = bg,
+                BackgroundColor = i <= level ? barColor : CL_Border,
                 Border          = Rectangle.BOX,
                 BorderColor     = CL_White,
-                BorderWidth     = 1.5f,
-                FixedHeight     = 10f,
-            };
-            barTbl.AddCell(c);
+                BorderWidth     = 1.2f,
+                FixedHeight     = 8f,
+            });
         }
 
-        var wrapper = new PdfPTable(1) { WidthPercentage = 100 };
-        wrapper.AddCell(new PdfPCell(
-            new Phrase($"{tr["severity"]}:", fonts["p9label"]))
+        var row = new PdfPTable(3) { WidthPercentage = 100, SpacingBefore = 8, SpacingAfter = 2 };
+        row.SetWidths(new[] { 30f, 22f, 48f });
+
+        row.AddCell(new PdfPCell(new Phrase($"{tr["severity"]}:", fonts["th9"]))
         {
-            Border        = Rectangle.NO_BORDER,
-            PaddingBottom = 2,
+            Border = Rectangle.NO_BORDER, Padding = 0, PaddingRight = 6,
+            VerticalAlignment = Element.ALIGN_MIDDLE,
+        });
+        row.AddCell(new PdfPCell(barTbl)
+        {
+            Border = Rectangle.NO_BORDER, Padding = 0,
+            VerticalAlignment = Element.ALIGN_MIDDLE,
         });
 
-        var barCell = new PdfPCell(barTbl) { Border = Rectangle.NO_BORDER, PaddingBottom = 2 };
-        wrapper.AddCell(barCell);
-
-        var labelFont = new Font(fonts["p9label"].BaseFont, MinFontSize, Font.NORMAL, barColor);
-        wrapper.AddCell(new PdfPCell(new Phrase($"{label.ToUpper()}  ({level}/3)", labelFont))
+        var labelFont = new Font(fonts["td9bold"].BaseFont, MinFontSize, Font.NORMAL, barColor);
+        row.AddCell(new PdfPCell(new Phrase($"{label.ToUpper()}  ({level}/3)", labelFont))
         {
-            Border        = Rectangle.NO_BORDER,
-            PaddingBottom = 4,
+            Border = Rectangle.NO_BORDER, Padding = 0, PaddingLeft = 10,
+            VerticalAlignment = Element.ALIGN_MIDDLE,
         });
 
-        return wrapper;
+        return row;
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -2065,56 +2271,40 @@ public class PdfReportService
             if (string.IsNullOrWhiteSpace(doctorName))
                 doctorName = tr["no_info"];
 
-            var metaTable = new PdfPTable(2) { WidthPercentage = 100 };
-            metaTable.SetWidths(new[] { 64f, 36f });
-
-            metaTable.AddCell(new PdfPCell(new Phrase($"{tr["diagnosed_by"]}: {doctorName}", fonts["th9_inv"]))
-            {
-                BackgroundColor = CL_DarkBlue,
-                Border = Rectangle.NO_BORDER,
-                PaddingLeft = 8,
-                PaddingRight = 8,
-                PaddingTop = 7,
-                PaddingBottom = 7,
-                VerticalAlignment = Element.ALIGN_MIDDLE
-            });
-
-            metaTable.AddCell(new PdfPCell(new Phrase(
-                $"{tr["diagnosed_at"]}: {(diag.CreatedAt.HasValue ? diag.CreatedAt.Value.ToString("dd.MM.yyyy HH:mm") : tr["no_info"])}",
-                fonts["th9_inv"]))
-            {
-                BackgroundColor = CL_DarkBlue,
-                Border = Rectangle.NO_BORDER,
-                PaddingLeft = 8,
-                PaddingRight = 8,
-                PaddingTop = 7,
-                PaddingBottom = 7,
-                HorizontalAlignment = Element.ALIGN_RIGHT,
-                VerticalAlignment = Element.ALIGN_MIDDLE
-            });
-
+            // Rasmiy xulosa ko'rinishi: matn, ostida chiziq va shifokor/sana
+            // (qog'ozdagi "Shifokor: ____ Sana: ____" satri kabi)
             var diagnosisText = string.IsNullOrWhiteSpace(diag.DiagnosisText) ? tr["no_info"] : diag.DiagnosisText.Trim();
-            var bodyCell = new PdfPCell(new Phrase(diagnosisText, fonts["td9"]))
-            {
-                BackgroundColor = CL_White,
-                Border = Rectangle.BOX,
-                BorderColor = CL_Border,
-                BorderWidth = 0.5f,
-                PaddingLeft = 8,
-                PaddingRight = 8,
-                PaddingTop = 8,
-                PaddingBottom = 8,
-            };
+            var createdAt = diag.CreatedAt.HasValue
+                ? AppTime.ToLocal(diag.CreatedAt.Value, _config).ToString("dd.MM.yyyy HH:mm")
+                : tr["no_info"];
 
-            var wrapper = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 5, SpacingAfter = 6 };
-            wrapper.AddCell(new PdfPCell(metaTable)
+            var body = new PdfPCell
             {
-                Border = Rectangle.BOX,
-                BorderColor = CL_DarkBlue,
-                BorderWidth = 0.5f,
-                Padding = 0
+                Border = Rectangle.LEFT_BORDER,
+                BorderColorLeft = CL_DarkBlue,
+                BorderWidthLeft = 2.5f,
+                BackgroundColor = CL_PanelBg,
+                PaddingLeft = 11,
+                PaddingRight = 10,
+                PaddingTop = 7,
+                PaddingBottom = 9,
+            };
+            body.AddElement(new Paragraph(diagnosisText, fonts["td9"]) { Leading = 16f, SpacingAfter = 6 });
+
+            var metaTbl = new PdfPTable(2) { WidthPercentage = 100 };
+            metaTbl.SetWidths(new[] { 62f, 38f });
+            var who = new Phrase();
+            who.Add(new Chunk($"{tr["diagnosed_by"]}: ", fonts["td9gray"]));
+            who.Add(new Chunk(doctorName, fonts["td9bold"]));
+            metaTbl.AddCell(new PdfPCell(who) { Border = Rectangle.NO_BORDER, Padding = 0 });
+            metaTbl.AddCell(new PdfPCell(new Phrase(createdAt, fonts["td9gray"]))
+            {
+                Border = Rectangle.NO_BORDER, Padding = 0, HorizontalAlignment = Element.ALIGN_RIGHT,
             });
-            wrapper.AddCell(bodyCell);
+            body.AddElement(metaTbl);
+
+            var wrapper = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 6, SpacingAfter = 4 };
+            wrapper.AddCell(body);
             doc.Add(wrapper);
         }
     }
@@ -2204,11 +2394,12 @@ public class PdfReportService
 
         var outerCell = new PdfPCell(inner)
         {
-            BackgroundColor = CL_VerifyBg,
-            Border          = Rectangle.BOX,
-            BorderColor     = CL_Border,
-            BorderWidth     = 0.5f,
-            Padding         = 0,
+            Border       = Rectangle.NO_BORDER,
+            PaddingLeft  = 8,
+            PaddingRight = 6,
+            PaddingTop   = 2,
+            PaddingBottom= 2,
+            CellEvent    = new RoundedCell(CL_VerifyBg, CL_Border, 8f, CL_Green),
         };
         outer.AddCell(outerCell);
         doc.Add(outer);
@@ -2250,11 +2441,12 @@ public class PdfReportService
 
         outer.AddCell(new PdfPCell(inner)
         {
-            BackgroundColor = CL_VerifyBg,
-            Border = Rectangle.BOX,
-            BorderColor = CL_Border,
-            BorderWidth = 0.5f,
-            Padding = 0,
+            Border = Rectangle.NO_BORDER,
+            PaddingLeft = 8,
+            PaddingRight = 6,
+            PaddingTop = 2,
+            PaddingBottom = 2,
+            CellEvent = new RoundedCell(CL_VerifyBg, CL_Border, 8f, CL_Green),
         });
         doc.Add(outer);
     }
@@ -2262,16 +2454,23 @@ public class PdfReportService
     private static void ComposeDisclaimer(Document doc,
         Dictionary<string, string> tr, Dictionary<string, Font> fonts)
     {
-        var cell = new PdfPCell(new Phrase($"⚠  {tr["disclaimer"]}", fonts["disclaimer"]))
+        // Sariq chap chiziqli yumshoq blok. Ilgari qizil ramkali qizil matn
+        // edi — tibbiy hujjatda xavf signalidek "baqirardi". "⚠" belgisi
+        // olib tashlandi: Arial shriftida yo'q va bo'sh joy bo'lib chiqardi.
+        var cell = new PdfPCell
         {
             BackgroundColor = CL_DisclBg,
-            Border          = Rectangle.BOX,
-            BorderColor     = CL_DisclBorder,
-            BorderWidth     = 0.5f,
-            Padding         = 7,
+            Border          = Rectangle.LEFT_BORDER,
+            BorderColorLeft = CL_DisclBorder,
+            BorderWidthLeft = 2.5f,
+            PaddingLeft     = 11,
+            PaddingRight    = 10,
+            PaddingTop      = 5,
+            PaddingBottom   = 8,
         };
+        cell.AddElement(new Paragraph(tr["disclaimer"], fonts["disclaimer"]) { Leading = 15f });
 
-        var tbl = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 6, SpacingAfter = 4 };
+        var tbl = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 8, SpacingAfter = 4 };
         tbl.AddCell(cell);
         doc.Add(tbl);
     }
@@ -2280,75 +2479,112 @@ public class PdfReportService
     //  UMUMIY YORDAMCHI METODLAR
     // ════════════════════════════════════════════════════════════════════
 
-    /// <summary>Rangli sarlavha satri — ComposeSectionHeader</summary>
-    private static void ComposeSectionHeader(Document doc,
+    /// <summary>
+    /// Bo'lim sarlavhasi: to'q ko'k qalin harflar, ostida ingichka chiziq.
+    /// Ilgari to'liq bo'yalgan yashil/ko'k polosa edi (oq matn) — hujjat
+    /// tibbiy xulosadan ko'ra reklama varaqasiga o'xshardi.
+    /// `bg` endi faqat chiziq rangini belgilaydi: yashil — AI bo'limi.
+    /// </summary>
+    private void ComposeSectionHeader(Document doc,
         Dictionary<string, Font> fonts, string title, BaseColor bg)
     {
-        var cell = new PdfPCell(new Phrase(title, fonts["h_white"]))
-        {
-            BackgroundColor = bg,
-            Border          = Rectangle.NO_BORDER,
-            Padding         = 5,
-            PaddingLeft     = 6,
-        };
+        KeepRoomOrBreak(doc, MinSpaceAfterHeader);
 
-        var tbl = new PdfPTable(1)
+        var accent = bg.Equals(CL_Green) ? CL_Green : CL_DarkBlue;
+        var font = new Font(fonts["h_white"].BaseFont, fonts["h_white"].Size, Font.NORMAL, accent);
+        // [▌] SARLAVHA ─────────── : chapda kichik rangli belgi, ostida chiziq
+        var tbl = new PdfPTable(2) { WidthPercentage = 100, SpacingBefore = 16, SpacingAfter = 6 };
+        tbl.SetWidths(new[] { 1.3f, 98.7f });
+        tbl.AddCell(new PdfPCell
         {
-            WidthPercentage = 100,
-            SpacingBefore   = 8,
-            SpacingAfter    = 0,
-        };
-        tbl.AddCell(cell);
+            Border = Rectangle.NO_BORDER,
+            Padding = 0,
+            CellEvent = new RoundedCell(accent, null, 1.6f),
+        });
+        tbl.AddCell(new PdfPCell(new Phrase(title.ToUpperInvariant(), font))
+        {
+            Border            = Rectangle.BOTTOM_BORDER,
+            BorderColorBottom = CL_Border,
+            BorderWidthBottom = 0.8f,
+            PaddingLeft       = 8,
+            PaddingTop        = 2,
+            PaddingBottom     = 6,
+            VerticalAlignment = Element.ALIGN_MIDDLE,
+        });
         doc.Add(tbl);
     }
 
-    /// <summary>2-ustunli ma'lumot jadvali</summary>
+    /// <summary>
+    /// Sahifada <paramref name="needed"/> pt joy qolmagan bo'lsa yangi sahifa ochadi.
+    /// Ilgari "SHIFOKOR TASHXISI" kabi sarlavha sahifa tagida yolg'iz qolib,
+    /// matni keyingi sahifaga o'tib ketardi.
+    /// </summary>
+    private void KeepRoomOrBreak(Document doc, float needed)
+    {
+        if (_writer == null) return;
+        var remaining = _writer.GetVerticalPosition(true) - doc.BottomMargin;
+        if (remaining < needed) doc.NewPage();
+    }
+
+    /// <summary>2-ustunli ma'lumot jadvali (yorliq | qiymat).</summary>
     private static PdfPTable InfoTable()
     {
-        var tbl = new PdfPTable(2) { WidthPercentage = 100, SpacingAfter = 0 };
-        tbl.SetWidths(new[] { 35f, 65f });
+        var tbl = new PdfPTable(2) { WidthPercentage = 100, SpacingBefore = 2, SpacingAfter = 2 };
+        tbl.SetWidths(new[] { 34f, 66f });
         return tbl;
     }
 
     private static void InfoRow(PdfPTable tbl, string label, string val,
         Dictionary<string, Font> fonts, int rowIndex)
     {
-        var bg = rowIndex % 2 == 0 ? CL_White : CL_RowAlt;
+        // Yorliq oxiridagi ":" olib tashlanadi — kulrang yorliq va qora
+        // qiymat o'zi ajralib turadi, ikki nuqta faqat shovqin qo'shardi
+        var cleanLabel = label.TrimEnd().TrimEnd(':');
 
-        var lc = new PdfPCell(new Phrase(label, fonts["th9"]))
+        tbl.AddCell(new PdfPCell(new Phrase(cleanLabel, fonts["th9"]))
         {
-            BackgroundColor   = bg,
             Border            = Rectangle.BOTTOM_BORDER,
             BorderColorBottom = CL_Border,
-            BorderWidthBottom = 0.3f,
-            Padding           = 4,
-            PaddingLeft       = 6,
-        };
+            BorderWidthBottom = 0.5f,
+            PaddingTop        = 5,
+            PaddingBottom     = 6,
+            PaddingLeft       = 0,
+            PaddingRight      = 8,
+        });
 
-        var vc = new PdfPCell(new Phrase(val, fonts["td9"]))
+        tbl.AddCell(new PdfPCell(new Phrase(string.IsNullOrWhiteSpace(val) ? "—" : val, fonts["td9"]))
         {
-            BackgroundColor   = bg,
             Border            = Rectangle.BOTTOM_BORDER,
             BorderColorBottom = CL_Border,
-            BorderWidthBottom = 0.3f,
-            Padding           = 4,
-        };
-
-        tbl.AddCell(lc);
-        tbl.AddCell(vc);
+            BorderWidthBottom = 0.5f,
+            PaddingTop        = 5,
+            PaddingBottom     = 6,
+            PaddingLeft       = 0,
+        });
     }
 
+    /// <summary>Jadval sarlavhasi: och kulrang-ko'k fon, to'q ko'k qalin matn, ostida chiziq.</summary>
     private static void TableHead(PdfPTable tbl,
         Dictionary<string, Font> fonts, params string[] headers)
     {
-        foreach (var h in headers)
+        for (var i = 0; i < headers.Length; i++)
         {
-            tbl.AddCell(new PdfPCell(new Phrase(h, fonts["th9_inv"]))
+            tbl.AddCell(new PdfPCell(new Phrase(headers[i], fonts["th9_inv"]))
             {
-                BackgroundColor     = CL_DarkBlue,
-                Border              = Rectangle.NO_BORDER,
-                Padding             = 5,
-                HorizontalAlignment = Element.ALIGN_CENTER,
+                BackgroundColor     = CL_HeadBg,
+                Border              = Rectangle.TOP_BORDER | Rectangle.BOTTOM_BORDER,
+                BorderColorTop      = CL_DarkBlue,
+                BorderWidthTop      = 1f,
+                BorderColorBottom   = CL_DarkBlue,
+                BorderWidthBottom   = 0.6f,
+                PaddingTop          = 5,
+                PaddingBottom       = 7,
+                PaddingLeft         = 6,
+                PaddingRight        = 6,
+                // Birinchi ustun (parametr nomi) chapga — qolganlari markazda.
+                // Ikki ustunli jadvalda (parametr | qiymat) hammasi chapga.
+                HorizontalAlignment = i == 0 || headers.Length <= 2 ? Element.ALIGN_LEFT : Element.ALIGN_CENTER,
+                VerticalAlignment   = Element.ALIGN_MIDDLE,
             });
         }
     }
@@ -2361,17 +2597,21 @@ public class PdfReportService
             BackgroundColor     = bg,
             Border              = Rectangle.BOTTOM_BORDER,
             BorderColorBottom   = CL_Border,
-            BorderWidthBottom   = 0.3f,
-            Padding             = 4,
+            BorderWidthBottom   = 0.5f,
+            PaddingTop          = 5,
+            PaddingBottom       = 6,
+            PaddingLeft         = 6,
+            PaddingRight        = 6,
             HorizontalAlignment = align,
+            VerticalAlignment   = Element.ALIGN_MIDDLE,
         });
     }
 
-    private static void HLine(Document doc, float width, BaseColor color)
+    private static void HLine(Document doc, float width, BaseColor color, float spacingBefore = 0f)
     {
         var cell = new PdfPCell { FixedHeight = width, BackgroundColor = color,
-            Border = Rectangle.NO_BORDER };
-        var tbl  = new PdfPTable(1) { WidthPercentage = 100 };
+            Border = Rectangle.NO_BORDER, Padding = 0 };
+        var tbl  = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = spacingBefore };
         tbl.AddCell(cell);
         doc.Add(tbl);
     }
@@ -2484,26 +2724,27 @@ public class PdfReportService
 
     private static void AddLabeledText(Document doc, Dictionary<string, Font> fonts, string label, string? text)
     {
-        var wrapper = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 7, SpacingAfter = 6 };
-        var formattedCell = new PdfPCell
+        // Yorliq (qalin, to'q ko'k) va matn; chapda ingichka kulrang chiziq.
+        // Ilgari har biri kulrang ramkali "karta" edi — ketma-ket kelganda
+        // sahifa qutichalar to'plamiga aylanardi.
+        var wrapper = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 8, SpacingAfter = 2 };
+        var cell = new PdfPCell
         {
-            Border = Rectangle.BOX,
-            BorderColor = CL_Border,
-            BackgroundColor = new BaseColor(252, 253, 253),
-            Padding = 7,
-            PaddingBottom = 9,
+            Border          = Rectangle.LEFT_BORDER,
+            BorderColorLeft = CL_Border,
+            BorderWidthLeft = 2f,
+            PaddingLeft     = 10,
+            PaddingRight    = 0,
+            PaddingTop      = 0,
+            PaddingBottom   = 3,
         };
-        formattedCell.AddElement(new Paragraph($"{label}:", fonts["th9"]) { SpacingAfter = 4, Leading = 12f });
-        formattedCell.AddElement(new Paragraph(string.IsNullOrWhiteSpace(text) ? "-" : text.Trim(), fonts["td9"])
+        cell.AddElement(new Paragraph(label.TrimEnd().TrimEnd(':'), fonts["p9label"]) { SpacingAfter = 3, Leading = 15f });
+        cell.AddElement(new Paragraph(string.IsNullOrWhiteSpace(text) ? "—" : text.Trim(), fonts["td9"])
         {
-            Leading = 14f,
-            SpacingAfter = 1,
+            Leading = 16f,
         });
-        wrapper.AddCell(formattedCell);
+        wrapper.AddCell(cell);
         doc.Add(wrapper);
-        return;
-        // Bu yerda `return;` dan keyin eski chizish usulidan
-        // qolgan va hech qachon bajarilmagan kod bor edi (T-009).
     }
 
     private static string? DoctorNames(IEnumerable<Doctor?>? list)
@@ -2599,77 +2840,97 @@ public class PdfReportService
     {
         if (_fontsCache != null) return _fontsCache;
 
-        BaseFont bf;
-        try
-        {
-            string[] candidates =
-            {
-                @"C:\Windows\Fonts\arial.ttf",
-                @"C:\Windows\Fonts\Arial.ttf",
-                "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-                "/usr/share/fonts/dejavu/DejaVuSans.ttf",
-            };
-            var found = candidates.FirstOrDefault(File.Exists);
-            bf = found != null
-                ? BaseFont.CreateFont(found, BaseFont.IDENTITY_H, BaseFont.EMBEDDED)
-                : BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
-        }
-        catch
-        {
-            bf = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
-        }
+        // Oddiy va QALIN shrift alohida fayllardan olinadi. Ilgari faqat
+        // oddiy shrift yuklanardi va qalin yozuv "BOLD → NORMAL" qilib
+        // o'chirilgan edi (iText qalinlikni chiziq bilan taqlid qilib, harflar
+        // surtilgandek chiqardi). Natijada hujjatda sarlavha bilan oddiy matn
+        // farq qilmasdi. Haqiqiy Bold fayl bilan bu muammo yo'q.
+        var bf = LoadBaseFont(
+            @"C:\Windows\Fonts\arial.ttf",
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+            "/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            "/usr/share/fonts/dejavu/DejaVuSans.ttf");
+        var bfb = LoadBaseFont(
+            @"C:\Windows\Fonts\arialbd.ttf",
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+            "/usr/share/fonts/liberation-sans/LiberationSans-Bold.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+            "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf") ?? bf;
+        bf ??= BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+        bfb ??= bf;
 
         // PDF hujjatidagi eng kichik yozuv o'lchami 12 bo'lishi kerak
         // (foydalanuvchi so'rovi): 12 dan past har qanday o'lcham 12 ga
         // ko'tariladi. Katta o'lchamlar (sarlavha, logotip) o'zgarmaydi.
-        Font F(float sz, int style = Font.NORMAL, BaseColor? c = null) =>
-            new Font(bf, Math.Max(sz, MinFontSize), style, c ?? CL_Black);
+        Font R(float sz, BaseColor? c = null) => new Font(bf, Math.Max(sz, MinFontSize), Font.NORMAL, c ?? CL_Black);
+        Font B(float sz, BaseColor? c = null) => new Font(bfb, Math.Max(sz, MinFontSize), Font.NORMAL, c ?? CL_Black);
 
         _fontsCache = new Dictionary<string, Font>
         {
-            // Header
-            ["h_13b"]         = F(13, Font.NORMAL),
-            ["doc_title"]     = F(11, Font.NORMAL),
-            ["analysis_title"]= F(10, Font.NORMAL,  CL_Green),
-            ["nmed_logo"]     = F(14, Font.NORMAL,  CL_Green),
-            ["nmed_url"]      = F(9,  Font.ITALIC,CL_Green),
-            ["p9bold"]        = F(9,  Font.NORMAL), // BOLD -> NORMAL
-            ["p9gray"]        = F(9,  Font.NORMAL,CL_Gray),
-            ["p8gray"]        = F(8,  Font.NORMAL,CL_Gray),
-            ["p10bold"]       = F(10, Font.NORMAL,CL_Black),
+            // Sarlavha (blank)
+            ["h_13b"]         = B(15, CL_DarkBlue),   // klinika nomi
+            ["doc_title"]     = B(15, CL_DarkBlue),   // hujjat nomi
+            ["analysis_title"]= R(12, CL_Green),
+            ["doc_kicker"]    = R(12, CL_LightGray),  // hujjat nomi ustidagi kichik yozuv
+            ["title_big"]     = B(17, CL_DarkBlue),   // hujjat nomi paneli
+            ["hdr_brand"]     = B(17, CL_Green),      // shapka: NMED
+            ["hdr_clinic"]    = B(15, CL_DarkBlue),   // shapka: klinika nomi
+            ["badge"]         = B(17, CL_White),      // logotip o'rnidagi bosh harflar
+            ["nmed_logo"]     = B(14, CL_Green),
+            ["nmed_url"]      = R(12, CL_Green),
+            ["p9bold"]        = B(12, CL_Black),
+            ["p9gray"]        = R(12, CL_Gray),
+            ["p8gray"]        = R(12, CL_Gray),
+            ["p10bold"]       = B(12, CL_DarkBlue),
 
-            // Label (section sub-labels — yengil)
-            ["p9label"]       = F(9,  Font.NORMAL,new BaseColor(68,68,68)), // #444 yengil label
+            // Bo'lim ichidagi yorliqlar
+            ["p9label"]       = B(12, CL_DarkBlue),
 
-            // Section headers
-            ["h_white"]       = F(9,  Font.NORMAL,  CL_White),
+            // Bo'lim sarlavhasi (endi oq emas — to'q ko'k matn, ostida chiziq)
+            ["h_white"]       = B(12, CL_DarkBlue),
 
-            // Info table
-            ["th9"]           = F(9,  Font.NORMAL,  new BaseColor(51,51,51)),
-            ["td9"]           = F(9,  Font.NORMAL,CL_Black),
-            ["td9bold"]       = F(9,  Font.NORMAL,CL_Black),   // BOLD → NORMAL (o'qish oson)
-            ["td9gray"]       = F(9,  Font.NORMAL,CL_Gray),
-            ["th9_inv"]       = F(9,  Font.NORMAL,  CL_White),
+            // Ma'lumot jadvali
+            ["th9"]           = R(12, CL_Gray),
+            ["td9"]           = R(12, CL_Black),
+            ["td9bold"]       = B(12, CL_Black),
+            ["td9gray"]       = R(12, CL_Gray),
+            ["th9_inv"]       = B(12, CL_DarkBlue),   // jadval ustun sarlavhasi
 
             // AI
-            ["p8_ai"]         = F(8,  Font.NORMAL,new BaseColor(34,34,34)),
-            ["p8"]            = F(8,  Font.NORMAL,CL_Black),
+            ["p8_ai"]         = R(12, CL_Black),
+            ["p8"]            = R(12, CL_Black),
 
-            // HRV cards
-            ["hrv_val"]       = F(12, Font.NORMAL,  CL_Black),
-            ["hrv_label"]     = F(8,  Font.NORMAL,CL_Gray),
+            // HRV kartochkalar
+            ["hrv_val"]       = B(14, CL_DarkBlue),
+            ["hrv_label"]     = R(12, CL_Gray),
 
-            // NMED verification
-            ["verify_title"]  = F(8,  Font.NORMAL,CL_Green),   // BOLD → NORMAL
-            ["verify_sub"]    = F(8,  Font.NORMAL,new BaseColor(85,85,85)),
-            ["verify_url"]    = F(8,  Font.ITALIC,CL_Green),
+            // NMED tasdiqlash bloki
+            ["verify_title"]  = B(12, CL_Green),
+            ["verify_sub"]    = R(12, CL_Gray),
+            ["verify_url"]    = R(12, CL_Green),
 
-            // Disclaimer
-            ["disclaimer"]    = F(8,  Font.NORMAL,CL_DisclBorder), // BOLD → NORMAL (o'qish oson)
+            // Ogohlantirish
+            ["disclaimer"]    = R(12, CL_DisclText),
         };
 
         return _fontsCache;
+    }
+
+    /// <summary>Birinchi mavjud TTF faylidan kirill qo'llab-quvvatlaydigan shrift.</summary>
+    private BaseFont? LoadBaseFont(params string[] candidates)
+    {
+        var found = candidates.FirstOrDefault(File.Exists);
+        if (found == null) return null;
+        try
+        {
+            return BaseFont.CreateFont(found, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "PDF shrifti yuklanmadi: {Font}", found);
+            return null;
+        }
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -2925,22 +3186,39 @@ public class PdfReportService
         }
     }
 
-    private class FooterEvent : PdfPageEventHelper
+    /// <summary>
+    /// Har bir sahifa "ramkasi": tepada brend chizig'i va shapka (NMED +
+    /// klinika), pastda kolontitul (platforma, hujjat raqami, sahifa X / Y).
+    /// 1-sahifada to'liq shapka, keyingilarida ixcham — matn uchun joy qolsin.
+    /// </summary>
+    private sealed class PageChromeEvent : PdfPageEventHelper
     {
+        private const float BarHeight  = 5f;   // sahifa tepasidagi to'q ko'k polosa
+        private const float HeaderTop  = 22f;  // sahifa chetidan shapka boshigacha
+        private const float RuleGap    = 9f;   // shapkadan ostidagi chiziqqacha
+        private const float ContentGap = 14f;  // chiziqdan asosiy matngacha
+
+        private readonly PdfPTable _full;
+        private readonly PdfPTable _compact;
         private readonly Dictionary<string, Font>   _f;
         private readonly Dictionary<string, string> _tr;
         private readonly string _docNum;
         private readonly Font _foot;
         private PdfTemplate? _totalPages;
 
-        public FooterEvent(Dictionary<string, Font> f,
-            Dictionary<string, string> tr, string docNum)
+        public PageChromeEvent(PdfPTable full, PdfPTable compact,
+            Dictionary<string, Font> f, Dictionary<string, string> tr, string docNum)
         {
+            _full = full; _compact = compact;
             _f = f; _tr = tr; _docNum = docNum;
             // Footer shrifti — p8gray bilan bir xil shrift va rang, lekin
             // 10 pt (umumiy 12 pt chegarasidan past — atayin kichik).
             _foot = new Font(_f["p8gray"].BaseFont, FooterFontSize, Font.NORMAL, CL_Gray);
         }
+
+        /// <summary>Shu shapka bilan sahifaning yuqori chegarasi (matn shapkaga tegmasin).</summary>
+        public static float TopMarginFor(PdfPTable header) =>
+            HeaderTop + header.TotalHeight + RuleGap + ContentGap;
 
         public override void OnOpenDocument(PdfWriter writer, Document document)
         {
@@ -2951,32 +3229,68 @@ public class PdfReportService
         {
             var cb = writer.DirectContent;
             var ps = document.PageSize;
-            // Yashil chiziq pastki chegara balandligida turadi; footer matni
-            // esa undan ~14 pt pastda chiziladi — ilgari matn 10 pt shrift
-            // bilan chiziqqa tegib/yopishib qolardi (foydalanuvchi so'rovi).
+
+            // ── Brend chizig'i: sahifaning yuqori va pastki chetida ─────
+            cb.SaveState();
+            cb.SetColorFill(CL_DarkBlue);
+            cb.Rectangle(0, ps.Height - BarHeight, ps.Width, BarHeight);
+            cb.Fill();
+            cb.SetColorFill(CL_Green);
+            cb.Rectangle(0, ps.Height - BarHeight - 1.6f, ps.Width, 1.6f);
+            cb.Fill();
+            cb.SetColorFill(CL_DarkBlue);
+            cb.Rectangle(0, 0, ps.Width, 3f);
+            cb.Fill();
+            cb.RestoreState();
+
+            // ── Shapka ──────────────────────────────────────────────────
+            var header = writer.PageNumber == 1 ? _full : _compact;
+            var top = ps.Height - HeaderTop;
+            header.WriteSelectedRows(0, -1, MrgSide, top, cb);
+
+            var ruleY = top - header.TotalHeight - RuleGap;
+            cb.SaveState();
+            cb.SetColorStroke(CL_Border);
+            cb.SetLineWidth(0.8f);
+            cb.MoveTo(MrgSide, ruleY);
+            cb.LineTo(ps.Width - MrgSide, ruleY);
+            cb.Stroke();
+            cb.RestoreState();
+
+            // Keyingi sahifalarda ixcham shapka — yuqori chegara ham kichrayadi
+            document.SetMargins(MrgSide, MrgSide, TopMarginFor(_compact), MrgBottom);
+
+            DrawFooter(writer, document, cb, ps);
+        }
+
+        private void DrawFooter(PdfWriter writer, Document document, PdfContentByte cb, Rectangle ps)
+        {
+            // Chiziq pastki chegara balandligida turadi; footer matni esa
+            // undan ~14 pt pastda chiziladi — ilgari matn 10 pt shrift bilan
+            // chiziqqa tegib/yopishib qolardi (foydalanuvchi so'rovi).
             var lineY = document.BottomMargin;
             var y     = lineY - 14;
 
-            // ── #1D9E75 chiziq ────────────────────────────────────────
-            cb.SetColorStroke(CL_Green);
-            cb.SetLineWidth(0.5f);
-            cb.MoveTo(document.LeftMargin, lineY);
-            cb.LineTo(ps.Width - document.RightMargin, lineY);
+            cb.SaveState();
+            cb.SetColorStroke(CL_Border);
+            cb.SetLineWidth(0.6f);
+            cb.MoveTo(MrgSide, lineY);
+            cb.LineTo(ps.Width - MrgSide, lineY);
             cb.Stroke();
+            cb.RestoreState();
 
             // ── CHAP: platforma nomi ──────────────────────────────────
-            // Uzun nom markazdagi hujjat raqamiga tegib ketardi ("...nmed.uzHujjat
-            // raqami: ..."), shuning uchun joyiga sig'masa qisqartiriladi.
+            // Uzun nom markazdagi hujjat raqamiga tegib ketardi, shuning
+            // uchun joyiga sig'masa qisqartiriladi.
             var leftText = $"{_tr["footer_platform"]} | nmed.uz";
             var maxLeft = ps.Width / 2
                 - _f["p8gray"].BaseFont.GetWidthPoint($"{_tr["doc_number_prefix"]}: {_docNum}", FooterFontSize) / 2
-                - document.LeftMargin - 10;
+                - MrgSide - 10;
             if (_f["p8gray"].BaseFont.GetWidthPoint(leftText, FooterFontSize) > maxLeft)
                 leftText = "NMED | nmed.uz";
 
             ColumnText.ShowTextAligned(cb, Element.ALIGN_LEFT,
-                new Phrase(leftText, _foot),
-                document.LeftMargin, y, 0);
+                new Phrase(leftText, _foot), MrgSide, y, 0);
 
             // ── MARKAZDA: hujjat raqami ───────────────────────────────
             ColumnText.ShowTextAligned(cb, Element.ALIGN_CENTER,
@@ -2985,12 +3299,11 @@ public class PdfReportService
 
             // ── O'NG: sahifa raqami (X / Y) ───────────────────────────
             var pageText = $"{_tr["footer_page"]} {writer.PageNumber} {_tr["footer_of"]} ";
-            var rightX = ps.Width - document.RightMargin;
+            var rightX = ps.Width - MrgSide;
             var textWidth = _f["p8gray"].BaseFont.GetWidthPoint(pageText, FooterFontSize);
             var totalWidth = _f["p8gray"].BaseFont.GetWidthPoint("00", FooterFontSize); // max 2 raqam
             var startX = rightX - textWidth - totalWidth;
 
-            // Avval matn, keyin template
             ColumnText.ShowTextAligned(cb, Element.ALIGN_LEFT,
                 new Phrase(pageText, _foot), startX, y, 0);
             cb.AddTemplate(_totalPages!, startX + textWidth, y);
@@ -3001,7 +3314,7 @@ public class PdfReportService
             if (_totalPages == null) return;
             _totalPages.BeginText();
             _totalPages.SetFontAndSize(_f["p8gray"].BaseFont, FooterFontSize);
-            _totalPages.SetColorFill(new BaseColor(136, 136, 136)); // #888
+            _totalPages.SetColorFill(CL_Gray);
             // `writer.PageNumber` hujjat yopilganda KEYINGI sahifa raqamini
             // qaytaradi, ya'ni 2 sahifali hujjatda 3 bo'ladi. Shu sababli
             // kolontitulda "Sahifa 1 / 3" deb yozilardi va hujjatni qabul

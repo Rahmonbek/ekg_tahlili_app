@@ -21,6 +21,7 @@ import PatcientPassportSearch from './pages/patcients/PatcientPassportSearch'
 import CombinedAnalyseView from './combined_analyse/CombinedAnalyseView'
 import CombinedAnalysesList from './combined_analyse/CombinedAnalysesList'
 import CombinedAnalyzer from './combined_analyse/CombinedAnalyzer'
+import DischargeEditor from './discharge/DischargeEditor'
 import Profile from './pages/Profile'
 import AuditLogs from './pages/AuditLogs'
 import SystemStatus from './pages/SystemStatus'
@@ -267,6 +268,17 @@ export default function Main() {
                         <Route path="/patcients/:id" element={
                             <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
                                 <PatcientCard />
+                            </ClinicGatedRoute>
+                        } />
+                        {/* ── Vipiska (chiqarish epikrizi) — faqat shifokor ── */}
+                        <Route path="/patcients/:patientId/discharge/new" element={
+                            <ClinicGatedRoute allowedRoles={[4]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <DischargeEditor />
+                            </ClinicGatedRoute>
+                        } />
+                        <Route path="/discharges/:id/edit" element={
+                            <ClinicGatedRoute allowedRoles={[4]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
+                                <DischargeEditor />
                             </ClinicGatedRoute>
                         } />
                         {/* ── Kompleks (ko'p tahlilli) AI xulosasi — to'rttala rol uchun ── */}

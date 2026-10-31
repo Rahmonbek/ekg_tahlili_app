@@ -504,6 +504,33 @@
   margin-top: 12px;
 }
 
+/* ── Vipiskalar ─────────────────────────────────────────────── */
+
+/* Qator bosilmaydi — amallar o'ng tomondagi tugmalarda */
+.ptc-discharge .ptc-row-main {
+  cursor: default;
+}
+
+.ptc-discharge-diag {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.8125rem;
+  color: var(--ptc-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ptc-discharge-actions {
+  gap: 6px;
+}
+
+.ptc-note {
+  margin: 0;
+  color: var(--ptc-muted);
+  font-size: 0.875rem;
+}
+
 /* ── Moslashuvchanlik ───────────────────────────────────────── */
 
 @media (max-width: 1200px) {

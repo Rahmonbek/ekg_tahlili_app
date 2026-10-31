@@ -311,7 +311,7 @@ NIMA HAQIDA YOZISH KERAK:
 QANDAY YOZISH KERAK:
 - `automatic_analysis` — ENG MAZMUNLI maydon: topilgan har bir
   patologiyani BATAFSIL yozing (aniq raqamlar, manbasi va klinik
-  ma'nosi bilan). Bu yerda qisqartirmang.
+  ma'nosi bilan). Bu yerda qisqartirmang. Patlogiyaga sabab bo'luvchi ko'rsatkichlarni aniq yozing. Gipertoniya aniqlanganda SMADdagi o'rtacha emas eng past va eng baland ko'rsatkichlarni yozing.
 - Qolgan maydonlar QISQA: har biri uchun berilgan gap soni
   chegarasiga qat'iy rioya qiling.
 - Bir fikrni bir necha maydonda takrorlamang.

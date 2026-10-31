@@ -41,6 +41,7 @@ builder.Services.AddScoped<CombinedAnalysisService>();
 // Yangi tahlil tugaganda bemorning barcha tahlillaridan avtomatik kompleks
 // AI xulosasi yaratadi (`AutoCombined:*` sozlamalari)
 builder.Services.AddHostedService<AutoCombinedAnalysisWorker>();
+builder.Services.AddScoped<DischargeSummaryService>();  // Vipiska (chiqarish epikrizi)
 builder.Services.AddScoped<MedicalDiagnoseService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();

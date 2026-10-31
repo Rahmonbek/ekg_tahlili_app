@@ -51,6 +51,13 @@ namespace EkgAnalyzerApi.Data
         public DbSet<AnalysisDiagnosis> AnalysisDiagnoses { get; set; }
         public DbSet<CombinedAnalysis> CombinedAnalyses { get; set; }
         public DbSet<CombinedAnalysisItem> CombinedAnalysisItems { get; set; }
+
+        // Statsionardan chiqarish epikrizi (vipiska)
+        public DbSet<DischargeSummary> DischargeSummaries { get; set; }
+        public DbSet<DischargeSummaryItem> DischargeSummaryItems { get; set; }
+        public DbSet<DischargeSummaryComplaint> DischargeSummaryComplaints { get; set; }
+        public DbSet<DischargeSummaryConsultation> DischargeSummaryConsultations { get; set; }
+        public DbSet<DischargeSummaryPrescription> DischargeSummaryPrescriptions { get; set; }
         public DbSet<VideoCallSession> VideoCallSessions { get; set; }
         public DbSet<VideoConference> VideoConferences { get; set; }
         public DbSet<VideoConferenceParticipant> VideoConferenceParticipants { get; set; }
@@ -187,6 +194,80 @@ namespace EkgAnalyzerApi.Data
             modelBuilder.Entity<CombinedAnalysisItem>()
                 .HasIndex(i => new { i.CombinedAnalysisId, i.AnalysisType, i.AnalysisId })
                 .IsUnique();
+
+            // ── Vipiska (statsionardan chiqarish epikrizi) ──────────────────
+            modelBuilder.Entity<DischargeSummary>()
+                .HasIndex(d => d.PatientId);
+
+            modelBuilder.Entity<DischargeSummary>()
+                .HasIndex(d => d.DoctorId);
+
+            modelBuilder.Entity<DischargeSummary>()
+                .HasOne(d => d.Patient)
+                .WithMany()
+                .HasForeignKey(d => d.PatientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DischargeSummary>()
+                .HasOne(d => d.Doctor)
+                .WithMany()
+                .HasForeignKey(d => d.DoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DischargeSummary>()
+                .HasOne(d => d.Clinic)
+                .WithMany()
+                .HasForeignKey(d => d.ClinicId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Tarkibiy jadvallar vipiska bilan birga o'chadi
+            modelBuilder.Entity<DischargeSummaryItem>()
+                .HasOne(i => i.DischargeSummary)
+                .WithMany(d => d.Items)
+                .HasForeignKey(i => i.DischargeSummaryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DischargeSummaryItem>()
+                .HasIndex(i => new { i.DischargeSummaryId, i.AnalysisType, i.AnalysisId })
+                .IsUnique();
+
+            modelBuilder.Entity<DischargeSummaryComplaint>()
+                .HasOne(c => c.DischargeSummary)
+                .WithMany(d => d.Complaints)
+                .HasForeignKey(c => c.DischargeSummaryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DischargeSummaryComplaint>()
+                .HasOne(c => c.Complaint)
+                .WithMany()
+                .HasForeignKey(c => c.ComplaintId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DischargeSummaryComplaint>()
+                .HasIndex(c => new { c.DischargeSummaryId, c.ComplaintId })
+                .IsUnique();
+
+            modelBuilder.Entity<DischargeSummaryConsultation>()
+                .HasOne(c => c.DischargeSummary)
+                .WithMany(d => d.Consultations)
+                .HasForeignKey(c => c.DischargeSummaryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DischargeSummaryConsultation>()
+                .HasOne(c => c.Consultation)
+                .WithMany()
+                .HasForeignKey(c => c.ConsultationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DischargeSummaryConsultation>()
+                .HasIndex(c => new { c.DischargeSummaryId, c.ConsultationId })
+                .IsUnique();
+
+            modelBuilder.Entity<DischargeSummaryPrescription>()
+                .HasOne(p => p.DischargeSummary)
+                .WithMany(d => d.Prescriptions)
+                .HasForeignKey(p => p.DischargeSummaryId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // ConsultantInvitations — UNIQUE (ClinicId, DoctorId)
             modelBuilder.Entity<ConsultantInvitation>()

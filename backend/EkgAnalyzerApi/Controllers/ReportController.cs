@@ -22,16 +22,21 @@ public class ReportController : ControllerBase
     private readonly DocumentVerificationService _verification;
     private readonly MedDataDB _context;
     private readonly ILogger<ReportController> _logger;
+    private readonly DischargeSummaryService _discharge;
+    private readonly IConfiguration _config;
 
     public ReportController(
         PdfReportService pdf,
         MedDataDB context,
-        ILogger<ReportController> logger, DocumentVerificationService verification)
+        ILogger<ReportController> logger, DocumentVerificationService verification,
+        DischargeSummaryService discharge, IConfiguration config)
     {
+        _config = config;
         _pdf     = pdf;
         _context = context;
         _logger  = logger;
         _verification = verification;
+        _discharge = discharge;
     }
 
     // ── EKG ─────────────────────────────────────────────────────────────
@@ -203,6 +208,33 @@ public class ReportController : ControllerBase
             $"nmed_consultation_{id}_{DateTime.Now:ddMMyyyy}.pdf");
     }
 
+    // ── Vipiska ──────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Vipiska (statsionardan chiqarish epikrizi) PDF.
+    /// GET /api/report/discharge/{id}?lang=uz
+    /// </summary>
+    /// <remarks>
+    /// Yaratgan shifokor yoki shu klinikaning admini/direktori yuklab oladi.
+    /// </remarks>
+    [HttpGet("discharge/{id:int}")]
+    public async Task<IActionResult> DownloadDischarge(int id, [FromQuery] string lang = "uz")
+    {
+        var userId = GetUserId();
+        if (userId == 0) return Unauthorized(new { message = "Token invalid" });
+
+        if (!await _discharge.CanViewAsync(userId, GetRoleId(), id))
+            return NotFound(new { message = "Vipiska topilmadi yoki ruxsat yo'q" });
+
+        var number = await _context.DischargeSummaries.AsNoTracking()
+            .Where(d => d.Id == id).Select(d => d.HistoryNumber).FirstOrDefaultAsync() ?? id.ToString();
+        var safeNumber = string.Concat(number.Where(char.IsLetterOrDigit));
+
+        return await BuildPdfResponse(
+            () => _pdf.GenerateDischargeReport(id, lang),
+            $"nmed_vipiska_{(safeNumber.Length > 0 ? safeNumber : id.ToString())}_{DateTime.Now:ddMMyyyy}.pdf");
+    }
+
     // ════════════════════════════════════════════════════════════════════
     //  YORDAMCHI METODLAR
     // ════════════════════════════════════════════════════════════════════
@@ -222,6 +254,9 @@ public class ReportController : ControllerBase
     {
         if (!_verification.TryParseToken(token, out var type, out var id))
             return NotFound(new { isValid = false, message = "Tasdiqlash kodi yaroqsiz" });
+
+        if (type == "discharge")
+            return await VerifyDischarge(id);
 
         VerificationInfo? info = type switch
         {
@@ -272,6 +307,49 @@ public class ReportController : ControllerBase
             clinicName = info.ClinicName,
             issuedAt = info.AnalysisDate,
             verificationText = "Ushbu hujjat NMED platformasida shakllantirilgan va haqiqiy."
+        });
+    }
+
+    /// <summary>
+    /// Vipiskani tasdiqlash. Imzo yo'q — QR kod yagona tasdiq, shuning uchun
+    /// javobda hujjatni qo'ldagi nusxa bilan solishtirish uchun yetarli
+    /// ma'lumot bor: ИБ raqami, yotish davri va oxirgi tahrir vaqti (PDF
+    /// pastidagi "Tasdiqlangan" vaqti bilan bir xil bo'lishi kerak — farq
+    /// qilsa, hujjat chop etilgandan keyin o'zgartirilgan). Bemorning to'liq
+    /// ismi va tibbiy mazmun boshqa hujjatlardagi kabi ATAYLAB qaytarilmaydi.
+    /// </summary>
+    private async Task<IActionResult> VerifyDischarge(int id)
+    {
+        var d = await _context.DischargeSummaries.AsNoTracking()
+            .Where(x => x.Id == id)
+            .Select(x => new
+            {
+                x.HistoryNumber,
+                x.DocumentDate,
+                x.AdmissionDate,
+                x.DischargeDate,
+                x.CreatedAt,
+                x.UpdatedAt,
+                PatientName = x.Patient!.LastName + " " + x.Patient.FirstName,
+                ClinicName = x.Clinic!.ClinicName,
+            })
+            .FirstOrDefaultAsync();
+
+        if (d == null)
+            return NotFound(new { isValid = false, message = "Hujjat topilmadi yoki bekor qilingan" });
+
+        return Ok(new
+        {
+            isValid = true,
+            documentType = "Vipiska (kasallik tarixidan ko'chirma)",
+            documentNumber = d.HistoryNumber,
+            patientInitials = DocumentVerificationService.ToInitials(d.PatientName),
+            clinicName = d.ClinicName,
+            issuedAt = d.DocumentDate.ToDateTime(TimeOnly.MinValue),
+            admissionDate = d.AdmissionDate,
+            dischargeDate = d.DischargeDate,
+            lastModifiedAt = AppTime.ToLocal(d.UpdatedAt ?? d.CreatedAt, _config),
+            verificationText = "Ushbu vipiska NMED platformasida shakllantirilgan va haqiqiy.",
         });
     }
 

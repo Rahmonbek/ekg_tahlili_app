@@ -20,6 +20,14 @@ namespace EkgAnalyzerApi.Models
         [Column("name_en")]
         public string? NameEn { get; set; }
 
+        /// <summary>
+        /// Yo'nalish (cardio, respiratory, neuro, ...) — vipiskadagi qidiruvli
+        /// ro'yxatda guruhlash uchun. Eski yozuvlarda bo'sh bo'lishi mumkin.
+        /// </summary>
+        [Column("category")]
+        [MaxLength(30)]
+        public string? Category { get; set; }
+
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 

@@ -271,7 +271,9 @@ export default function EcgAnalyzer() {
                         onToggle={() => setComplaintsOpen((v) => !v)}
                     >
                         <div className="anz-chips">
-                            {complaints.map((item) => (
+                            {/* Spravochnikda boshqa yo'nalishlar ham bor (vipiska
+                                uchun) — EKG da faqat kardiologik shikoyatlar */}
+                            {complaints.filter((item) => !item.category || item.category === 'cardio').map((item) => (
                                 <Chip
                                     key={item.id}
                                     selected={selectedComplaints.some((x) => x.id === item.id)}

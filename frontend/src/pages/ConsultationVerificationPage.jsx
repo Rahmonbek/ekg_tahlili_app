@@ -118,7 +118,29 @@ export default function ConsultationVerificationPage() {
                     <Descriptions.Item label="Sana">
                         {data.issuedAt ? dayjs(data.issuedAt).format('DD.MM.YYYY') : '-'}
                     </Descriptions.Item>
+                    {/* Vipiska: imzo yo'q, shuning uchun qo'ldagi nusxani
+                        solishtirish uchun yotish davri va oxirgi tahrir vaqti */}
+                    {data.admissionDate && (
+                        <Descriptions.Item label="Yotish davri">
+                            {dayjs(data.admissionDate).format('DD.MM.YYYY')}
+                            {' — '}
+                            {data.dischargeDate ? dayjs(data.dischargeDate).format('DD.MM.YYYY') : '-'}
+                        </Descriptions.Item>
+                    )}
+                    {data.lastModifiedAt && (
+                        <Descriptions.Item label="Oxirgi tahrir">
+                            {dayjs(data.lastModifiedAt).format('DD.MM.YYYY HH:mm')}
+                        </Descriptions.Item>
+                    )}
                 </Descriptions>
+
+                {data.lastModifiedAt && (
+                    <Text type="secondary" className="cons-verify-note" style={{ display: 'block', marginBottom: 8 }}>
+                        Qo&apos;ldagi vipiskaning pastidagi &laquo;Tasdiqlangan&raquo; vaqti shu
+                        &laquo;Oxirgi tahrir&raquo; vaqti bilan bir xil bo&apos;lishi kerak. Farq qilsa,
+                        hujjat chop etilgandan keyin o&apos;zgartirilgan — eng so&apos;nggi nusxani so&apos;rang.
+                    </Text>
+                )}
 
                 <Text type="secondary" className="cons-verify-note">
                     Maxfiylikni saqlash uchun bu sahifada bemorning to&apos;liq ism-sharifi va

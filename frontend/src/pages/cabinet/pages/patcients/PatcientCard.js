@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Alert, Button, Modal, Skeleton, Tag, message } from 'antd'
+import { Alert, Button, Col, DatePicker, Form, Grid, Input, Modal, Popconfirm, Row, Skeleton, Tag, message } from 'antd'
 import {
-    ArrowLeftOutlined, CalendarOutlined, CheckOutlined, DashboardOutlined, DownOutlined,
-    EnvironmentOutlined, ExperimentOutlined, FieldTimeOutlined, FileTextOutlined, HeartOutlined,
+    ArrowLeftOutlined, CalendarOutlined, CheckOutlined, DashboardOutlined, DeleteOutlined, DownOutlined,
+    EditOutlined, EnvironmentOutlined, ExperimentOutlined, FieldTimeOutlined, FileTextOutlined, HeartOutlined,
     IdcardOutlined, LineChartOutlined, PhoneOutlined, RightOutlined, RobotOutlined,
 } from '@ant-design/icons'
+import dayjs from 'dayjs'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { FaUserInjured } from 'react-icons/fa'
@@ -22,6 +23,8 @@ import { patientCardTour } from '../../../../tools/tourSteps'
 import { usePageTour } from '../../../../components/shared/TourProvider'
 import useDocumentTitle from '../../../../tools/useDocumentTitle'
 import LabDynamicsChart from '../../../../components/results/LabDynamicsChart'
+import DownloadReportButton from '../../../../components/DownloadReportButton'
+import { delete_discharge, get_discharges_by_patient } from '../../../../host/requests/DischargeRequest'
 import './PatcientCard.css'
 
 /**
@@ -130,6 +133,16 @@ export default function PatcientCard() {
     const [expandedCombined, setExpandedCombined] = useState(null)
     const [combinedDetails, setCombinedDetails] = useState({})
 
+    // ── Vipiska (statsionardan chiqarish epikrizi) ───────────────────────
+    // Faqat shifokor va faqat o'ziga yo'naltirilgan bemorga chiqaradi —
+    // `canCreate` ni backend hisoblaydi (bemorlar ro'yxatidagi qoida)
+    const [discharges, setDischarges] = useState({ canCreate: false, items: [] })
+    const [dischargeOpen, setDischargeOpen] = useState(false)
+    const [dischargeForm] = Form.useForm()
+    // Telefonda kalendar ochilganda klaviatura chiqib, uni yopib qo'ymasin
+    const screens = Grid.useBreakpoint()
+    const dischargePicker = { format: 'DD.MM.YYYY', style: { width: '100%' }, inputReadOnly: !screens.md }
+
     // Bemor kartasi yorlig'i bemor ismi bilan nomlanadi
     useDocumentTitle(
         card
@@ -164,8 +177,56 @@ export default function PatcientCard() {
         }
     }, [id])
 
+    const fetchDischarges = useCallback(async () => {
+        try {
+            const res = await get_discharges_by_patient(id)
+            setDischarges({
+                canCreate: !!res?.data?.canCreate,
+                items: Array.isArray(res?.data?.items) ? res.data.items : [],
+            })
+        } catch (err) {
+            // Vipiskalar — qo'shimcha bo'lim: yuklanmasa ham karta ochiladi
+            setDischarges({ canCreate: false, items: [] })
+        }
+    }, [id])
+
     useEffect(() => { fetchCard() }, [fetchCard])
     useEffect(() => { fetchCombined() }, [fetchCombined])
+    useEffect(() => { fetchDischarges() }, [fetchDischarges])
+
+    const openDischargeModal = () => {
+        dischargeForm.setFieldsValue({
+            historyNumber: undefined,
+            documentDate: dayjs(),
+            admissionDate: undefined,
+            dischargeDate: dayjs(),
+        })
+        setDischargeOpen(true)
+    }
+
+    /** Oynada kiritilgan ИБ raqami va sanalar bilan vipiska sahifasiga o'tadi. */
+    const startDischarge = async () => {
+        const values = await dischargeForm.validateFields()
+        setDischargeOpen(false)
+        navigate(`/patcients/${id}/discharge/new`, {
+            state: {
+                historyNumber: values.historyNumber.trim(),
+                documentDate: values.documentDate.format('YYYY-MM-DD'),
+                admissionDate: values.admissionDate.format('YYYY-MM-DD'),
+                dischargeDate: values.dischargeDate.format('YYYY-MM-DD'),
+            },
+        })
+    }
+
+    const removeDischarge = async (dischargeId) => {
+        try {
+            await delete_discharge(dischargeId)
+            message.success(t('dc_deleted', { defaultValue: 'Vipiska o‘chirildi' }))
+            fetchDischarges()
+        } catch (err) {
+            message.error(err?.response?.data?.message || t('dc_delete_failed', { defaultValue: 'Vipiskani o‘chirib bo‘lmadi' }))
+        }
+    }
 
     const timeline = useMemo(() => card?.timeline ?? [], [card])
     const filtered = typeFilter === 'all' ? timeline : timeline.filter((row) => row.type === typeFilter)
@@ -418,6 +479,78 @@ export default function PatcientCard() {
                 )}
             </section>
 
+            {/* ═══════ Vipiskalar ═══════ */}
+            {(discharges.canCreate || discharges.items.length > 0) && (
+                <section className="ptc-panel" data-tour="card-discharges">
+                    <header className="ptc-panel-head">
+                        <h2 className="ptc-panel-title">
+                            <FileTextOutlined /> {t('dc_list_title', { defaultValue: 'Vipiskalar' })}
+                            <span className="ptc-count">{discharges.items.length}</span>
+                        </h2>
+                        {discharges.canCreate && (
+                            <Button type="primary" icon={<FileTextOutlined />} onClick={openDischargeModal}>
+                                {t('dc_issue', { defaultValue: 'Vipiska chiqarish' })}
+                            </Button>
+                        )}
+                    </header>
+                    {discharges.items.length === 0 ? (
+                        <p className="ptc-note">
+                            {t('dc_list_empty', { defaultValue: 'Bu bemorga hali vipiska chiqarilmagan' })}
+                        </p>
+                    ) : (
+                        <ul className="ptc-list">
+                            {discharges.items.map((row) => (
+                                <li key={row.id} className="ptc-row ptc-discharge">
+                                    <div className="ptc-row-main">
+                                        <span className="ptc-type ptc-type--diagnose" aria-hidden="true"><FileTextOutlined /></span>
+                                        <span className="ptc-row-text">
+                                            <span className="ptc-row-title">
+                                                {t('dc_history_number_short', { defaultValue: 'ИБ №' })} {row.historyNumber}
+                                            </span>
+                                            <span className="ptc-row-meta">
+                                                <span>
+                                                    <CalendarOutlined /> {formatDate(row.admissionDate)} — {formatDate(row.dischargeDate)}
+                                                </span>
+                                                {row.doctorName && <span>{row.doctorName}</span>}
+                                            </span>
+                                            {row.diagnosisMain && (
+                                                <span className="ptc-discharge-diag" title={row.diagnosisMain}>
+                                                    {row.diagnosisMain}
+                                                </span>
+                                            )}
+                                        </span>
+                                        <span className="ptc-row-side ptc-discharge-actions">
+                                            <DownloadReportButton type="discharge" id={row.id} />
+                                            {row.isMine && (
+                                                <Button
+                                                    size="small"
+                                                    icon={<EditOutlined />}
+                                                    onClick={() => navigate(`/discharges/${row.id}/edit`)}
+                                                >
+                                                    {t('edit', { defaultValue: 'Tahrirlash' })}
+                                                </Button>
+                                            )}
+                                            {row.isMine && (
+                                                <Popconfirm
+                                                    title={t('dc_delete_confirm', { defaultValue: 'Vipiskani o‘chirasizmi? QR kod orqali tekshiruv ham ishlamay qoladi.' })}
+                                                    okText={t('delete', { defaultValue: 'O‘chirish' })}
+                                                    cancelText={t('cancel', { defaultValue: 'Bekor qilish' })}
+                                                    okButtonProps={{ danger: true }}
+                                                    onConfirm={() => removeDischarge(row.id)}
+                                                >
+                                                    <Button size="small" danger icon={<DeleteOutlined />}
+                                                        aria-label={t('delete', { defaultValue: 'O‘chirish' })} />
+                                                </Popconfirm>
+                                            )}
+                                        </span>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </section>
+            )}
+
             {/* ═══════ 4. Kompleks AI xulosalari ═══════ */}
             {combinedList.length > 0 && (
                 <section className="ptc-panel">
@@ -523,6 +656,71 @@ export default function PatcientCard() {
                         defaultValue: 'Tahlillarning AI xulosalari bilan birga EKG rasmlari ham AI ga yuboriladi, shuning uchun javob bir necha daqiqa olishi mumkin.',
                     })}
                 />
+            </Modal>
+
+            <Modal
+                open={dischargeOpen}
+                title={t('dc_issue', { defaultValue: 'Vipiska chiqarish' })}
+                okText={t('dc_continue', { defaultValue: 'Davom etish' })}
+                cancelText={t('cancel', { defaultValue: 'Bekor qilish' })}
+                onOk={startDischarge}
+                onCancel={() => setDischargeOpen(false)}
+                forceRender
+                style={{ top: 24 }}
+            >
+                <Form form={dischargeForm} layout="vertical" requiredMark>
+                    <Row gutter={12}>
+                        <Col xs={24} sm={12}>
+                            <Form.Item
+                                name="historyNumber"
+                                label={t('dc_history_number', { defaultValue: 'Kasallik tarixi (ИБ) raqami' })}
+                                rules={[{ required: true, whitespace: true, message: t('dc_required', { defaultValue: 'Majburiy maydon' }) }, { max: 50 }]}
+                            >
+                                <Input placeholder="1788" />
+                            </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={12}>
+                            <Form.Item
+                                name="documentDate"
+                                label={t('dc_document_date', { defaultValue: 'Vipiska sanasi' })}
+                                rules={[{ required: true, message: t('dc_required', { defaultValue: 'Majburiy maydon' }) }]}
+                            >
+                                <DatePicker {...dischargePicker} />
+                            </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={12}>
+                            <Form.Item
+                                name="admissionDate"
+                                label={t('dc_admission_date', { defaultValue: 'Yotqizilgan sana' })}
+                                rules={[{ required: true, message: t('dc_required', { defaultValue: 'Majburiy maydon' }) }]}
+                            >
+                                <DatePicker {...dischargePicker} />
+                            </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={12}>
+                            <Form.Item
+                                name="dischargeDate"
+                                label={t('dc_discharge_date', { defaultValue: 'Chiqarilgan sana' })}
+                                dependencies={['admissionDate']}
+                                rules={[
+                                    { required: true, message: t('dc_required', { defaultValue: 'Majburiy maydon' }) },
+                                    ({ getFieldValue }) => ({
+                                        validator: (_, value) => {
+                                            const from = getFieldValue('admissionDate')
+                                            if (!value || !from || !from.isAfter(value, 'day')) return Promise.resolve()
+                                            return Promise.reject(new Error(t('dc_dates_order', { defaultValue: 'Chiqarilgan sana yotqizilgan sanadan oldin bo‘lishi mumkin emas' })))
+                                        },
+                                    }),
+                                ]}
+                            >
+                                <DatePicker {...dischargePicker} />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                </Form>
+                <p className="ptc-note">
+                    {t('dc_modal_hint', { defaultValue: 'Keyingi sahifada bemorning sizga yo‘naltirilgan tahlillari va yotish davrida olingan boshqa tahlillari chiqadi — vipiskaga kiradiganlarini tanlaysiz.' })}
+                </p>
             </Modal>
         </div>
     )

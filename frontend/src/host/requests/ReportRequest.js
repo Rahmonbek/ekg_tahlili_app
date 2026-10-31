@@ -4,7 +4,7 @@ import { httpGetRequest } from "../Host";
 /**
  * PDF hisobotni serverdan blob sifatida yuklab, brauzerda avtomatik saqlaydigan funksiya.
  *
- * @param {"ecg"|"smad"|"holter"|"lab"|"parasitology"|"combined"|"combined-ai"|"consultation"} type  - tahlil turi
+ * @param {"ecg"|"smad"|"holter"|"lab"|"parasitology"|"combined"|"combined-ai"|"consultation"|"discharge"} type  - tahlil turi
  * @param {number} id         - analysisId; `combined` uchun patientId,
  *                              `combined-ai` uchun kompleks xulosa id si
  * @param {"uz"|"ru"|"en"} lang - PDF tili

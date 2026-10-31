@@ -8,7 +8,7 @@ import { downloadReport } from '../host/requests/ReportRequest';
  * PDF yuklab olish tugmasi — har qanday tahlil kartochkasida ishlatiladi.
  *
  * Props:
- *   type     — "ecg" | "smad" | "holter" | "lab" | "parasitology" | "combined"
+ *   type     — "ecg" | "smad" | "holter" | "lab" | "parasitology" | "combined" | "discharge"
  *   id       — analysisId yoki combined uchun patientId
  *   size     — "small" | "middle" | "large"  (default: "small")
  *   block    — true bo'lsa butun kenglikni egallaydi

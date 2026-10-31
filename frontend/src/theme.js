@@ -98,6 +98,13 @@ export const theme = {
         Modal: {
             borderRadiusLG: 16,
         },
+        // Kalendar katakchasining kengligi standartda `controlHeightSM * 1.5`
+        // (48 px) — `controlHeight: 40` tufayli panel 372 px bo'lib, telefon
+        // ekraniga (375 px) sig'masdi va chap chetidan chiqib ketardi.
+        // 36 px bilan panel ~300 px — antd ning o'z standart o'lchami.
+        DatePicker: {
+            cellWidth: 36,
+        },
     },
 };
 

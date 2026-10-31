@@ -129,6 +129,32 @@ harf bilan, `lower()` dan OLDIN taniladi. Frontend
 `AnalysisResultBody.normUnit` — tuzatilmagan yozuvlar uchun himoya.
 Eski yozuvlar: `python repair_lab_units.py [--apply]`.
 
+**Vipiska** (`discharge_summaries`) — statsionardan chiqarish epikrizi
+(«Выписка из истории болезни»).
+
+* **Kim**: faqat shifokor (rol 4) va faqat O'ZIGA yo'naltirilgan bemorga
+  (`PatientVisibility` qoidasi). Tahrirlash/o'chirish — yaratgan shifokor;
+  admin/direktor o'z klinikasinikini faqat ko'radi va PDF yuklaydi.
+* **Oqim**: bemor kartasi → «Vipiska chiqarish» → oynada ИБ raqami,
+  vipiska sanasi, yotqizilish/chiqarilish sanalari (shifokor KIRITADI) →
+  `/patcients/:id/discharge/new`. Tahrirlash: `/discharges/:id/edit`.
+* **Tahlillar**: shifokorga yo'naltirilgan (yoki u yuklagan) tahlillar
+  sanasidan qat'i nazar + yotish davrida olingan BOSHQA tahlillar; faqat
+  tayyorlari. Backend (`DischargeSummaryService.GetCandidatesAsync`) shu
+  to'plamdan tashqaridagi tahlilni rad etadi.
+* **Diagnoz** 3 qism (asosiy/yo'ldosh/asorat) — tanlangan tahlillardagi
+  `analysis_diagnoses` xulosalaridan NUSXA qo'shiladi yoki qo'lda yoziladi.
+  Konsultatsiya xulosalari — yotish davridagilardan tanlanadi.
+* **Shikoyatlar**: `complaints` spravochnigi (`category` ustuni, 12
+  yo'nalish). EKG yuklash sahifasida faqat `cardio` ko'rsatiladi.
+* **Imzo YO'Q** — haqiqiylikni QR tasdiqlaydi: token turi `discharge`,
+  `/verify/{token}` login talab qilmaydi. Tekshiruv sahifasida «Oxirgi
+  tahrir» vaqti PDF dagi «Tasdiqlangan» vaqti bilan bir xil bo'lishi kerak
+  — shuning uchun har saqlashda `updated_at` majburan yangilanadi.
+* **PDF**: `GET /api/report/discharge/{id}` →
+  `PdfReportService.Discharge.cs` (shapkada faqat klinika, hujjat raqami
+  = ИБ raqami, ixtiyoriy «bemor uchun tavsiyalar» sahifasi).
+
 ---
 
 ## Arxitektura Hujjatlari
@@ -212,6 +238,33 @@ Istalgan API **401** qaytarsa `Api.js` interceptori tokenni o'chirib,
 `/login?session=expired` ga yo'naltiradi va login sahifasi sababini
 ko'rsatadi. Ochiq sahifalarda (login/register/reset) 401 yo'naltirilmaydi
 — u yerda 401 "parol noto'g'ri" degani.
+
+### PDF hujjatlar uslubi (`PdfReportService*.cs`)
+
+Barcha hujjatlar umumiy yordamchilardan chiziladi — yangi hujjat ham
+shulardan foydalansin, o'z "dizayn"ini yaratmasin:
+`OpenPdf` (hujjatni ochadi) → `ComposeDocTitle` (nom + raqam/sana paneli)
+→ `ComposeSectionHeader` (rangli belgi + to'q ko'k qalin matn + chiziq;
+`CL_Green` faqat AI bo'limi uchun) → `Card(InfoGrid(...))` (yorliq tepada,
+qiymat pastda, qatorda 3 ta) / `TableHead`+`TblCell` / `AddLabeledText` /
+`AddAiTextBlock`.
+
+* **Shapka HAR sahifada** (`PageChromeEvent`): chapda NMED (logotip,
+  platforma, nmed.uz), o'ngda hujjatni CHIQARAYOTGAN foydalanuvchining
+  klinikasi (`ResolveIssuerClinic`: logotip yoki bosh harflar belgisi,
+  nom, telefon). 1-sahifada to'liq, keyingilarida ixcham. Shapka
+  hujjat ichida chizilmaydi — faqat sahifa hodisasida.
+* Bitta `Image` obyektini ikki joyda ishlatmang: `ScaleToFit` umumiy —
+  ixcham shapka katta logotipni ham kichraytirib qo'yardi.
+
+* Shrift: oddiy + HAQIQIY Bold fayl (`arialbd.ttf` / Liberation/DejaVu
+  Bold). Eng kichik o'lcham **12 pt** (`MinFontSize`, foydalanuvchi
+  talabi), footer 10 pt.
+* To'liq bo'yalgan rangli polosa ishlatilmaydi. Rang faqat ma'noga ega
+  joyda: normadan og'gan qiymat (qizil/sariq qalin), normal — oddiy qora.
+* `✓ ⚠ ✗` belgilari Arial da YO'Q (bo'sh joy chiqadi) — faqat `↑ ↓`.
+* Bo'lim sarlavhasi sahifa tagida yolg'iz qolmaydi (`KeepRoomOrBreak`,
+  `_writer` orqali qolgan joy tekshiriladi).
 
 ### Passport Qidiruvi
 AES-256-CBC tasodifiy IV ishlatadi → DB `LIKE` ishlamaydi.
