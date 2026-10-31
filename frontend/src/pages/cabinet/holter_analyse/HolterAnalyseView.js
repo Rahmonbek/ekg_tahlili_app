@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Spin, Modal, Space, Image, Typography, Tag } from 'antd';
 import HolterOldResult from '../../../components/results/holter_analyse/HolterOldResult';
 import { get_holter_analyse_by_id } from '../../../host/requests/HolterAnalyseRequest';
-import { formatDate, calculateAge, personName } from '../../../tools/formatters';
+import { formatDate, calculateAge, personName, genderForAi } from '../../../tools/formatters';
 import { useStore } from '../../../store/Store';
 import DownloadReportButton from '../../../components/DownloadReportButton';
 import DoctorDiagnosisBlock from '../../../components/results/DoctorDiagnosisBlock';
@@ -142,8 +142,8 @@ export default function HolterAnalyseView() {
                 onReplace={replaceHolterFile}
                 accept=".pdf,.png,.jpg,.jpeg"
                 meta={{
-                    age: data.patcient?.birthDate ? calculateAge(data.patcient.birthDate) : 0,
-                    gender: data.patcient?.gender ? 'erkak' : 'ayol',
+                    age: data.patcient?.birthDate ? calculateAge(data.patcient.birthDate) : null,
+                    gender: genderForAi(data.patcient?.gender),
                     lang: i18n.language || 'uz',
                 }}
                 onSuccess={getData}

@@ -3,6 +3,7 @@ import { Alert, Button, Space, Typography } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { successAlert, dangerAlert } from '../../tools/Alerts';
+import { appendPatientMeta } from '../../tools/formatters';
 
 const { Text } = Typography;
 
@@ -48,8 +49,7 @@ export default function FileMismatchBanner({
             const formData = new FormData();
             formData.append('id', analysisId);
             files.forEach((file) => formData.append('file', file));
-            formData.append('age', meta.age ?? 0);
-            formData.append('gender', meta.gender ?? 'erkak');
+            appendPatientMeta(formData, meta);
             formData.append('lang', meta.lang ?? 'uz');
 
             await onReplace(formData);

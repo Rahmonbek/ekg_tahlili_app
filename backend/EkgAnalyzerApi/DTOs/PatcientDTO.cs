@@ -4,18 +4,25 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EkgAnalyzerApi.DTOs;
 
+/// <summary>
+/// Bemorni yaratish/tahrirlash. Faqat <c>firstname</c> va <c>lastname</c>
+/// majburiy; qolganlari ixtiyoriy (loyiha egasining qarori). Matnlar
+/// faqat lotin harflarida — tekshiruv <c>PatientInput</c> da.
+/// </summary>
 public class PatcientDTO
 {
+    /// <summary>Berilsa — aynan shu bemor tahrirlanadi (ism bo'yicha qidiruvdan tanlangan).</summary>
+    public int? id { get; set; }
     public string firstname { get; set; } = string.Empty;
     public string lastname { get; set; } = string.Empty;
-    public string surename { get; set; } = string.Empty;
-    public string passport { get; set; } = string.Empty;
-    public string phone { get; set; } = string.Empty;
-    public string birthdate { get; set; } = string.Empty;
+    public string? surename { get; set; }
+    public string? passport { get; set; }
+    public string? phone { get; set; }
+    /// <summary>"YYYY-MM-DD" yoki bo'sh.</summary>
+    public string? birthdate { get; set; }
     public string? address { get; set; }
-    public int district_id { get; set; }
-    public bool gender { get; set; }
-
+    public int? district_id { get; set; }
+    public bool? gender { get; set; }
 }
 
 public class PatcientDTOResponse
@@ -45,12 +52,16 @@ public class PatcientListItemDTO
     /// <summary>Maskalangan passport, masalan "** ****4567". Hech qachon to'liq emas.</summary>
     public string PassportMasked { get; set; } = string.Empty;
 
-    public DateOnly BirthDate { get; set; }
-    public bool Gender { get; set; }
+    public DateOnly? BirthDate { get; set; }
+    public bool? Gender { get; set; }
     public string? Phone { get; set; }
     public string? Address { get; set; }
     public string? RegionName { get; set; }
     public string? DistrictName { get; set; }
+
+    /// <summary>Tahrirlash formasini to'ldirish uchun (ism bo'yicha qidiruv).</summary>
+    public int? RegionId { get; set; }
+    public int? DistrictId { get; set; }
 
     /// <summary>Shu bemorga tegishli (klinika ko'rinishidagi) tahlillar soni.</summary>
     public int AnalysesCount { get; set; }
@@ -98,8 +109,8 @@ public class PatientCardDTO
     public string LastName { get; set; } = string.Empty;
     public string? SureName { get; set; }
     public string PassportMasked { get; set; } = string.Empty;
-    public DateOnly BirthDate { get; set; }
-    public bool Gender { get; set; }
+    public DateOnly? BirthDate { get; set; }
+    public bool? Gender { get; set; }
     public string? Phone { get; set; }
     public string? Address { get; set; }
     public string? RegionName { get; set; }

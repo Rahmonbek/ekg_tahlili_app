@@ -145,5 +145,5 @@ public class DischargeDetailDTO : DischargeSaveRequest
     public string? PatientFirstName { get; set; }
     public string? PatientLastName { get; set; }
     public DateOnly? PatientBirthDate { get; set; }
-    public bool PatientGender { get; set; }
+    public bool? PatientGender { get; set; }
 }

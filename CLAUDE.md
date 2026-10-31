@@ -270,6 +270,28 @@ qiymat pastda, qatorda 3 ta) / `TableHead`+`TblCell` / `AddLabeledText` /
 AES-256-CBC tasodifiy IV ishlatadi → DB `LIKE` ishlamaydi.
 Qidiruv in-memory: barcha passportlar `EncryptionService.Decrypt()` → keyin taqqoslash.
 
+### Tahlil yuklashda bemor tanlash (ism bo'yicha)
+
+EKG/Holter/SMAD/Lab/Parazitologiya/Kompleks AI yuklash sahifalarida bemor
+passport + tug'ilgan sana bo'yicha EMAS, bitta maydonda ism/familiya/
+otasining ismi bo'yicha qidiriladi: `GET api/patcient/search-by-name?q=`
+(butun baza, klinika filtri yo'q — loyiha egasining qarori; 30 ta natija).
+Ro'yxatdan tanlanadi yoki «Yangi bemor qo'shish».
+
+* Frontend: `hooks/usePatientNameSearch.js` + `components/shared/PatientNameSearch.js`
+  (`pns-*`), forma `PatientInfoForm` (`showIdentity`). Eski passport oqimi
+  (`usePatientSearch`) faqat konsultatsiya/xulosalar sahifalarida qoldi.
+* **Faqat familiya va ism majburiy.** `patients.birthdate` va `gender`
+  NULL bo'lishi mumkin (migratsiya `20261031000000_PatientOptionalBirthDateGender`).
+  Noma'lum yosh/jins AI ga YUBORILMAYDI (`appendPatientMeta`; Python
+  `age`/`gender` = `Optional`), ko'rsatishda `genderLabel` → `null`, PDF da «—».
+  Hech qachon `gender ? 'erkak' : 'ayol'` yozmang — NULL «ayol» bo'lib qoladi.
+* **Faqat lotin harflari**: `Helpers/PatientInput.cs` va `tools/latinInput.js`
+  (mos bo'lishi SHART). Tutuqlar (`‘ ’ ʻ ʼ \``) ismda `'` ga keltiriladi;
+  qidiruvda tutuqlar ikkala tomonda olib tashlanadi («gofurova» = «G'OFUROVA»).
+* `save-patient-data`: `id` berilsa — shu bemor tahrirlanadi; aks holda
+  passport+sana mos kelsa mavjud bemor yangilanadi; bo'lmasa yangi bemor.
+
 ---
 
 ## Xavfsizlik Sertifikatsiyasi (O'z DSt 2814:2014 3-daraja)

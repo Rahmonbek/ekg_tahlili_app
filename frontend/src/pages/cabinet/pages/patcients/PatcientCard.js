@@ -16,7 +16,7 @@ import {
     get_combined_analysis,
 } from '../../../../host/requests/CombinedAnalysisRequest'
 import CombinedResult, { CombinedAutoBadge } from '../../../../components/results/CombinedResult'
-import { calculateAge, formatDate, formatDateTime, formatPhoneNumberForForm, personName } from '../../../../tools/formatters'
+import { calculateAge, formatDate, formatDateTime, formatPhoneNumberForForm, personName, genderLabel } from '../../../../tools/formatters'
 import { parseSeverity, SEVERITY, severityLabel } from '../../../../tools/severity'
 import EmptyState from '../../../../components/shared/EmptyState'
 import { patientCardTour } from '../../../../tools/tourSteps'
@@ -387,7 +387,7 @@ export default function PatcientCard() {
                         <h1 className="ptc-name">{fio}</h1>
                         <div className="ptc-sub">
                             {age != null && <span>{age} {t('age', { defaultValue: 'yosh' })}</span>}
-                            <span>{card.gender ? t('male', { defaultValue: 'Erkak' }) : t('female', { defaultValue: 'Ayol' })}</span>
+                            {genderLabel(card.gender, t) && <span>{genderLabel(card.gender, t)}</span>}
                             {card.birthDate && <span>{formatDate(card.birthDate)}</span>}
                         </div>
                     </div>

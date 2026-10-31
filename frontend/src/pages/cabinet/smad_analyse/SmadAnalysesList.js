@@ -5,7 +5,7 @@ import { FaSearch, FaHeartbeat, FaCheck, FaClock, FaSpinner, FaExclamationCircle
 import { FaEye } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
 import { get_smad_analyses_by_clinic, get_smad_analyses_by_doctor, get_smad_analyses_by_nurse, mark_smad_viewed } from '../../../host/requests/SmadAnalyseRequest';
-import { formatDateTime, formatDate, calculateAge , rowNumber } from '../../../tools/formatters';
+import { formatDateTime, formatDate, calculateAge, rowNumber, genderForAi } from '../../../tools/formatters';
 import { useStore } from '../../../store/Store';
 import EmptyState from '../../../components/shared/EmptyState';
 import DeleteAnalysisButton from '../../../components/shared/DeleteAnalysisButton';
@@ -410,8 +410,8 @@ export default function SmadAnalysesList() {
                             id={row.id}
                             onRetry={retryAnalysis('smad')}
                             meta={{
-                                age: row.patcient?.birthDate ? calculateAge(row.patcient.birthDate) : 0,
-                                gender: row.patcient?.gender ? 'erkak' : 'ayol',
+                                age: row.patcient?.birthDate ? calculateAge(row.patcient.birthDate) : null,
+                                gender: genderForAi(row.patcient?.gender),
                                 lang: t('data_lang') === 'Ru' ? 'ru' : t('data_lang') === 'En' ? 'en' : 'uz',
                             }}
                             onDone={() => fetchData(page)}

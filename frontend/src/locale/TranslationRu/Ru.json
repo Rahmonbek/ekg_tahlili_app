@@ -939,7 +939,7 @@
   "analyzer_optional": "необязательно",
   "analyzer_other_patient": "Другой пациент",
   "analyzer_step_patient": "Пациент",
-  "analyzer_step_patient_hint": "Найдите по серии паспорта и дате рождения",
+  "analyzer_step_patient_hint": "Ищите по имени, фамилии или отчеству",
   "analyzer_step_settings": "Настройки анализа",
   "analyzer_submit_ai": "Отправить на AI-анализ",
   "analyzer_summary": "Готовность к отправке",
@@ -1120,5 +1120,18 @@
   "dc_remove_from": "Убрать",
   "dc_show_more": "Показать полностью",
   "dc_remove_manual": "Текст изменён — удалите его из поля диагноза вручную",
-  "dc_pdf_auto_failed": "Не удалось автоматически скачать PDF — нажмите «Скачать PDF»"
+  "dc_pdf_auto_failed": "Не удалось автоматически скачать PDF — нажмите «Скачать PDF»",
+  "patient_search_label": "Имя, фамилия или отчество",
+  "patient_search_placeholder": "Например: ISMOILOV RAHMON",
+  "patient_search_min": "Введите не менее 2 букв",
+  "patient_search_results": "Найденные пациенты",
+  "patient_search_empty": "Пациент не найден. Можно добавить нового пациента.",
+  "patient_search_limit": "Показаны только первые {{count}} результатов — уточните запрос",
+  "patient_search_failed": "Ошибка поиска. Попробуйте ещё раз.",
+  "patient_add_new": "Добавить нового пациента",
+  "patient_new_title": "Новый пациент",
+  "patient_new_hint": "Обязательны только фамилия и имя, остальное — по желанию. Все данные вводите латиницей.",
+  "patient_save_failed": "Не удалось сохранить данные пациента",
+  "patient_analyses_count": "Анализов: {{count}}",
+  "latin_only": "Вводите только латинскими буквами"
 }

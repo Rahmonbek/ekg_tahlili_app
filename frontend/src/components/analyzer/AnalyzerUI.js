@@ -17,10 +17,10 @@ import {
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-import PatientSearchSection from '../shared/PatientSearchSection';
+import PatientNameSearch from '../shared/PatientNameSearch';
 import PatientInfoForm from '../shared/PatientInfoForm';
 import DateField from '../shared/DateField';
-import { calculateAge } from '../../tools/formatters';
+import { calculateAge, formatPhoneNumberForForm, genderLabel } from '../../tools/formatters';
 
 import './Analyzer.css';
 
@@ -115,15 +115,19 @@ export function Field({ label, required, optional, note, children, tour }) {
 }
 
 /**
- * 1-qadam: bemor. Qidiruv → topilsa ixcham kartochka, topilmasa yangi
- * bemor formasi. Bemor formasi DOIM DOM da turadi: qidiruv natijasi
+ * 1-qadam: bemor. Ism/familiya/otasining ismi bo'yicha qidiruv →
+ * ro'yxatdan tanlash yoki "Yangi bemor qo'shish" formasi. Tanlangach —
+ * ixcham kartochka. Bemor formasi DOIM DOM da turadi: tanlangan bemor
  * `form.setFieldsValue` bilan yoziladi va ulangan Form talab qilinadi.
+ *
+ * `onSearchChange` endi ishlatilmaydi (qidiruv maydoni o'zgarganda
+ * sahifa tozalanardi — endi bemor faqat ro'yxatdan tanlanadi).
  */
-export function PatientStep({ patient, onSearchChange, onStartOver, number = 1 }) {
+export function PatientStep({ patient, onStartOver, number = 1 }) {
     const { t } = useTranslation();
     const {
-        patcient, checkReady, isNewPatient, editPatient, setEditPatient,
-        form, form1, loading, loadingSave, searchPatcient, savePatcient,
+        patcient, checkReady, isNewPatient, editPatient, setEditPatient, cancelCreate,
+        form, form1, loadingSave, savePatcient,
         phoneValue, setPhoneValue, gender, setGender, regions, districts, fetchDistricts,
     } = patient;
 
@@ -136,7 +140,7 @@ export function PatientStep({ patient, onSearchChange, onStartOver, number = 1 }
         <AnalyzerStep
             number={number}
             title={t('analyzer_step_patient', { defaultValue: 'Bemor' })}
-            hint={checkReady ? null : t('analyzer_step_patient_hint', { defaultValue: 'Passport seriyasi va tug\'ilgan sana bo\'yicha qidiring' })}
+            hint={checkReady ? null : t('analyzer_step_patient_hint', { defaultValue: 'Ism, familiya yoki otasining ismi bo\'yicha qidiring' })}
             done={checkReady && !editPatient}
             action={checkReady && !editPatient && (
                 <>
@@ -149,14 +153,9 @@ export function PatientStep({ patient, onSearchChange, onStartOver, number = 1 }
                 </>
             )}
         >
-            {/* Bemor topilgach qidiruv yashiriladi (DOM da qoladi) */}
+            {/* Bemor tanlangach qidiruv yashiriladi (DOM da qoladi) */}
             <div className={checkReady ? 'anz-hidden' : undefined}>
-                <PatientSearchSection
-                    form={form1}
-                    onFinish={searchPatcient}
-                    onReset={onSearchChange}
-                    loading={loading}
-                />
+                <PatientNameSearch form={form1} search={patient} />
             </div>
 
             {checkReady && !editPatient && (
@@ -167,9 +166,9 @@ export function PatientStep({ patient, onSearchChange, onStartOver, number = 1 }
                     <div className="anz-patient-info">
                         <div className="anz-patient-name">{name}</div>
                         <div className="anz-patient-meta">
-                            <span>{patcient?.gender ? t('male') : t('female')}</span>
+                            {genderLabel(patcient?.gender, t) && <span>{genderLabel(patcient?.gender, t)}</span>}
                             {age != null && <span>{age} {t('age', { defaultValue: 'yosh' })}</span>}
-                            {patcient?.phone && <span>{patcient.phone}</span>}
+                            {patcient?.phone && <span>{formatPhoneNumberForForm(patcient.phone) || patcient.phone}</span>}
                         </div>
                     </div>
                 </div>
@@ -180,8 +179,8 @@ export function PatientStep({ patient, onSearchChange, onStartOver, number = 1 }
                     type="info"
                     showIcon
                     className="anz-new-patient-alert"
-                    message={t('analyzer_new_patient', { defaultValue: 'Bemor topilmadi — yangi bemor ma\'lumotlarini kiriting va saqlang' })}
-                    description={t('alert_patcient')}
+                    message={t('patient_new_title', { defaultValue: 'Yangi bemor' })}
+                    description={t('patient_new_hint', { defaultValue: 'Faqat familiya va ism majburiy, qolganlari ixtiyoriy. Barcha ma\'lumotlarni lotin harflarida kiriting.' })}
                 />
             )}
 
@@ -189,6 +188,9 @@ export function PatientStep({ patient, onSearchChange, onStartOver, number = 1 }
                 <PatientInfoForm
                     form={form}
                     patcient={patcient}
+                    visible={isNewPatient || editPatient}
+                    showIdentity
+                    alwaysShowSave={isNewPatient}
                     onFinish={savePatcient}
                     loading={loadingSave}
                     phoneValue={phoneValue}
@@ -199,8 +201,8 @@ export function PatientStep({ patient, onSearchChange, onStartOver, number = 1 }
                     districts={districts}
                     fetchDistricts={fetchDistricts}
                 />
-                {editPatient && (
-                    <Button type="link" onClick={() => setEditPatient(false)}>
+                {(editPatient || isNewPatient) && (
+                    <Button type="link" onClick={() => (isNewPatient ? cancelCreate() : setEditPatient(false))}>
                         {t('cancel', { defaultValue: 'Bekor qilish' })}
                     </Button>
                 )}

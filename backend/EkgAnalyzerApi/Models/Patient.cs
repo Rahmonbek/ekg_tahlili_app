@@ -16,7 +16,7 @@ namespace EkgAnalyzerApi.Models
         public string Passport { get; set; } = string.Empty;
 
         [Column("birthdate")]
-        public DateOnly BirthDate { get; set; }
+        public DateOnly? BirthDate { get; set; }
 
         [Column("firstname")]
         public string FirstName { get; set; } = string.Empty;
@@ -28,7 +28,7 @@ namespace EkgAnalyzerApi.Models
         public string SureName { get; set; } = string.Empty;
 
         [Column("gender")]
-        public bool Gender { get; set; }
+        public bool? Gender { get; set; }
 
         [Column("phone")]
         public string Phone { get; set; } = string.Empty;

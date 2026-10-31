@@ -4,6 +4,7 @@ import { ReloadOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { successAlert, dangerAlert } from '../../tools/Alerts'
 import { useStore } from '../../store/Store'
+import { appendPatientMeta } from '../../tools/formatters'
 
 // Qayta tahlil progress elementi uchun tur bo'yicha yorliq va ro'yxat yo'li
 const RETRY_TYPE_META = {
@@ -37,8 +38,7 @@ export default function RetryAnalysisButton({ id, type, onRetry, meta = {}, onDo
         try {
             const formData = new FormData()
             formData.append('id', id)
-            formData.append('age', meta.age ?? 0)
-            formData.append('gender', meta.gender ?? 'erkak')
+            appendPatientMeta(formData, meta)
             formData.append('lang', meta.lang ?? 'uz')
 
             await onRetry(formData)

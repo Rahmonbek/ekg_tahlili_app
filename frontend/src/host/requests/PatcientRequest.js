@@ -29,3 +29,14 @@ export const get_patient_card=(id, data)=>{
 export const search_patcients_by_passport=(data)=>{
     return httpGetRequest("/patcient/search-by-passport", data)
 }
+
+/**
+ * Ism / familiya / otasining ismi bo'yicha bemor QIDIRUVI — tahlil
+ * yuklash sahifalaridagi "Bemor" qadami uchun. Butun baza qidiriladi,
+ * javob 30 ta bemor bilan cheklangan.
+ *
+ * @param {{q:string, lang?:string}} data
+ */
+export const search_patcients_by_name=(data)=>{
+    return httpGetRequest("/patcient/search-by-name", data)
+}

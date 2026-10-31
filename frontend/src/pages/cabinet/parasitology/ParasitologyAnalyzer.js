@@ -1,17 +1,17 @@
 import { Alert, Button, Col, Form, Row, Select, Tooltip, Upload } from 'antd';
-import { InboxOutlined } from '@ant-design/icons';
+import { InboxOutlined, ReloadOutlined } from '@ant-design/icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IoAlertCircleSharp } from 'react-icons/io5';
 import { MdLanguage } from 'react-icons/md';
 import { MoonLoader } from 'react-spinners';
 
-import { usePatientSearch } from '../../../hooks/usePatientSearch';
+import { usePatientNameSearch } from '../../../hooks/usePatientNameSearch';
 import { useRegionDistrict } from '../../../hooks/useRegionDistrict';
 import { useDoctorPositions } from '../../../hooks/useDoctorPositions';
 import { getTodayDateInputValue, useAnalyzerState } from '../../../hooks/useAnalyzerState';
 
-import PatientSearchSection from '../../../components/shared/PatientSearchSection';
+import PatientNameSearch from '../../../components/shared/PatientNameSearch';
 import PatientInfoForm from '../../../components/shared/PatientInfoForm';
 import DoctorSelectSection from '../../../components/shared/DoctorSelectSection';
 
@@ -32,7 +32,7 @@ export default function ParasitologyAnalyzer() {
     const [form] = Form.useForm();
     const [form1] = Form.useForm();
     const [form2] = Form.useForm();
-    const [gender, setGender] = React.useState(true);
+    const [gender, setGender] = React.useState(null);
     const [analysisDateValue, setAnalysisDateValue] = React.useState(getTodayDateInputValue());
 
     const { user } = useStore();
@@ -72,14 +72,16 @@ export default function ParasitologyAnalyzer() {
         }
     }, [state.page, dispatch]);
 
-    const {
-        patcient, loading, loadingSave, checkReady,
-        phoneValue, setPhoneValue, searchPatcient, savePatcient, resetPatient,
-    } = usePatientSearch({
+    // Bemor ism/familiya bo'yicha qidiriladi va ro'yxatdan tanlanadi
+    const patientSearch = usePatientNameSearch({
         form,
         getDistricts: fetchDistricts,
         onPatientFound: (data) => getOldAnalyses(data.id, 'first'),
     });
+    const {
+        patcient, loadingSave, checkReady, isCreating, cancelCreate,
+        phoneValue, setPhoneValue, savePatcient, resetPatient,
+    } = patientSearch;
 
     const handleUploadFile = useCallback((file) => (
         validatedBeforeUpload(file, {
@@ -136,14 +138,6 @@ export default function ParasitologyAnalyzer() {
         retryAnalyse();
     }, [state, patcient, user, selectedDoctors, runInBackground, form2, t, retryAnalyse]);
 
-    const resetData = useCallback(() => {
-        resetPatient();
-        resetDoctorSelection();
-        setAnalysisDateValue(getTodayDateInputValue());
-        resetAll();
-        form.resetFields();
-        form2.resetFields();
-    }, [resetPatient, resetDoctorSelection, resetAll, form, form2]);
 
     return (
         <div>
@@ -156,15 +150,31 @@ export default function ParasitologyAnalyzer() {
                     </Tooltip>
                 </h1>
                 <div className="main_card_content">
-                    <PatientSearchSection
-                        form={form1}
-                        onFinish={searchPatcient}
-                        onReset={resetData}
-                        loading={loading}
-                    />
+                    {checkReady ? (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+                            <strong>{[patcient?.lastName, patcient?.firstName, patcient?.sureName].filter(Boolean).join(' ')}</strong>
+                            <Button type="link" icon={<ReloadOutlined />} onClick={retryAnalyse}>
+                                {t('analyzer_other_patient', { defaultValue: 'Boshqa bemor' })}
+                            </Button>
+                        </div>
+                    ) : (
+                        <PatientNameSearch form={form1} search={patientSearch} />
+                    )}
+                    {isCreating && (
+                        <Alert
+                            type="info"
+                            showIcon
+                            style={{ margin: '8px 0' }}
+                            message={t('patient_new_title', { defaultValue: 'Yangi bemor' })}
+                            description={t('patient_new_hint', { defaultValue: "Faqat familiya va ism majburiy, qolganlari ixtiyoriy. Barcha ma'lumotlarni lotin harflarida kiriting." })}
+                        />
+                    )}
                     <PatientInfoForm
                         form={form}
                         patcient={patcient}
+                        visible={isCreating || checkReady}
+                        showIdentity
+                        alwaysShowSave={isCreating}
                         onFinish={savePatcient}
                         loading={loadingSave}
                         phoneValue={phoneValue}
@@ -175,6 +185,11 @@ export default function ParasitologyAnalyzer() {
                         districts={districts}
                         fetchDistricts={fetchDistricts}
                     />
+                    {isCreating && (
+                        <Button type="link" onClick={cancelCreate}>
+                            {t('cancel', { defaultValue: 'Bekor qilish' })}
+                        </Button>
+                    )}
                 </div>
             </div>
 

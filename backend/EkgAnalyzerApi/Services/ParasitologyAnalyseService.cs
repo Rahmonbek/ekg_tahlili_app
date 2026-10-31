@@ -80,9 +80,7 @@ namespace EkgAnalyzerApi.Services
 
             // Bemor ma'lumotlari (request davomida)
             var patcient = await _context.Patcients.FindAsync(dto.PatcientId);
-            var age = patcient != null
-                ? (int)((DateTime.UtcNow - patcient.BirthDate.ToDateTime(TimeOnly.MinValue)).TotalDays / 365.25)
-                : 0;
+            var age = AgeYears(patcient) ?? 0;
             var gender = patcient?.Gender == true ? "erkak" : "ayol";
             var analysisId = analysis.Id;
 
@@ -170,9 +168,7 @@ namespace EkgAnalyzerApi.Services
             };
 
             var patcient = analysis.Patcient;
-            var age = patcient != null
-                ? (int)((DateTime.UtcNow - patcient.BirthDate.ToDateTime(TimeOnly.MinValue)).TotalDays / 365.25)
-                : 0;
+            var age = AgeYears(patcient) ?? 0;
 
             await RunAiWithBytesAsync(analysis, fileBytes, fileName, dto, age,
                 patcient?.Gender == true ? "erkak" : "ayol", jwtToken);
@@ -586,6 +582,12 @@ namespace EkgAnalyzerApi.Services
             return $"/uploads/parasitology/{folderName}/{uniqueName}";
         }
 
+        /// <summary>Bemor yoshi; tug'ilgan sana kiritilmagan bo'lsa <c>null</c>.</summary>
+        private static int? AgeYears(Patcient? patcient) =>
+            patcient?.BirthDate is { } bd
+                ? (int)((DateTime.UtcNow - bd.ToDateTime(TimeOnly.MinValue)).TotalDays / 365.25)
+                : null;
+
         private static string GetUniqueFileName(string directory, string fileName)
         {
             if (!File.Exists(Path.Combine(directory, fileName)))
@@ -617,9 +619,7 @@ namespace EkgAnalyzerApi.Services
             }
 
             var patcient = await _context.Patcients.FindAsync(dto.PatcientId);
-            var age = patcient != null
-                ? (int)((DateTime.UtcNow - patcient.BirthDate.ToDateTime(TimeOnly.MinValue)).TotalDays / 365.25)
-                : 0;
+            var age = AgeYears(patcient) ?? 0;
             var gender = patcient?.Gender == true ? "erkak" : "ayol";
 
             await RunAiWithBytesAsync(analysis, bytes, file.FileName, dto, age, gender, jwtToken);
@@ -713,8 +713,10 @@ namespace EkgAnalyzerApi.Services
                         var patcient = await _context.Patcients.FindAsync(analysis.PatcientId);
                         if (patcient != null)
                         {
-                            var ageYears = (int)((DateTime.UtcNow - patcient.BirthDate.ToDateTime(TimeOnly.MinValue)).TotalDays / 365.25);
-                            result.PatientAgeGroup = ageYears <= 5 ? "0-5"
+                            // Tug'ilgan sana kiritilmagan bemor yosh guruhi statistikasiga kirmaydi
+                            var ageYears = AgeYears(patcient);
+                            result.PatientAgeGroup = ageYears == null ? null
+                                : ageYears <= 5 ? "0-5"
                                 : ageYears <= 14 ? "6-14"
                                 : ageYears <= 60 ? "15-60"
                                 : "60+";
@@ -837,8 +839,10 @@ namespace EkgAnalyzerApi.Services
                         var patcient = await context.Patcients.FindAsync(analysis.PatcientId);
                         if (patcient != null)
                         {
-                            var ageYears = (int)((DateTime.UtcNow - patcient.BirthDate.ToDateTime(TimeOnly.MinValue)).TotalDays / 365.25);
-                            result.PatientAgeGroup = ageYears <= 5 ? "0-5"
+                            // Tug'ilgan sana kiritilmagan bemor yosh guruhi statistikasiga kirmaydi
+                            var ageYears = AgeYears(patcient);
+                            result.PatientAgeGroup = ageYears == null ? null
+                                : ageYears <= 5 ? "0-5"
                                 : ageYears <= 14 ? "6-14"
                                 : ageYears <= 60 ? "15-60"
                                 : "60+";

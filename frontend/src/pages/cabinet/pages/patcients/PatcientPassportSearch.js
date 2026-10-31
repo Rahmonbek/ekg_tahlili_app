@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { FaUserInjured } from 'react-icons/fa'
 import { search_patcients_by_passport } from '../../../../host/requests/PatcientRequest'
 import DateField, { dateFieldProps } from '../../../../components/shared/DateField'
-import { calculateAge, formatDate, formatPhoneNumberForForm } from '../../../../tools/formatters'
+import { calculateAge, formatDate, formatPhoneNumberForForm, genderLabel } from '../../../../tools/formatters'
 import EmptyState from '../../../../components/shared/EmptyState'
 import useDocumentTitle from '../../../../tools/useDocumentTitle'
 
@@ -67,9 +67,7 @@ export default function PatcientPassportSearch() {
                     <div>
                         <Text type="secondary" style={{ fontSize: 12 }}>
                             {row.birthDate ? `${calculateAge(row.birthDate)} ${t('age', { defaultValue: 'yosh' })}` : ''}
-                            {` · ${row.gender
-                                ? t('male', { defaultValue: 'Erkak' })
-                                : t('female', { defaultValue: 'Ayol' })}`}
+                            {genderLabel(row.gender, t) && ` · ${genderLabel(row.gender, t)}`}
                         </Text>
                     </div>
                 </div>

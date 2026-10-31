@@ -94,7 +94,35 @@ const [year, month, day] = birthdate.split('-').map(Number);
   }else{
     return null
   }
-  
+
+}
+
+/**
+ * Bemor jinsi yorlig'i. Jins ixtiyoriy (bazada NULL bo'lishi mumkin) —
+ * kiritilmagan bo'lsa `null` qaytadi va hech narsa ko'rsatilmaydi
+ * (ilgari `null` "Ayol" deb chiqardi).
+ */
+export function genderLabel(gender, t) {
+  if (gender === true) return t('male', { defaultValue: 'Erkak' });
+  if (gender === false) return t('female', { defaultValue: 'Ayol' });
+  return null;
+}
+
+/** AI so'roviga yuboriladigan jins; noma'lum bo'lsa `null` — maydon yuborilmaydi. */
+export function genderForAi(gender) {
+  if (gender === true) return 'erkak';
+  if (gender === false) return 'ayol';
+  return null;
+}
+
+/**
+ * Bemor yoshi va jinsini AI so'roviga qo'shadi — faqat MA'LUM bo'lsa.
+ * Yuborilmasa Python AI ga ham aytmaydi (ilgari yosh 0 = "chaqaloq"
+ * deb ketardi).
+ */
+export function appendPatientMeta(formData, { age, gender }) {
+  if (age != null && Number.isFinite(Number(age))) formData.append('age', age);
+  if (gender) formData.append('gender', gender);
 }
 
 

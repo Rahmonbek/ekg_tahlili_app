@@ -19,6 +19,7 @@ import LiveKitRoomView from '../../../components/video/LiveKitRoom';
 import dayjs from 'dayjs';
 import './Consultation.css';
 import useDocumentTitle from '../../../tools/useDocumentTitle';
+import { genderLabel } from '../../../tools/formatters';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -233,7 +234,7 @@ export default function ConsultationWorkPage() {
                         )}
                         {detail.patientGender != null && (
                             <Descriptions.Item label="Jins">
-                                {detail.patientGender ? 'Erkak' : 'Ayol'}
+                                {genderLabel(detail.patientGender, t) || '—'}
                             </Descriptions.Item>
                         )}
                         {detail.note && (

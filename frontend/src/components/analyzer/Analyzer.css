@@ -220,6 +220,28 @@
   margin-top: 4px;
 }
 
+/* Bemor formasi ixcham: umumiy forma uslubida yorliq 37px va maydon
+   ostida 24px bo'sh joy bor edi — 10 ta maydon telefonda juda uzun bo'lardi */
+.anz-patient-form .ant-form-item {
+  margin-bottom: 12px;
+}
+
+.anz-patient-form .ant-form-item-label {
+  padding-bottom: 4px;
+}
+
+/* App.css yorliqqa `margin-top: var(--main_padding) !important` beradi */
+.anz-patient-form .ant-form-item-label > label {
+  height: auto;
+  margin-top: 4px !important;
+}
+
+/* "Bekor qilish" — "Saqlash" tugmasi ostida, markazda */
+.anz-patient-form > .ant-btn-link {
+  display: block;
+  margin: 0 auto;
+}
+
 /* ── Fayl ─────────────────────────────────────────────────────── */
 
 .anz-dragger.ant-upload-wrapper .ant-upload-drag {

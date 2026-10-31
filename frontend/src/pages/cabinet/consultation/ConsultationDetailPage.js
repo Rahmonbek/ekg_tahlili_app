@@ -16,6 +16,7 @@ import { initiateConsultationCall } from '../../../hooks/videoSignalRService';
 import dayjs from 'dayjs';
 import './Consultation.css';
 import useDocumentTitle from '../../../tools/useDocumentTitle';
+import { genderLabel } from '../../../tools/formatters';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -171,7 +172,7 @@ export default function ConsultationDetailPage() {
                                 <Descriptions.Item label={t('age')}>{data.patientAge} {t('years_old')}</Descriptions.Item>
                             )}
                             {data.patientGender != null && (
-                                <Descriptions.Item label="Jins">{data.patientGender ? 'Erkak' : 'Ayol'}</Descriptions.Item>
+                                <Descriptions.Item label="Jins">{genderLabel(data.patientGender, t) || '—'}</Descriptions.Item>
                             )}
                         </Descriptions>
                     </Card>

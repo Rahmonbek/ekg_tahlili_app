@@ -2,33 +2,33 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Form } from 'antd';
 import { useTranslation } from 'react-i18next';
 
-import { usePatientSearch } from '../../hooks/usePatientSearch';
+import { usePatientNameSearch } from '../../hooks/usePatientNameSearch';
 import { useRegionDistrict } from '../../hooks/useRegionDistrict';
 import { useDoctorPositions } from '../../hooks/useDoctorPositions';
 import { fileKey, getTodayDateInputValue, useAnalyzerState } from '../../hooks/useAnalyzerState';
 import useFileTypes from '../../hooks/useFileTypes';
 import { useStore } from '../../store/Store';
-import { calculateAge } from '../../tools/formatters';
+import { calculateAge, appendPatientMeta, genderForAi } from '../../tools/formatters';
 import { warningAlert } from '../../tools/Alerts';
 import { validatedBeforeUpload } from '../../tools/validatedBeforeUpload';
 
 /**
- * "Bemor" qadami uchun umumiy holat: qidiruv va bemor formalari,
- * viloyat/tuman, topilgan bemorni tahrirlash rejimi.
+ * "Bemor" qadami uchun umumiy holat: ism bo'yicha qidiruv va bemor
+ * formasi, viloyat/tuman, tanlangan bemorni tahrirlash rejimi.
  *
  * Fayl yuklanmaydigan sahifalar (Kompleks AI) ham ishlatadi, shuning
  * uchun `useAnalyzerPage` dan alohida.
  */
 export function usePatientStep({ onPatientFound } = {}) {
     const [form] = Form.useForm();   // bemor ma'lumotlari
-    const [form1] = Form.useForm();  // passport + tug'ilgan sana qidiruvi
-    const [gender, setGender] = useState(true);
+    const [form1] = Form.useForm();  // ism / familiya / otasining ismi qidiruvi
+    const [gender, setGender] = useState(null);
     const [editPatient, setEditPatient] = useState(false);
     const { regions, districts, fetchDistricts } = useRegionDistrict();
 
-    const search = usePatientSearch({ form, getDistricts: fetchDistricts, onPatientFound });
+    const search = usePatientNameSearch({ form, getDistricts: fetchDistricts, onPatientFound });
 
-    // Bemor saqlangach (yoki boshqasi topilgach) tahrirlash rejimi yopiladi
+    // Bemor saqlangach (yoki boshqasi tanlangach) tahrirlash rejimi yopiladi
     useEffect(() => {
         if (search.checkReady) setEditPatient(false);
     }, [search.checkReady, search.patcient]);
@@ -39,8 +39,8 @@ export function usePatientStep({ onPatientFound } = {}) {
         gender, setGender,
         editPatient, setEditPatient,
         regions, districts, fetchDistricts,
-        // Qidirildi, lekin bazada yo'q — yangi bemor formasi ko'rsatiladi
-        isNewPatient: !!search.patcient && !search.checkReady,
+        // "Yangi bemor qo'shish" bosildi — bo'sh forma ko'rsatiladi
+        isNewPatient: search.isCreating,
     };
 }
 
@@ -186,12 +186,15 @@ export function useAnalyzerPage({ fileKind, fetchOldAnalyses, onReset, maxFiles 
         const formData = new FormData();
         state.files.forEach((f) => formData.append('file', f));
         selectedDoctors.forEach((d) => formData.append('doctor_id', d.id));
-        formData.append('gender', patcient.gender ? 'erkak' : 'ayol');
         formData.append('patcient_id', patcient.id);
         formData.append('created_doctor_id', user.doctor.id);
         formData.append('clinic_id', user.clinic.id);
         formData.append('lang', state.lang);
-        formData.append('age', calculateAge(patcient.birthDate));
+        // Tug'ilgan sana va jins ixtiyoriy — noma'lum bo'lsa yuborilmaydi
+        appendPatientMeta(formData, {
+            age: calculateAge(patcient.birthDate),
+            gender: genderForAi(patcient.gender),
+        });
         if (state.analysis_date) {
             formData.append('analysis_date', state.analysis_date);
         }

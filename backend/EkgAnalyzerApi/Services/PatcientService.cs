@@ -1,6 +1,7 @@
 ﻿using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.Constants;
 using EkgAnalyzerApi.DTOs;
+using EkgAnalyzerApi.Helpers;
 using EkgAnalyzerApi.Models;
 using iTextSharp.text;
 using Microsoft.EntityFrameworkCore;
@@ -171,6 +172,72 @@ namespace EkgAnalyzerApi.Services
 
             if (matched.Count == 0) return new List<PatcientListItemDTO>();
 
+            return await ToListItemsAsync(matched, lang);
+        }
+
+        /// <summary>Ism bo'yicha qidiruvda qaytariladigan eng ko'p bemorlar soni.</summary>
+        public const int NameSearchLimit = 30;
+
+        /// <summary>
+        /// Ism / familiya / otasining ismi bo'yicha bemor qidiruvi — tahlil
+        /// yuklash sahifalaridagi "Bemor" qadami uchun.
+        ///
+        /// So'rov so'zlarga bo'linadi va HAR BIR so'z uchala maydondan
+        /// birortasida uchrashi kerak: "ismoilov rahmon" → familiyasi
+        /// ISMOILOV va ismi RAHMON... bo'lgan bemor; tartib ahamiyatsiz.
+        ///
+        /// Klinika va rol filtri YO'Q — butun baza qidiriladi (loyiha
+        /// egasining qarori, eski passport qidiruvi bilan bir xil). Natija
+        /// <see cref="NameSearchLimit"/> ta bilan cheklanadi: bazani ro'yxat
+        /// sifatida "kezib" chiqib bo'lmasin va javob og'irlashmasin.
+        /// </summary>
+        /// <param name="query">Foydalanuvchi kiritgan matn (lotincha, kamida 2 belgi).</param>
+        public async Task<List<PatcientListItemDTO>> SearchByNameAsync(string query, string lang = "uz")
+        {
+            var tokens = PatientInput.NormalizeName(query)
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Take(4)
+                .ToList();
+            if (tokens.Count == 0) return new List<PatcientListItemDTO>();
+
+            IQueryable<Patcient> q = _context.Patcients.AsNoTracking()
+                .Include(p => p.District!).ThenInclude(d => d.Region!);
+
+            // Tutuq belgilari ikkala tomonda ham olib tashlanadi: odamlar
+            // ko'pincha "gofurova", "ogli" deb tutuqsiz yozadi, eski yozuvlarda
+            // esa ‘ ʻ ` kabi boshqa tutuqlar uchraydi
+            foreach (var token in tokens)
+            {
+                var pattern = PatientInput.ToLikePattern(token);
+                if (pattern == "%%") continue; // so'z faqat tutuqdan iborat edi
+                q = q.Where(p =>
+                    EF.Functions.ILike(p.LastName.Replace("'", "").Replace("‘", "").Replace("’", "").Replace("ʻ", "").Replace("`", ""), pattern) ||
+                    EF.Functions.ILike(p.FirstName.Replace("'", "").Replace("‘", "").Replace("’", "").Replace("ʻ", "").Replace("`", ""), pattern) ||
+                    EF.Functions.ILike(p.SureName.Replace("'", "").Replace("‘", "").Replace("’", "").Replace("ʻ", "").Replace("`", ""), pattern));
+            }
+
+            var matched = await q
+                .OrderBy(p => p.LastName).ThenBy(p => p.FirstName).ThenBy(p => p.Id)
+                .Take(NameSearchLimit)
+                .ToListAsync();
+
+            if (matched.Count == 0) return new List<PatcientListItemDTO>();
+
+            // Familiyasi so'rovning birinchi so'zi bilan boshlanadiganlar yuqorida
+            var first = tokens[0].Replace("'", "");
+            return (await ToListItemsAsync(matched, lang))
+                .OrderByDescending(x => x.LastName.Replace("'", "").StartsWith(first, StringComparison.OrdinalIgnoreCase))
+                .ThenBy(x => x.LastName)
+                .ThenBy(x => x.FirstName)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Topilgan bemorlarni ro'yxat qatorlariga aylantiradi: tahlillar soni
+        /// va oxirgi tahlil sanasi bilan. Natija oxirgi tahlil bo'yicha saralanadi.
+        /// </summary>
+        private async Task<List<PatcientListItemDTO>> ToListItemsAsync(List<Patcient> matched, string lang)
+        {
             var ids = matched.Select(p => p.Id).ToList();
 
             // Tahlil sonlari: har bir tur bo'yicha bitta GROUP BY so'rovi —
@@ -223,6 +290,8 @@ namespace EkgAnalyzerApi.Services
                         : Localized(lang, p.District.Region.NameUz, p.District.Region.NameRu, p.District.Region.NameEn),
                     DistrictName = p.District == null ? null
                         : Localized(lang, p.District.NameUz, p.District.NameRu, p.District.NameEn),
+                    RegionId = p.District?.RegionId,
+                    DistrictId = p.DistrictId,
                     AnalysesCount = hasStats ? stat.Count : 0,
                     LastAnalysisAt = hasStats ? stat.Last : null,
                 };

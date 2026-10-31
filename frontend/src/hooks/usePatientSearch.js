@@ -67,7 +67,7 @@ export function usePatientSearch({ form, getDistricts, onPatientFound }) {
             setLoadingSave(true);
             const res = await save_patcient_data({
                 ...val,
-                district_id: val.districtname.value,
+                district_id: val.districtname?.value ?? null,
                 passport,
                 birthdate,
                 address: val.address,

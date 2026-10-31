@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { FaUserInjured } from 'react-icons/fa'
 import { get_combined_analyses_list } from '../../../host/requests/CombinedAnalysisRequest'
-import { calculateAge, formatDateTime, rowNumber } from '../../../tools/formatters'
+import { calculateAge, formatDateTime, rowNumber, genderLabel } from '../../../tools/formatters'
 import { severityColor, severityLabel } from '../../../tools/severity'
 import EmptyState from '../../../components/shared/EmptyState'
 import { CombinedAutoBadge } from '../../../components/results/CombinedResult'
@@ -127,9 +127,7 @@ export default function CombinedAnalysesList() {
                             {row.patientBirthDate
                                 ? `${calculateAge(row.patientBirthDate)} ${t('age', { defaultValue: 'yosh' })}`
                                 : ''}
-                            {` · ${row.patientGender
-                                ? t('male', { defaultValue: 'Erkak' })
-                                : t('female', { defaultValue: 'Ayol' })}`}
+                            {genderLabel(row.patientGender, t) && ` · ${genderLabel(row.patientGender, t)}`}
                         </Text>
                     </div>
                 </div>

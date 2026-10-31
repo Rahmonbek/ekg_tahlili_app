@@ -572,7 +572,7 @@ public class DischargeSummaryService
             PatientFirstName = d.Patient?.FirstName,
             PatientLastName = d.Patient?.LastName,
             PatientBirthDate = d.Patient?.BirthDate,
-            PatientGender = d.Patient?.Gender ?? false,
+            PatientGender = d.Patient?.Gender,
         };
     }
 

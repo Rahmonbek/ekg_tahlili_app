@@ -939,7 +939,7 @@
   "analyzer_optional": "optional",
   "analyzer_other_patient": "Another patient",
   "analyzer_step_patient": "Patient",
-  "analyzer_step_patient_hint": "Search by passport number and date of birth",
+  "analyzer_step_patient_hint": "Search by first name, last name or patronymic",
   "analyzer_step_settings": "Analysis settings",
   "analyzer_submit_ai": "Send for AI analysis",
   "analyzer_summary": "Ready to submit",
@@ -1120,5 +1120,18 @@
   "dc_remove_from": "Remove",
   "dc_show_more": "Show more",
   "dc_remove_manual": "The text was edited — remove it from the diagnosis field manually",
-  "dc_pdf_auto_failed": "Could not download the PDF automatically — use the Download PDF button"
+  "dc_pdf_auto_failed": "Could not download the PDF automatically — use the Download PDF button",
+  "patient_search_label": "First name, last name or patronymic",
+  "patient_search_placeholder": "E.g.: ISMOILOV RAHMON",
+  "patient_search_min": "Enter at least 2 letters",
+  "patient_search_results": "Patients found",
+  "patient_search_empty": "No such patient found. You can add a new patient.",
+  "patient_search_limit": "Only the first {{count}} results are shown — refine your search",
+  "patient_search_failed": "Search failed. Please try again.",
+  "patient_add_new": "Add new patient",
+  "patient_new_title": "New patient",
+  "patient_new_hint": "Only last name and first name are required, the rest is optional. Enter all data in Latin letters.",
+  "patient_save_failed": "Could not save patient data",
+  "patient_analyses_count": "{{count}} analyses",
+  "latin_only": "Use Latin letters only"
 }

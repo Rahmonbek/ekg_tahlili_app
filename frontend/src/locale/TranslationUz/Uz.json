@@ -919,7 +919,7 @@
   "analyzer_optional": "ixtiyoriy",
   "analyzer_other_patient": "Boshqa bemor",
   "analyzer_step_patient": "Bemor",
-  "analyzer_step_patient_hint": "Passport seriyasi va tug'ilgan sana bo'yicha qidiring",
+  "analyzer_step_patient_hint": "Ism, familiya yoki otasining ismi bo'yicha qidiring",
   "analyzer_step_settings": "Tahlil sozlamalari",
   "analyzer_submit_ai": "AI tahlilga yuborish",
   "analyzer_summary": "Yuborishga tayyorlik",
@@ -1100,5 +1100,18 @@
   "dc_remove_from": "Olib tashlash",
   "dc_show_more": "To'liq ko'rish",
   "dc_remove_manual": "Matn tahrirlangan — uni diagnoz maydonidan qo'lda o'chiring",
-  "dc_pdf_auto_failed": "PDF ni avtomatik yuklab bo'lmadi — «PDF yuklab olish» tugmasini bosing"
+  "dc_pdf_auto_failed": "PDF ni avtomatik yuklab bo'lmadi — «PDF yuklab olish» tugmasini bosing",
+  "patient_search_label": "Ism, familiya yoki otasining ismi",
+  "patient_search_placeholder": "Masalan: ISMOILOV RAHMON",
+  "patient_search_min": "Kamida 2 ta harf kiriting",
+  "patient_search_results": "Topilgan bemorlar",
+  "patient_search_empty": "Bunday bemor topilmadi. Yangi bemor qo'shishingiz mumkin.",
+  "patient_search_limit": "Faqat birinchi {{count}} ta natija ko'rsatildi — qidiruvni aniqlashtiring",
+  "patient_search_failed": "Qidiruvda xatolik. Qayta urinib ko'ring.",
+  "patient_add_new": "Yangi bemor qo'shish",
+  "patient_new_title": "Yangi bemor",
+  "patient_new_hint": "Faqat familiya va ism majburiy, qolganlari ixtiyoriy. Barcha ma'lumotlarni lotin harflarida kiriting.",
+  "patient_save_failed": "Bemor ma'lumotlarini saqlab bo'lmadi",
+  "patient_analyses_count": "{{count}} ta tahlil",
+  "latin_only": "Faqat lotin harflarida kiriting"
 }

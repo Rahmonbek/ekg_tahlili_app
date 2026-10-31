@@ -1924,7 +1924,7 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("address");
 
-                    b.Property<DateOnly>("BirthDate")
+                    b.Property<DateOnly?>("BirthDate")
                         .HasColumnType("date")
                         .HasColumnName("birthdate");
 
@@ -1941,7 +1941,7 @@ namespace EkgAnalyzerApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("firstname");
 
-                    b.Property<bool>("Gender")
+                    b.Property<bool?>("Gender")
                         .HasColumnType("boolean")
                         .HasColumnName("gender");
 

@@ -300,7 +300,7 @@ public class CombinedAnalysisService
                 PatientLastName = c.Patient?.LastName,
                 PatientSureName = c.Patient?.SureName,
                 PatientBirthDate = c.Patient?.BirthDate,
-                PatientGender = c.Patient?.Gender ?? false,
+                PatientGender = c.Patient?.Gender,
             };
         }).ToList();
 
@@ -343,7 +343,7 @@ public class CombinedAnalysisService
             PatientLastName = c.Patient?.LastName,
             PatientSureName = c.Patient?.SureName,
             PatientBirthDate = c.Patient?.BirthDate,
-            PatientGender = c.Patient?.Gender ?? false,
+            PatientGender = c.Patient?.Gender,
             ModelUsed = c.ModelUsed,
             AIAnswerData = c.AIAnswerData,
         };

@@ -4,7 +4,7 @@ import { DownOutlined, RobotOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 
 import parseAiResult from '../../tools/aiResult';
-import { calculateAge, formatDate } from '../../tools/formatters';
+import { calculateAge, formatDate, appendPatientMeta, genderForAi } from '../../tools/formatters';
 import { parseSeverity, SEVERITY, severityLabel } from '../../tools/severity';
 import { dangerAlert, successAlert, warningAlert } from '../../tools/Alerts';
 import { analyzeEkgFileRetry, retryAnalysis } from '../../host/EkgService';
@@ -103,8 +103,10 @@ export default function ResultCard({
         const formData = new FormData();
         (data.complaints ?? []).forEach((f) => formData.append('complaint', f.nameUz));
         if (data.patcient) {
-            formData.append('gender', data.patcient.gender ? 'erkak' : 'ayol');
-            formData.append('age', calculateAge(data.patcient.birthDate));
+            appendPatientMeta(formData, {
+                age: calculateAge(data.patcient.birthDate),
+                gender: genderForAi(data.patcient.gender),
+            });
         }
         formData.append('lang', (i18n.language || 'uz').slice(0, 2));
         formData.append('id', data.id);

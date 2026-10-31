@@ -5,7 +5,7 @@ import { FaSearch, FaFlask, FaHeartbeat, FaCheck, FaClock, FaSpinner, FaExclamat
 import { FaEye } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
 import { get_lab_analyses_by_clinic, get_lab_analyses_by_doctor, get_lab_analyses_by_nurse, mark_lab_viewed } from '../../../host/requests/LabAnalyseRequest';
-import { formatDate, calculateAge, formatDateTime , rowNumber } from '../../../tools/formatters';
+import { formatDate, calculateAge, formatDateTime, rowNumber, genderForAi } from '../../../tools/formatters';
 import { useStore } from '../../../store/Store';
 import EmptyState from '../../../components/shared/EmptyState';
 import DeleteAnalysisButton from '../../../components/shared/DeleteAnalysisButton';
@@ -410,8 +410,8 @@ export default function LabAnalysesList() {
                             id={row.id}
                             onRetry={retryAnalysis('lab')}
                             meta={{
-                                age: row.patcient?.birthDate ? calculateAge(row.patcient.birthDate) : 0,
-                                gender: row.patcient?.gender ? 'erkak' : 'ayol',
+                                age: row.patcient?.birthDate ? calculateAge(row.patcient.birthDate) : null,
+                                gender: genderForAi(row.patcient?.gender),
                                 lang: t('data_lang') === 'Ru' ? 'ru' : t('data_lang') === 'En' ? 'en' : 'uz',
                             }}
                             onDone={() => fetchData(page)}

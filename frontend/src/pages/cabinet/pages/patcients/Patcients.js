@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { FaUserInjured } from 'react-icons/fa'
 import { get_patcients_of_clinic } from '../../../../host/requests/PatcientRequest'
-import { formatPhoneNumberForForm, formatDate, calculateAge , rowNumber } from '../../../../tools/formatters'
+import { formatPhoneNumberForForm, formatDate, calculateAge, rowNumber, genderLabel } from '../../../../tools/formatters'
 import EmptyState from '../../../../components/shared/EmptyState'
 import { patientsTour } from '../../../../tools/tourSteps'
 import { usePageTour } from '../../../../components/shared/TourProvider';
@@ -90,9 +90,7 @@ export default function Patcients() {
                     <div>
                         <Text type="secondary" style={{ fontSize: 12 }}>
                             {row.birthDate ? `${calculateAge(row.birthDate)} ${t('age', { defaultValue: 'yosh' })}` : ''}
-                            {` · ${row.gender
-                                ? t('male', { defaultValue: 'Erkak' })
-                                : t('female', { defaultValue: 'Ayol' })}`}
+                            {genderLabel(row.gender, t) && ` · ${genderLabel(row.gender, t)}`}
                         </Text>
                     </div>
                 </div>

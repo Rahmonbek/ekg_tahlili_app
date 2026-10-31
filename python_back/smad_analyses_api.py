@@ -5,6 +5,7 @@ import os
 import io
 import json
 from pathlib import Path
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -281,9 +282,9 @@ async def analyze(
     main_doctor_id: int = Form(...),
     clinic_id: int = Form(...),
     patcient_id: int = Form(...),
-    gender: str = Form(...),
+    gender: Optional[str] = Form(None),
     lang: str = Form(...),
-    age: int = Form(...),
+    age: Optional[int] = Form(None),
     analysis_date: str | None = Form(None),
     # Foydalanuvchi takror haqidagi ogohlantirishni ko'rib, ataylab davom
     # etishni tanlaganda frontend buni `true` qilib yuboradi (T-096)
@@ -374,9 +375,9 @@ async def replace_file(
     user: dict = Depends(verify_token),
     id: int = Form(...),
     file: UploadFile = File(...),
-    gender: str = Form(...),
+    gender: Optional[str] = Form(None),
     lang: str = Form(...),
-    age: int = Form(...),
+    age: Optional[int] = Form(None),
 ):
     """Mavjud SMAD tahlilining faylini almashtirib, qayta tahlil qilish.
 
@@ -437,9 +438,9 @@ async def retry_analyse(
     db: Session = Depends(get_db),
     user: dict = Depends(verify_token),
     id: int = Form(...),
-    gender: str = Form("erkak"),
+    gender: Optional[str] = Form(None),
     lang: str = Form("uz"),
-    age: int = Form(0),
+    age: Optional[int] = Form(None),
 ):
     """Xatolik bilan tugagan tahlilni MAVJUD fayl bilan qayta ishga tushirish.
 

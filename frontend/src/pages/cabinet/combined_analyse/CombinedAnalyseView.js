@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { FaUserInjured } from 'react-icons/fa'
 import { create_combined_analysis, get_combined_analysis } from '../../../host/requests/CombinedAnalysisRequest'
-import { calculateAge, formatDate, formatDateTime, personName } from '../../../tools/formatters'
+import { calculateAge, formatDate, formatDateTime, personName, genderLabel } from '../../../tools/formatters'
 import { severityColor, severityLabel } from '../../../tools/severity'
 import EmptyState from '../../../components/shared/EmptyState'
 import CombinedResult, { CombinedAutoBadge } from '../../../components/results/CombinedResult'
@@ -197,9 +197,7 @@ export default function CombinedAnalyseView() {
                                 {patientName || '—'}
                             </p>
                             <p className="analysis-view-meta-sub">
-                                {ageText} · {data.patientGender
-                                    ? t('male', { defaultValue: 'Erkak' })
-                                    : t('female', { defaultValue: 'Ayol' })}
+                                {[ageText, genderLabel(data.patientGender, t)].filter(Boolean).join(' · ') || '—'}
                             </p>
                         </div>
 

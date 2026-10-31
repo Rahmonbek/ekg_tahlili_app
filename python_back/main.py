@@ -1487,9 +1487,9 @@ async def analyze(
     created_doctor_id: int = Form(...),
     clinic_id: int = Form(...),
     patcient_id: int = Form(...),
-    gender: str = Form(...),
+    gender: Optional[str] = Form(None),
     lang: str = Form(...),
-    age: int = Form(...),
+    age: Optional[int] = Form(None),
     analysis_date: str | None = Form(None),
     # Foydalanuvchi takror haqidagi ogohlantirishni ko'rib, ataylab davom
     # etishni tanlaganda frontend buni `true` qilib yuboradi (T-096)
@@ -1598,9 +1598,9 @@ async def analyze_save(
     created_doctor_id: int = Form(...),
     clinic_id: int = Form(...),
     patcient_id: int = Form(...),
-    gender: str = Form(...),
+    gender: Optional[str] = Form(None),
     lang: str = Form(...),
-    age: int = Form(...),
+    age: Optional[int] = Form(None),
     analysis_date: str | None = Form(None),
     # Foydalanuvchi takror haqidagi ogohlantirishni ko'rib, ataylab davom
     # etishni tanlaganda frontend buni `true` qilib yuboradi (T-096)
@@ -1732,9 +1732,9 @@ async def analyze_retry(
     user: dict = Depends(verify_token),
     complaint: list[str] | None = Form(None),
     id: str = Form(...),
-    gender: str = Form(...),
+    gender: Optional[str] = Form(None),
     lang: str = Form(...),
-    age: int = Form(...)
+    age: Optional[int] = Form(None)
 ):
     if OPENAI_API_KEY is None:
         raise HTTPException(status_code=400, detail="Provide OpenAI API key in environment variable 'OPENAI_API_KEY'")
@@ -1982,9 +1982,9 @@ async def analyze_replace_file(
     user: dict = Depends(verify_token),
     id: int = Form(...),
     file: UploadFile = File(...),
-    gender: str = Form(...),
+    gender: Optional[str] = Form(None),
     lang: str = Form(...),
-    age: int = Form(...),
+    age: Optional[int] = Form(None),
     complaint: list[str] | None = Form(None),
 ):
     """Mavjud EKG tahlilining faylini almashtirib, qayta tahlil qilish.

@@ -141,7 +141,8 @@ def _load_patient(db: Session, patient_id: int) -> dict:
 
     gender, birth_date = row[0], row[1]
     return {
-        "gender": "erkak" if gender else "ayol",
+        # Jins ixtiyoriy (NULL) — noma'lum bo'lsa AI ga umuman aytilmaydi
+        "gender": None if gender is None else ("erkak" if gender else "ayol"),
         "birth_date": birth_date.isoformat() if birth_date else None,
         "age": _age_from(birth_date),
     }

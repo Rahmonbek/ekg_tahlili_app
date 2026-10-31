@@ -56,12 +56,11 @@ public partial class PdfReportService
         // ── Bemor va yotish ma'lumotlari ──
         ComposeSectionHeader(doc, fonts, tr["patient_info"], CL_DarkBlue);
         var p = row.Patient;
-        var age = Age(p.BirthDate, row.AdmissionDate.ToDateTime(TimeOnly.MinValue));
         doc.Add(Card(InfoGrid(new List<(string, string)>
         {
             (tr["fio"], $"{p.LastName?.ToUpper()} {p.FirstName}".Trim()),
-            (tr["birth_date"], $"{p.BirthDate:dd.MM.yyyy}  ({age} {tr["age_suffix"]})"),
-            (tr["gender"], p.Gender ? tr["gender_male"] : tr["gender_female"]),
+            (tr["birth_date"], BirthDateText(p.BirthDate, row.AdmissionDate.ToDateTime(TimeOnly.MinValue), tr)),
+            (tr["gender"], GenderText(p.Gender, tr)),
             (dt["treating_doctor"], DoctorFullName(row.Doctor)),
             (dt["admission_date"], row.AdmissionDate.ToString("dd.MM.yyyy")),
             (dt["discharge_date"], row.DischargeDate.ToString("dd.MM.yyyy")),
@@ -159,7 +158,7 @@ public partial class PdfReportService
 
             doc.Add(Card(InfoGrid(new List<(string, string)>
             {
-                (tr["fio"], $"{p.LastName?.ToUpper()} {p.FirstName}  ({p.BirthDate:yyyy})".Trim()),
+                (tr["fio"], $"{p.LastName?.ToUpper()} {p.FirstName}{(p.BirthDate is { } bd ? $"  ({bd:yyyy})" : "")}".Trim()),
                 (dt["history_number"], row.HistoryNumber),
                 (dt["treating_doctor"], DoctorFullName(row.Doctor)),
                 (dt["discharge_date"], row.DischargeDate.ToString("dd.MM.yyyy")),

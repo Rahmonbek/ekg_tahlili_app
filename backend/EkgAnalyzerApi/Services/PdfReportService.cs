@@ -1045,12 +1045,11 @@ public partial class PdfReportService
         // Sharif chiqarilmaydi — platformadagi barcha ko'rsatish joylari
         // bilan bir xil qoida. Manzil ham ataylab chiqarilmaydi (loyiha
         // egasi qarori).
-        var age = Age(patient.BirthDate, refDate ?? AppTime.LocalNow(_config));
         var pairs = new List<(string, string)>
         {
             (tr["fio"], $"{patient.LastName?.ToUpper()} {patient.FirstName}".Trim()),
-            (tr["birth_date"], $"{patient.BirthDate:dd.MM.yyyy}  ({age} {tr["age_suffix"]})"),
-            (tr["gender"], patient.Gender ? tr["gender_male"] : tr["gender_female"]),
+            (tr["birth_date"], BirthDateText(patient.BirthDate, refDate ?? AppTime.LocalNow(_config), tr)),
+            (tr["gender"], GenderText(patient.Gender, tr)),
             (tr["passport"], MaskPassport(patient.Passport)),
         };
         if (!string.IsNullOrWhiteSpace(patient.Phone))
@@ -2669,9 +2668,26 @@ public partial class PdfReportService
     private static int Age(DateOnly bd, DateTime now)
     {
         var a = now.Year - bd.Year;
-        if (new DateOnly(now.Year, bd.Month, bd.Day) > DateOnly.FromDateTime(now)) a--;
+        // AddYears: 29-fevralda tug'ilganlar kabisa bo'lmagan yilda ham to'g'ri
+        // (ilgari `new DateOnly(now.Year, 2, 29)` istisno tashlardi)
+        if (bd.AddYears(a) > DateOnly.FromDateTime(now)) a--;
         return a;
     }
+
+    /// <summary>
+    /// "18.03.2001  (25 yosh)". Tug'ilgan sana ixtiyoriy — kiritilmagan
+    /// bo'lsa "—" (yosh ham hisoblanmaydi).
+    /// </summary>
+    private static string BirthDateText(DateOnly? bd, DateTime now, Dictionary<string, string> tr) =>
+        bd is { } d ? $"{d:dd.MM.yyyy}  ({Age(d, now)} {tr["age_suffix"]})" : "—";
+
+    /// <summary>Jins ixtiyoriy — kiritilmagan bo'lsa "—".</summary>
+    private static string GenderText(bool? gender, Dictionary<string, string> tr) => gender switch
+    {
+        true => tr["gender_male"],
+        false => tr["gender_female"],
+        null => "—",
+    };
 
     private static string DoctorFullName(Doctor? d)
     {

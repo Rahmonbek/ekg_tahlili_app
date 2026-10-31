@@ -59,7 +59,7 @@ public class CombinedAnalysisRowDTO : CombinedAnalysisListItemDTO
     public string? PatientLastName { get; set; }
     public string? PatientSureName { get; set; }
     public DateOnly? PatientBirthDate { get; set; }
-    public bool PatientGender { get; set; }
+    public bool? PatientGender { get; set; }
 }
 
 public class CombinedAnalysisDetailDTO : CombinedAnalysisListItemDTO
@@ -69,7 +69,7 @@ public class CombinedAnalysisDetailDTO : CombinedAnalysisListItemDTO
     public string? PatientLastName { get; set; }
     public string? PatientSureName { get; set; }
     public DateOnly? PatientBirthDate { get; set; }
-    public bool PatientGender { get; set; }
+    public bool? PatientGender { get; set; }
     public string? ModelUsed { get; set; }
 
     /// <summary>

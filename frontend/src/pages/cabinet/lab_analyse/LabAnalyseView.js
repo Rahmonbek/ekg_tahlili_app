@@ -8,7 +8,7 @@ import { get_lab_analyse_by_id } from '../../../host/requests/LabAnalyseRequest'
 import { useStore } from '../../../store/Store';
 import DownloadReportButton from '../../../components/DownloadReportButton';
 import DoctorDiagnosisBlock from '../../../components/results/DoctorDiagnosisBlock';
-import { formatDate, calculateAge, personName } from '../../../tools/formatters';
+import { formatDate, calculateAge, personName, genderForAi } from '../../../tools/formatters';
 import AnalyseViewHeader from '../../../components/shared/AnalyseViewHeader';
 import FileMismatchBanner, { parseFileMismatch } from '../../../components/shared/FileMismatchBanner';
 import NotAnalyzableBanner, { parseAiResult } from '../../../components/shared/NotAnalyzableBanner';
@@ -144,8 +144,8 @@ export default function LabAnalyseView() {
                 accept=".pdf,.png,.jpg,.jpeg"
                 multiple
                 meta={{
-                    age: data.patcient?.birthDate ? calculateAge(data.patcient.birthDate) : 0,
-                    gender: data.patcient?.gender ? 'erkak' : 'ayol',
+                    age: data.patcient?.birthDate ? calculateAge(data.patcient.birthDate) : null,
+                    gender: genderForAi(data.patcient?.gender),
                     lang: i18n.language || 'uz',
                 }}
                 onSuccess={getData}
