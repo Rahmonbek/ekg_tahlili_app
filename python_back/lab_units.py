@@ -315,6 +315,50 @@ def canonical_units(db) -> dict:
     return lab_catalog.canonical_units(db)
 
 
+def _harmonize_refs(column: str, cell: dict, result: dict, canonical) -> dict:
+    """Fayldagi me'yor chegaralarini qiymat bilan BIR XIL birlikka keltiradi.
+
+    Qiymat aylantirilgan bo'lsa (masalan fibrinogen 336 mg/dL → 3.36 g/L),
+    me'yor ham xuddi shu koeffitsiyent bilan (200–400 → 2–4). Birlik nomi
+    xato yozilgan holatda (koeffitsiyent 1) — o'zgarmaydi. Birligi mos
+    kelmagan qiymat aylantirilmagan, demak me'yor ham asl birlikda qoladi —
+    shu tufayli bunday qiymat ham laboratoriya me'yori bilan baholanadi.
+    """
+    refs = {k: cell.get(k) for k in ("ref_low", "ref_high")
+            if isinstance(cell.get(k), (int, float)) and not isinstance(cell.get(k), bool)}
+    if not refs:
+        return {}
+    original = result.get("original")
+    if not original:
+        return refs
+    try:
+        before, after = float(original.get("value")), float(result.get("value"))
+    except (TypeError, ValueError):
+        before = after = None
+
+    # Me'yor qiymat bilan bir xil "shkalada"mi? Blankalarda ikki holat bor:
+    #  * erkin T4 0.95 | me'yor 0.5–1.4 "нг/мл" — me'yor ham qiymat kabi
+    #    xato birlikda: qiymatning koeffitsiyenti bilan aylantiriladi;
+    #  * kortizol 6.47 | me'yor 138–690 "нмоль/л" — me'yor yozilgan birlikda
+    #    TO'G'RI, faqat qiymat boshqa birlikda: me'yor yozilgan birlik bo'yicha
+    #    (xato-birlik qoidasisiz) aylantiriladi.
+    nonzero = [abs(v) for v in refs.values() if v]
+    same_scale = (
+        not before or not nonzero
+        or all(0.05 <= abs(before) / r <= 20 for r in nonzero)
+    )
+    if same_scale and before:
+        ratio = after / before
+        return {k: _round(v * ratio) for k, v in refs.items()}
+
+    src, dst = norm_unit(cell.get("unit")), norm_unit(canonical)
+    factor = 1.0 if src == dst else _factor(column, src, dst)
+    if factor is None:
+        # Me'yorni ishonchli aylantirib bo'lmaydi — baho katalog me'yori bilan
+        return {}
+    return {k: _round(v * factor) for k, v in refs.items()}
+
+
 def harmonize_all(db, measurements: dict) -> dict:
     """`digital_measurements` lug'atidagi barcha ko'rsatkichlarni keltiradi."""
     if not isinstance(measurements, dict):
@@ -328,8 +372,10 @@ def harmonize_all(db, measurements: dict) -> dict:
         result = harmonize(column, cell.get("value"), cell.get("unit"), units.get(column))
         # Sifat natijasining asl yozuvi ("Отрицательный(-)") yo'qolmasin —
         # ilgari `harmonize` yangi lug'at qaytarardi va `text` tushib qolardi
-        if cell.get("text"):
-            result["text"] = cell["text"]
+        for key in ("text", "result_kind", "ref_text"):
+            if cell.get(key):
+                result[key] = cell[key]
+        result.update(_harmonize_refs(column, cell, result, units.get(column)))
         if result.get("original"):
             logger.info("Lab birlik: %s %s %s → %s %s", column, cell.get("value"),
                         cell.get("unit"), result["value"], result["unit"])

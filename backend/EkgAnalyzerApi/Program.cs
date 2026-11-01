@@ -42,6 +42,12 @@ builder.Services.AddScoped<CombinedAnalysisService>();
 // AI xulosasi yaratadi (`AutoCombined:*` sozlamalari)
 builder.Services.AddHostedService<AutoCombinedAnalysisWorker>();
 builder.Services.AddScoped<DischargeSummaryService>();  // Vipiska (chiqarish epikrizi)
+// Klinika laboratoriya statistikasi va xavf signallari (klinik qoidalar
+// spetsifikatsiyasi; `LabRules:*` sozlamalari)
+builder.Services.AddScoped<EkgAnalyzerApi.Services.LabStatistics.LabStatisticsService>();
+builder.Services.AddScoped<EkgAnalyzerApi.Services.LabRules.LabSignalsService>();
+builder.Services.AddScoped<EkgAnalyzerApi.Services.LabRules.LabRuleEngine>();
+builder.Services.AddHostedService<EkgAnalyzerApi.Services.LabRules.LabRuleWorker>();
 builder.Services.AddScoped<MedicalDiagnoseService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();

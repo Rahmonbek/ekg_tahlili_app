@@ -94,6 +94,8 @@ public static class PdfTranslations
         ["lab_normal"]              = "Normal",
         ["lab_positive"]            = "Musbat",
         ["lab_negative"]            = "Manfiy",
+        ["lab_equivocal"]           = "Shubhali",
+        ["lab_invalid"]             = "Yaroqsiz",
         ["lab_not_assessed"]        = "Baholanmadi",
         ["lab_param_note"]          = "Eslatma",
 
@@ -241,6 +243,8 @@ public static class PdfTranslations
         ["lab_normal"]              = "Норма",
         ["lab_positive"]            = "Положительный",
         ["lab_negative"]            = "Отрицательный",
+        ["lab_equivocal"]           = "Сомнительный",
+        ["lab_invalid"]             = "Недействительный",
         ["lab_not_assessed"]        = "Не оценено",
         ["lab_param_note"]          = "Примечание",
 
@@ -381,6 +385,8 @@ public static class PdfTranslations
         ["lab_normal"]              = "Normal",
         ["lab_positive"]            = "Positive",
         ["lab_negative"]            = "Negative",
+        ["lab_equivocal"]           = "Equivocal",
+        ["lab_invalid"]             = "Invalid",
         ["lab_not_assessed"]        = "Not assessed",
         ["lab_param_note"]          = "Note",
 

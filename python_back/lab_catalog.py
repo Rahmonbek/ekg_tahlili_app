@@ -117,19 +117,51 @@ def norm_bounds(t: LabType, gender: bool | None) -> tuple[float | None, float | 
     return (min(mins) if mins else None), (max(maxs) if maxs else None)
 
 
-def flag_for(t: LabType, value, gender: bool | None, unit_mismatch: bool) -> int | None:
-    """-1 past, 0 normal, 1 yuqori; None — baholanmaydi."""
-    if unit_mismatch or value is None or t.value_kind == "code":
-        return None
+#: Sifat natijasi holati → baho (shubhali ham e'tibor talab qiladi, lekin
+#: `result_kind` da musbatdan alohida saqlanadi)
+_KIND_FLAG = {"NEGATIVE": 0, "POSITIVE": 1, "EQUIVOCAL": 1}
+
+
+def flag_for(
+    t: LabType,
+    value,
+    gender: bool | None,
+    unit_mismatch: bool,
+    ref_low=None,
+    ref_high=None,
+    result_kind: str | None = None,
+) -> tuple[int | None, str | None]:
+    """Baho va uning manbasi: `(-1 | 0 | 1 | None, "lab" | "catalog" | None)`.
+
+    * Sifat natijasi — `result_kind` bo'yicha.
+    * Sonli — avval LABORATORIYANING o'z me'yori (`ref_low`/`ref_high`,
+      fayldan): me'yor assayga xos, klinik qoidalar ham "laboratoriya
+      ULN/LLN" ni talab qiladi. Me'yor qiymat bilan bir birlikda bo'lgani
+      uchun birligi aylantirilmagan qiymat ham shu bilan baholanadi.
+    * Fayldagi me'yor bo'lmasa — katalog me'yori (birligi mos bo'lsa).
+    """
+    if t.value_kind == "code":
+        return None, None
+    if t.value_kind == "qualitative":
+        flag = _KIND_FLAG.get(result_kind or "")
+        return (flag, "lab") if flag is not None else (None, None)
+    if value is None:
+        return None, None
     try:
         num = float(value)
     except (TypeError, ValueError):
-        return None
-    lo, hi = norm_bounds(t, gender)
+        return None, None
+
+    if ref_low is not None or ref_high is not None:
+        lo, hi, source = ref_low, ref_high, "lab"
+    elif unit_mismatch:
+        return None, None
+    else:
+        (lo, hi), source = norm_bounds(t, gender), "catalog"
     if lo is None and hi is None:
-        return None
-    if lo is not None and num < lo:
-        return -1
-    if hi is not None and num > hi:
-        return 1
-    return 0
+        return None, None
+    if lo is not None and num < float(lo):
+        return -1, source
+    if hi is not None and num > float(hi):
+        return 1, source
+    return 0, source

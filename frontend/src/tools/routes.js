@@ -108,6 +108,17 @@ export const routers = [
     // },
     
 
+    // Klinika laboratoriya statistikasi + klinik qoidalar asosidagi xavf signallari
+    {
+        path: '/lab-statistics',
+        icon: <FaChartLine />,
+        title: "nav_lab_statistics",
+        tools: "lab-statistics",
+        role_id: [2, 3],
+        unread_key: null,
+        requires_active: true
+    },
+
     // ── Online Konsultatsiya — Admin/Direktor ──────────────────────────────────
     {
         path: '/consultants',

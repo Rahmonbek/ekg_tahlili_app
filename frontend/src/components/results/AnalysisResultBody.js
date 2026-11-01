@@ -214,6 +214,11 @@ function LabCard({ row }) {
                         {t('lab_negative', { defaultValue: 'Manfiy' })}
                     </span>
                 )}
+                {status === 'equivocal' && (
+                    <span className="lab-card-pill lab-card-pill--low">
+                        {t('lab_equivocal', { defaultValue: 'Shubhali' })}
+                    </span>
+                )}
                 {status === 'unit' && (
                     <span className="lab-card-pill lab-card-pill--unit">
                         {t('lab_not_assessed', { defaultValue: 'Baholanmadi' })}
@@ -242,6 +247,8 @@ function LabCard({ row }) {
             {rangeText && (
                 <div className="lab-card-range">
                     {t('norm', { defaultValue: 'norma' })}: {rangeText}{unit ? ` ${unit}` : ''}
+                    {/* Me'yor laboratoriya blankasidan olingan (assayga xos) */}
+                    {row.labRef ? ` (${t('lab_ref_source', { defaultValue: 'laboratoriya' })})` : ''}
                 </div>
             )}
         </div>
@@ -266,16 +273,28 @@ function LabMeasurements({ measurements, gender }) {
         .filter((v) => measurements[v.columnName] != null)
         .map((v) => {
             const cell = measurements[v.columnName];
-            // Birlik me'yor birligidan farq qilsa solishtirib bo'lmaydi
-            const comparable = !cell.unit_mismatch && unitsMatch(cell.unit, v.measure);
-            // Sifat natijasi (0 manfiy / 1 musbat yoki indeks) va kod (qon
-            // guruhi, rezus) — oddiy "norma/yuqori" bahosi ma'nosiz
+            // Laboratoriyaning o'z me'yori (fayldan, qiymat bilan bir birlikda)
+            // ustun turadi: me'yor assayga xos — masalan erkin T3 uchun klinika
+            // 1.2–4.2 beradi, katalogda 3.1–6.8. Shu me'yor bo'lsa birlik
+            // mos kelmagan qiymat ham baholanadi.
+            const labRef = cell.ref_low != null || cell.ref_high != null;
+            const comparable = labRef || (!cell.unit_mismatch && unitsMatch(cell.unit, v.measure));
+            // Sifat natijasi va kod (qon guruhi, rezus) — oddiy "norma/yuqori"
+            // bahosi ma'nosiz
             const qualitative = v.valueKind === 'qualitative' || v.valueKind === 'code';
-            let verdict = comparable && v.valueKind !== 'code' ? evaluate(cell.value, v, gender) : null;
+            const refType = labRef
+                ? { normalMinMale: cell.ref_low, normalMaxMale: cell.ref_high,
+                    normalMinFemale: cell.ref_low, normalMaxFemale: cell.ref_high }
+                : v;
+            let verdict = comparable && !qualitative ? evaluate(cell.value, refType, gender) : null;
             let status = comparable ? (verdict?.status || 'na') : 'unit';
-            if (v.valueKind === 'qualitative' && verdict) {
-                status = verdict.status === 'high' ? 'positive' : 'negative';
-                verdict = null; // "norma: ≤ 0.99" ko'rsatilmaydi
+            if (v.valueKind === 'qualitative') {
+                // Holat alohida saqlanadi ("shubhali" musbat emas). Eski
+                // yozuvlarda holat yo'q — kod (0/1) bo'yicha.
+                const kind = cell.result_kind
+                    ?? (cell.value == null ? null : (Number(cell.value) >= 1 ? 'POSITIVE' : 'NEGATIVE'));
+                status = { POSITIVE: 'positive', NEGATIVE: 'negative', EQUIVOCAL: 'equivocal' }[kind] || 'na';
+                verdict = null;
             }
             return {
                 id: v.id,
@@ -283,6 +302,7 @@ function LabMeasurements({ measurements, gender }) {
                 verdict,
                 status,
                 qualitative,
+                labRef,
                 unit: cell.unit ?? v.measure,
                 measure: v.measure,
                 name: v[`name${t('data_lang')}`],
@@ -290,7 +310,7 @@ function LabMeasurements({ measurements, gender }) {
         });
     if (rows.length === 0) return null;
 
-    const isAbnormal = (r) => r.status === 'high' || r.status === 'low' || r.status === 'positive';
+    const isAbnormal = (r) => ['high', 'low', 'positive', 'equivocal'].includes(r.status);
     const abnormal = rows.filter(isAbnormal);
     const other = rows.filter((r) => !isAbnormal(r));
     // Chetlanish bo'lmasa yig'ishning ma'nosi yo'q — hammasi ko'rinadi

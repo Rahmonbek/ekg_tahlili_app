@@ -260,9 +260,9 @@ def lab_measurements(columns: list[str]) -> dict:
                     "type": ["string", "null"],
                     "description": "O'lchov birligi (masalan g/L, mmol/L)",
                 },
-                # Sifat natijalari (HBsAg "Отрицательный(-)", qon guruhi "A(II)")
-                # raqamli ustunga kod sifatida yoziladi, asl yozuv esa shu yerda
-                # saqlanadi va ekranda raqam o'rniga ko'rsatiladi
+                # Sifat natijasining asl yozuvi (HBsAg "Отрицательный(-)", qon
+                # guruhi "A(II)") — ekranda va PDF da shu ko'rsatiladi; holati
+                # `result_kind` da
                 "text": {
                     "type": ["string", "null"],
                     "description": (
@@ -271,8 +271,27 @@ def lab_measurements(columns: list[str]) -> dict:
                         "ko'rsatkichlarda null."
                     ),
                 },
+                # Laboratoriyaning O'Z me'yori — baho shu bilan qilinadi
+                # (me'yor assayga xos; katalog me'yori faqat zaxira)
+                "ref_low": {
+                    "type": ["number", "null"],
+                    "description": "Fayldagi me'yorning pastki chegarasi (qiymat bilan bir xil birlikda).",
+                },
+                "ref_high": {
+                    "type": ["number", "null"],
+                    "description": "Fayldagi me'yorning yuqori chegarasi (qiymat bilan bir xil birlikda).",
+                },
+                "ref_text": {
+                    "type": ["string", "null"],
+                    "description": "Fayldagi me'yor matni aynan o'zicha (murakkab bo'lsa ham).",
+                },
+                "result_kind": {
+                    "type": ["string", "null"],
+                    "enum": ["NEGATIVE", "POSITIVE", "EQUIVOCAL", "INVALID", None],
+                    "description": "Faqat sifat natijalari uchun holat; sonli ko'rsatkichlarda null.",
+                },
             },
-            "required": ["column_name", "value", "unit", "text"],
+            "required": ["column_name", "value", "unit", "text", "ref_low", "ref_high", "ref_text", "result_kind"],
         },
     }
 
@@ -296,6 +315,16 @@ RESULT_FIELDS = (
 )
 
 
+LAB_DATE_PROPERTY = {
+    "type": ["string", "null"],
+    "description": (
+        "Hujjatdagi tahlil sanasi (namuna olingan yoki natija berilgan kun) "
+        "YYYY-MM-DD ko'rinishida. Tug'ilgan sana yoki chop etilgan vaqt EMAS. "
+        "Hujjatda sana bo'lmasa — null."
+    ),
+}
+
+
 def response_format(kind: str, lab_columns: list[str] | None = None) -> dict:
     """`client.responses.create(text=...)` uchun format tavsifi.
 
@@ -308,6 +337,10 @@ def response_format(kind: str, lab_columns: list[str] | None = None) -> dict:
         if not lab_columns:
             raise ValueError("lab sxemasi uchun lab_columns kerak")
         schema = _schema("lab_analysis", "Laboratoriya tahlili", lab_measurements(lab_columns))
+        # Tahlilning O'Z sanasi — statistika va dinamika yuklangan kun bilan
+        # emas, shu sana bilan ishlaydi (`lab_dates`)
+        schema["properties"]["analysis_date"] = LAB_DATE_PROPERTY
+        schema["required"].append("analysis_date")
     else:
         schema = SCHEMAS[kind]
     return {

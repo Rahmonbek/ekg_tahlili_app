@@ -244,8 +244,11 @@ export function FileDropzone({ fileTypes, files, onSelect, onRemove, text, hint,
     );
 }
 
-/** AI tahlil tili + tahlil sanasi (bir qatorda). */
-export function LangDateFields({ lang, onLangChange, dateValue, onDateChange }) {
+/**
+ * AI tahlil tili + tahlil sanasi (bir qatorda). `dateNote` berilsa sana
+ * ixtiyoriy (laboratoriya: kiritilmasa fayldagi sana olinadi).
+ */
+export function LangDateFields({ lang, onLangChange, dateValue, onDateChange, dateNote }) {
     const { t } = useTranslation();
     return (
         <div className="anz-row">
@@ -261,7 +264,7 @@ export function LangDateFields({ lang, onLangChange, dateValue, onDateChange }) 
                     ]}
                 />
             </Field>
-            <Field label={t('analysis_date')}>
+            <Field label={t('analysis_date')} optional={!!dateNote} note={dateNote}>
                 {/* Tug'ma `<input type="date">` brauzer tiliga bo'ysunardi
                     (o'zbek interfeysda ruscha `дд.мм.гггг`) */}
                 <DateField value={dateValue} onChange={onDateChange} />

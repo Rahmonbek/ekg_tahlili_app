@@ -1,0 +1,257 @@
+/* Laboratoriya statistikasi (`lst-*`) */
+
+.lst-lead {
+  margin: 0 0 14px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.lst-loading {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+/* ── Filtrlar ── */
+.lst-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px 12px;
+  align-items: end;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: #f8fafc;
+  border: 1px solid #eef2f6;
+  border-radius: 10px;
+}
+
+.lst-filters--inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  margin-bottom: 12px;
+  background: none;
+  border: none;
+}
+
+.lst-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.lst-filter label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.lst-filter--wide {
+  grid-column: span 2;
+}
+
+.lst-filter--switch {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 32px;
+}
+
+.lst-age {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lst-age .ant-input-number {
+  width: 100%;
+}
+
+.lst-filter-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* ── Asosiy raqamlar ── */
+.lst-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.lst-kpi {
+  text-align: left;
+  background: #fff;
+  border: 1px solid #eef2f6;
+  border-top: 3px solid #14a38b;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+  color: inherit;
+  cursor: default;
+}
+
+.lst-kpi--clickable {
+  cursor: pointer;
+  transition: box-shadow .15s ease, transform .15s ease;
+}
+
+.lst-kpi--clickable:hover {
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .08);
+}
+
+.lst-kpi--active {
+  box-shadow: 0 0 0 2px rgba(20, 163, 139, .35);
+}
+
+.lst-kpi-label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.lst-kpi-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+.lst-kpi-hint {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.lst-kpis--compact {
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+}
+
+.lst-mini {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 10px;
+  border: 1px solid #eef2f6;
+  border-radius: 8px;
+}
+
+.lst-mini span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* ── Panellar va grafiklar ── */
+.lst-panel {
+  background: #fff;
+  border: 1px solid #eef2f6;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  min-width: 0;
+}
+
+.lst-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.lst-panel-head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.lst-chart {
+  position: relative;
+  height: 260px;
+}
+
+.lst-chart--tall {
+  height: 340px;
+}
+
+.lst-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.lst-grid--2 {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.lst-grid--4 {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+/* ── Matn ── */
+.lst-high { color: #e5484d; font-weight: 600; }
+.lst-low { color: #d97706; font-weight: 600; }
+.lst-muted { color: #94a3b8; font-size: 12px; }
+
+.lst-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #14a38b;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.lst-link:hover { text-decoration: underline; }
+
+/* ── Signallar ── */
+.lst-disclaimer { margin-bottom: 4px; }
+
+.lst-sev {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.lst-signal-title {
+  font-weight: 600;
+  color: #0f172a;
+  margin-top: 4px;
+}
+
+.lst-signal-msg {
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.lst-expand {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.lst-rec,
+.lst-temporal,
+.lst-missing {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.lst-missing { color: #92400e; }
+
+@media (max-width: 640px) {
+  .lst-filter--wide { grid-column: span 1; }
+  .lst-chart--tall { height: 300px; }
+}
+
+.lst .ant-table-thead > tr > th { white-space: nowrap; }

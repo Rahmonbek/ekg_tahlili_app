@@ -57,7 +57,8 @@ namespace EkgAnalyzerApi.Models
         /// Aniqlangan ko'rsatkich qiymatlari — `lab_analysis_values` (har bir
         /// ko'rsatkich alohida qator). Ilgari har bir ko'rsatkich shu jadvalda
         /// alohida ustun edi (87 ta); ular migratsiya `20261101000000_LabAnalysisValues`
-        /// da yangi jadvalga ko'chirildi va endi o'qilmaydi/yozilmaydi.
+        /// da yangi jadvalga ko'chirildi, `20261103000000_LabAnalysisDateSource`
+        /// da esa o'chirildi.
         /// </summary>
         public List<LabAnalysisValue>? Values { get; set; }
 
@@ -66,6 +67,16 @@ namespace EkgAnalyzerApi.Models
 
         [Column("analysis_date")]
         public DateTime? AnalysisDate { get; set; }
+
+        /// <summary>
+        /// `AnalysisDate` qayerdan olingani: `user` — yuklash formasida kiritilgan
+        /// (AI uni o'zgartirmaydi), `document` — fayldagi tahlil sanasi (Excel
+        /// «Дата:» katagi yoki AI hujjatdan o'qigan), NULL — sana noma'lum,
+        /// o'rniga `CreatedAt` ishlatiladi.
+        /// </summary>
+        [Column("analysis_date_source")]
+        [MaxLength(16)]
+        public string? AnalysisDateSource { get; set; }
 
         [Column("updated_at")]
         public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;

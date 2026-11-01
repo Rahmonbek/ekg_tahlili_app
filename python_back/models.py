@@ -58,6 +58,8 @@ class LabAnalyses(Base):
     analyse_file_link = Column(String, nullable=True)
     ai_answer_data = Column(String, nullable=True)  # text
     analysis_date = Column(DateTime, nullable=True)
+    # `user` — formada kiritilgan, `document` — fayldan olingan, NULL — noma'lum
+    analysis_date_source = Column(String(16), nullable=True)
 
     # Yuklangan faylning SHA-256 xeshi — takroriy yuklashni
     # aniqlash uchun (T-096, `duplicate_guard.py`)
@@ -273,6 +275,13 @@ class LabAnalysisValues(Base):
     original_unit = Column(String(64), nullable=True)
     unit_mismatch = Column(Boolean, nullable=False, default=False)
     flag = Column(SmallInteger, nullable=True)
+    flag_source = Column(String(8), nullable=True)  # lab | catalog
+    # Laboratoriyaning o'z me'yori (fayldan, `value` bilan bir xil birlikda)
+    ref_low = Column(Numeric, nullable=True)
+    ref_high = Column(Numeric, nullable=True)
+    ref_text = Column(String(300), nullable=True)
+    # Sifat natijasi: NEGATIVE | POSITIVE | EQUIVOCAL | INVALID | UNKNOWN
+    result_kind = Column(String(16), nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
 
 

@@ -147,8 +147,29 @@ tayanadi — `unit_mismatch = true` qatorlarni chiqarib tashlang.
   `value_kind` numeric|qualitative|code, `sort_order`, `ai_hint`). Yangi
   ko'rsatkich = shu jadvalga qator: Python `lab_catalog` AI sxemasidagi
   `enum` va prompt ro'yxatini undan quradi — kodni o'zgartirish SHART EMAS.
-* `lab_analyses` dagi eski 87 ta ustun — zaxira, hech kim yozmaydi/o'qimaydi;
-  ko'chirish tekshirilgach keyingi migratsiyada `DROP COLUMN`.
+* Katalog me'yorlari 2026-11-02 da manbalar (ABIM, Mayo, Roche/Abbott
+  insertlari, ADA, ESC, WHO, Helix/Gemotest) bilan solishtirilib
+  tuzatilgan (`20261102010000_LabNormsReview`: PLT ≥150, sutkalik natriy
+  40–220, RF ≤14, troponin I ≤0.04, glyukoza ≤5.5, vitamin D ≥20…). Ular
+  ZAXIRA — laboratoriya me'yori bo'lsa ishlatilmaydi. Assayga xos
+  ko'rsatkichlarda (troponin, gormonlar) baho uchun laboratoriya me'yori
+  asosiy manba.
+* `lab_analyses` dagi eski 87 ta ko'rsatkich ustuni `20261103000000_LabAnalysisDateSource`
+  da O'CHIRILGAN (oldin idempotent qayta ko'chirish, birorta qiymat
+  ko'chmasa migratsiya xato bilan to'xtaydi). Snapshot ham tozalangan.
+* **Tahlil sanasi** — tahlilning O'Z sanasi, yuklangan kun EMAS
+  (`analysis_date`; `measured_at` undan): statistika, dinamika, klinik
+  qoidalar, ro'yxat, PDF shunga tayanadi. Laboratoriya yuklash formasida
+  sana IXTIYORIY va bo'sh (`useAnalyzerPage({ dateFromFile: true })`;
+  ilgari bugungi kun avtomatik qo'yilardi). Kiritilmasa: Excel —
+  «Дата:» katagi (`excel_to_text.xlsx_read`, natijasi bor listlardagi eng
+  ko'p sana, AI siz); PDF/rasm — AI sxemasidagi `analysis_date`
+  (`lab_dates.validate`: 2000..bugun+1, tug'ilgan kun emas). Manba
+  `analysis_date_source`: `user` (forma — AI o'zgartirmaydi) | `document`
+  (har qayta tahlilda yangilanadi) | NULL (noma'lum → `created_at`).
+  Eski yozuvlar: `python repair_lab_dates.py [--apply]` (faqat Excel;
+  PDF/rasm uchun qayta tahlil). 1000 ta klinika faylida: 88% papka
+  sanasi bilan ±3 kun, qolgani asosan papka nomidagi xato.
 * Yozuvchi faqat Python `lab_analyse.replace_lab_values` — har tahlil/qayta
   tahlilda tahlilning BARCHA qatorlari almashtiriladi (eski fayl qiymati
   qolmaydi; AI boshlanishida `clear_lab_values`).
@@ -157,9 +178,20 @@ tayanadi — `unit_mismatch = true` qatorlarni chiqarib tashlang.
   (`AddLabTable` — nom/me'yor katalogdan, tilga mos; chaqiruvchi
   `WithLabValues` bilan yuklaydi). Natija kartochkalari esa hamon
   `ai_answer_data.digital_measurements` JSON dan chiziladi.
-* **Sifat natijalari** (HBsAg, Anti-HCV, RW, OIV, H. pylori): kod 0 manfiy /
-  1 musbat yoki shubhali / laboratoriya indeksi (COI), chegara `< 0.99`;
-  asl yozuv `text` da ("Отрицательный(-)") — ekran va PDF da shu chiqadi.
+* **Laboratoriyaning o'z me'yori** (migratsiya `20261102000000_LabValueReferenceAndKind`):
+  AI fayldagi norma ustunini `ref_low`/`ref_high`/`ref_text` ga oladi
+  (bemor jinsiga mos qator; Excel'da natijasiz "(Ж)" qatori ham "faqat
+  me'yor" bo'lib beriladi). Baho (`flag`) AVVAL shu me'yor bilan, bo'lmasa
+  katalog me'yori bilan (`flag_source` = lab | catalog) — me'yor assayga
+  xos (masalan erkin T3: klinika 1.2–4.2, katalog 3.1–6.8). Qiymat
+  aylantirilsa me'yor ham aylantiriladi; me'yor boshqa "shkalada" bo'lsa
+  (kortizol 6.47 | 138–690 nmol/L) — yozilgan birligi bo'yicha
+  (`lab_units._harmonize_refs`). Kartochkada "(laboratoriya)" belgisi.
+* **Sifat natijalari** (HBsAg, Anti-HCV, RW, OIV, H. pylori): holat
+  `result_kind` = NEGATIVE | POSITIVE | EQUIVOCAL | INVALID | UNKNOWN
+  ("shubhali" musbat bilan BIRLASHTIRILMAYDI — klinik qoidalar
+  spetsifikatsiyasi INF-02); `value` faqat laboratoriya indeksi (COI)
+  bo'lsa. Asl yozuv `text` da ("Отрицательный(-)") — ekran va PDF da shu.
   Qon guruhi 1..4, rezus 1/0 (`value_kind = code`, baholanmaydi).
 
 **Laboratoriya — Excel (.xlsx)** (`python_back/excel_to_text.py`): model
@@ -174,6 +206,35 @@ shablondan farq qilmaydi), fayl faqat shundan iborat bo'lsa yuboriladi.
 Bo'sh shablon `file_validator._validate_xlsx` da rad etiladi (`xlsx_empty`).
 `.xls` (eski format) qabul qilinmaydi. .NET proksi kirillcha nomli faylning
 kengaytmasini saqlaydi (`PythonApiProxyService.NormalizeFileName`).
+
+**Laboratoriya statistikasi va xavf signallari** (`/lab-statistics`,
+faqat Admin/Direktor — rol 2/3, menyu «Statistika»; API `api/lab-statistics`,
+klinika `users.clinic_id` dan, boshqa klinika ko'rinmaydi).
+
+* **Statistika** (`Services/LabStatistics/LabStatisticsService.cs`, xom SQL
+  `SqlRows` — EF7 da tipsiz SqlQuery yo'q): filtrlar — davr (tahlil
+  sanasi), shifokor, jins, yosh, guruh, ko'rsatkich, faqat me'yordan
+  tashqari. Bo'limlar: umumiy (KPI, vaqt grafigi kun/hafta/oy, AI
+  jiddiyligi, jins/yosh, fayl turlari, guruhlar, xodimlar), ko'rsatkichlar
+  (top chetlanishlar, jadval, drawer: gistogramma p01..p99, oylik mediana,
+  jins/yosh, oxirgi natijasi me'yordan tashqari bemorlar). `unit_mismatch`
+  qatorlar statistikaga kirmaydi.
+* **Xavf signallari** — «NMED laboratoriya klinik qoidalari» v1.0
+  spetsifikatsiyasi: `Services/LabRules/` (24 qoida: REN-01 AKI, REN-02 CKD
+  CKD-EPI 2021, ELE-01/02, CAR-01/02, GLU-01/02, HEM-01..05, THY-01/02,
+  LIV-01/02 FIB-4, PAN-01, LIP-01, INF-01/02, COA-01, UR-01, ONC-01,
+  MET-01). Bemorning SHU klinikadagi tahlillari vaqt bo'yicha solishtiriladi.
+  Natija `lab_rule_signals` (klinika+bemor+qoida bo'yicha bitta, dalil/
+  vaqt/yetishmayotgan ma'lumot jsonb). Foizli ehtimol YO'Q — holat
+  (CRITICAL/CRITERIA_MET/SUSPECTED/MONITOR/INSUFFICIENT_DATA) + dalil +
+  keyingi qadam. Signal tashxis emas: shifokor tasdiqlaydi/rad etadi
+  (`reviewer_status`; dalil o'zgarsa `pending` ga qaytadi).
+* `LabRuleWorker` (`LabRules:Enabled/IntervalSeconds/BatchSize`) faqat
+  o'zgargan bemorlarni qayta baholaydi (`lab_rule_patient_state`:
+  last_value_id, values_count, rules_version). Qoida o'zgarsa
+  `LabRules.Version` ni oshiring — hammasi qayta hisoblanadi. Faqat
+  `measured_at` o'zgartirilsa worker sezmaydi — state qatorini o'chiring.
+* Frontend: `pages/cabinet/statistics/` (`lst-*`, chart.js).
 
 **Vipiska** (`discharge_summaries`) — statsionardan chiqarish epikrizi
 («Выписка из истории болезни»).

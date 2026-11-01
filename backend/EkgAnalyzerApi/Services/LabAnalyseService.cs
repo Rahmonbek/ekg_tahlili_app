@@ -69,6 +69,11 @@ namespace EkgAnalyzerApi.Services
                             OriginalUnit = v.OriginalUnit,
                             UnitMismatch = v.UnitMismatch,
                             Flag = v.Flag,
+                            FlagSource = v.FlagSource,
+                            RefLow = v.RefLow,
+                            RefHigh = v.RefHigh,
+                            RefText = v.RefText,
+                            ResultKind = v.ResultKind,
                         })
                         .ToList(),
                     PatcientId = e.PatcientId,
@@ -632,6 +637,11 @@ namespace EkgAnalyzerApi.Services
                         OriginalUnit = v.OriginalUnit,
                         UnitMismatch = v.UnitMismatch,
                         Flag = v.Flag,
+                        FlagSource = v.FlagSource,
+                        RefLow = v.RefLow,
+                        RefHigh = v.RefHigh,
+                        RefText = v.RefText,
+                        ResultKind = v.ResultKind,
                     })
                     .ToList(),
                 PatcientId = e.PatcientId,

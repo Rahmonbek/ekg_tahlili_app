@@ -27,6 +27,13 @@ public class LabValueDTO
     public bool UnitMismatch { get; set; }
     /// <summary>-1 past, 0 normal, 1 yuqori; null — baholanmadi.</summary>
     public short? Flag { get; set; }
+    /// <summary>`lab` — fayldagi me'yor bilan baholangan, `catalog` — katalog me'yori bilan.</summary>
+    public string? FlagSource { get; set; }
+    public decimal? RefLow { get; set; }
+    public decimal? RefHigh { get; set; }
+    public string? RefText { get; set; }
+    /// <summary>NEGATIVE | POSITIVE | EQUIVOCAL | INVALID | UNKNOWN (sifat natijasi).</summary>
+    public string? ResultKind { get; set; }
 }
 
 public class LabAnalyseDTO

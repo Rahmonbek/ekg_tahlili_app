@@ -1531,8 +1531,17 @@ public partial class PdfReportService
                 _    => type.NameUz,
             }) ?? type.NameUz ?? type.ColumnName ?? "";
 
-            var (lo, hi) = LabNormBounds(type, gender);
-            var norm = v.UnitMismatch ? "" : LabNormText(lo, hi);
+            // Laboratoriyaning o'z me'yori (fayldan) — ustun; bo'lmasa katalog
+            // me'yori. Me'yor assayga xos: masalan erkin T3 uchun klinika
+            // 1.2–4.2 beradi, katalogda 3.1–6.8 — katalog bilan hamma natija "past" bo'lardi.
+            var hasLabRef = v.RefLow.HasValue || v.RefHigh.HasValue;
+            var (lo, hi) = hasLabRef
+                ? ((double?)v.RefLow, (double?)v.RefHigh)
+                : (v.UnitMismatch ? (null, null) : LabNormBounds(type, gender));
+            // Sifat natijasida sonli chegara ("< 0.99") ma'nosiz — fayldagi
+            // me'yor matni ("Отрицательный") ko'rsatiladi
+            var norm = type.ValueKind == "qualitative" ? (v.RefText ?? "") : LabNormText(lo, hi);
+            if (norm == "" && !string.IsNullOrWhiteSpace(v.RefText)) norm = v.RefText!;
             var unit = v.UnitMismatch ? (v.Unit ?? "") : (type.Measure ?? v.Unit ?? "");
 
             // Sifat natijasi (HBsAg "Отрицательный(-)") va chegara yozuvi (">50")
@@ -1591,16 +1600,24 @@ public partial class PdfReportService
     {
         string T(string key, string fallback) => tr.TryGetValue(key, out var s) ? s : fallback;
 
-        if (v.UnitMismatch)
+        if (type.ValueKind == "qualitative")
+        {
+            // Holat alohida saqlanadi — "shubhali" musbat bilan birlashtirilmaydi
+            return v.ResultKind switch
+            {
+                "POSITIVE"  => (T("lab_positive", "Musbat"), CL_BadText, ""),
+                "EQUIVOCAL" => (T("lab_equivocal", "Shubhali"), CL_WarnText, ""),
+                "NEGATIVE"  => (T("lab_negative", "Manfiy"), CL_GoodText, ""),
+                "INVALID"   => (T("lab_invalid", "Yaroqsiz"), CL_Gray, ""),
+                _           => ("—", CL_Gray, ""),
+            };
+        }
+        if (v.UnitMismatch && lo == null && hi == null)
             return (T("lab_not_assessed", "Baholanmadi"), CL_Gray, "");
         if (v.Value == null)
             return ("—", CL_GoodText, "");
 
         var val = (double)v.Value.Value;
-        if (type.ValueKind == "qualitative")
-            return val >= 1
-                ? (T("lab_positive", "Musbat"), CL_BadText, "")
-                : (T("lab_negative", "Manfiy"), CL_GoodText, "");
         if (type.ValueKind == "code" || (lo == null && hi == null))
             return ("—", CL_GoodText, "");
 

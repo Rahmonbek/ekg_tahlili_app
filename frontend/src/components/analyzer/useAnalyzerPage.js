@@ -54,14 +54,19 @@ export function usePatientStep({ onPatientFound } = {}) {
  * @param {Function} [onReset]         sahifaga xos holatni tozalash (shikoyat, …)
  * @param {number}   [maxFiles=1]      1 dan katta bo'lsa — bir nechta fayl rejimi
  *                                     (laboratoriya: bitta topshiriq bir necha varaqda)
+ * @param {boolean}  [dateFromFile]    sana ixtiyoriy va bo'sh boshlanadi: kiritilmasa
+ *                                     backend uni fayldan oladi (laboratoriya — Excel
+ *                                     «Дата:» katagi yoki AI). Aks holda bugungi kun
+ *                                     qo'yilib, statistika yuklangan kunni ko'rsatardi.
  */
-export function useAnalyzerPage({ fileKind, fetchOldAnalyses, onReset, maxFiles = 1 }) {
+export function useAnalyzerPage({ fileKind, fetchOldAnalyses, onReset, maxFiles = 1, dateFromFile = false }) {
     const { t } = useTranslation();
     const fileTypes = useFileTypes(fileKind);
     const { user } = useStore();
     const doctorsApi = useDoctorPositions();
     const { state, dispatch, resetAll } = useAnalyzerState();
-    const [analysisDateValue, setAnalysisDateValue] = useState(getTodayDateInputValue());
+    const initialDate = dateFromFile ? '' : getTodayDateInputValue();
+    const [analysisDateValue, setAnalysisDateValue] = useState(initialDate);
 
     useEffect(() => {
         if (!state.analysis_date && analysisDateValue) {
@@ -104,12 +109,12 @@ export function useAnalyzerPage({ fileKind, fetchOldAnalyses, onReset, maxFiles 
         resetPatient();
         resetDoctorSelection();
         setEditPatient(false);
-        setAnalysisDateValue(getTodayDateInputValue());
+        setAnalysisDateValue(dateFromFile ? '' : getTodayDateInputValue());
         resetAll();
         form.resetFields();
         if (clearSearch) form1.resetFields();
         onResetRef.current?.();
-    }, [resetPatient, resetDoctorSelection, setEditPatient, resetAll, form, form1]);
+    }, [resetPatient, resetDoctorSelection, setEditPatient, resetAll, form, form1, dateFromFile]);
 
     /** To'liq tozalash — yangi bemor uchun boshidan boshlash. */
     const startOver = useCallback(() => resetForm(true), [resetForm]);
@@ -203,7 +208,7 @@ export function useAnalyzerPage({ fileKind, fetchOldAnalyses, onReset, maxFiles 
 
     const hasFile = state.files.length > 0;
     const hasDoctor = selectedDoctors.length > 0;
-    const hasDate = !!analysisDateValue;
+    const hasDate = dateFromFile || !!analysisDateValue;
 
     return {
         t,

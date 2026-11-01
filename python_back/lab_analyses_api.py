@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from database import get_db, SessionLocal
 from lab_analyse_categories import create_lab_analyse_category
@@ -34,6 +35,7 @@ import duplicate_guard
 import lab_units
 import lab_catalog
 import excel_to_text
+import lab_dates
 from document_classifier import (
     classify_document,
     STATUS_DONE,
@@ -156,11 +158,21 @@ yozishning hojati yo'q. Har bir maydonga nima yozilishi:
   xato demakdir. Raqamni o'qib bo'lmasa `value` ni `null` qoldir.
   ❗️Norma (referens) ustunidagi sonlar NATIJA EMAS — `value` ga faqat
   "Результат"/"Natija" ustunidagi qiymat yoziladi.
-  ❗️SIFAT natijalari (HBsAg, Anti-HCV, RW, OIV, H. pylori): manfiy → 0,
-  musbat yoki shubhali → 1; laboratoriya son (indeks, COI) bergan bo'lsa
-  — o'sha son. Qon guruhi va rezus — ro'yxatdagi kod. Har qanday sifat
-  yozuvini (masalan "Отрицательный(-)", "A(II)") `text` ga AYNAN
-  ko'chir; oddiy raqamli ko'rsatkichlarda `text` = null.
+  ❗️SIFAT natijalari (HBsAg, Anti-HCV, RW, OIV, H. pylori): holatini
+  `result_kind` ga yoz — NEGATIVE (manfiy), POSITIVE (musbat), EQUIVOCAL
+  (shubhali, "±", "+-"), INVALID (yaroqsiz). Shubhalini musbatga
+  QO'SHMA. `value` — faqat laboratoriya son (indeks, COI, S/CO) bergan
+  bo'lsa, aks holda null. Qon guruhi va rezus — ro'yxatdagi kod. Har
+  qanday sifat yozuvini (masalan "Отрицательный(-)", "A(II)") `text` ga
+  AYNAN ko'chir; oddiy raqamli ko'rsatkichlarda `text` va `result_kind` = null.
+  ❗️ME'YOR: fayldagi norma (referens) ustunini `ref_low` / `ref_high` ga
+  yoz — `value` bilan BIR XIL birlikda, aylantirmasdan. Bemor jinsiga mos
+  qatorni tanla (masalan "Креатинин (М) 53–115", "(Ж) 44–80"). Natija
+  "(М)" qatorida tursa-yu bemor ayol bo'lsa — me'yorni "(Ж)" qatoridan
+  ol ("faqat me'yor" deb belgilangan qatorlar). "до 10" →
+  ref_high = 10; "0–30" → 0 va 30; ">1,54" → ref_low = 1.54. Me'yor faza,
+  yosh yoki xavf darajasiga qarab bir nechta bo'lsa yoki umuman yo'q bo'lsa —
+  ikkalasi null. Asl me'yor matnini har doim `ref_text` ga ko'chir.
   ❗️Natija ">50", "<0,5" ko'rinishida bo'lsa — `value` ga chegara soni
   (50; 0.5), `text` ga asl yozuv.
   ❗️Foiz (NEU%) va mutlaq son (NEU#) — ikki xil ko'rsatkich: foiz
@@ -176,6 +188,11 @@ yozishning hojati yo'q. Har bir maydonga nima yozilishi:
   mochevina 2–40 "мкмоль/л" — aslida mmol/L; siydik kislotasi 100–700
   "ммоль/л" — aslida µmol/L. `unit` ga baribir fayldagi yozuvni yozing
   (aylantirishni tizim bajaradi).
+
+- **analysis_date** — hujjatdagi tahlil sanasi YYYY-MM-DD: namuna olingan
+  kun ("Дата забора", "Дата взятия"), u bo'lmasa natija berilgan kun
+  ("Дата выдачи", "Дата", "Sana"). Tug'ilgan sana EMAS. Sana yo'q yoki
+  o'qilmasa — null (taxmin qilma). "05.09.2025" → "2025-09-05" (kun.oy.yil).
 
 - **automatic_analysis** — qaysi ko'rsatkichlar normada emasligi.
   Normaning o'zini yozma. Aniqlab bo'lmagan parametrlar haqida yozma.
@@ -288,7 +305,8 @@ def _measurements_to_dict(raw, columns: set[str]) -> dict:
 
     Qiymati `null` bo'lgan yozuvlar **tushirib qoldiriladi**: model
     ko'rsatkichni topgan, lekin o'qiy olmagan degani — bunday qatorni
-    ekranda ko'rsatish shifokorni chalg'itadi.
+    ekranda ko'rsatish shifokorni chalg'itadi. Istisno — sifat natijasi
+    (holati yoki asl yozuvi bor, son esa yo'q).
     """
     if isinstance(raw, dict):
         # Sxemasiz eski javob: ham katalog bo'yicha filtrlanadi
@@ -302,7 +320,9 @@ def _measurements_to_dict(raw, columns: set[str]) -> dict:
             continue
         name = item.get("column_name")
         value = item.get("value")
-        if not name or value is None:
+        # Sifat natijasida son bo'lmasligi mumkin — holat va matn yetarli
+        has_quality = item.get("result_kind") or (isinstance(item.get("text"), str) and item["text"].strip())
+        if not name or (value is None and not has_quality):
             continue
         # Sxemadagi `enum` buni kafolatlaydi, lekin sxemasiz zaxira
         # yo'lda ham xavfsiz bo'lishi kerak
@@ -311,12 +331,58 @@ def _measurements_to_dict(raw, columns: set[str]) -> dict:
             continue
         cell = {"value": value, "unit": item.get("unit")}
         # Sifat natijasining asl yozuvi ("Отрицательный(-)") — ekranda
-        # kod (0/1) o'rniga shu ko'rsatiladi
+        # shu ko'rsatiladi; holati — `result_kind`
         text = item.get("text")
         if isinstance(text, str) and text.strip():
             cell["text"] = text.strip()[:120]
+        kind = item.get("result_kind")
+        if kind in ("NEGATIVE", "POSITIVE", "EQUIVOCAL", "INVALID"):
+            cell["result_kind"] = kind
+        # Laboratoriyaning o'z me'yori — baho shu bilan qilinadi
+        for key in ("ref_low", "ref_high"):
+            ref = item.get(key)
+            if isinstance(ref, (int, float)) and not isinstance(ref, bool):
+                cell[key] = ref
+        ref_text = item.get("ref_text")
+        if isinstance(ref_text, str) and ref_text.strip():
+            cell["ref_text"] = ref_text.strip()[:300]
         out[name] = cell
     return out
+
+
+def document_date(files: list[tuple[bytes, str]], parsed=None, birthdate=None):
+    """Fayldagi tahlil sanasi: Excel «Дата:» katagi (aniq, AI siz), bo'lmasa
+    AI hujjatdan o'qigan `analysis_date`. Bir nechta fayl — eng kechi."""
+    excel = [
+        lab_dates.validate(excel_to_text.xlsx_date(content), birthdate)
+        for content, fname in files if excel_to_text.is_xlsx(fname)
+    ]
+    found = lab_dates.pick_latest(excel)
+    if found:
+        return found
+    ai_value = parsed.get("analysis_date") if isinstance(parsed, dict) else None
+    return lab_dates.validate(lab_dates.parse(ai_value), birthdate)
+
+
+def _apply_document_date(db, analyse_id: int, files, parsed) -> None:
+    """Formada sana kiritilmagan bo'lsa (`analysis_date_source != 'user'`)
+    `analysis_date` fayldagi sana bilan yangilanadi. Fayl almashtirilsa va
+    yangisida sana bo'lmasa — eski fayldan qolgan sana o'chiriladi."""
+    lab = get_lab_analyse_by_id(db, analyse_id)
+    if lab is None or lab.analysis_date_source == lab_dates.SOURCE_USER:
+        return
+    birthdate = db.execute(
+        text("SELECT birthdate FROM patients WHERE id = :id"), {"id": lab.patcient_id}
+    ).scalar()
+    found = document_date(files, parsed, birthdate)
+    if found:
+        lab.analysis_date = lab_dates.to_storage(found)
+        lab.analysis_date_source = lab_dates.SOURCE_DOCUMENT
+    elif lab.analysis_date_source == lab_dates.SOURCE_DOCUMENT:
+        lab.analysis_date = None
+        lab.analysis_date_source = None
+    db.commit()
+    logger.info("Lab: tahlil sanasi analyse_id=%d → %s", analyse_id, found or "aniqlanmadi")
 
 
 # ─── Fon rejimidagi AI tahlil ─────────────────────────────────────────────────
@@ -415,6 +481,10 @@ async def _lab_ai_background(
         # darajasiga 1 (= yashil "Normal") qo'yib yuborishi mumkin.
         # Guard shunday holatda darajani olib tashlaydi (T-092).
         ai_data_str = ai_result_guard.sanitize(ai_data_str, analyse_id, "lab")
+
+        # Tahlilning O'Z sanasi (yuklangan kun emas) — qiymatlarning
+        # `measured_at` i shundan olinadi, shuning uchun ulardan OLDIN
+        _apply_document_date(db, analyse_id, files, parsed)
 
         # Har bir ko'rsatkich — `lab_analysis_values` da alohida qator
         # (statistika va kasallik dinamikasi uchun). Holat "tayyor" bo'lishidan
@@ -607,6 +677,10 @@ async def analyze(
     # AI qaysi tilda javob berishi shu yerda qayd etiladi: natija
     # boshqa tilli shifokorga ochilganda sababi tushunarli bo'lsin (T-059)
     lab_analyse.ai_lang = (lang or 'uz')[:5]
+    # Formada kiritilgan sana — AI fayldagi sana bilan almashtirmaydi.
+    # Kiritilmagan bo'lsa u fayldan olinadi (`_apply_document_date`).
+    if analysis_date:
+        lab_analyse.analysis_date_source = lab_dates.SOURCE_USER
     db.commit()
 
     # Fayllar ro'yxati; birinchisi `analyse_file_link`, `original_filename`

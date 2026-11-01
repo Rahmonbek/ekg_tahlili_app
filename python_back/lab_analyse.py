@@ -170,7 +170,9 @@ def replace_lab_values(session: Session, analyse_id: int, measurements: dict) ->
     * Katalogda yo'q kalit tashlab yuboriladi (log bilan).
     * `unit_mismatch` qiymatlar ham SAQLANADI (asl birligi bilan), lekin
       `flag` qo'yilmaydi — statistikada ular chiqarib tashlanishi kerak.
-    * `flag` bemor jinsiga qarab hisoblanadi (`lab_catalog.flag_for`).
+    * `flag` avval laboratoriyaning o'z me'yori (`ref_low`/`ref_high`) bilan,
+      bo'lmasa katalog me'yori va bemor jinsi bilan (`lab_catalog.flag_for`);
+      sifat natijasi — `result_kind` bo'yicha.
 
     Bitta tranzaksiyada: eski qatorlar o'chiriladi va yangilari yoziladi.
     Qaytaradi: yozilgan qatorlar soni.
@@ -195,10 +197,20 @@ def replace_lab_values(session: Session, analyse_id: int, measurements: dict) ->
             continue
         value = _to_number(cell.get("value"))
         text_value = cell.get("text") if isinstance(cell.get("text"), str) else None
-        if value is None and not text_value:
+        kind = cell.get("result_kind") if cell.get("result_kind") in _RESULT_KINDS else None
+        if t.value_kind == "qualitative" and kind is None:
+            kind = "UNKNOWN"
+        if value is None and not text_value and kind in (None, "UNKNOWN"):
             continue
         mismatch = bool(cell.get("unit_mismatch"))
         original = cell.get("original") if isinstance(cell.get("original"), dict) else {}
+        ref_low, ref_high = _to_number(cell.get("ref_low")), _to_number(cell.get("ref_high"))
+        # Teskari yozilgan me'yor (masalan 40–20) ishonchsiz — ishlatilmaydi
+        if ref_low is not None and ref_high is not None and ref_low > ref_high:
+            ref_low = ref_high = None
+        flag, flag_source = lab_catalog.flag_for(
+            t, value, gender, mismatch, ref_low, ref_high, kind)
+        ref_text = cell.get("ref_text") if isinstance(cell.get("ref_text"), str) else None
         session.add(LabAnalysisValues(
             lab_analysis_id=analyse_id,
             value_type_id=t.id,
@@ -210,12 +222,20 @@ def replace_lab_values(session: Session, analyse_id: int, measurements: dict) ->
             original_value=_to_number(original.get("value")),
             original_unit=(str(original.get("unit"))[:64] if original.get("unit") else None),
             unit_mismatch=mismatch,
-            flag=lab_catalog.flag_for(t, value, gender, mismatch),
+            flag=flag,
+            flag_source=flag_source,
+            ref_low=ref_low,
+            ref_high=ref_high,
+            ref_text=(ref_text[:300] if ref_text else None),
+            result_kind=kind,
             created_at=datetime.datetime.utcnow(),
         ))
         written += 1
     session.commit()
     return written
+
+
+_RESULT_KINDS = {"NEGATIVE", "POSITIVE", "EQUIVOCAL", "INVALID", "UNKNOWN"}
 
 
 def _to_number(value):

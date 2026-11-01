@@ -61,9 +61,9 @@ def main() -> None:
                 if not isinstance(cell, dict) or "value" not in cell or cell.get("original"):
                     fixed[column] = cell  # allaqachon tuzatilgan yoki boshqa shakl
                     continue
-                result = lab_units.harmonize(column, cell.get("value"), cell.get("unit"), units.get(column))
-                if cell.get("text"):
-                    result["text"] = cell["text"]
+                # Bitta ko'rsatkich uchun yangi yozuvdagidek: qiymat, me'yor
+                # chegaralari (`ref_low`/`ref_high`), `text`, `result_kind`
+                result = lab_units.harmonize_all(db, {column: cell})[column]
                 fixed[column] = result
                 if result.get("original"):
                     notes.append(f"{column}: {cell.get('value')} {cell.get('unit')} → {result['value']} {result['unit']}")

@@ -42,6 +42,7 @@ import SmadAnalyseView from './smad_analyse/SmadAnalyseView'
 import LabAnalyseView from './lab_analyse/LabAnalyseView'
 import DiagnoseView from './diagnoses/DiagnoseView'
 import Dashboard from './Dashboard'
+import LabStatistics from './statistics/LabStatistics'
 import ClinicActivationGate from '../../components/ClinicActivationGate'
 import VideoConference from './video_conference/VideoConference'
 import ConsultantsPage from './consultation/ConsultantsPage'
@@ -307,6 +308,13 @@ export default function Main() {
                         <Route path="/video-conference/:id" element={
                             <ProtectedRoute allowedRoles={[2, 3, 4]} userRole={user.roleId}>
                                 <VideoConference />
+                            </ProtectedRoute>
+                        } />
+
+                        {/* ── Laboratoriya statistikasi va xavf signallari — Admin/Direktor ── */}
+                        <Route path="/lab-statistics" element={
+                            <ProtectedRoute allowedRoles={[2, 3]} userRole={user.roleId}>
+                                <LabStatistics />
                             </ProtectedRoute>
                         } />
 

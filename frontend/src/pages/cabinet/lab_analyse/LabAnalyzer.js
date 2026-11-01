@@ -44,6 +44,8 @@ export default function LabAnalyzer() {
         fileKind: 'lab',
         fetchOldAnalyses: get_lab_analyses_by_patcient_id,
         maxFiles: MAX_LAB_FILES,
+        // Sana kiritilmasa — fayldagi tahlil sanasi (Excel «Дата:» / AI)
+        dateFromFile: true,
     });
     const { t, patient, doctors, state } = page;
     const { checkReady } = patient;
@@ -92,9 +94,11 @@ export default function LabAnalyzer() {
             hint: t('analyzer_need_doctor', { defaultValue: 'Kamida bitta shifokorni tanlang' }),
         },
         {
-            key: 'date', ok: page.hasDate,
+            key: 'date', ok: true,
             label: t('analysis_date'),
-            hint: t('analyzer_need_date', { defaultValue: 'Tahlil sanasini kiriting' }),
+            value: page.analysisDateValue
+                ? page.analysisDateValue.split('-').reverse().join('.')
+                : t('lab_date_from_file_short', { defaultValue: 'fayldan olinadi' }),
         },
     ];
 
@@ -171,6 +175,9 @@ export default function LabAnalyzer() {
                         onLangChange={page.setLang}
                         dateValue={page.analysisDateValue}
                         onDateChange={page.changeDate}
+                        dateNote={t('lab_date_from_file', {
+                            defaultValue: "Bo'sh qoldirilsa — fayldagi tahlil sanasi olinadi. Statistika va dinamika shu sana bo'yicha.",
+                        })}
                     />
 
                 </AnalyzerStep>

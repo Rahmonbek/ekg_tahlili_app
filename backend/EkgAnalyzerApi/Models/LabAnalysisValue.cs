@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EkgAnalyzerApi.Models
@@ -71,9 +71,41 @@ namespace EkgAnalyzerApi.Models
         [Column("unit_mismatch")]
         public bool UnitMismatch { get; set; }
 
-        /// <summary>-1 past, 0 normal, 1 yuqori; null — baholanmadi (me'yor yo'q / birlik mos emas).</summary>
+        /// <summary>
+        /// -1 past, 0 normal, 1 yuqori (sifat natijasida: 1 = musbat yoki
+        /// shubhali); null — baholanmadi.
+        /// </summary>
         [Column("flag")]
         public short? Flag { get; set; }
+
+        /// <summary>Baho qaysi me'yor bilan qilingan: `lab` (fayldagi) yoki `catalog`.</summary>
+        [Column("flag_source")]
+        [MaxLength(8)]
+        public string? FlagSource { get; set; }
+
+        /// <summary>
+        /// Laboratoriyaning O'Z referens chegaralari (fayldan; `Value` bilan bir
+        /// xil birlikda). Me'yor assayga xos — katalog me'yori faqat zaxira.
+        /// </summary>
+        [Column("ref_low")]
+        public decimal? RefLow { get; set; }
+
+        [Column("ref_high")]
+        public decimal? RefHigh { get; set; }
+
+        /// <summary>Fayldagi me'yor matni aynan o'zicha ("до 10", "муж: 9,0–38").</summary>
+        [Column("ref_text")]
+        [MaxLength(300)]
+        public string? RefText { get; set; }
+
+        /// <summary>
+        /// Sifat natijasi holati: NEGATIVE | POSITIVE | EQUIVOCAL | INVALID |
+        /// UNKNOWN (sonli ko'rsatkichlarda null). "Shubhali" musbat bilan
+        /// birlashtirilmaydi (klinik qoidalar spetsifikatsiyasi, INF-02).
+        /// </summary>
+        [Column("result_kind")]
+        [MaxLength(16)]
+        public string? ResultKind { get; set; }
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
