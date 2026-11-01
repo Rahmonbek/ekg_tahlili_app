@@ -200,12 +200,16 @@ def classify_document(
             max_retries=1,
         )
 
-        fobj = io.BytesIO(content)
-        fobj.name = filename
-        uploaded = client.files.create(file=fobj, purpose="user_data")
-
-        is_image = filename.lower().endswith((".png", ".jpg", ".jpeg"))
-        part_type = "input_image" if is_image else "input_file"
+        if filename.lower().endswith(".xlsx"):
+            # Excel faylni model o'qiy olmaydi — natija jadvali matn sifatida
+            import excel_to_text
+            file_part = {"type": "input_text", "text": excel_to_text.xlsx_to_text(content)[:8000]}
+        else:
+            fobj = io.BytesIO(content)
+            fobj.name = filename
+            uploaded = client.files.create(file=fobj, purpose="user_data")
+            is_image = filename.lower().endswith((".png", ".jpg", ".jpeg"))
+            file_part = {"type": "input_image" if is_image else "input_file", "file_id": uploaded.id}
 
         resp = client.responses.create(
             model=CLASSIFIER_MODEL,
@@ -213,7 +217,7 @@ def classify_document(
                 "role": "user",
                 "content": [
                     {"type": "input_text", "text": _SYSTEM_PROMPT},
-                    {"type": part_type, "file_id": uploaded.id},
+                    file_part,
                 ],
             }],
         )

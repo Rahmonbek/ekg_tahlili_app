@@ -52,6 +52,9 @@ LINK_COLUMNS = [
     ("ecg_analyses", "generated_file_link"),
     ("ecg_analyses", "generated_short_file_link"),
     ("lab_analyses", "analyse_file_link"),
+    # Laboratoriyaning 2-, 3-… fayllari faqat shu jadvalda — ilgari ular
+    # "yetim" deb `_trash` ga ko'chirilardi
+    ("lab_analysis_files", "file_link"),
     ("holter_analyses", "analyse_file_link"),
     ("smad_analyses", "analyse_file_link"),
     ("medical_diagnoses", "diagnose_file_link"),

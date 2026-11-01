@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EkgAnalyzerApi.Controllers;
@@ -34,7 +34,7 @@ public class FileTypesController : ControllerBase
         ["ecg"] = new[] { ".jpeg", ".jpg", ".pdf", ".png" },
         ["holter"] = new[] { ".jpeg", ".jpg", ".pdf", ".png" },
         ["smad"] = new[] { ".jpeg", ".jpg", ".pdf", ".png" },
-        ["lab"] = new[] { ".jpeg", ".jpg", ".pdf", ".png" },
+        ["lab"] = new[] { ".jpeg", ".jpg", ".pdf", ".png", ".xlsx" },
         ["diagnose"] = new[] { ".jpeg", ".jpg", ".pdf", ".png" },
     };
 

@@ -140,14 +140,21 @@ namespace EkgAnalyzerApi.Services
             var rawFileName = string.IsNullOrWhiteSpace(fileName) ? "upload" : fileName.Trim();
             var decodedFileName = DecodeEncodedFileName(rawFileName);
             var selectedFileName = EncodedWordRegex.IsMatch(decodedFileName) ? "upload" : decodedFileName;
-            var safeName = Path.GetFileName(selectedFileName).Replace('\\', '_').Replace('/', '_');
-            safeName = Regex.Replace(safeName, @"\s+", "_");
+            var baseName = Path.GetFileName(selectedFileName).Replace('\\', '_').Replace('/', '_');
+
+            // Kengaytma nomdan OLDIN ajratiladi: ilgari butun nom tozalanib,
+            // keyin `Trim('.')` qilinardi va faqat kirill harfli nom
+            // ("Анализ.xlsx") "xlsx" ga — kengaytmasiz nomga aylanardi,
+            // Python esa uni turi noma'lum deb rad etardi.
+            var extension = Regex.Replace(Path.GetExtension(baseName), @"[^A-Za-z0-9.]", "").ToLowerInvariant();
+            if (extension == ".") extension = string.Empty;
+
+            var safeName = Regex.Replace(Path.GetFileNameWithoutExtension(baseName), @"\s+", "_");
             safeName = Regex.Replace(safeName, @"[^A-Za-z0-9._-]", "_").Trim('_', '.', '-');
 
             if (string.IsNullOrWhiteSpace(safeName))
                 safeName = "upload";
 
-            var extension = Path.GetExtension(safeName);
             if (string.IsNullOrWhiteSpace(extension))
             {
                 extension = contentType?.ToLowerInvariant() switch
@@ -160,11 +167,12 @@ namespace EkgAnalyzerApi.Services
                     "text/tab-separated-values" => ".tsv",
                     "application/xml" => ".xml",
                     "text/xml" => ".xml",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" => ".xlsx",
                     _ => string.Empty
                 };
             }
 
-            return string.IsNullOrWhiteSpace(extension) ? safeName : $"{Path.GetFileNameWithoutExtension(safeName)}{extension}";
+            return $"{safeName}{extension}";
         }
 
         private static string DecodeEncodedFileName(string fileName)

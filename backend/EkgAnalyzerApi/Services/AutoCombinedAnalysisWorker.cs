@@ -59,7 +59,10 @@ public class AutoCombinedAnalysisWorker : BackgroundService
         _scopeFactory = scopeFactory;
         _tracker = tracker;
         _logger = logger;
-        _enabled = config.GetValue("AutoCombined:Enabled", true);
+        // Standart — O'CHIQ (2026-11-01, loyiha egasining qarori): klinikaning
+        // eski laboratoriya arxivi ommaviy yuklanayotganda har bir bemor uchun
+        // AI chaqirilmasin. Yoqish — appsettings da `AutoCombined:Enabled = true`.
+        _enabled = config.GetValue("AutoCombined:Enabled", false);
         _interval = TimeSpan.FromSeconds(Math.Max(15, config.GetValue("AutoCombined:IntervalSeconds", 60)));
         _settle = TimeSpan.FromMinutes(Math.Max(0, config.GetValue("AutoCombined:SettleMinutes", 3)));
         _lookback = TimeSpan.FromHours(Math.Max(1, config.GetValue("AutoCombined:LookbackHours", 24)));

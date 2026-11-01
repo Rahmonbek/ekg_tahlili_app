@@ -1,4 +1,4 @@
-using EkgAnalyzerApi.Data;
+﻿using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -97,6 +97,12 @@ public class FileProxyController : ControllerBase
                 .Where(e => e.AnalyseFileLink == link)
                 .Select(e => e.OriginalFilename).FirstOrDefaultAsync();
             if (lab != null) return lab;
+
+            // Laboratoriyaning 2-, 3-… fayllari faqat `lab_analysis_files` da
+            var labFile = await _context.LabAnalysisFiles.AsNoTracking()
+                .Where(f => f.FileLink == link)
+                .Select(f => f.OriginalFilename).FirstOrDefaultAsync();
+            if (labFile != null) return labFile;
 
             var holter = await _context.HolterAnalyses.AsNoTracking()
                 .Where(e => e.AnalyseFileLink == link)

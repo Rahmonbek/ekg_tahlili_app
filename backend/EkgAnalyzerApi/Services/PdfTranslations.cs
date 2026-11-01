@@ -88,6 +88,13 @@ public static class PdfTranslations
 
         // Laboratoriya
         ["lab_param_unit"]          = "Birlik",
+        ["lab_lang"]                = "uz",
+        ["lab_high"]                = "↑ Yuqori",
+        ["lab_low"]                 = "↓ Past",
+        ["lab_normal"]              = "Normal",
+        ["lab_positive"]            = "Musbat",
+        ["lab_negative"]            = "Manfiy",
+        ["lab_not_assessed"]        = "Baholanmadi",
         ["lab_param_note"]          = "Eslatma",
 
         // Parazitologiya
@@ -228,6 +235,13 @@ public static class PdfTranslations
         ["ecg_source_file"]         = "Загруженный исходный файл",
 
         ["lab_param_unit"]          = "Единица",
+        ["lab_lang"]                = "ru",
+        ["lab_high"]                = "↑ Повышен",
+        ["lab_low"]                 = "↓ Понижен",
+        ["lab_normal"]              = "Норма",
+        ["lab_positive"]            = "Положительный",
+        ["lab_negative"]            = "Отрицательный",
+        ["lab_not_assessed"]        = "Не оценено",
         ["lab_param_note"]          = "Примечание",
 
         ["para_helminth_type"]      = "Вид гельминта",
@@ -361,6 +375,13 @@ public static class PdfTranslations
         ["ecg_source_file"]         = "Uploaded source file",
 
         ["lab_param_unit"]          = "Unit",
+        ["lab_lang"]                = "en",
+        ["lab_high"]                = "↑ High",
+        ["lab_low"]                 = "↓ Low",
+        ["lab_normal"]              = "Normal",
+        ["lab_positive"]            = "Positive",
+        ["lab_negative"]            = "Negative",
+        ["lab_not_assessed"]        = "Not assessed",
         ["lab_param_note"]          = "Note",
 
         ["para_helminth_type"]      = "Helminth Type",

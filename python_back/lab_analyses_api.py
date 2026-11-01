@@ -18,6 +18,8 @@ from lab_analyse import (
     update_lab_analyse,
     set_lab_analysis_files,
     get_lab_analysis_file_links,
+    replace_lab_values,
+    clear_lab_values,
 )
 from lab_analyse_doctors import create_lab_analyse_doctor
 from openai import OpenAI
@@ -30,6 +32,8 @@ import storage
 import reference_validator
 import duplicate_guard
 import lab_units
+import lab_catalog
+import excel_to_text
 from document_classifier import (
     classify_document,
     STATUS_DONE,
@@ -93,7 +97,13 @@ def openai_upload_file(api_key: str, file_bytes: bytes, filename: str = "lab.png
     except Exception as e:
         raise RuntimeError(f"OpenAI file upload failed: {e}")
 
-def compose_prompt_for_openai(age, gender,  lang) -> str:
+def compose_prompt_for_openai(age, gender, lang, indicators: str) -> str:
+    """Laboratoriya prompti.
+
+    `indicators` — `lab_catalog.prompt_lines(db)`: ko'rsatkichlar ro'yxati
+    `lab_value_types` katalogidan (ilgari bu yerda 137 qator qo'lda yozilgan
+    edi va har yangi ko'rsatkichda kodni o'zgartirish kerak edi).
+    """
     prompt_header = ""
     language = (
     "O'ZBEK" if lang == 'uz'
@@ -115,7 +125,8 @@ def compose_prompt_for_openai(age, gender,  lang) -> str:
     
     
     prompt_header += f"""
-    Sizga laboratoriya natijasi fayli va bemor ma'lumotlari berildi. 
+    Sizga laboratoriya natijasi fayli (yoki Excel jadvalining matnli
+    ko'rinishi) va bemor ma'lumotlari berildi. 
     
 ❗️JAVOB QOIDALARI:
 - Javob FAQAT quyida berilgan JSON formatida bo'lsin
@@ -123,93 +134,7 @@ def compose_prompt_for_openai(age, gender,  lang) -> str:
 - Javobni {language} tilida taqdim et
 - Laboratoriya natijasini tahlil qiling va quyidagi bo'limlarni to'ldiring:
 - Laboratoriya faylidagi quyidagi parametrlardan qaysi birlarini qiymatini aniqlash mumkin bo'lsa, ularni aniqlang va qiymatlarini yozing. Parametrlar:
-hb - Gemoglobin – qonda kislorod tashuvchi oqsil (g/L)
-rbc - Qizil qon hujayralari soni (x10¹²/L)
-wbc - Oq qon hujayralari soni (x10⁹/L)
-plt - Qon trombotsitlari soni (x10⁹/L)
-hct - Gematokrit – qondagi qizil qon hujayralari foizi (%)
-mcv - O'rtacha eritrosit hajmi (fL)
-mch - O'rtacha gemoglobin miqdori eritrositda (pg)
-mchc - O'rtacha gemoglobin kontsentratsiyasi eritrositda (g/L)
-esr - Erythrocyte Sedimentation Rate – qizil qon hujayralari cho'kishi (mm/soat)
-glucose - Qonda glyukoza darajasi (mmol/L)
-cholesterol - Qonda xolesterol darajasi (mmol/L)
-alt - Alanin aminotransferaza – jigar fermenti (U/L)
-ast - Aspartat aminotransferaza – jigar/miya fermenti (U/L)
-bilirubin_total - Jami bilirubin – jigar funksiyasi (µmol/L)
-bilirubin_direct - To'g'ridan-to'g'ri bilirubin (µmol/L)
-creatinine - Kreatinin – buyrak funksiyasi (µmol/L)
-urea - Mochevina – buyrak funksiyasi (mmol/L)
-total_protein - Jami oqsillar (g/L)
-albumin - Albumin oqsili (g/L)
-calcium - Qondagi kalsiy (mmol/L)
-sodium - Qondagi natriy (mmol/L)
-potassium - Qondagi kaliy (mmol/L)
-iron - Qondagi temir (µmol/L)
-tsh - Tiroid stimulyator gormoni (µIU/mL)
-free_t4 - Bepul tiroksin T4 (pmol/L)
-insulin - Qondagi insulin (µIU/mL)
-urine_volume - Peshob hajmi (mL)
-urine_density - Peshob zichligi (1.010–1.025)
-urine_ph - Peshob pH (0–14)
-urine_protein - Peshobdagi oqsillar (g/L)
-urine_glucose - Peshobdagi glyukoza (mmol/L)
-urine_ketones - Peshobdagi keton tanqalari (mmol/L)
-urine_bilirubin - Peshobdagi bilirubin (µmol/L)
-urobilinogen - Peshobdagi urobilinogen (µmol/L)
-urine_rbc - Peshobdagi qizil qon hujayralari soni (count/field)
-urine_wbc - Peshobdagi oq qon hujayralari soni (count/field)
-daily_protein - 24 soatlik peshobdagi protein (mg/24h)
-daily_creatinine - 24 soatlik kreatinin (mmol/24h)
-daily_calcium - 24 soatlik kalsiy (mmol/24h)
-daily_sodium - 24 soatlik natriy (mmol/24h)
-triglycerides - Triglitseridlar (mmol/L)
-hdl - HDL (yuqori zichlikli) xolesterin (mmol/L)
-ldl - LDL (past zichlikli) xolesterin (mmol/L)
-vldl - VLDL (juda past zichlikli) xolesterin (mmol/L)
-atherogenic_index - Aterogenlik koeffitsienti (nisbat)
-hba1c - Glikirlangan gemoglobin HbA1c (%)
-c_peptide - S-peptid (ng/mL)
-crp - C-reaktiv oqsil CRP (mg/L)
-ggt - Gamma-glutamiltransferaza GGT (U/L)
-alp - Ishqoriy fosfataza ALP (U/L)
-amylase - Amilaza (U/L)
-lipase - Lipaza (U/L)
-ldh - Laktatdegidrogenaza LDH (U/L)
-ck - Kreatinkinaza KFK (U/L)
-ck_mb - Kreatinkinaza-MB KFK-MB (U/L)
-uric_acid - Siydik kislotasi (µmol/L)
-magnesium - Magniy (mmol/L)
-phosphorus - Fosfor (mmol/L)
-chloride - Xlor (mmol/L)
-ferritin - Ferritin (µg/L)
-tibc - Umumiy temir bog'lash qobiliyati TIBC (µmol/L)
-transferrin - Transferrin (g/L)
-bilirubin_indirect - To'g'ri bo'lmagan (indirekt) bilirubin (µmol/L)
-globulin - Globulinlar (g/L)
-free_t3 - Erkin T3 FT3 (pmol/L)
-t3_total - Umumiy T3 (nmol/L)
-t4_total - Umumiy T4 (nmol/L)
-vitamin_d - Vitamin D 25-OH (ng/mL)
-vitamin_b12 - Vitamin B12 (pg/mL)
-folate - Foliy kislotasi (ng/mL)
-prothrombin_time - Protrombin vaqti PV (sekund)
-prothrombin_index - Protrombin indeksi PTI (%)
-inr - Xalqaro normallashgan nisbat INR (nisbat)
-aptt - Faollashgan qisman tromboplastin vaqti aPTT (sekund)
-fibrinogen - Fibrinogen (g/L)
-thrombin_time - Trombin vaqti (sekund)
-d_dimer - D-dimer (mg/L)
-neutrophils - Neytrofillar (%)
-lymphocytes - Limfotsitlar (%)
-monocytes - Monotsitlar (%)
-eosinophils - Eozinofillar (%)
-basophils - Bazofillar (%)
-rdw - Eritrositlar taqsimlanish kengligi RDW (%)
-mpv - O'rtacha trombotsit hajmi MPV (fL)
-pdw - Trombotsitlar taqsimlanish kengligi PDW (%)
-pct - Trombokrit PCT (%)
-reticulocytes - Retikulotsitlar (%)
+{indicators}
 
 ---
 
@@ -229,6 +154,28 @@ yozishning hojati yo'q. Har bir maydonga nima yozilishi:
   ❗️FAQAT faylda haqiqatan bor ko'rsatkichlarni yoz. Yo'q
   ko'rsatkichni ro'yxatga QO'SHMA — qiymatini taxmin qilish tibbiy
   xato demakdir. Raqamni o'qib bo'lmasa `value` ni `null` qoldir.
+  ❗️Norma (referens) ustunidagi sonlar NATIJA EMAS — `value` ga faqat
+  "Результат"/"Natija" ustunidagi qiymat yoziladi.
+  ❗️SIFAT natijalari (HBsAg, Anti-HCV, RW, OIV, H. pylori): manfiy → 0,
+  musbat yoki shubhali → 1; laboratoriya son (indeks, COI) bergan bo'lsa
+  — o'sha son. Qon guruhi va rezus — ro'yxatdagi kod. Har qanday sifat
+  yozuvini (masalan "Отрицательный(-)", "A(II)") `text` ga AYNAN
+  ko'chir; oddiy raqamli ko'rsatkichlarda `text` = null.
+  ❗️Natija ">50", "<0,5" ko'rinishida bo'lsa — `value` ga chegara soni
+  (50; 0.5), `text` ga asl yozuv.
+  ❗️Foiz (NEU%) va mutlaq son (NEU#) — ikki xil ko'rsatkich: foiz
+  `neutrophils` ga, mutlaq son `neutrophils_abs` ga (qolgan
+  leykotsitlar ham shunday).
+  ❗️Klinika blankalarida birlik ko'pincha XATO yozilgan. Qiymat blankadagi
+  birlikda fiziologik imkonsiz bo'lsa, uni haqiqiy birlikda baholang va
+  "keskin past/yuqori" deb xulosa QILMANG:
+  kortizol 3–30 "нмоль/л" — aslida µg/dL (×27.6 = nmol/L);
+  insulin 2–60 "нг/мл" — aslida µIU/mL; erkin T4 0.3–3 "нг/мл" —
+  aslida ng/dL (×12.9 = pmol/L); prolaktin 3–60 "мМЕ/л" — aslida ng/mL;
+  D-dimer 0.1–10 "нг/мл" — aslida mg/L; FSG/LG "мМЕ/л" — aslida mIU/mL;
+  mochevina 2–40 "мкмоль/л" — aslida mmol/L; siydik kislotasi 100–700
+  "ммоль/л" — aslida µmol/L. `unit` ga baribir fayldagi yozuvni yozing
+  (aylantirishni tizim bajaradi).
 
 - **automatic_analysis** — qaysi ko'rsatkichlar normada emasligi.
   Normaning o'zini yozma. Aniqlab bo'lmagan parametrlar haqida yozma.
@@ -262,7 +209,14 @@ def _multi_file_note(count: int) -> str:
     )
 
 
-def _sync_lab_openai(files: list[tuple[bytes, str]], age: int, gender: str, lang: str) -> dict:
+def _sync_lab_openai(
+    files: list[tuple[bytes, str]],
+    age: int,
+    gender: str,
+    lang: str,
+    indicators: str,
+    columns: list[str],
+) -> dict:
     """OpenAI ga sinxron so'rov — asyncio.to_thread() orqali chaqiriladi.
 
     `files` — `(baytlar, fayl nomi)` ro'yxati, yuklangan tartibda. Barcha
@@ -271,13 +225,24 @@ def _sync_lab_openai(files: list[tuple[bytes, str]], age: int, gender: str, lang
     """
     client = OpenAI(api_key=OPENAI_API_KEY)
 
-    prompt = compose_prompt_for_openai(age, gender, lang)
+    prompt = compose_prompt_for_openai(age, gender, lang, indicators)
     if len(files) > 1:
         prompt += _multi_file_note(len(files))
 
     content_parts = [{"type": "input_text", "text": prompt}]
     for index, (content, fname) in enumerate(files, start=1):
         fname = prepare_upload_filename(fname, content, default_stem="lab_upload").lower()
+
+        # Excel — matnli jadval sifatida (model xlsx faylni o'qiy olmaydi).
+        # Bemor F.I.O. va shifokor imzosi matnga kirmaydi (`excel_to_text`).
+        if excel_to_text.is_xlsx(fname):
+            table = excel_to_text.xlsx_to_text(content)
+            label = f"Fayl {index}/{len(files)} — " if len(files) > 1 else ""
+            content_parts.append({
+                "type": "input_text",
+                "text": f"{label}Excel jadvali (faqat to'ldirilgan natija qatorlari):\n{table}",
+            })
+            continue
 
         # 1. Faylni OpenAI ga yuklash
         fobj = io.BytesIO(content)
@@ -300,7 +265,7 @@ def _sync_lab_openai(files: list[tuple[bytes, str]], age: int, gender: str, lang
         # Qat'iy JSON sxema (A-7). Ko'rsatkichlar massiv sifatida
         # qaytadi va `column_name` `enum` bilan cheklangan — model
         # mavjud bo'lmagan ustun nomini o'ylab topa olmaydi.
-        text=ai_schema.response_format("lab"),
+        text=ai_schema.response_format("lab", lab_columns=columns),
     )
     try:
         return json.loads(resp.output_text)
@@ -308,7 +273,7 @@ def _sync_lab_openai(files: list[tuple[bytes, str]], age: int, gender: str, lang
         return {"raw": resp.output_text}
 
 
-def _measurements_to_dict(raw) -> dict:
+def _measurements_to_dict(raw, columns: set[str]) -> dict:
     """Ko'rsatkichlarni bir xil lug'at ko'rinishiga keltiradi (A-7).
 
     Kirish ikki xil bo'lishi mumkin:
@@ -326,7 +291,8 @@ def _measurements_to_dict(raw) -> dict:
     ekranda ko'rsatish shifokorni chalg'itadi.
     """
     if isinstance(raw, dict):
-        return raw
+        # Sxemasiz eski javob: ham katalog bo'yicha filtrlanadi
+        return {k: v for k, v in raw.items() if k in columns}
     if not isinstance(raw, list):
         return {}
 
@@ -340,10 +306,16 @@ def _measurements_to_dict(raw) -> dict:
             continue
         # Sxemadagi `enum` buni kafolatlaydi, lekin sxemasiz zaxira
         # yo'lda ham xavfsiz bo'lishi kerak
-        if name not in ai_schema.LAB_COLUMNS:
+        if name not in columns:
             logger.warning("Lab: noma'lum ko'rsatkich o'tkazib yuborildi: %s", name)
             continue
-        out[name] = {"value": value, "unit": item.get("unit")}
+        cell = {"value": value, "unit": item.get("unit")}
+        # Sifat natijasining asl yozuvi ("Отрицательный(-)") — ekranda
+        # kod (0/1) o'rniga shu ko'rsatiladi
+        text = item.get("text")
+        if isinstance(text, str) and text.strip():
+            cell["text"] = text.strip()[:120]
+        out[name] = cell
     return out
 
 
@@ -361,6 +333,12 @@ async def _lab_ai_background(
     """
     db = SessionLocal()
     try:
+        # Oldingi natijaning qiymatlari (qayta tahlil / fayl almashtirish)
+        # darhol o'chiriladi: yangi natija faqat TOPILGAN ko'rsatkichlarni
+        # yozadi va eski fayldagi qiymat qolib ketmasligi kerak
+        clear_lab_values(db, analyse_id)
+        db.commit()
+
         # Har bir fayl laboratoriya tahliliga mos kelishi asosiy tahlildan
         # oldin (parallel) tekshiriladi. BIRORTASI mos kelmasa qimmat tahlil
         # yuborilmaydi: begona hujjat xulosani buzadi.
@@ -390,14 +368,20 @@ async def _lab_ai_background(
             )
             return
 
-        parsed = await asyncio.to_thread(_sync_lab_openai, files, age, gender, lang)
+        # Ko'rsatkichlar ro'yxati va AI sxemasidagi `enum` — katalogdan
+        indicators = lab_catalog.prompt_lines(db)
+        columns = lab_catalog.columns(db)
+        parsed = await asyncio.to_thread(
+            _sync_lab_openai, files, age, gender, lang, indicators, columns
+        )
 
         # Sxema bo'yicha `digital_measurements` — massiv (A-7). Qolgan
         # kod (bazaga yozish, frontend, PDF) lug'at kutadi, shuning
         # uchun shu yerda o'giriladi. Eski, sxemasiz javoblar lug'at
         # bo'lib kelishi mumkin — ular ham qo'llab-quvvatlanadi.
         digital_measurements = _measurements_to_dict(
-            parsed.get("digital_measurements") if isinstance(parsed, dict) else None
+            parsed.get("digital_measurements") if isinstance(parsed, dict) else None,
+            set(columns),
         )
         # Fayldagi birlik (mg/dL, g/dL, …) me'yor birligiga keltiriladi —
         # aks holda solishtirish, PDF va dinamika noto'g'ri bo'ladi
@@ -409,18 +393,22 @@ async def _lab_ai_background(
         except (ValueError, TypeError):
             automatic_analysis_bool = 0
 
-        # Birligi mos kelmagan (aylantirib bo'lmagan) ko'rsatkich ustunga yozilmaydi
-        digital_values = lab_units.column_values(digital_measurements)
         ai_data_str = json.dumps({
-            # Ko'rsatkichlar ilgari faqat `lab_analyses` ustunlariga yozilardi
-            # va natija sahifasida umuman ko'rinmasdi
+            # Ekrandagi kartochkalar shu JSON dan chiziladi; statistika,
+            # dinamika va PDF esa `lab_analysis_values` jadvalidan o'qiydi
             "digital_measurements": digital_measurements,
             "automatic_analysis": automatic_analysis_text,
             "AI_recommendations": (
                 parsed.get("AI_recommendations", "") if isinstance(parsed, dict) else ""
             ),
             "final_summary": final_summary,
-            "automatic_analysis_bool": automatic_analysis_bool
+            "automatic_analysis_bool": automatic_analysis_bool,
+            # Sxema talab qiladi, lekin ilgari saqlanmasdi — `ai_result_guard`
+            # matndan taxmin qilishga majbur edi
+            "analiz_mumkinmi": parsed.get("analiz_mumkinmi") if isinstance(parsed, dict) else None,
+            "analiz_mumkin_emas_sababi": (
+                parsed.get("analiz_mumkin_emas_sababi") if isinstance(parsed, dict) else None
+            ),
         }, ensure_ascii=False)
 
         # AI matnda "tahlil qilib bo'lmadi" desa ham jiddiylik
@@ -428,14 +416,18 @@ async def _lab_ai_background(
         # Guard shunday holatda darajani olib tashlaydi (T-092).
         ai_data_str = ai_result_guard.sanitize(ai_data_str, analyse_id, "lab")
 
+        # Har bir ko'rsatkich — `lab_analysis_values` da alohida qator
+        # (statistika va kasallik dinamikasi uchun). Holat "tayyor" bo'lishidan
+        # OLDIN yoziladi: interfeys natijani ochganda qiymatlar allaqachon bor.
+        written = replace_lab_values(db, analyse_id, digital_measurements)
+
         update_lab_analyse(
             session=db,
             analyse_id=analyse_id,
             status=STATUS_DONE,
             ai_answer_data=ai_data_str,
-            **digital_values
         )
-        logger.info("Lab AI muvaffaqiyatli: analyse_id=%d", analyse_id)
+        logger.info("Lab AI muvaffaqiyatli: analyse_id=%d, ko'rsatkichlar=%d", analyse_id, written)
 
     except Exception as exc:
         logger.error("Lab AI fon xatolik analyse_id=%d [%s]: %s",

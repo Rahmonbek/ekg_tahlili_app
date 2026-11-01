@@ -156,7 +156,7 @@ function normUnit(unit) {
         .replace(/мкМЕ|мкЕ[дД]?|МкМЕ|МкЕ/g, 'µiu').replace(/мМЕ|мЕ[дД]?/g, 'miu')
         .replace(/МЕ/g, 'iu').replace(/Е[дД]/g, 'u')
         .toLowerCase()
-        .replace(/μ/g, 'µ').replace(/мкмоль/g, 'µmol').replace(/ммоль/g, 'mmol')
+        .replace(/μ/g, 'µ').replace(/фл/g, 'fl').replace(/мкмоль/g, 'µmol').replace(/ммоль/g, 'mmol')
         .replace(/мкг/g, 'µg').replace(/мг/g, 'mg').replace(/нг/g, 'ng').replace(/пг/g, 'pg')
         .replace(/мм/g, 'mm').replace(/час|ч/g, 'h')
         .replace(/дл/g, 'dl').replace(/мл/g, 'ml').replace(/л/g, 'l').replace(/г/g, 'g')
@@ -167,6 +167,7 @@ function normUnit(unit) {
     const same = {
         'miu/l': 'µiu/ml', 'mu/l': 'µiu/ml', 'iu/l': 'u/l', 'µg/l': 'ng/ml',
         'mg/l': 'µg/ml', 'mm/soat': 'mm/h', 'mm/hr': 'mm/h',
+        'сек': 'sekund', 'с': 'sekund', 'sec': 'sekund', 's': 'sekund', '109/l': '10^9/l', '1012/l': '10^12/l',
     };
     return same[s] ?? s;
 }
@@ -202,6 +203,17 @@ function LabCard({ row }) {
                         {t('normal', { defaultValue: 'Norma' })}
                     </span>
                 )}
+                {/* Sifat natijasi (HBsAg, RW…): kod 0/1 o'rniga "Manfiy"/"Musbat" */}
+                {status === 'positive' && (
+                    <span className="lab-card-pill lab-card-pill--high">
+                        {t('lab_positive', { defaultValue: 'Musbat' })}
+                    </span>
+                )}
+                {status === 'negative' && (
+                    <span className="lab-card-pill lab-card-pill--normal">
+                        {t('lab_negative', { defaultValue: 'Manfiy' })}
+                    </span>
+                )}
                 {status === 'unit' && (
                     <span className="lab-card-pill lab-card-pill--unit">
                         {t('lab_not_assessed', { defaultValue: 'Baholanmadi' })}
@@ -209,7 +221,9 @@ function LabCard({ row }) {
                 )}
             </div>
             <div className="lab-card-value">
-                {cell.value}{unit ? <span className="lab-card-unit"> {unit}</span> : null}
+                {/* Fayldagi asl yozuv ("Отрицательный(-)", ">50") bo'lsa — shu */}
+                {cell.text ?? cell.value}
+                {unit && !row.qualitative ? <span className="lab-card-unit"> {unit}</span> : null}
             </div>
             {/* Qiymat boshqa birlikdan aylantirilgan — asl yozuv ko'rinib tursin */}
             {cell.original && (
@@ -254,12 +268,21 @@ function LabMeasurements({ measurements, gender }) {
             const cell = measurements[v.columnName];
             // Birlik me'yor birligidan farq qilsa solishtirib bo'lmaydi
             const comparable = !cell.unit_mismatch && unitsMatch(cell.unit, v.measure);
-            const verdict = comparable ? evaluate(cell.value, v, gender) : null;
+            // Sifat natijasi (0 manfiy / 1 musbat yoki indeks) va kod (qon
+            // guruhi, rezus) — oddiy "norma/yuqori" bahosi ma'nosiz
+            const qualitative = v.valueKind === 'qualitative' || v.valueKind === 'code';
+            let verdict = comparable && v.valueKind !== 'code' ? evaluate(cell.value, v, gender) : null;
+            let status = comparable ? (verdict?.status || 'na') : 'unit';
+            if (v.valueKind === 'qualitative' && verdict) {
+                status = verdict.status === 'high' ? 'positive' : 'negative';
+                verdict = null; // "norma: ≤ 0.99" ko'rsatilmaydi
+            }
             return {
                 id: v.id,
                 cell,
                 verdict,
-                status: comparable ? (verdict?.status || 'na') : 'unit',
+                status,
+                qualitative,
                 unit: cell.unit ?? v.measure,
                 measure: v.measure,
                 name: v[`name${t('data_lang')}`],
@@ -267,8 +290,9 @@ function LabMeasurements({ measurements, gender }) {
         });
     if (rows.length === 0) return null;
 
-    const abnormal = rows.filter((r) => r.status === 'high' || r.status === 'low');
-    const other = rows.filter((r) => r.status !== 'high' && r.status !== 'low');
+    const isAbnormal = (r) => r.status === 'high' || r.status === 'low' || r.status === 'positive';
+    const abnormal = rows.filter(isAbnormal);
+    const other = rows.filter((r) => !isAbnormal(r));
     // Chetlanish bo'lmasa yig'ishning ma'nosi yo'q — hammasi ko'rinadi
     const normalOpen = showNormal || abnormal.length === 0;
 

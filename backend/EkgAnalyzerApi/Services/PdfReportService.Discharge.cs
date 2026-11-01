@@ -1,4 +1,4 @@
-using EkgAnalyzerApi.Helpers;
+﻿using EkgAnalyzerApi.Helpers;
 using EkgAnalyzerApi.Models;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
@@ -182,7 +182,7 @@ public partial class PdfReportService
 
         if (item.AnalysisType == "lab")
         {
-            var lab = await _context.LabAnalyse.AsNoTracking()
+            var lab = await WithLabValues(_context.LabAnalyse.AsNoTracking())
                 .Include(l => l.Patcient)
                 .FirstOrDefaultAsync(l => l.Id == item.AnalysisId);
             if (lab == null)

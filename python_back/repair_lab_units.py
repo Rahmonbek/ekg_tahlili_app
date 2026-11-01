@@ -12,9 +12,9 @@ Har bir yozuvda:
   * `ai_answer_data.digital_measurements` — qiymat va birlik aylantiriladi,
     asl yozuv `original` da saqlanadi; aylantirib bo'lmaganiga
     `unit_mismatch` belgisi qo'yiladi;
-  * raqamli ustunlar (`hb`, `uric_acid`, …) — aylantirilgan qiymat;
-    birligi mos kelmagani `NULL` (boshqa birlikdagi son PDF va dinamika
-    grafigini buzardi);
+  * `lab_analysis_values` — tahlilning qatorlari tuzatilgan qiymatlar bilan
+    qayta yoziladi (`replace_lab_values`: birligi mos kelmagani
+    `unit_mismatch = true`, baholanmaydi va statistikaga kirmaydi);
   * `ai_translations` keshi tozalanadi — unda eski birliklar nusxasi bor,
     keyingi so'rovda qayta yaratiladi.
 
@@ -30,13 +30,10 @@ import sys
 from sqlalchemy import text
 
 import lab_units
-from database import engine
-from models import LabAnalyses
+from database import SessionLocal
+from lab_analyse import replace_lab_values
 
 APPLY = "--apply" in sys.argv
-
-# Faqat `lab_analyses` da haqiqatan bor ustunlar yangilanadi
-_COLUMNS = {c.key for c in LabAnalyses.__table__.columns}
 
 
 def main() -> None:
@@ -44,10 +41,12 @@ def main() -> None:
         sys.stdout.reconfigure(encoding="utf-8")
 
     changed = 0
-    with engine.begin() as conn:
-        units = lab_units.canonical_units(conn)
-        rows = conn.execute(text(
-            "SELECT id, ai_answer_data FROM lab_analyses WHERE ai_answer_data IS NOT NULL ORDER BY id"
+    db = SessionLocal()
+    try:
+        units = lab_units.canonical_units(db)
+        rows = db.execute(text(
+            "SELECT id, ai_answer_data FROM lab_analyses "
+            "WHERE ai_answer_data IS NOT NULL AND deleted_at IS NULL ORDER BY id"
         )).fetchall()
 
         for row_id, answer in rows:
@@ -57,29 +56,23 @@ def main() -> None:
                 continue
 
             fixed = {}
-            column_updates = {}
             notes = []
             for column, cell in measurements.items():
                 if not isinstance(cell, dict) or "value" not in cell or cell.get("original"):
                     fixed[column] = cell  # allaqachon tuzatilgan yoki boshqa shakl
                     continue
                 result = lab_units.harmonize(column, cell.get("value"), cell.get("unit"), units.get(column))
+                if cell.get("text"):
+                    result["text"] = cell["text"]
                 fixed[column] = result
                 if result.get("original"):
                     notes.append(f"{column}: {cell.get('value')} {cell.get('unit')} → {result['value']} {result['unit']}")
-                    if column in _COLUMNS:
-                        column_updates[column] = result["value"]
                 elif result.get("unit_mismatch") and not cell.get("unit_mismatch"):
                     notes.append(f"{column}: {cell.get('value')} {cell.get('unit')} — me'yor {units.get(column)}, baholanmaydi")
-                    if column in _COLUMNS:
-                        column_updates[column] = None
                 elif cell.get("unit_mismatch") and not result.get("unit_mismatch"):
                     # Ilgari tanilmagan birlik (masalan ruscha "МкЕ/мл") endi taniladi
                     notes.append(f"{column}: {cell.get('unit')!r} endi taniladi → {result['unit']!r}")
-                    if column in _COLUMNS:
-                        column_updates[column] = result["value"]
                 elif result.get("unit") != cell.get("unit"):
-                    fixed[column] = result  # faqat birlik yozuvi bir xillashtirildi
                     notes.append(f"{column}: birlik yozuvi {cell.get('unit')!r} → {result['unit']!r}")
 
             if not notes:
@@ -92,12 +85,14 @@ def main() -> None:
 
             if APPLY:
                 data["digital_measurements"] = fixed
-                sets = ["ai_answer_data = CAST(:data AS jsonb)", "ai_translations = NULL"]
-                params = {"data": json.dumps(data, ensure_ascii=False), "id": row_id}
-                for i, (column, value) in enumerate(column_updates.items()):
-                    sets.append(f"{column} = :v{i}")  # ustun nomi `_COLUMNS` dan — xavfsiz
-                    params[f"v{i}"] = value
-                conn.execute(text(f"UPDATE lab_analyses SET {', '.join(sets)} WHERE id = :id"), params)
+                db.execute(
+                    text("UPDATE lab_analyses SET ai_answer_data = CAST(:data AS jsonb), "
+                         "ai_translations = NULL WHERE id = :id"),
+                    {"data": json.dumps(data, ensure_ascii=False), "id": row_id},
+                )
+                replace_lab_values(db, row_id, fixed)  # o'zi commit qiladi
+    finally:
+        db.close()
 
     print(f"\n  O'zgaradigan yozuvlar: {changed}")
     if not APPLY:

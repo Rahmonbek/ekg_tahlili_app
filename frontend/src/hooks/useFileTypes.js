@@ -31,7 +31,7 @@ const FALLBACK = {
     ecg: ['.jpeg', '.jpg', '.pdf', '.png'],
     holter: ['.jpeg', '.jpg', '.pdf', '.png'],
     smad: ['.jpeg', '.jpg', '.pdf', '.png'],
-    lab: ['.jpeg', '.jpg', '.pdf', '.png'],
+    lab: ['.jpeg', '.jpg', '.pdf', '.png', '.xlsx'],
     diagnose: ['.jpeg', '.jpg', '.pdf', '.png'],
 };
 

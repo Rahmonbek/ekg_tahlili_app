@@ -18,6 +18,7 @@ public class LabValuesController : ControllerBase
     }
 
 
+    /// <summary>Ko'rsatkichlar katalogi (`lab_value_types`). Tartib — `Id` (natija kartochkalari shu tartibda chiziladi).</summary>
     [HttpGet("get-lab-values")]
     public async Task<IActionResult> GetComplaints()
     {
@@ -39,8 +40,8 @@ public class LabValuesController : ControllerBase
     /// <summary>
     /// Bitta bemorning laboratoriya ko'rsatkichlari vaqt bo'yicha (T-035).
     ///
-    /// Nima uchun kerak: qiymatlar `lab_analyses` ning 40 ta ustunida
-    /// allaqachon saqlanardi, lekin ularni **faqat bitta tahlil ichida**
+    /// Nima uchun kerak: qiymatlar (endi `lab_analysis_values` da) ilgari
+    /// **faqat bitta tahlil ichida**
     /// ko'rish mumkin edi. "Gemoglobin uch oyda qanday o'zgardi" degan
     /// savolga javob berish uchun shifokor tahlillarni birma-bir ochib,
     /// raqamlarni qo'lda yozib olishi kerak edi.
@@ -70,49 +71,51 @@ public class LabValuesController : ControllerBase
         if (patient == null)
             return NotFound(new { message = "patient_not_found" });
 
-        var types = await _context.LabValueTypes.AsNoTracking().ToListAsync();
-
-        var analyses = await _context.LabAnalyse
+        // Bemorning shu klinikadagi faol tahlillari soni (o'chirilganlari
+        // global filtr bilan chiqarib tashlanadi)
+        var analysisCount = await _context.LabAnalyse
             .AsNoTracking()
-            .Where(a => a.PatcientId == patcientId
-                        && a.DeletedAt == null
-                        && a.ClinicId == user.ClinicId)
-            .OrderBy(a => a.AnalysisDate ?? a.CreatedAt)
-            .ToListAsync();
+            .CountAsync(a => a.PatcientId == patcientId && a.ClinicId == user.ClinicId);
 
-        if (analyses.Count == 0)
+        if (analysisCount == 0)
             return Ok(new { analysisCount = 0, series = Array.Empty<object>() });
 
-        var entityType = typeof(EkgAnalyzerApi.Models.LabAnalyses);
-        var series = new List<object>();
+        // Qiymatlar `lab_analysis_values` dan BITTA so'rov bilan olinadi.
+        // Ilgari har bir ko'rsatkich `lab_analyses` ning alohida ustuni edi va
+        // ular refleksiya bilan birma-bir o'qilardi. Birligi me'yor birligiga
+        // keltirilmagan qiymatlar (`unit_mismatch`) grafikka qo'shilmaydi —
+        // ular boshqa birlikda va o'qni buzadi.
+        var rows = await _context.LabAnalysisValues
+            .AsNoTracking()
+            .Where(v => v.LabAnalysis.PatcientId == patcientId
+                        && v.LabAnalysis.ClinicId == user.ClinicId
+                        && !v.UnitMismatch
+                        && v.Value != null)
+            .Select(v => new
+            {
+                v.ValueTypeId,
+                v.LabAnalysisId,
+                Date = v.LabAnalysis.AnalysisDate ?? v.LabAnalysis.CreatedAt,
+                Value = v.Value!.Value,
+            })
+            .ToListAsync();
 
+        var types = await _context.LabValueTypes
+            .AsNoTracking()
+            .OrderBy(t => t.Id)
+            .ToListAsync();
+
+        var series = new List<object>();
         foreach (var type in types)
         {
-            if (string.IsNullOrWhiteSpace(type.ColumnName))
-                continue;
-
-            // `column_name` ("hb") -> C# xossasi ("Hb"). Xossa topilmasa
-            // ko'rsatkich o'tkazib yuboriladi: bu `lab_value_types` ga
-            // ustunsiz yozuv qo'shilganini bildiradi, xatolik emas.
-            // Model xossalari `column_name` bilan bir xil yoziladi
-            // (`hb`, `bilirubin_total`), shuning uchun to'g'ridan-to'g'ri
-            // taqqoslanadi; zaxira sifatida pastki chiziqsiz variant ham.
-            var property = entityType.GetProperty(type.ColumnName)
-                ?? entityType.GetProperties().FirstOrDefault(
-                    p => string.Equals(p.Name.Replace("_", ""),
-                                       type.ColumnName.Replace("_", ""),
-                                       StringComparison.OrdinalIgnoreCase));
-            if (property == null)
-                continue;
-
-            var points = analyses
-                .Select(a => new { a, value = property.GetValue(a) })
-                .Where(x => x.value != null)
-                .Select(x => new
+            var points = rows
+                .Where(r => r.ValueTypeId == type.Id)
+                .OrderBy(r => r.Date)
+                .Select(r => new
                 {
-                    date = AppTime.ToLocal(x.a.AnalysisDate ?? x.a.CreatedAt),
-                    analysisId = x.a.Id,
-                    value = Convert.ToDouble(x.value)
+                    date = AppTime.ToLocal(r.Date),
+                    analysisId = r.LabAnalysisId,
+                    value = Convert.ToDouble(r.Value)
                 })
                 .ToList();
 
@@ -141,6 +144,6 @@ public class LabValuesController : ControllerBase
         // ikkita tahlil kerak" degani EMAS, balki tahlillar HAR XIL
         // ko'rsatkichlarni o'lchagani (umumiy ko'rsatkich yo'q) degani.
         // Frontend shu ikki holatga alohida tushunarli xabar ko'rsatadi.
-        return Ok(new { analysisCount = analyses.Count, series });
+        return Ok(new { analysisCount, series });
     }
 }

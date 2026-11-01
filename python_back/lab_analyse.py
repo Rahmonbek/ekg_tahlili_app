@@ -1,7 +1,12 @@
 from sqlalchemy.orm import Session
-from models import LabAnalyses, LabAnalysisFiles
+from models import LabAnalyses, LabAnalysisFiles, LabAnalysisValues
+from sqlalchemy import text
+import lab_catalog
 import datetime
+import logging
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 def get_lab_analyse_by_id(session: Session, analyse_id: int) -> Optional[LabAnalyses]:
     """
@@ -20,50 +25,13 @@ def create_lab_analyse(
     
     analyse_file_link: Optional[str] = None,
     ai_answer_data: Optional[str] = None,
-    hb: Optional[float] = None,
-    rbc: Optional[float] = None,
-    wbc: Optional[float] = None,
-    plt: Optional[float] = None,
-    hct: Optional[float] = None,
-    mcv: Optional[float] = None,
-    mch: Optional[float] = None,
-    mchc: Optional[float] = None,
-    esr: Optional[float] = None,
-    glucose: Optional[float] = None,
-    cholesterol: Optional[float] = None,
-    alt: Optional[float] = None,
-    ast: Optional[float] = None,
-    bilirubin_total: Optional[float] = None,
-    bilirubin_direct: Optional[float] = None,
-    creatinine: Optional[float] = None,
-    urea: Optional[float] = None,
-    total_protein: Optional[float] = None,
-    albumin: Optional[float] = None,
-    calcium: Optional[float] = None,
-    sodium: Optional[float] = None,
-    potassium: Optional[float] = None,
-    iron: Optional[float] = None,
-    tsh: Optional[float] = None,
-    free_t4: Optional[float] = None,
-    insulin: Optional[float] = None,
-    urine_volume: Optional[float] = None,
-    urine_density: Optional[float] = None,
-    urine_ph: Optional[float] = None,
-    urine_protein: Optional[float] = None,
-    urine_glucose: Optional[float] = None,
-    urine_ketones: Optional[float] = None,
-    urine_bilirubin: Optional[float] = None,
-    urobilinogen: Optional[float] = None,
-    urine_rbc: Optional[int] = None,
-    urine_wbc: Optional[int] = None,
-    daily_protein: Optional[float] = None,
-    daily_creatinine: Optional[float] = None,
-    daily_calcium: Optional[float] = None,
-    daily_sodium: Optional[float] = None,
     analysis_date: Optional[datetime.datetime] = None
 ) -> LabAnalyses:
     """
     Yangi laboratoriya tahlilini yaratadi.
+
+    Ko'rsatkich qiymatlari bu yerda berilmaydi — ular AI natijasidan keyin
+    `replace_lab_values` bilan `lab_analysis_values` ga yoziladi.
     """
     new_lab = LabAnalyses(
         patcient_id=patient_id,
@@ -72,46 +40,6 @@ def create_lab_analyse(
         status=status,
         analyse_file_link=analyse_file_link,
         ai_answer_data=ai_answer_data,
-        hb=hb,
-        rbc=rbc,
-        wbc=wbc,
-        plt=plt,
-        hct=hct,
-        mcv=mcv,
-        mch=mch,
-        mchc=mchc,
-        esr=esr,
-        glucose=glucose,
-        cholesterol=cholesterol,
-        alt=alt,
-        ast=ast,
-        bilirubin_total=bilirubin_total,
-        bilirubin_direct=bilirubin_direct,
-        creatinine=creatinine,
-        urea=urea,
-        total_protein=total_protein,
-        albumin=albumin,
-        calcium=calcium,
-        sodium=sodium,
-        potassium=potassium,
-        iron=iron,
-        tsh=tsh,
-        free_t4=free_t4,
-        insulin=insulin,
-        urine_volume=urine_volume,
-        urine_density=urine_density,
-        urine_ph=urine_ph,
-        urine_protein=urine_protein,
-        urine_glucose=urine_glucose,
-        urine_ketones=urine_ketones,
-        urine_bilirubin=urine_bilirubin,
-        urobilinogen=urobilinogen,
-        urine_rbc=urine_rbc,
-        urine_wbc=urine_wbc,
-        daily_protein=daily_protein,
-        daily_creatinine=daily_creatinine,
-        daily_calcium=daily_calcium,
-        daily_sodium=daily_sodium,
         analysis_date=analysis_date,
         created_at=datetime.datetime.utcnow(),
         updated_at=datetime.datetime.utcnow()
@@ -134,18 +62,12 @@ def update_lab_analyse(
     analyse_file_link: Optional[str] = None,
     ai_answer_data: Optional[str] = None,
     clear_ai_answer: bool = False,
-    # Laboratoriya ko'rsatkichlari endi ustunma-ustun sanab o'tilmaydi:
-    # AI aniqlagan qiymatlar (column_name -> value) shu yerga tushadi
-    # (`update_lab_analyse(**digital_values)`). Yangi ustun qo'shilganda
-    # bu funksiyani o'zgartirish SHART EMAS — `lab_analyses` jadvalining
-    # haqiqiy ustunlari oq ro'yxat sifatida ishlatiladi (pastda), shuning
-    # uchun yangi ko'rsatkichlar avtomatik qo'llab-quvvatlanadi (T-035+).
-    **lab_values,
 ) -> Optional[LabAnalyses]:
     """
-    LabAnalyses yozuvini yangilaydi.
+    LabAnalyses yozuvini yangilaydi (holat, fayl, AI javobi).
     Agar yozuv topilmasa, None qaytaradi.
-    AI tomonidan aniqlangan barcha parametrlar ham bazaga yoziladi.
+
+    Ko'rsatkich qiymatlari bu yerda yozilmaydi — `replace_lab_values`.
     """
 
     lab = session.query(LabAnalyses).filter(LabAnalyses.id == analyse_id).first()
@@ -161,23 +83,6 @@ def update_lab_analyse(
     for field, value in base_fields.items():
         if value is not None:
             setattr(lab, field, value)
-
-    # Laboratoriya ko'rsatkichlari — faqat `lab_analyses` jadvalida
-    # HAQIQATAN mavjud ustunlar yoziladi. `c.key` model atributi nomini
-    # beradi ("hb", "crp", ...) — noma'lum yoki noto'g'ri kalit jimgina
-    # o'tkazib yuboriladi (kelgan qiymat AI sxemasida allaqachon
-    # tekshirilgan, bu esa qo'shimcha himoya).
-    valid_columns = {c.key for c in LabAnalyses.__table__.columns}
-    for col, value in lab_values.items():
-        if value is None or col not in valid_columns:
-            continue
-        setattr(lab, col, value)
-
-    
-
-    # Aniq tozalash: `None` "tegma" degani, shuning uchun
-
-    # o'chirish uchun alohida bayroq (T-036).
 
     # Aniq tozalash: yuqoridagi sikl `None` ni "bu maydonga tegma" deb
     # qabul qiladi, shuning uchun o'chirish uchun alohida bayroq kerak.
@@ -242,3 +147,85 @@ def get_lab_analysis_file_links(session: Session, lab: LabAnalyses) -> list[str]
     if not links and lab.analyse_file_link:
         links = [lab.analyse_file_link]
     return links
+
+
+def clear_lab_values(session: Session, analyse_id: int) -> None:
+    """Tahlilning barcha ko'rsatkich qatorlarini o'chiradi (commit qilmaydi).
+
+    Qayta tahlil yoki fayl almashtirilganda chaqiriladi: ilgari eski
+    fayldagi qiymatlar ustunlarda qolib ketardi, chunki yangi natija
+    faqat TOPILGAN ko'rsatkichlarni yozardi.
+    """
+    session.query(LabAnalysisValues).filter(
+        LabAnalysisValues.lab_analysis_id == analyse_id
+    ).delete(synchronize_session=False)
+
+
+def replace_lab_values(session: Session, analyse_id: int, measurements: dict) -> int:
+    """AI natijasini `lab_analysis_values` ga yozadi (eski qatorlar o'rniga).
+
+    `measurements` — `lab_units.harmonize_all` natijasi:
+    `{column_name: {"value", "unit", "text"?, "original"?, "unit_mismatch"?}}`.
+
+    * Katalogda yo'q kalit tashlab yuboriladi (log bilan).
+    * `unit_mismatch` qiymatlar ham SAQLANADI (asl birligi bilan), lekin
+      `flag` qo'yilmaydi — statistikada ular chiqarib tashlanishi kerak.
+    * `flag` bemor jinsiga qarab hisoblanadi (`lab_catalog.flag_for`).
+
+    Bitta tranzaksiyada: eski qatorlar o'chiriladi va yangilari yoziladi.
+    Qaytaradi: yozilgan qatorlar soni.
+    """
+    lab = session.query(LabAnalyses).filter(LabAnalyses.id == analyse_id).first()
+    if lab is None:
+        return 0
+    types = lab_catalog.catalog(session)
+    gender = session.execute(
+        text("SELECT gender FROM patients WHERE id = :id"), {"id": lab.patcient_id}
+    ).scalar()
+    measured_at = lab.analysis_date or lab.created_at or datetime.datetime.utcnow()
+
+    clear_lab_values(session, analyse_id)
+    written = 0
+    for column, cell in (measurements or {}).items():
+        t = types.get(column)
+        if t is None:
+            logger.warning("Lab: katalogda yo'q ko'rsatkich yozilmadi: %s", column)
+            continue
+        if not isinstance(cell, dict):
+            continue
+        value = _to_number(cell.get("value"))
+        text_value = cell.get("text") if isinstance(cell.get("text"), str) else None
+        if value is None and not text_value:
+            continue
+        mismatch = bool(cell.get("unit_mismatch"))
+        original = cell.get("original") if isinstance(cell.get("original"), dict) else {}
+        session.add(LabAnalysisValues(
+            lab_analysis_id=analyse_id,
+            value_type_id=t.id,
+            patient_id=lab.patcient_id,
+            measured_at=measured_at,
+            value=value,
+            unit=(str(cell.get("unit"))[:64] if cell.get("unit") else None),
+            text=(text_value[:200] if text_value else None),
+            original_value=_to_number(original.get("value")),
+            original_unit=(str(original.get("unit"))[:64] if original.get("unit") else None),
+            unit_mismatch=mismatch,
+            flag=lab_catalog.flag_for(t, value, gender, mismatch),
+            created_at=datetime.datetime.utcnow(),
+        ))
+        written += 1
+    session.commit()
+    return written
+
+
+def _to_number(value):
+    """Son yoki None (bool va matnli qiymatlar son emas)."""
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        num = float(value)
+    except (TypeError, ValueError):
+        return None
+    if num != num or num in (float("inf"), float("-inf")):
+        return None
+    return num

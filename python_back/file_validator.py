@@ -17,6 +17,10 @@ ALLOWED_FILE_SIGNATURES = {
     '.csv': None,
     '.txt': None,
     '.tsv': None,
+    # Excel (OOXML) — zip konteyner. `PK` imzosi har qanday zip (docx ham)
+    # uchun bir xil, shuning uchun mazmun `_validate_xlsx` da alohida
+    # tekshiriladi (`xl/workbook.xml` va natija qatorlari bor-yo'qligi).
+    '.xlsx': [b'PK\x03\x04'],
 }
 
 ENCODED_WORD_PATTERN = re.compile(r"=\?[^?]+\?[bBqQ]\?[^?]+\?=")
@@ -136,7 +140,9 @@ ALLOWED_BY_ANALYSIS_TYPE = {
     "ecg":    {".pdf", ".png", ".jpg", ".jpeg"},
     "holter": {".pdf", ".png", ".jpg", ".jpeg"},
     "smad":   {".pdf", ".png", ".jpg", ".jpeg"},
-    "lab":    {".pdf", ".png", ".jpg", ".jpeg"},
+    # Laboratoriya: klinikalar natijani ko'pincha Excel shablonida beradi —
+    # u AI ga matnli jadval sifatida yuboriladi (`excel_to_text`)
+    "lab":    {".pdf", ".png", ".jpg", ".jpeg", ".xlsx"},
     "diagnose": {".pdf", ".png", ".jpg", ".jpeg"},
 }
 
@@ -267,6 +273,10 @@ def validate_upload(
     #    natija olib bo'lmaydi — buni oldindan aytish kerak.
     if ext == ".pdf":
         _validate_pdf(content, lang)
+
+    # 6. Excel bo'lsa — haqiqiy xlsx ekanligi va natija qatorlari borligi
+    if ext == ".xlsx":
+        _validate_xlsx(content, lang)
 
 
 def _validate_image(content: bytes, lang: str) -> None:
@@ -426,6 +436,43 @@ def _validate_pdf(content: bytes, lang: str) -> None:
             "Пожалуйста, отправьте оригинальный PDF, выгруженный из лабораторной системы.",
             "No text could be extracted from the PDF — the document is a scanned image. "
             "Please send the original PDF exported from the laboratory system.",
+        ))
+
+
+def _validate_xlsx(content: bytes, lang: str) -> None:
+    """Excel fayl ochiladimi va unda laboratoriya natijasi bormi.
+
+    Klinika shablonining to'ldirilmagan nusxasi ham haqiqiy xlsx — uni AI ga
+    yuborish pul va vaqtni bekorga sarflaydi, shuning uchun oldindan aytiladi.
+    """
+    import excel_to_text
+
+    try:
+        excel_to_text.xlsx_to_text(content)
+    except excel_to_text.ExcelReadError as exc:
+        reason = str(exc)
+        if reason == "empty":
+            raise FileValidationError("xlsx_empty", _msg(
+                lang,
+                "Excel faylda laboratoriya natijasi topilmadi — "
+                "\"Результат\" ustuni bo'sh (to'ldirilmagan shablon).",
+                "В Excel-файле не найдено результатов анализа — "
+                "столбец «Результат» пуст (незаполненный шаблон).",
+                "No laboratory results were found in the Excel file — "
+                "the \"Result\" column is empty (blank template).",
+            ))
+        if reason == "too_large":
+            raise FileValidationError("xlsx_too_large", _msg(
+                lang,
+                "Excel fayl juda katta. Faqat natija listlarini qoldirib, qayta saqlang.",
+                "Excel-файл слишком большой. Оставьте только листы с результатами и сохраните снова.",
+                "The Excel file is too large. Keep only the result sheets and save it again.",
+            ))
+        raise FileValidationError("broken_xlsx", _msg(
+            lang,
+            "Excel faylni ochib bo'lmadi. Fayl .xlsx formatida (Excel 2007+) va buzilmaganligiga ishonch hosil qiling.",
+            "Не удалось открыть Excel-файл. Убедитесь, что он в формате .xlsx (Excel 2007+) и не повреждён.",
+            "The Excel file could not be opened. Make sure it is an .xlsx file (Excel 2007+) and is not corrupted.",
         ))
 
 

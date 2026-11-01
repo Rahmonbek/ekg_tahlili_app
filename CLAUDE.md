@@ -67,7 +67,8 @@ xulosa beradi.
   Python ga ichki token (`TokenService.GenerateServiceToken`, audience
   `…-internal` — .NET uni qabul QILMAYDI) bilan murojaat qiladi; tayyor
   bo'lganda yuklagan xodimga SignalR xabari. Sozlamalar `AutoCombined:*`:
-  `Enabled` (true), `IntervalSeconds` (60), `SettleMinutes` (3),
+  `Enabled` (**standart false** — 2026-11-01 dan, eski lab arxivi ommaviy
+  yuklanguncha o'chiq; yuklash tugagach barcha bemorlar uchun ishga tushiriladi), `IntervalSeconds` (60), `SettleMinutes` (3),
   `LookbackHours` (24 — birinchi ishga tushishda butun tarix uchun AI
   chaqirilmasin), `MaxPerCycle` (5). Muzlagan (0/1) kompleks yozuvni
   `StuckAnalysisWatchdog` xatolikka o'tkazadi — aks holda takror
@@ -123,11 +124,56 @@ ularni `lab_value_types.measure` birligiga DETERMINISTIK keltiradi
 (prefiks + molyar massa; `original` da asl yozuv saqlanadi). Natija
 fiziologik mumkinlik (`PLAUSIBLE`) bilan tekshiriladi — faqat birlik nomi
 xato yozilgan holat ("4.7 µmol/L mochevina") shunday ajratiladi.
-Aylantirib bo'lmasa `unit_mismatch: true` — baholanmaydi va raqamli
-ustunga yozilmaydi. Ruscha "мЕ/л" va "МЕ/л" (1000× farq) — katta-kichik
-harf bilan, `lower()` dan OLDIN taniladi. Frontend
+Aylantirib bo'lmasa `unit_mismatch: true` — baholanmaydi, dinamika va
+statistikaga kirmaydi. Ruscha "мЕ/л" va "МЕ/л" (1000× farq) — katta-kichik
+harf bilan, `lower()` dan OLDIN taniladi. Klinika blankalaridagi
+MA'LUM xato birliklar (`_MISLABELED`: insulin/erkin T4 "нг/мл",
+kortizol "нмоль/л", prolaktin/FSG/LG "мМЕ/л", D-dimer "нг/мл", AT-TPO
+"МЕ/л") qiymat oralig'i bo'yicha tuzatiladi; promptda ham shu ro'yxat bor
+(aks holda AI matnda "kortizol keskin past" derdi). "сек", "фл",
+"в п.з.", "109/л" (Excel yuqori indeksni yo'qotadi) taniladi. Frontend
 `AnalysisResultBody.normUnit` — tuzatilmagan yozuvlar uchun himoya.
-Eski yozuvlar: `python repair_lab_units.py [--apply]`.
+Eski yozuvlar: `python repair_lab_units.py [--apply]` (JSON va
+`lab_analysis_values` ni birga tuzatadi).
+
+**Laboratoriya qiymatlari — alohida jadval** (`lab_analysis_values`,
+migratsiya `20261101000000_LabAnalysisValues`): har bir aniqlangan
+ko'rsatkich — bitta qator (`value`, `unit`, `text`, `original_*`,
+`unit_mismatch`, `flag` -1/0/1, statistika uchun nusxa `patient_id` +
+`measured_at`). Statistika, kasallik dinamikasi va bashorat shu jadvalga
+tayanadi — `unit_mismatch = true` qatorlarni chiqarib tashlang.
+
+* **Katalog — yagona manba**: `lab_value_types` (137 ta; `category`,
+  `value_kind` numeric|qualitative|code, `sort_order`, `ai_hint`). Yangi
+  ko'rsatkich = shu jadvalga qator: Python `lab_catalog` AI sxemasidagi
+  `enum` va prompt ro'yxatini undan quradi — kodni o'zgartirish SHART EMAS.
+* `lab_analyses` dagi eski 87 ta ustun — zaxira, hech kim yozmaydi/o'qimaydi;
+  ko'chirish tekshirilgach keyingi migratsiyada `DROP COLUMN`.
+* Yozuvchi faqat Python `lab_analyse.replace_lab_values` — har tahlil/qayta
+  tahlilda tahlilning BARCHA qatorlari almashtiriladi (eski fayl qiymati
+  qolmaydi; AI boshlanishida `clear_lab_values`).
+* O'quvchilar: .NET `LabAnalyseService` (DTO `Values`), dinamika
+  (`LabValuesController.GetPatientDynamics` — bitta so'rov), PDF
+  (`AddLabTable` — nom/me'yor katalogdan, tilga mos; chaqiruvchi
+  `WithLabValues` bilan yuklaydi). Natija kartochkalari esa hamon
+  `ai_answer_data.digital_measurements` JSON dan chiziladi.
+* **Sifat natijalari** (HBsAg, Anti-HCV, RW, OIV, H. pylori): kod 0 manfiy /
+  1 musbat yoki shubhali / laboratoriya indeksi (COI), chegara `< 0.99`;
+  asl yozuv `text` da ("Отрицательный(-)") — ekran va PDF da shu chiqadi.
+  Qon guruhi 1..4, rezus 1/0 (`value_kind = code`, baholanmaydi).
+
+**Laboratoriya — Excel (.xlsx)** (`python_back/excel_to_text.py`): model
+xlsx ni o'qiy olmaydi, shuning uchun jadval lokal matnga o'giriladi va AI ga
+`input_text` bo'lib boradi (klassifikator ham). Klinika shabloni uchun:
+faqat "Результат" ustunida qiymati bor qatorlar; standart yozuvlardan
+("abs", "-", "Желтый", "Отрицательный(-)", "Начало:", norma bilan bir xil
+natija) iborat list tashlab yuboriladi; F.I.O. va imzo yuborilmaydi.
+Faqat "manfiy"lardan iborat serologiya listi boshqa natijalar bilan birga
+YUBORILMAYDI (ba'zi shablon versiyalarida oldindan yozilgan — bo'sh
+shablondan farq qilmaydi), fayl faqat shundan iborat bo'lsa yuboriladi.
+Bo'sh shablon `file_validator._validate_xlsx` da rad etiladi (`xlsx_empty`).
+`.xls` (eski format) qabul qilinmaydi. .NET proksi kirillcha nomli faylning
+kengaytmasini saqlaydi (`PythonApiProxyService.NormalizeFileName`).
 
 **Vipiska** (`discharge_summaries`) — statsionardan chiqarish epikrizi
 («Выписка из истории болезни»).

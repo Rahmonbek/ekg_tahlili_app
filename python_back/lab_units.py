@@ -9,8 +9,8 @@ birlikda. Solishtirish birliksiz bo'lgani uchun noto'g'ri baho chiqardi:
     siydik kislotasi 5.5 mg/dL  vs  me'yor 202–416 µmol/L  → "past"  (aslida ~327, norma)
     gemoglobin       15.2 g/dL  vs  me'yor 130–170 g/L     → "past"  (aslida 152, norma)
 
-Xuddi shu noto'g'ri qiymat `lab_analyses` ning raqamli ustunlariga ham
-yozilardi — PDF hisobot va dinamika grafigi ham buzilardi.
+Xuddi shu noto'g'ri qiymat raqamli qiymat sifatida ham saqlanardi — PDF
+hisobot va dinamika grafigi ham buzilardi.
 
 Yechim
 ------
@@ -24,16 +24,15 @@ Yechim
   ajratadi: haqiqiy boshqa birlik (aylantiriladi) va faqat birlik NOMI
   xato yozilgan qiymat ("mochevina 4.7 µmol/L" — qiymat aslida mmol/L).
 * Aylantirib bo'lmasa (masalan PDW: fL va %) qiymat o'zgarmaydi, lekin
-  `unit_mismatch` belgisi qo'yiladi: interfeys uni baholamaydi va raqamli
-  ustunga yozilmaydi. Xato tomonga xavfsiz: noaniq bo'lsa — baholanmadi.
+  `unit_mismatch` belgisi qo'yiladi: interfeys uni baholamaydi, dinamika va
+  statistikaga kirmaydi (`lab_analysis_values.unit_mismatch`). Xato tomonga xavfsiz: noaniq bo'lsa — baholanmadi.
 """
 from __future__ import annotations
 
 import logging
 import re
-import time
 
-from sqlalchemy import text
+import lab_catalog
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +49,7 @@ _CASE_SENSITIVE = [
 
 _REPLACEMENTS = [
     # Kirill → lotin (uzunlari birinchi)
-    ("мкмоль", "µmol"), ("ммоль", "mmol"), ("нмоль", "nmol"), ("пмоль", "pmol"), ("моль", "mol"),
+    ("фл", "fl"), ("мкмоль", "µmol"), ("ммоль", "mmol"), ("нмоль", "nmol"), ("пмоль", "pmol"), ("моль", "mol"),
     ("мкг", "µg"), ("мг", "mg"), ("нг", "ng"), ("пг", "pg"),
     ("дл", "dl"), ("мл", "ml"), ("мкл", "µl"), ("л", "l"), ("г", "g"),
     ("час", "h"), ("ч", "h"), ("мм", "mm"),
@@ -70,10 +69,20 @@ _EQUIVALENT = {
     "mm/hr": "mm/h",
     "mm/1h": "mm/h",
     "fl": "fl",
+    # Vaqt (koagulogramma): klinikalar "сек", "с", "sec" deb yozadi
+    "сек": "sekund", "сек.": "sekund", "с": "sekund", "sec": "sekund", "s": "sekund",
+    "секунд": "sekund", "seconds": "sekund", "soniya": "sekund",
 }
 
-_COUNT_9 = {"10^9/l", "g/l", "giga/l", "10e9/l", "thousand/µl", "10^3/µl", "тыс/µl"}
-_COUNT_12 = {"10^12/l", "t/l", "tera/l", "10e12/l", "million/µl", "10^6/µl", "млн/µl"}
+#: Excel daraja belgisini (yuqori indeks) saqlamaydi: "10⁹/л" katakda "109/л"
+#: bo'lib qoladi — shu yozuvlar ham hisob birligi sifatida taniladi
+_COUNT_9 = {"10^9/l", "g/l", "giga/l", "10e9/l", "thousand/µl", "10^3/µl", "тыс/µl", "109/l"}
+_COUNT_12 = {"10^12/l", "t/l", "tera/l", "10e12/l", "million/µl", "10^6/µl", "млн/µl", "1012/l"}
+
+#: "Ko'rish maydonida" (peshob cho'kmasi) — yozuvi juda har xil
+#: ("в п/з", "в одном п.з.", "hpf", "dona / ko‘rish maydoni")
+_FIELD_UNIT = "dona/ko‘rishmaydoni"
+_FIELD_MARKERS = ("п/з", "п.з", "пз", "hpf", "field", "maydon")
 
 
 def norm_unit(unit) -> str:
@@ -86,7 +95,9 @@ def norm_unit(unit) -> str:
     s = s.lower()
     for src, dst in _REPLACEMENTS:
         s = s.replace(src, dst)
-    s = s.replace(" ", "").replace("×", "x").replace("*", "^")
+    s = s.replace(" ", "").replace("×", "x").replace("*", "^").replace("\\", "/")
+    if any(m in s for m in _FIELD_MARKERS):
+        return _FIELD_UNIT
     # 10⁹, 10¹² → 10^9, 10^12
     s = s.replace("⁹", "^9").replace("¹²", "^12").replace("10^^", "10^")
     s = re.sub(r"^x?10\^?(9|12)", r"10^\1", s)
@@ -122,6 +133,12 @@ MOLAR_MASS = {
     "vitamin_b12": 1355.37,
     "folate": 441.4,
     "c_peptide": 3020.3,
+    "glucose_postprandial": 180.16,
+    "homocysteine": 135.18,
+    "testosterone": 288.42,
+    "progesterone": 314.46,
+    "estradiol": 272.38,
+    "cortisol": 362.46,
 }
 
 
@@ -154,7 +171,45 @@ def _factor(column: str, src: str, dst: str):
     # Insulin: 1 µIU/mL ≈ 6 pmol/L (xalqaro konvensiya)
     if column == "insulin" and src == "pmol/l" and dst == "µiu/ml":
         return 1 / 6.0
+    # Prolaktin: 1 ng/mL = 21.2 mIU/L (WHO 3rd IS). "miu/l" norm_unit da
+    # "µiu/ml" ga keltiriladi
+    if column == "prolactin" and src == "µiu/ml" and dst == "ng/ml":
+        return 1 / 21.2
     return None
+
+
+#: Klinika blankalarida tez-tez uchraydigan NOTO'G'RI yozilgan birliklar.
+#: `(ustun, fayldagi birlik) -> (shart, haqiqiy birlik)`: shart bajarilsa
+#: fayldagi birlik nomi xato deb hisoblanadi. Shartlar fiziologik
+#: mumkinlikka tayanadi (klinika arxividagi 26 ming Excel natija tahlili):
+#:
+#: * erkin T4 "нг/мл" da 0.5–1.4 — aslida ng/dL (ng/mL da 0.005–0.03 bo'lardi);
+#: * insulin "нг/мл" da 4–23 — aslida µIU/mL (ng/mL da 0.2–1 bo'lardi);
+#: * prolaktin "мМЕ/л" da 12–45 — aslida ng/mL (mIU/L da 60–600 bo'lardi);
+#: * kortizol "нмоль/л" da 6–19 — aslida µg/dL (nmol/L da 138–690 bo'lardi);
+#: * D-dimer "ng/mL" da 0.1–10 — aslida µg/mL = mg/L (ng/mL da 50+ bo'lardi);
+#: * FSG/LG/XGCh "мМЕ/л" — aslida mIU/mL (= IU/L).
+#: * AT-TPO / AT-TG "МЕ/л" — aslida IU/mL (me'yori 0–30 / 0–100).
+_MISLABELED = {
+    ("free_t4", "ng/ml"): (lambda v: v >= 0.1, "ng/dl"),
+    ("insulin", "ng/ml"): (lambda v: v >= 2, "µiu/ml"),
+    ("prolactin", "µiu/ml"): (lambda v: v < 40, "ng/ml"),
+    ("cortisol", "nmol/l"): (lambda v: v < 40, "µg/dl"),
+    ("d_dimer", "ng/ml"): (lambda v: v < 20, "µg/ml"),
+    ("fsh", "µiu/ml"): (lambda v: True, "miu/ml"),
+    ("lh", "µiu/ml"): (lambda v: True, "miu/ml"),
+    ("hcg", "µiu/ml"): (lambda v: True, "miu/ml"),
+    # IU/L aynan mIU/mL ga teng
+    ("fsh", "u/l"): (lambda v: True, "miu/ml"),
+    ("lh", "u/l"): (lambda v: True, "miu/ml"),
+    ("hcg", "u/l"): (lambda v: True, "miu/ml"),
+    # Antitanalar blankada "МЕ/л" deb yozilgan, me'yori (0–30) esa IU/mL da
+    ("anti_tpo", "u/l"): (lambda v: True, "iu/ml"),
+    ("anti_tg", "u/l"): (lambda v: True, "iu/ml"),
+}
+
+#: Antitanalar va revmoproba: "Ед/мл" (U/mL) va "МЕ/мл" (IU/mL) amalda bir xil
+_IU_EQUIVALENT_COLUMNS = {"anti_tpo", "anti_tg", "rheumatoid_factor", "aslo", "ige_total"}
 
 
 #: Me'yor birligidagi FIZIOLOGIK mumkin bo'lgan oraliq (me'yor emas — kasal
@@ -175,6 +230,10 @@ PLAUSIBLE = {
     "crp": (0, 600), "fibrinogen": (0.2, 15), "d_dimer": (0, 100),
     "insulin": (0.1, 1000), "tsh": (0.001, 150), "c_peptide": (0.01, 40), "hba1c": (2, 20),
     "wbc": (0.1, 500), "rbc": (0.5, 10), "plt": (1, 3000),
+    "glucose_postprandial": (0.5, 60), "homocysteine": (1, 300),
+    "prolactin": (0.1, 3000), "testosterone": (0.01, 200), "cortisol": (5, 3000),
+    "estradiol": (1, 50000), "progesterone": (0.05, 1500),
+    "troponin_i": (0, 1000), "nt_probnp": (0, 100000), "procalcitonin": (0, 1000),
 }
 
 
@@ -201,14 +260,31 @@ def harmonize(column: str, value, unit, canonical) -> dict:
       * `"unit_mismatch": True` — aylantirib bo'lmadi, baholanmaydi.
     """
     cell = {"value": value, "unit": unit}
-    if canonical in (None, "") or unit in (None, ""):
-        return cell
     try:
         num = float(value)
     except (TypeError, ValueError):
         return cell
 
+    # Peshob nisbiy zichligi ko'pincha "1020" ko'rinishida yoziladi (= 1.020)
+    if column == "urine_density" and num > 100:
+        return {"value": round(num / 1000, 3), "unit": canonical or unit,
+                "original": {"value": value, "unit": unit}}
+
+    if canonical in (None, "") or unit in (None, ""):
+        return cell
+
     src, dst = norm_unit(unit), norm_unit(canonical)
+
+    # Fayldagi birlik nomi xato yozilgani aniq bo'lgan holatlar (`_MISLABELED`)
+    rule = _MISLABELED.get((column, src))
+    if rule is not None and rule[0](num):
+        fixed = rule[1]
+        if fixed == dst:
+            return {"value": value, "unit": canonical, "original": {"value": value, "unit": unit}}
+        src = fixed
+    if column in _IU_EQUIVALENT_COLUMNS and src == "u/ml":
+        src = "iu/ml"
+
     if src == dst:
         return {"value": value, "unit": canonical}
     # Hisob birliklari (10⁹/L va h.k.) — yozuvi har xil, ma'nosi bir
@@ -233,18 +309,10 @@ def harmonize(column: str, value, unit, canonical) -> dict:
 
 # ─── `lab_value_types` dan me'yor birliklari ──────────────────────────────────
 
-_CACHE: dict = {"units": None, "at": 0.0}
-_CACHE_TTL = 600  # soniya — ma'lumotnoma deyarli o'zgarmaydi
-
 
 def canonical_units(db) -> dict:
-    """`{column_name: measure}` — `lab_value_types` dan (10 daqiqa kesh)."""
-    now = time.monotonic()
-    if _CACHE["units"] is None or now - _CACHE["at"] > _CACHE_TTL:
-        rows = db.execute(text("SELECT column_name, measure FROM lab_value_types")).fetchall()
-        _CACHE["units"] = {r[0]: r[1] for r in rows if r[0]}
-        _CACHE["at"] = now
-    return _CACHE["units"]
+    """`{column_name: measure}` — katalogdan (`lab_catalog`, 10 daqiqa kesh)."""
+    return lab_catalog.canonical_units(db)
 
 
 def harmonize_all(db, measurements: dict) -> dict:
@@ -258,6 +326,10 @@ def harmonize_all(db, measurements: dict) -> dict:
             out[column] = cell
             continue
         result = harmonize(column, cell.get("value"), cell.get("unit"), units.get(column))
+        # Sifat natijasining asl yozuvi ("Отрицательный(-)") yo'qolmasin —
+        # ilgari `harmonize` yangi lug'at qaytarardi va `text` tushib qolardi
+        if cell.get("text"):
+            result["text"] = cell["text"]
         if result.get("original"):
             logger.info("Lab birlik: %s %s %s → %s %s", column, cell.get("value"),
                         cell.get("unit"), result["value"], result["unit"])
@@ -266,16 +338,3 @@ def harmonize_all(db, measurements: dict) -> dict:
                         column, cell.get("value"), cell.get("unit"), units.get(column))
         out[column] = result
     return out
-
-
-def column_values(measurements: dict) -> dict:
-    """`lab_analyses` raqamli ustunlariga yoziladigan qiymatlar.
-
-    Birligi mos kelmagan ko'rsatkich yozilmaydi: boshqa birlikdagi son
-    ustunga tushsa, PDF va dinamika grafigi uni noto'g'ri baholardi.
-    """
-    return {
-        key: cell["value"]
-        for key, cell in (measurements or {}).items()
-        if isinstance(cell, dict) and "value" in cell and not cell.get("unit_mismatch")
-    }

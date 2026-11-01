@@ -14,6 +14,7 @@ import FileMismatchBanner, { parseFileMismatch } from '../../../components/share
 import NotAnalyzableBanner, { parseAiResult } from '../../../components/shared/NotAnalyzableBanner';
 import { replaceLabFile } from '../../../host/LabService';
 import useDocumentTitle from '../../../tools/useDocumentTitle';
+import useFileTypes from '../../../hooks/useFileTypes';
 import AiLanguageNotice from '../../../components/shared/AiLanguageNotice';
 
 const { Title, Text } = Typography;
@@ -23,6 +24,8 @@ export default function LabAnalyseView() {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const { setloader } = useStore();
+    // Faylni almashtirishda ham yuklash sahifasidagi bilan bir xil turlar (xlsx ham)
+    const labFileTypes = useFileTypes('lab');
 
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -141,7 +144,7 @@ export default function LabAnalyseView() {
                 info={parseFileMismatch(data.aiAnswerData)}
                 analysisId={data.id}
                 onReplace={replaceLabFile}
-                accept=".pdf,.png,.jpg,.jpeg"
+                accept={labFileTypes.accept}
                 multiple
                 meta={{
                     age: data.patcient?.birthDate ? calculateAge(data.patcient.birthDate) : null,

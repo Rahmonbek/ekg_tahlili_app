@@ -196,7 +196,7 @@ public partial class PdfReportService
     public async Task<byte[]> GenerateLabReport(int id, string lang)
     {
         var tr  = PdfTranslations.Get(lang);
-        var row = await _context.LabAnalyse
+        var row = await WithLabValues(_context.LabAnalyse)
             .Include(e => e.Patcient)
             .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail).ThenInclude(d => d!.District).ThenInclude(d => d!.Region)
             .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
@@ -479,7 +479,7 @@ public partial class PdfReportService
             .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
             .OrderByDescending(e => e.CreatedAt).ToListAsync();
 
-        var labList = await _context.LabAnalyse
+        var labList = await WithLabValues(_context.LabAnalyse)
             .Where(e => e.PatcientId == patientId && e.Status == 2)
             .Include(e => e.Clinic).ThenInclude(c => c.ClinicDetail).ThenInclude(d => d!.District).ThenInclude(d => d!.Region)
             .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
@@ -1492,97 +1492,27 @@ public partial class PdfReportService
     //  BLOK 4 — TAHLIL NATIJALARI: LABORATORIYA
     // ════════════════════════════════════════════════════════════════════
 
-    private static readonly (string name, string unit, string normM, string normF,
-        Func<LabAnalyses, decimal?> get)[] LabRows =
-    {
-        ("Gemoglobin (Hb)",      "g/L",      "130–170",  "120–155", e => e.hb),
-        ("Eritrositlar (RBC)",   "×10¹²/L",  "4.5–5.5",  "3.8–4.8", e => e.rbc),
-        ("Leykositlar (WBC)",    "×10⁹/L",   "4.0–9.0",  "4.0–9.0", e => e.wbc),
-        ("Trombotsitlar (PLT)",  "×10⁹/L",   "150–400",  "150–400", e => e.plt),
-        ("Gematokrit (HCT)",     "%",         "40–50",    "37–47",   e => e.hct),
-        ("MCV",                  "fL",        "80–100",   "80–100",  e => e.mcv),
-        ("MCH",                  "pg",        "27–34",    "27–34",   e => e.mch),
-        ("MCHC",                 "g/L",       "315–360",  "315–360", e => e.mchc),
-        ("EChT (ESR)",           "mm/soat",   "0–15",     "0–20",    e => e.esr),
-        ("Glyukoza",             "mmol/L",    "3.9–5.5",  "3.9–5.5", e => e.glucose),
-        ("Umumiy xolesterol",    "mmol/L",    "< 5.2",    "< 5.2",   e => e.cholesterol),
-        ("ALT",                  "U/L",       "0–40",     "0–40",    e => e.alt),
-        ("AST",                  "U/L",       "0–40",     "0–40",    e => e.ast),
-        ("Bilirubin umumiy",     "µmol/L",    "5–21",     "5–21",    e => e.bilirubin_total),
-        ("Bilirubin to'g'ri",    "µmol/L",    "0–5",      "0–5",     e => e.bilirubin_direct),
-        ("Kreatinin",            "µmol/L",    "62–115",   "53–97",   e => e.creatinine),
-        ("Siydikchil (Urea)",    "mmol/L",    "2.5–8.3",  "2.5–8.3", e => e.urea),
-        ("Umumiy oqsil",         "g/L",       "65–85",    "65–85",   e => e.total_protein),
-        ("Albumin",              "g/L",       "35–52",    "35–52",   e => e.albumin),
-        ("Kaltsiy",              "mmol/L",    "2.12–2.62","2.12–2.62",e => e.calcium),
-        ("Natriy",               "mmol/L",    "136–145",  "136–145", e => e.sodium),
-        ("Kaliy",                "mmol/L",    "3.5–5.1",  "3.5–5.1", e => e.potassium),
-        ("Temir",                "µmol/L",    "11.6–30.4","8.8–27.0",e => e.iron),
-        ("TTG",                  "µIU/mL",    "0.27–4.2", "0.27–4.2",e => e.tsh),
-        ("Erkin T4",             "pmol/L",    "12–22",    "12–22",   e => e.free_t4),
-        ("Insulin",              "µIU/mL",    "2–25",     "2–25",    e => e.insulin),
-        ("Siydik hajmi",         "mL/kun",    "1000–2000","1000–2000",e => e.urine_volume),
-        ("Siydik zichligi",      "",          "1.010–1.025","1.010–1.025",e => e.urine_density),
-        ("Siydik pH",            "",          "5.0–8.0",  "5.0–8.0", e => e.urine_ph),
-        ("Siydik oqsili",        "g/L",       "0–0.1",    "0–0.1",   e => e.urine_protein),
-        ("Siydik glyukozasi",    "mmol/L",    "0",        "0",       e => e.urine_glucose),
-        ("Siydik eritrosit",     "maydon",    "0–2",      "0–2",     e => e.urine_rbc),
-        ("Siydik leykosit",      "maydon",    "0–5",      "0–5",     e => e.urine_wbc),
-        ("Kunlik oqsil",         "mg/24h",    "0–150",    "0–150",   e => e.daily_protein),
-        // ── Qo'shimcha ko'rsatkichlar (20260905 migratsiya) ──
-        ("Triglitseridlar",                                   "mmol/L",  "< 1.7",       "< 1.7",       e => e.triglycerides),
-        ("HDL xolesterin (yuqori zichlik)",                   "mmol/L",  "> 1",         "> 1.2",       e => e.hdl),
-        ("LDL xolesterin (past zichlik)",                     "mmol/L",  "< 3",         "< 3",         e => e.ldl),
-        ("VLDL xolesterin (juda past zichlik)",               "mmol/L",  "0.1–1",       "0.1–1",       e => e.vldl),
-        ("Aterogenlik koeffitsienti",                         "",        "< 3",         "< 3",         e => e.atherogenic_index),
-        ("Glikirlangan gemoglobin (HbA1c)",                   "%",       "4–5.6",       "4–5.6",       e => e.hba1c),
-        ("S-peptid",                                          "ng/mL",   "1.1–4.4",     "1.1–4.4",     e => e.c_peptide),
-        ("C-reaktiv oqsil (CRP)",                             "mg/L",    "< 5",         "< 5",         e => e.crp),
-        ("Gamma-glutamiltransferaza (GGT)",                   "U/L",     "< 55",        "< 38",        e => e.ggt),
-        ("Ishqoriy fosfataza (ALP)",                          "U/L",     "40–130",      "40–130",      e => e.alp),
-        ("Amilaza",                                           "U/L",     "28–100",      "28–100",      e => e.amylase),
-        ("Lipaza",                                            "U/L",     "13–60",       "13–60",       e => e.lipase),
-        ("Laktatdegidrogenaza (LDH)",                         "U/L",     "125–220",     "125–220",     e => e.ldh),
-        ("Kreatinkinaza (KFK)",                               "U/L",     "39–308",      "26–192",      e => e.ck),
-        ("Kreatinkinaza-MB (KFK-MB)",                         "U/L",     "< 25",        "< 25",        e => e.ck_mb),
-        ("Siydik kislotasi",                                  "µmol/L",  "202–416",     "142–339",     e => e.uric_acid),
-        ("Magniy",                                            "mmol/L",  "0.66–1.07",   "0.66–1.07",   e => e.magnesium),
-        ("Fosfor",                                            "mmol/L",  "0.81–1.45",   "0.81–1.45",   e => e.phosphorus),
-        ("Xlor",                                              "mmol/L",  "98–107",      "98–107",      e => e.chloride),
-        ("Ferritin",                                          "µg/L",    "30–400",      "13–150",      e => e.ferritin),
-        ("Umumiy temir bog'lash qobiliyati (TIBC)",           "µmol/L",  "45–72",       "45–72",       e => e.tibc),
-        ("Transferrin",                                       "g/L",     "2–3.6",       "2–3.6",       e => e.transferrin),
-        ("To'g'ri bo'lmagan bilirubin",                       "µmol/L",  "< 17",        "< 17",        e => e.bilirubin_indirect),
-        ("Globulinlar",                                       "g/L",     "20–35",       "20–35",       e => e.globulin),
-        ("Erkin T3 (FT3)",                                    "pmol/L",  "3.1–6.8",     "3.1–6.8",     e => e.free_t3),
-        ("Umumiy T3",                                         "nmol/L",  "1.3–3.1",     "1.3–3.1",     e => e.t3_total),
-        ("Umumiy T4",                                         "nmol/L",  "66–181",      "66–181",      e => e.t4_total),
-        ("Vitamin D (25-OH)",                                 "ng/mL",   "30–100",      "30–100",      e => e.vitamin_d),
-        ("Vitamin B12",                                       "pg/mL",   "187–883",     "187–883",     e => e.vitamin_b12),
-        ("Foliy kislotasi",                                   "ng/mL",   "3.1–20.5",    "3.1–20.5",    e => e.folate),
-        ("Protrombin vaqti (PV)",                             "sekund",  "11–14",       "11–14",       e => e.prothrombin_time),
-        ("Protrombin indeksi (PTI)",                          "%",       "70–130",      "70–130",      e => e.prothrombin_index),
-        ("Xalqaro normallashgan nisbat (INR)",                "",        "0.8–1.2",     "0.8–1.2",     e => e.inr),
-        ("Faollashgan qisman tromboplastin vaqti (aPTT)",     "sekund",  "25–35",       "25–35",       e => e.aptt),
-        ("Fibrinogen",                                        "g/L",     "2–4",         "2–4",         e => e.fibrinogen),
-        ("Trombin vaqti",                                     "sekund",  "14–21",       "14–21",       e => e.thrombin_time),
-        ("D-dimer",                                           "mg/L",    "< 0.5",       "< 0.5",       e => e.d_dimer),
-        ("Neytrofillar",                                      "%",       "40–70",       "40–70",       e => e.neutrophils),
-        ("Limfotsitlar",                                      "%",       "20–40",       "20–40",       e => e.lymphocytes),
-        ("Monotsitlar",                                       "%",       "2–10",        "2–10",        e => e.monocytes),
-        ("Eozinofillar",                                      "%",       "1–6",         "1–6",         e => e.eosinophils),
-        ("Bazofillar",                                        "%",       "0–1",         "0–1",         e => e.basophils),
-        ("Eritrositlar taqsimlanish kengligi (RDW)",          "%",       "11.5–14.5",   "11.5–14.5",   e => e.rdw),
-        ("O'rtacha trombotsit hajmi (MPV)",                   "fL",      "7.5–11.5",    "7.5–11.5",    e => e.mpv),
-        ("Trombotsitlar taqsimlanish kengligi (PDW)",         "%",       "10–18",       "10–18",       e => e.pdw),
-        ("Trombokrit (PCT)",                                  "%",       "0.15–0.4",    "0.15–0.4",    e => e.pct),
-        ("Retikulotsitlar",                                   "%",       "0.5–2.5",     "0.5–2.5",     e => e.reticulocytes),
-    };
-
+    /// <summary>
+    /// Laboratoriya ko'rsatkichlari jadvali — `lab_analysis_values` va
+    /// `lab_value_types` dan quriladi (nom, birlik, me'yor — ekrandagi bilan
+    /// BIR XIL manba). Ilgari bu yerda nom va me'yorlar kodda alohida
+    /// yozilgan massiv edi: faqat o'zbekcha, 6 ta ko'rsatkich umuman
+    /// chiqmasdi va me'yorlar ekrandagidan farq qilardi.
+    ///
+    /// Chaqiruvchi `lab.Values` ni `ValueType` bilan birga yuklashi SHART
+    /// (<see cref="WithLabValues"/>).
+    /// </summary>
     private void AddLabTable(Document doc, Dictionary<string, string> tr, LabAnalyses lab)
     {
+        var values = lab.Values?
+            .Where(v => v.ValueType != null && (v.Value != null || !string.IsNullOrWhiteSpace(v.Text)))
+            .OrderBy(v => v.ValueType.Id)
+            .ToList();
+        if (values == null || values.Count == 0) return;
+
         var fonts  = BuildFonts();
-        var isMale = lab.Patcient?.Gender ?? true;
+        var gender = lab.Patcient?.Gender;
+        var lang   = tr.TryGetValue("lab_lang", out var l) ? l : "uz";
 
         var tbl = new PdfPTable(5) { WidthPercentage = 100, SpacingBefore = 6 };
         tbl.SetWidths(new[] { 32f, 14f, 14f, 20f, 20f });
@@ -1591,15 +1521,28 @@ public partial class PdfReportService
             tr["lab_param_unit"], tr["normal_range"], tr["assessment"]);
 
         int rowIdx = 0;
-        foreach (var (name, unit, normM, normF, getter) in LabRows)
+        foreach (var v in values)
         {
-            var val = getter(lab);
-            if (val == null) continue;
+            var type = v.ValueType;
+            var name = (lang switch
+            {
+                "ru" => type.NameRu,
+                "en" => type.NameEn,
+                _    => type.NameUz,
+            }) ?? type.NameUz ?? type.ColumnName ?? "";
 
-            var norm   = isMale ? normM : normF;
-            var valStr = val.Value.ToString("G6");
-            var (badge, color, prefix) = LabAssess(val.Value, norm);
-            var bg     = rowIdx++ % 2 == 0 ? CL_White : CL_RowAlt;
+            var (lo, hi) = LabNormBounds(type, gender);
+            var norm = v.UnitMismatch ? "" : LabNormText(lo, hi);
+            var unit = v.UnitMismatch ? (v.Unit ?? "") : (type.Measure ?? v.Unit ?? "");
+
+            // Sifat natijasi (HBsAg "Отрицательный(-)") va chegara yozuvi (">50")
+            // raqam o'rniga asl ko'rinishida chiqadi
+            var valStr = !string.IsNullOrWhiteSpace(v.Text)
+                ? v.Text!
+                : v.Value!.Value.ToString("G6");
+
+            var (badge, color, prefix) = LabAssess(v, type, lo, hi, tr);
+            var bg = rowIdx++ % 2 == 0 ? CL_White : CL_RowAlt;
 
             // Normal qiymat oddiy qora, baho kulrang; faqat normadan og'ganlari
             // rangli va qalin — ko'z darhol patologiyaga tushadi
@@ -1609,8 +1552,8 @@ public partial class PdfReportService
             var badgeFont= isNormal ? fonts["td9gray"]
                 : new Font(fonts["td9bold"].BaseFont, MinFontSize, Font.NORMAL, color);
 
-            TblCell(tbl, name,           fonts["td9"],   bg, Element.ALIGN_LEFT);
-            TblCell(tbl, prefix + valStr,valFont,        bg, Element.ALIGN_CENTER);
+            TblCell(tbl, name,           fonts["td9"],    bg, Element.ALIGN_LEFT);
+            TblCell(tbl, prefix + valStr,valFont,         bg, Element.ALIGN_CENTER);
             TblCell(tbl, unit,           fonts["td9gray"],bg, Element.ALIGN_CENTER);
             TblCell(tbl, norm,           fonts["td9gray"],bg, Element.ALIGN_CENTER);
 
@@ -1620,54 +1563,55 @@ public partial class PdfReportService
         doc.Add(tbl);
     }
 
-    private (string badge, BaseColor color, string prefix) LabAssess(decimal val, string norm)
+    /// <summary>
+    /// Bemor jinsiga mos me'yor chegaralari. Jinsi noma'lum bo'lsa ikkala
+    /// me'yorning birlashmasi olinadi (frontend `evaluate` bilan bir xil) —
+    /// NULL jinsni erkak deb hisoblash noto'g'ri baho berardi.
+    /// </summary>
+    private static (double? lo, double? hi) LabNormBounds(LabValueTypes t, bool? gender)
     {
-        try
-        {
-            if (norm.StartsWith("< ") &&
-                decimal.TryParse(norm[2..], System.Globalization.NumberStyles.Any,
-                    System.Globalization.CultureInfo.InvariantCulture, out var up))
-                return val > up
-                    ? ("↑ Yuqori", CL_BadText,  "↑ ")
-                    : ("Normal",  CL_GoodText, "");
-
-            // Bir tomonlama pastki chegara (masalan HDL "> 1.0"): qiymat
-            // chegaradan past bo'lsa — past, aks holda normal.
-            if (norm.StartsWith("> ") &&
-                decimal.TryParse(norm[2..], System.Globalization.NumberStyles.Any,
-                    System.Globalization.CultureInfo.InvariantCulture, out var low))
-                return val < low
-                    ? ("↓ Past",   CL_WarnText, "↓ ")
-                    : ("Normal",  CL_GoodText, "");
-
-            if (norm == "0")
-                return val > 0
-                    ? ("↑ Aniqlandi", CL_WarnText, "")
-                    : ("Normal",     CL_GoodText, "");
-
-            if (norm.Contains('–') || norm.Contains('-'))
-            {
-                var sep   = norm.Contains('–') ? '–' : '-';
-                var parts = norm.Split(sep);
-                if (parts.Length == 2 &&
-                    decimal.TryParse(parts[0].Trim(), System.Globalization.NumberStyles.Any,
-                        System.Globalization.CultureInfo.InvariantCulture, out var lo) &&
-                    decimal.TryParse(parts[1].Trim(), System.Globalization.NumberStyles.Any,
-                        System.Globalization.CultureInfo.InvariantCulture, out var hi))
-                {
-                    if (val < lo) return ("↓ Past",    CL_WarnText,  "↓ ");
-                    if (val > hi) return ("↑ Yuqori",  CL_BadText,   "↑ ");
-                    return              ("Normal",   CL_GoodText,  "");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogDebug(ex, "Lab norma parsingda xatolik. Norm: {Norm}", norm);
-        }
-
-        return ("Normal", CL_GoodText, "");
+        if (gender == true)  return (t.NormalMinMale, t.NormalMaxMale);
+        if (gender == false) return (t.NormalMinFemale, t.NormalMaxFemale);
+        var mins = new[] { t.NormalMinMale, t.NormalMinFemale }.Where(x => x.HasValue).Select(x => x!.Value).ToList();
+        var maxs = new[] { t.NormalMaxMale, t.NormalMaxFemale }.Where(x => x.HasValue).Select(x => x!.Value).ToList();
+        return (mins.Count > 0 ? mins.Min() : null, maxs.Count > 0 ? maxs.Max() : null);
     }
+
+    private static string LabNormText(double? lo, double? hi)
+    {
+        static string F(double d) => d.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+        if (lo.HasValue && hi.HasValue) return $"{F(lo.Value)}–{F(hi.Value)}";
+        if (hi.HasValue) return $"< {F(hi.Value)}";
+        if (lo.HasValue) return $"> {F(lo.Value)}";
+        return "";
+    }
+
+    private (string badge, BaseColor color, string prefix) LabAssess(
+        LabAnalysisValue v, LabValueTypes type, double? lo, double? hi, Dictionary<string, string> tr)
+    {
+        string T(string key, string fallback) => tr.TryGetValue(key, out var s) ? s : fallback;
+
+        if (v.UnitMismatch)
+            return (T("lab_not_assessed", "Baholanmadi"), CL_Gray, "");
+        if (v.Value == null)
+            return ("—", CL_GoodText, "");
+
+        var val = (double)v.Value.Value;
+        if (type.ValueKind == "qualitative")
+            return val >= 1
+                ? (T("lab_positive", "Musbat"), CL_BadText, "")
+                : (T("lab_negative", "Manfiy"), CL_GoodText, "");
+        if (type.ValueKind == "code" || (lo == null && hi == null))
+            return ("—", CL_GoodText, "");
+
+        if (lo.HasValue && val < lo.Value) return (T("lab_low", "↓ Past"),   CL_WarnText, "↓ ");
+        if (hi.HasValue && val > hi.Value) return (T("lab_high", "↑ Yuqori"), CL_BadText,  "↑ ");
+        return (T("lab_normal", "Normal"), CL_GoodText, "");
+    }
+
+    /// <summary>Laboratoriya PDF lari uchun: qiymatlar katalog yozuvi bilan birga.</summary>
+    private static IQueryable<LabAnalyses> WithLabValues(IQueryable<LabAnalyses> q) =>
+        q.Include(e => e.Values!).ThenInclude(v => v.ValueType);
 
     // ════════════════════════════════════════════════════════════════════
     //  BLOK 4 — TAHLIL NATIJALARI: PARAZITOLOGIYA

@@ -40,6 +40,9 @@ pandas==2.3.3
 scipy==1.16.3
 neurokit2==0.2.12
 matplotlib==3.10.7
+# Laboratoriya natijasi Excel (.xlsx) faylini o'qish — `excel_to_text.py`
+openpyxl==3.1.5
+et-xmlfile==2.0.0
 
 # ─── Tasvirlar va PDF ──────────────────────────────────────────────────
 Pillow==12.0.0

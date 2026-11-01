@@ -38,6 +38,7 @@ namespace EkgAnalyzerApi.Data
         public DbSet<ECGAnalyseComplaints> ECGAnalyseComplaint { get; set; }
         public DbSet<LabAnalyseCategories> LabAnalyseCategories { get; set; }
         public DbSet<LabAnalysisFile> LabAnalysisFiles { get; set; }
+        public DbSet<LabAnalysisValue> LabAnalysisValues { get; set; }
         public DbSet<ClinicDetail> ClinicDetails { get; set; }
         public DbSet<Patcient> Patcients { get; set; }
         public DbSet<Complaints> Complaints { get; set; }
@@ -125,6 +126,33 @@ namespace EkgAnalyzerApi.Data
             modelBuilder.Entity<ECGAnalyseComplaints>().HasQueryFilter(x => x.ECGAnalyse.DeletedAt == null);
             modelBuilder.Entity<LabAnalyseCategories>().HasQueryFilter(x => x.LabAnalyse.DeletedAt == null);
             modelBuilder.Entity<LabAnalysisFile>().HasQueryFilter(x => x.LabAnalysis.DeletedAt == null);
+            modelBuilder.Entity<LabAnalysisValue>().HasQueryFilter(x => x.LabAnalysis.DeletedAt == null);
+
+            // Laboratoriya qiymatlari (har bir ko'rsatkich — qator). Jadval va
+            // indekslar migratsiyada (`20261101000000_LabAnalysisValues`) SQL bilan
+            // yaratilgan; bu yerda faqat EF modeli ularga moslanadi.
+            modelBuilder.Entity<LabAnalysisValue>(e =>
+            {
+                e.HasIndex(x => new { x.LabAnalysisId, x.ValueTypeId })
+                    .IsUnique()
+                    .HasDatabaseName("ux_lab_analysis_values_analysis_type");
+                e.HasIndex(x => new { x.ValueTypeId, x.MeasuredAt })
+                    .HasDatabaseName("ix_lab_analysis_values_type_date");
+                e.HasIndex(x => new { x.PatientId, x.ValueTypeId, x.MeasuredAt })
+                    .HasDatabaseName("ix_lab_analysis_values_patient_type_date");
+                e.HasOne(x => x.LabAnalysis)
+                    .WithMany(a => a.Values)
+                    .HasForeignKey(x => x.LabAnalysisId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(x => x.ValueType)
+                    .WithMany()
+                    .HasForeignKey(x => x.ValueTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<LabValueTypes>()
+                .HasIndex(x => x.ColumnName)
+                .IsUnique()
+                .HasDatabaseName("ux_lab_value_types_column_name");
 
             // User - Doctor (1:1)
             modelBuilder.Entity<User>()

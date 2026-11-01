@@ -148,19 +148,6 @@ ECG_MEASUREMENTS = {
     "P_QRS_T_morphology": _measure("P/QRS/T morfologiyasi va ritm tavsifi"),
 }
 
-#: Laboratoriya uchun qat'iy sxema ATAYIN ishlatilmaydi.
-#:
-#: Sababi: lab natijasidagi `digital_measurements` faqat ekranda
-#: ko'rsatilmaydi — u `**digital_values` orqali `lab_analyses` jadvalining
-#: haqiqiy ustunlariga (hb, urine_rbc, daily_protein va h.k., ~50 ta)
-#: yoziladi. `strict: true` rejimi `required` ro'yxatiga BARCHA xossalarni
-#: talab qiladi, ya'ni model har bir tahlilda ellikta maydonni, asosan
-#: `null` qiymat bilan, qaytarishga majbur bo'lardi — bu javob narxini
-#: va kechikishini bekorga oshiradi.
-#:
-#: Shuning uchun laboratoriya uchun mavjud kalitli lug'at shakli saqlanadi,
-#: yetishmayotgan `AI_recommendations` esa prompt orqali qo'shiladi.
-
 #: Holter va SMAD: vaqti ko'rsatilgan patologik epizodlar.
 #:
 #: Ilgari model ularni `automatic_analysis` ichida vergul bilan tizib
@@ -236,103 +223,64 @@ def _schema(name: str, subject: str, measurements, episodes: bool = False) -> di
 
 # ─── Laboratoriya ───────────────────────────────────────────────────────────
 
-#: `lab_analyses` jadvalidagi ko'rsatkich ustunlari. Manba —
-#: `lab_value_types.column_name` (40 ta yozuv).
-#:
-#: Yangi ko'rsatkich qo'shilganda bu ro'yxatga ham qo'shish SHART:
-#: `enum` da yo'q nomni model qaytara olmaydi, ya'ni ko'rsatkich
-#: jimgina yo'qoladi. Buni `startup_check()` tekshiradi.
-LAB_COLUMNS = [
-    # Umumiy qon tahlili
-    "hb", "rbc", "wbc", "plt", "hct", "mcv", "mch", "mchc", "esr",
-    # Biokimyo
-    "glucose", "cholesterol", "alt", "ast", "bilirubin_total",
-    "bilirubin_direct", "creatinine", "urea", "total_protein", "albumin",
-    "calcium", "sodium", "potassium", "iron",
-    # Gormonlar
-    "tsh", "free_t4", "insulin",
-    # Peshob
-    "urine_volume", "urine_density", "urine_ph", "urine_protein",
-    "urine_glucose", "urine_ketones", "urine_bilirubin", "urobilinogen",
-    "urine_rbc", "urine_wbc",
-    # Sutkalik peshob
-    "daily_protein", "daily_creatinine", "daily_calcium", "daily_sodium",
-    # ── Qo'shimcha ko'rsatkichlar (20260905 migratsiya) ──
-    # Lipid paneli
-    "triglycerides", "hdl", "ldl", "vldl", "atherogenic_index",
-    # Uglevod almashinuvi
-    "hba1c", "c_peptide",
-    # Yallig'lanish
-    "crp",
-    # Fermentlar
-    "ggt", "alp", "amylase", "lipase", "ldh", "ck", "ck_mb",
-    # Buyrak / elektrolit / almashinuv
-    "uric_acid", "magnesium", "phosphorus", "chloride",
-    # Temir almashinuvi
-    "ferritin", "tibc", "transferrin",
-    # Bilirubin / oqsil
-    "bilirubin_indirect", "globulin",
-    # Qalqonsimon bez
-    "free_t3", "t3_total", "t4_total",
-    # Vitaminlar
-    "vitamin_d", "vitamin_b12", "folate",
-    # Koagulyatsiya (gemostaz)
-    "prothrombin_time", "prothrombin_index", "inr", "aptt",
-    "fibrinogen", "thrombin_time", "d_dimer",
-    # Qon formulasi (leykotsitar)
-    "neutrophils", "lymphocytes", "monocytes", "eosinophils", "basophils",
-    # Qizil qon / trombotsit indekslari
-    "rdw", "mpv", "pdw", "pct", "reticulocytes",
-]
-
 #: Laboratoriya o'lchovlari — obyekt emas, **massiv**.
 #:
 #: Nima uchun boshqa turlardan farq qiladi: EKG/Holter/SMAD da
 #: ko'rsatkichlar ro'yxati qat'iy va har doim bir xil (11–19 ta), shuning
 #: uchun ularni obyekt sifatida so'rash va aniqlanmaganiga `null` berish
-#: mantiqiy. Laboratoriyada esa 40 ta ustun bor, bitta tahlilda esa
-#: odatda 2–10 tasi bo'ladi — qat'iy obyekt modelni 30–38 ta `null`
+#: mantiqiy. Laboratoriya katalogida esa 137 ta ko'rsatkich bor, bitta tahlilda esa
+#: odatda 2–15 tasi bo'ladi — qat'iy obyekt modelni 120 dan ortiq `null`
 #: yozishga majbur qilardi. Massivda esa faqat TOPILGANLARI qaytadi.
 #:
-#: `column_name` uchun `enum`: model mavjud bo'lmagan ustun nomini
-#: o'ylab topa olmaydi. Ilgari bu himoya yo'q edi va noma'lum kalit
-#: `update_lab_analyse(**digital_values)` chaqiruvini `TypeError` bilan
-#: buzardi — ya'ni butun tahlil natijasi yo'qolardi.
-LAB_MEASUREMENTS = {
-    "type": "array",
-    "description": (
-        "Fayldan o'qib olingan ko'rsatkichlar. FAQAT haqiqatan topilganlarini "
-        "yoz — fayl da yo'q ko'rsatkichni ro'yxatga qo'shma va qiymatini "
-        "taxmin qilma."
-    ),
-    "items": {
-        "type": "object",
-        "additionalProperties": False,
-        "properties": {
-            "column_name": {
-                "type": "string",
-                "enum": LAB_COLUMNS,
-                "description": "Ko'rsatkichning tizimdagi nomi",
+#: `column_name` uchun `enum` — `lab_value_types` katalogidagi kalitlar
+#: (`lab_catalog.columns`): model katalogda yo'q nomni o'ylab topa olmaydi.
+def lab_measurements(columns: list[str]) -> dict:
+    """Ko'rsatkichlar massivi sxemasi; `columns` — `lab_catalog.columns(db)`."""
+    return {
+        "type": "array",
+        "description": (
+            "Fayldan o'qib olingan ko'rsatkichlar. FAQAT haqiqatan topilganlarini "
+            "yoz — fayl da yo'q ko'rsatkichni ro'yxatga qo'shma va qiymatini "
+            "taxmin qilma."
+        ),
+        "items": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "column_name": {
+                    "type": "string",
+                    "enum": list(columns),
+                    "description": "Ko'rsatkichning tizimdagi nomi",
+                },
+                "value": {
+                    "type": ["number", "null"],
+                    "description": "Raqamli qiymat. O'qib bo'lmasa null.",
+                },
+                "unit": {
+                    "type": ["string", "null"],
+                    "description": "O'lchov birligi (masalan g/L, mmol/L)",
+                },
+                # Sifat natijalari (HBsAg "Отрицательный(-)", qon guruhi "A(II)")
+                # raqamli ustunga kod sifatida yoziladi, asl yozuv esa shu yerda
+                # saqlanadi va ekranda raqam o'rniga ko'rsatiladi
+                "text": {
+                    "type": ["string", "null"],
+                    "description": (
+                        "Faylda yozilgan sifat natijasi aynan o'zicha (masalan "
+                        "'Отрицательный(-)', 'A(II) Rh+'). Oddiy raqamli "
+                        "ko'rsatkichlarda null."
+                    ),
+                },
             },
-            "value": {
-                "type": ["number", "null"],
-                "description": "Raqamli qiymat. O'qib bo'lmasa null.",
-            },
-            "unit": {
-                "type": ["string", "null"],
-                "description": "O'lchov birligi (masalan g/L, mmol/L)",
-            },
+            "required": ["column_name", "value", "unit", "text"],
         },
-        "required": ["column_name", "value", "unit"],
-    },
-}
+    }
 
 
 SCHEMAS = {
     "ecg": _schema("ecg_analysis", "EKG yozuvi", ECG_MEASUREMENTS),
     "holter": _schema("holter_analysis", "Holter monitoring yozuvi", HOLTER_MEASUREMENTS, episodes=True),
     "smad": _schema("smad_analysis", "Sutkalik arterial bosim monitoringi (SMAD)", SMAD_MEASUREMENTS, episodes=True),
-    "lab": _schema("lab_analysis", "Laboratoriya tahlili", LAB_MEASUREMENTS),
 }
 
 #: `automatic_analysis_bool` va boshqa umumiy maydonlar ro'yxati — natijani
@@ -348,17 +296,26 @@ RESULT_FIELDS = (
 )
 
 
-def response_format(kind: str) -> dict:
+def response_format(kind: str, lab_columns: list[str] | None = None) -> dict:
     """`client.responses.create(text=...)` uchun format tavsifi.
 
-    `kind` — "ecg", "holter", "smad" yoki "lab".
+    `kind` — "ecg", "holter", "smad", "combined" yoki "lab". Laboratoriya
+    sxemasi `lab_columns` (katalogdagi ko'rsatkichlar, `lab_catalog.columns`)
+    dan har safar quriladi: yangi ko'rsatkich `lab_value_types` ga qo'shilishi
+    bilanoq model uni qaytara oladi — kodni o'zgartirish shart emas.
     """
+    if kind == "lab":
+        if not lab_columns:
+            raise ValueError("lab sxemasi uchun lab_columns kerak")
+        schema = _schema("lab_analysis", "Laboratoriya tahlili", lab_measurements(lab_columns))
+    else:
+        schema = SCHEMAS[kind]
     return {
         "format": {
             "type": "json_schema",
             "name": f"{kind}_analysis",
             "strict": True,
-            "schema": SCHEMAS[kind],
+            "schema": schema,
         }
     }
 
