@@ -11,8 +11,9 @@
      qaytadan ishga tushirilganda davom etadi, takror yuklamaydi.
 
 AI so'rovlari uchun API da UMUMIY chegara bor (daqiqasiga 10 ta, barcha
-foydalanuvchilar uchun) — `--rate` dan oshirmang; kunduzi klinika ishlayotgan
-bo'lsa 5–6 qiling. 429 javobida skript o'zi kutadi.
+foydalanuvchilar uchun) — `--rate` dan oshirmang. 429 javobida skript o'zi
+kutadi. Serverda AI navbati `--max-queue` (10) dan oshsa yuborish to'xtab
+turadi — tezlik serverning o'z imkoniyatiga moslashadi.
 
 Buyruqlar:
     run    — yuklash (birinchi marta `--limit 30` bilan sinab ko'ring)
@@ -134,6 +135,54 @@ def age_at(birthdate, on_date):
     return d.year - b.year - ((d.month, d.day) < (b.month, b.day))
 
 
+def server_queue():
+    """Serverda AI kutayotgan (0/1) lab tahlillari soni — BARCHA foydalanuvchilarniki.
+
+    Skript serverda (Python papkasi yonida) ishlaganda bazadan o'qiladi;
+    boshqa joyda ishlasa `None` — navbat nazorati o'chadi.
+    AI fon vazifalari umumiy thread pool da (4 yadroli serverda 8 ta) bajariladi:
+    navbat cheksiz o'ssa, kutish 30 daqiqadan oshib, watchdog tahlilni xato
+    deb belgilardi va xodimlarning tahlillari ham shu navbatda qolardi.
+    """
+    global _db_session
+    try:
+        if _db_session is None:
+            sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+            from database import SessionLocal  # noqa: E402
+            from sqlalchemy import text  # noqa: E402
+            _db_session = (SessionLocal, text)
+        SessionLocal, text = _db_session
+        with SessionLocal() as db:
+            return db.execute(text(
+                "SELECT count(*) FROM lab_analyses WHERE status IN (0, 1) "
+                "AND created_at > now() - interval '6 hours'")).scalar()
+    except Exception as e:  # noqa: BLE001 — baza yo'q bo'lsa navbat nazoratisiz ishlaydi
+        if _db_session is not False:
+            log(f"  navbat nazorati o'chiq (baza ochilmadi: {type(e).__name__})")
+        _db_session = False
+        return None
+
+
+_db_session = None
+
+
+def wait_for_queue(limit):
+    """Server navbati `limit` dan kichik bo'lguncha kutadi."""
+    if not limit or _db_session is False:
+        return
+    waited = 0
+    while True:
+        q = server_queue()
+        if q is None or q < limit:
+            if waited:
+                log(f"  navbat {q} — davom etiladi ({waited} s kutildi)")
+            return
+        if waited == 0:
+            log(f"  serverda {q} ta tahlil AI kutmoqda — navbat kamayguncha kutiladi")
+        time.sleep(15)
+        waited += 15
+
+
 GUARD_EVERY = 20   # shuncha yuklashdan keyin AI holati tekshiriladi
 GUARD_SAMPLE = 6   # oxirgi shuncha (4+ daqiqa oldin yuborilgan) tahlil
 
@@ -195,6 +244,7 @@ def cmd_run(a):
                 data["gender"] = gender
             if u.get("date_from_folder") and u.get("date"):
                 data["analysis_date"] = u["date"]
+            wait_for_queue(a.max_queue)
             wait = last_post + interval - time.time()
             if wait > 0:
                 time.sleep(wait)
@@ -274,6 +324,8 @@ def main():
     ap.add_argument("--lang", default="uz")
     ap.add_argument("--rate", type=float, default=8, help="AI so'rovlari / daqiqa (API chegarasi 10)")
     ap.add_argument("--limit", type=int, default=0, help="shuncha tahlildan keyin to'xtash (sinov)")
+    ap.add_argument("--max-queue", type=int, default=10,
+                    help="serverda AI kutayotgan tahlillar shundan ko'p bo'lsa kutiladi (0 — o'chiq)")
     a = ap.parse_args()
     if a.command == "run" and not a.root:
         sys.exit("--root kerak")

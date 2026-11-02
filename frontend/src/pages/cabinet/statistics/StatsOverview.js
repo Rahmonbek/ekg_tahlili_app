@@ -7,7 +7,7 @@ import {
     get_lab_stats_doctors, get_lab_stats_summary, get_lab_stats_timeline,
 } from '../../../host/requests/LabStatisticsRequest';
 import { AGE_GROUPS, CATEGORY_LABELS, COLORS, num, pct, pick } from './statsCommon';
-import { Card, MiniTable, PctBar, Stat, chartOptions, fmtDate, intAxis } from './statsUi';
+import { Card, PctBar, RING_OTHER, Ring, Stat, chartOptions, fmtDate, intAxis } from './statsUi';
 
 function periodLabel(p, bucket) {
     const [y, m, d] = String(p || '').split('-');
@@ -79,11 +79,18 @@ export default function StatsOverview({ params, reloadKey, lang, periodText }) {
     }), [timeline, bucket, lang]);
 
     const sexLabels = { male: t('male', { defaultValue: 'Erkak' }), female: t('female', { defaultValue: 'Ayol' }), unknown: L.unknown };
-    const sexRows = (summary?.sex || []).map((r) => ({ key: r.key, label: sexLabels[r.key] || r.key, value: Number(r.patients) || 0 }));
+    const sexColors = { male: '#2563eb', female: '#ec4899', unknown: RING_OTHER };
+    const sexRows = (summary?.sex || []).map((r) => ({ key: r.key, label: sexLabels[r.key] || r.key, value: Number(r.patients) || 0, color: sexColors[r.key] || RING_OTHER }));
     const ageMap = Object.fromEntries((summary?.ages || []).map((r) => [r.key, r]));
-    const ageRows = AGE_GROUPS.map((g) => ({ key: g, label: g === 'unknown' ? L.unknown : g, value: Number(ageMap[g]?.patients) || 0 }));
+    // Yosh oshgani sari to'qroq — guruhlar tartibi rangdan ham o'qiladi
+    const ageColors = ['#bae6fd', '#7dd3fc', '#38bdf8', '#0ea5e9', '#0369a1', '#1e3a8a'];
+    const ageRows = AGE_GROUPS.map((g, i) => ({
+        key: g, label: g === 'unknown' ? L.unknown : g, value: Number(ageMap[g]?.patients) || 0,
+        color: g === 'unknown' ? RING_OTHER : ageColors[i % ageColors.length],
+    }));
     const fileLabels = { pdf: 'PDF', image: t('stats_images', { defaultValue: 'Rasm' }), xlsx: 'Excel', other: t('stats_other', { defaultValue: 'Boshqa' }) };
-    const fileRows = (summary?.files || []).map((r) => ({ key: r.key, label: fileLabels[r.key] || r.key, value: Number(r.files) || 0 }));
+    const fileColors = { pdf: '#dc2626', image: '#a855f7', xlsx: '#16a34a', other: RING_OTHER };
+    const fileRows = (summary?.files || []).map((r) => ({ key: r.key, label: fileLabels[r.key] || r.key, value: Number(r.files) || 0, color: fileColors[r.key] || RING_OTHER }));
     const sevRows = [
         { key: 1, label: t('stats_sev1', { defaultValue: 'Yengil' }), value: Number(c.severity1) || 0, color: '#0f766e' },
         { key: 2, label: t('stats_sev2', { defaultValue: "O'rtacha" }), value: Number(c.severity2) || 0, color: COLORS.low },
@@ -106,7 +113,7 @@ export default function StatsOverview({ params, reloadKey, lang, periodText }) {
     if (!summary || !c.analyses) return <>{crumb}<div className="ls3-empty">{L.empty}</div></>;
 
     const numCol = (title, key, extra = {}) => ({
-        title, dataIndex: key, align: 'right', className: 'ls3-num', width: 100,
+        title, dataIndex: key, align: 'right', className: 'ls3-num',
         sorter: (a, b) => (Number(a[key]) || 0) - (Number(b[key]) || 0),
         render: (x) => (Number(x) ? x : <span className="ls3-muted">0</span>),
         ...extra,
@@ -141,16 +148,17 @@ export default function StatsOverview({ params, reloadKey, lang, periodText }) {
                 <Table
                     className="ls3-period-table"
                     size="small"
+                    tableLayout="auto"
                     rowKey="period"
                     dataSource={timeline.slice().reverse()}
                     pagination={timeline.length > 12 ? { pageSize: 12, size: 'small', showSizeChanger: false } : false}
                     columns={[
-                        { title: t('stats_period_short', { defaultValue: 'Davr' }), dataIndex: 'period', width: 130, render: (p) => <b>{periodLabel(p, bucket)}</b> },
+                        { title: t('stats_period_short', { defaultValue: 'Davr' }), dataIndex: 'period', render: (p) => <b>{periodLabel(p, bucket)}</b> },
                         numCol(L.analyses, 'analyses'),
                         numCol(L.patients, 'patients'),
-                        numCol(L.abnormal, 'abnormal', { width: 170 }),
-                        { title: L.rate, key: 'rate', width: 170, render: (_, r) => <PctBar part={r.abnormal} total={r.analyses} /> },
-                        numCol(t('stats_severe', { defaultValue: "AI: og'ir holat" }), 'severe', { width: 150, render: (x) => (Number(x) ? <span className="ls3-high">{x}</span> : <span className="ls3-muted">0</span>) }),
+                        numCol(L.abnormal, 'abnormal', {}),
+                        { title: L.rate, key: 'rate', render: (_, r) => <PctBar part={r.abnormal} total={r.analyses} /> },
+                        numCol(t('stats_severe', { defaultValue: "AI: og'ir holat" }), 'severe', { render: (x) => (Number(x) ? <span className="ls3-high">{x}</span> : <span className="ls3-muted">0</span>) }),
                     ]}
                 />
             </Card>
@@ -161,32 +169,32 @@ export default function StatsOverview({ params, reloadKey, lang, periodText }) {
                     rowKey="key"
                     dataSource={categories}
                     pagination={false}
-                    scroll={{ x: 760 }}
+                    tableLayout="auto"
                     columns={[
                         { title: t('stats_category', { defaultValue: 'Tahlil guruhi' }), dataIndex: 'name', render: (n) => <b>{n}</b> },
-                        numCol(t('stats_values_short', { defaultValue: 'Qiymatlar' }), 'value_count', { width: 110, defaultSortOrder: 'descend' }),
+                        numCol(t('stats_values_short', { defaultValue: 'Qiymatlar' }), 'value_count', { defaultSortOrder: 'descend' }),
                         numCol(L.analyses, 'analyses'),
                         numCol(L.patients, 'patients'),
                         numCol(L.normal, 'normal'),
                         numCol(`↑ ${L.high}`, 'high', { render: (x) => (Number(x) ? <span className="ls3-high">{x}</span> : <span className="ls3-muted">0</span>) }),
                         numCol(`↓ ${L.low}`, 'low', { render: (x) => (Number(x) ? <span className="ls3-low">{x}</span> : <span className="ls3-muted">0</span>) }),
-                        { title: L.rate, key: 'rate', width: 170, render: (_, r) => <PctBar part={r.abnormal} total={(Number(r.normal) || 0) + (Number(r.abnormal) || 0)} />, sorter: (a, b) => (a.abnormal / (a.value_count || 1)) - (b.abnormal / (b.value_count || 1)) },
+                        { title: L.rate, key: 'rate', render: (_, r) => <PctBar part={r.abnormal} total={(Number(r.normal) || 0) + (Number(r.abnormal) || 0)} />, sorter: (a, b) => (a.abnormal / (a.value_count || 1)) - (b.abnormal / (b.value_count || 1)) },
                     ]}
                 />
             </Card>
 
-            <div className="ls3-cols ls3-cols--2" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                <Card title={t('stats_patients_breakdown', { defaultValue: 'Bemorlar tarkibi' })}>
-                    <div className="ls3-minis">
-                        <MiniTable title={t('gender', { defaultValue: 'Jinsi' })} rows={sexRows} valueLabel={L.patients} color={COLORS.blue} empty={L.empty} />
-                        <MiniTable title={t('stats_by_age_short', { defaultValue: 'Yosh guruhlari' })} rows={ageRows} valueLabel={L.patients} color={COLORS.blue} empty={L.empty} />
-                    </div>
+            <div className="ls3-rings">
+                <Card title={t('gender', { defaultValue: 'Jinsi' })}>
+                    <Ring size={136} rows={sexRows} totalLabel={L.patients.toLowerCase()} empty={L.empty} />
                 </Card>
-                <Card title={t('stats_analyses_breakdown', { defaultValue: 'Tahlillar tarkibi' })}>
-                    <div className="ls3-minis">
-                        <MiniTable title={t('stats_ai_severity', { defaultValue: 'AI jiddiylik darajasi' })} rows={sevRows} valueLabel={L.analyses} empty={L.empty} />
-                        <MiniTable title={t('stats_file_types', { defaultValue: 'Yuklangan fayl turlari' })} rows={fileRows} valueLabel={t('stats_files', { defaultValue: 'Fayllar' })} color="#8b5cf6" empty={L.empty} />
-                    </div>
+                <Card title={t('stats_by_age_short', { defaultValue: 'Yosh guruhlari' })}>
+                    <Ring size={136} rows={ageRows} totalLabel={L.patients.toLowerCase()} empty={L.empty} />
+                </Card>
+                <Card title={t('stats_ai_severity', { defaultValue: 'AI jiddiylik darajasi' })}>
+                    <Ring size={136} rows={sevRows} totalLabel={L.analyses.toLowerCase()} empty={L.empty} />
+                </Card>
+                <Card title={t('stats_file_types_short', { defaultValue: 'Fayl turlari' })}>
+                    <Ring size={136} rows={fileRows} totalLabel={t('stats_files', { defaultValue: 'Fayllar' }).toLowerCase()} empty={L.empty} />
                 </Card>
             </div>
 
@@ -196,15 +204,15 @@ export default function StatsOverview({ params, reloadKey, lang, periodText }) {
                     rowKey={(r) => r.doctor_id}
                     dataSource={doctors}
                     pagination={false}
-                    scroll={{ x: 640 }}
+                    tableLayout="auto"
                     columns={[
                         { title: t('stats_staff', { defaultValue: 'Xodim (yuklagan)' }), dataIndex: 'name', render: (n) => <b>{n || '—'}</b> },
                         numCol(L.analyses, 'analyses', { defaultSortOrder: 'descend' }),
                         numCol(L.patients, 'patients'),
-                        numCol(L.abnormal, 'abnormal', { width: 170 }),
-                        { title: L.rate, key: 'rate', width: 170, render: (_, r) => <PctBar part={r.abnormal} total={r.analyses} /> },
-                        numCol(L.severe, 'severe', { width: 90, render: (x) => (Number(x) ? <span className="ls3-high">{x}</span> : <span className="ls3-muted">0</span>) }),
-                        { title: t('stats_last', { defaultValue: 'Oxirgi tahlil' }), dataIndex: 'last_at', width: 120, render: fmtDate },
+                        numCol(L.abnormal, 'abnormal', {}),
+                        { title: L.rate, key: 'rate', render: (_, r) => <PctBar part={r.abnormal} total={r.analyses} /> },
+                        numCol(L.severe, 'severe', { render: (x) => (Number(x) ? <span className="ls3-high">{x}</span> : <span className="ls3-muted">0</span>) }),
+                        { title: t('stats_last', { defaultValue: 'Oxirgi tahlil' }), dataIndex: 'last_at', render: fmtDate },
                     ]}
                 />
             </Card>

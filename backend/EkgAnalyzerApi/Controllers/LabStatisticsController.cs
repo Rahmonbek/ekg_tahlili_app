@@ -1,5 +1,7 @@
 using System.Security.Claims;
+using System.Text.Json;
 using EkgAnalyzerApi.Data;
+using EkgAnalyzerApi.Services;
 using EkgAnalyzerApi.Services.LabRules;
 using EkgAnalyzerApi.Services.LabStatistics;
 using Microsoft.AspNetCore.Authorization;
@@ -19,11 +21,15 @@ public class LabStatisticsController : ControllerBase
     private readonly LabSignalsService _signals;
     private readonly LabRuleEngine _engine;
     private readonly MedDataDB _db;
+    private readonly PdfReportService _pdf;
+    private readonly IConfiguration _config;
     private readonly ILogger<LabStatisticsController> _logger;
 
     public LabStatisticsController(LabStatisticsService stats, LabSignalsService signals, LabRuleEngine engine,
-        MedDataDB db, ILogger<LabStatisticsController> logger)
+        MedDataDB db, PdfReportService pdf, IConfiguration config, ILogger<LabStatisticsController> logger)
     {
+        _pdf = pdf;
+        _config = config;
         _stats = stats;
         _signals = signals;
         _engine = engine;
@@ -54,6 +60,94 @@ public class LabStatisticsController : ControllerBase
     [HttpGet("doctor-options")]
     public async Task<IActionResult> DoctorOptions() =>
         await WithClinic(c => _stats.GetDoctorOptionsAsync(c));
+
+    /// <summary>
+    /// Sahifadagi statistikaning PDF nusxasi — xuddi shu filtrlar bilan
+    /// (umumiy raqamlar, oylar, tarkib, guruhlar, ko'rsatkichlar, xodimlar,
+    /// xavf signallari). GET api/lab-statistics/pdf?lang=uz&amp;from=…
+    /// </summary>
+    [HttpGet("pdf")]
+    public async Task<IActionResult> Pdf([FromQuery] LabStatsFilter f, [FromQuery] string lang = "uz")
+    {
+        var (clinicId, _, error) = await ResolveAsync();
+        if (error != null) return error;
+
+        static JsonElement J(object o) => JsonSerializer.SerializeToElement(o);
+        var indicators = J(await _stats.GetIndicatorsAsync(clinicId, f));
+        var data = new PdfReportService.LabStatsReportData
+        {
+            Summary = J(await _stats.GetSummaryAsync(clinicId, f)),
+            Timeline = J(await _stats.GetTimelineAsync(clinicId, f, "month")),
+            Indicators = indicators,
+            Doctors = J(await _stats.GetDoctorsAsync(clinicId, f)),
+            Signals = J(await _signals.GetSummaryAsync(clinicId)),
+            Filters = await DescribeFiltersAsync(clinicId, f, lang, indicators),
+        };
+
+        try
+        {
+            var bytes = _pdf.GenerateLabStatisticsReport(data, lang);
+            return File(bytes, "application/pdf", $"lab_statistika_{AppTime.LocalNow(_config):yyyy-MM-dd}.pdf");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lab statistikasi PDF yaratilmadi: clinic={Clinic}", clinicId);
+            return StatusCode(500, new { message = "pdf_failed" });
+        }
+    }
+
+    /// <summary>Hisobot boshidagi «parametrlar» paneli — sahifadagi filtrlar tanlangan tilda.</summary>
+    private async Task<List<(string, string)>> DescribeFiltersAsync(int clinicId, LabStatsFilter f, string lang, JsonElement indicators)
+    {
+        var lg = (lang ?? "uz").ToLowerInvariant();
+        string L(string uz, string ru, string en) => lg == "ru" ? ru : lg == "en" ? en : uz;
+        var all = L("Barchasi", "Все", "All");
+
+        var period = f.From == null && f.To == null
+            ? L("Butun davr", "Весь период", "All time")
+            : $"{f.From?.ToString("dd.MM.yyyy") ?? "…"} — {f.To?.ToString("dd.MM.yyyy") ?? "…"}";
+
+        var doctor = all;
+        if (f.DoctorId is { } did)
+        {
+            var opts = JsonSerializer.SerializeToElement(await _stats.GetDoctorOptionsAsync(clinicId));
+            foreach (var o in opts.EnumerateArray())
+                if (o.TryGetProperty("id", out var id) && id.GetInt32() == did && o.TryGetProperty("name", out var n))
+                    doctor = n.GetString() ?? all;
+        }
+
+        var gender = f.Gender switch
+        {
+            "male" => L("Erkak", "Мужской", "Male"),
+            "female" => L("Ayol", "Женский", "Female"),
+            "unknown" => L("Noma'lum", "Неизвестно", "Unknown"),
+            _ => all,
+        };
+        var age = f.AgeFrom == null && f.AgeTo == null ? all : $"{f.AgeFrom?.ToString() ?? "…"} — {f.AgeTo?.ToString() ?? "…"}";
+        var category = f.Category != null && PdfReportService.LabCategoryNames.TryGetValue(f.Category, out var cn)
+            ? (lg == "ru" ? cn.ru : lg == "en" ? cn.en : cn.uz) : all;
+        var indicator = all;
+        if (!string.IsNullOrEmpty(f.Indicator))
+        {
+            indicator = f.Indicator;
+            foreach (var r in indicators.EnumerateArray())
+                if (r.TryGetProperty("column_name", out var col) && col.GetString() == f.Indicator
+                    && r.TryGetProperty($"name_{lg}", out var nm) && nm.ValueKind == JsonValueKind.String)
+                    indicator = nm.GetString()!;
+        }
+
+        return new List<(string, string)>
+        {
+            (L("Davr (tahlil sanasi)", "Период (дата анализа)", "Period (analysis date)"), period),
+            (L("Shifokor", "Врач", "Doctor"), doctor),
+            (L("Jinsi", "Пол", "Sex"), gender),
+            (L("Yoshi", "Возраст", "Age"), age),
+            (L("Tahlil guruhi", "Группа анализов", "Analysis group"), category),
+            (L("Ko'rsatkich", "Показатель", "Indicator"), indicator),
+            (L("Qiymatlar", "Значения", "Values"), f.OnlyAbnormal
+                ? L("Faqat me'yordan tashqari", "Только вне нормы", "Only out of range") : all),
+        };
+    }
 
     // ── Xavf signallari ────────────────────────────────────────────────────
 

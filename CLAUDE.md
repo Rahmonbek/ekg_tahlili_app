@@ -257,14 +257,20 @@ klinika `users.clinic_id` dan, boshqa klinika ko'rinmaydi).
   bo'limlar + BARCHA filtrlar bir xil kenglikda, yorliqli, darhol
   qo'llanadi; signallar bo'limida signal filtrlariga almashadi) +
   `StatsOverview` (hero qator; BITTA ustunli grafik — tahlillar, ichida
-  patologiyalisi qizil — ostida davr jadvali; guruhlar, bemorlar/tahlillar
-  tarkibi, xodimlar — JADVALLAR, ulush `PctBar`) / `StatsIndicators`
-  (statistika jadvali: har ustun bitta statistika — natijalar, bemorlar,
-  me'yorda, ↑, ↓, ulush, o'rtacha, mediana, min, max, P10–P90,
-  baholanmagan; qator → `IndicatorDrawer`) / `StatsSignals` (BEMOR bo'yicha
-  guruhlangan). Bloklar `statsUi.js` (`Stat`, `Card`, `RankList`,
-  `PctBar`, `MiniTable`), uslub `LabStatistics.css` (`ls3-*`; Drawer
-  `body` ga chiziladi — `rootClassName="ls3"`). 2026-11-02 da uch variantdan
+  patologiyalisi qizil — ostida davr jadvali; guruhlar va
+  xodimlar — JADVALLAR, ulush `PctBar`; bemorlar/tahlillar tarkibi — 4 ta
+  halqa `Ring`) / `StatsIndicators` (eng ko'p patologiya — chapda legenda,
+  o'ngda halqa; statistika jadvali: nom ustuni qotgan, qisqa sarlavhalar
+  bir qatorda, to'liq nomi `title` da; qator → `IndicatorDrawer`) /
+  `StatsSignals` (BEMOR bo'yicha guruhlangan). Bloklar `statsUi.js` (`Stat`,
+  `Card`, `Ring`, `PctBar`), uslub `LabStatistics.css` (`ls3-*`; Drawer
+  `body` ga chiziladi — `rootClassName="ls3"`; filtr maydonlari 34 px va
+  jadval sarlavhalari katta harfsiz — FAQAT `.ls3` ichida, App.css
+  o'zgarmagan). **PDF**: «PDF yuklab olish» → `GET api/lab-statistics/pdf`
+  (shu filtrlar, interfeys tili) → `PdfReportService.GenerateLabStatisticsReport`
+  (`PdfReportService.LabStatistics.cs`): yotiq A4 (`OpenPdf(..., pageSize)`),
+  umumiy shapka/sarlavha yordamchilari, halqalar `RingEvent` (LINECANVAS
+  da — fonda chizilsa kartochka foni yopadi). 2026-11-02 da uch variantdan
   shu tanlandi, qolganlari o'chirildi (`/lab-statistics-new*` → redirect).
   Umumiy: `statsCommon.js` (konstantalar, `num`/`pct`, chart.js ro'yxati),
   `signalParts.js` + `.css` (`lst-*`: signal tafsiloti, qaror oynasi —

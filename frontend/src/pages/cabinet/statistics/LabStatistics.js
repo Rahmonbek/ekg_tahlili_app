@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Checkbox, DatePicker, Divider, InputNumber, Select, Input } from 'antd';
-import { AlertOutlined, BarChartOutlined, ExperimentOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Button, Checkbox, DatePicker, Divider, InputNumber, Select, Input, Space, message } from 'antd';
+import { AlertOutlined, BarChartOutlined, ExperimentOutlined, FilePdfOutlined, ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 import { useStore } from '../../../store/Store';
 import useDocumentTitle from '../../../tools/useDocumentTitle';
-import { get_lab_signals_summary, get_lab_stats_doctor_options } from '../../../host/requests/LabStatisticsRequest';
+import { download_lab_stats_pdf, get_lab_signals_summary, get_lab_stats_doctor_options } from '../../../host/requests/LabStatisticsRequest';
 import { CATEGORY_LABELS, REVIEW_META, RULE_LABELS, STATUS_META, cleanParams, langCode, pick, ruleLabel } from './statsCommon';
 import StatsOverview from './StatsOverview';
 import StatsIndicators from './StatsIndicators';
@@ -38,6 +38,7 @@ export default function LabStatistics() {
     const { lab_values } = useStore();
 
     const [section, setSection] = useState('overview');
+    const [pdfLoading, setPdfLoading] = useState(false);
     const [preset, setPreset] = useState('all');
     const [range, setRange] = useState(null);
     const [filters, setFilters] = useState(NO_FILTERS);
@@ -72,6 +73,18 @@ export default function LabStatistics() {
         indicator: filters.indicator,
         onlyAbnormal: filters.onlyAbnormal ? true : null,
     }), [range, filters]);
+
+    // PDF — sahifadagi filtrlar bilan, interfeys tilida
+    const downloadPdf = async () => {
+        setPdfLoading(true);
+        try {
+            await download_lab_stats_pdf(params, lang);
+        } catch {
+            message.error(t('pdf_download_failed', { defaultValue: "PDF yuklab bo'lmadi. Qayta urinib ko'ring." }));
+        } finally {
+            setPdfLoading(false);
+        }
+    };
 
     const categories = useMemo(() => {
         const set = new Set((lab_values ?? []).map((v) => v.category).filter(Boolean));
@@ -115,9 +128,14 @@ export default function LabStatistics() {
             <div className="main_card">
                 <h1>
                     <span>{t('lab_statistics', { defaultValue: 'Laboratoriya statistikasi' })}</span>
-                    <Button icon={<ReloadOutlined />} onClick={() => setReloadKey((k) => k + 1)}>
-                        {t('stats_refresh', { defaultValue: 'Yangilash' })}
-                    </Button>
+                    <Space>
+                        <Button icon={<FilePdfOutlined />} loading={pdfLoading} onClick={downloadPdf}>
+                            {t('download_pdf', { defaultValue: 'PDF yuklab olish' })}
+                        </Button>
+                        <Button icon={<ReloadOutlined />} onClick={() => setReloadKey((k) => k + 1)}>
+                            {t('stats_refresh', { defaultValue: 'Yangilash' })}
+                        </Button>
+                    </Space>
                 </h1>
                 <div className="main_card_content">
                     <div className="ls3-layout">

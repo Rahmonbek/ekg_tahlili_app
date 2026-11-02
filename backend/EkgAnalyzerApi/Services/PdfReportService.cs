@@ -703,8 +703,8 @@ public partial class PdfReportService
         return ms.ToArray();
     }
 
-    private static Document CreateDoc() =>
-        new Document(PageSize.A4, MrgSide, MrgSide, MrgTop, MrgBottom);
+    private static Document CreateDoc(Rectangle? pageSize = null) =>
+        new Document(pageSize ?? PageSize.A4, MrgSide, MrgSide, MrgTop, MrgBottom);
 
     // ════════════════════════════════════════════════════════════════════
     //  BLOK 1 — SHAPKA VA HUJJAT SARLAVHASI
@@ -716,12 +716,15 @@ public partial class PdfReportService
     /// 1-sahifada to'liq shapka, keyingilarida ixcham variant.
     /// </summary>
     private Document OpenPdf(MemoryStream ms, Dictionary<string, string> tr,
-        Dictionary<string, Font> fonts, Clinic? documentClinic, string docNum)
+        Dictionary<string, Font> fonts, Clinic? documentClinic, string docNum,
+        Rectangle? pageSize = null)
     {
+        // Keng jadvalli hisobotlar (statistika) — yotiq A4; shapka shu kenglikda
+        var size = pageSize ?? PageSize.A4;
         var clinic = ResolveIssuerClinic(documentClinic);
-        var (full, compact) = BuildHeaderTables(tr, fonts, clinic);
+        var (full, compact) = BuildHeaderTables(tr, fonts, clinic, size.Width - MrgSide * 2);
 
-        var doc = CreateDoc();
+        var doc = CreateDoc(size);
         doc.SetMargins(MrgSide, MrgSide, PageChromeEvent.TopMarginFor(full), MrgBottom);
 
         var writer = PdfWriter.GetInstance(doc, ms);
@@ -767,9 +770,9 @@ public partial class PdfReportService
     /// hodisasida (<see cref="PageChromeEvent"/>) har sahifaga chiziladi.
     /// </summary>
     private (PdfPTable full, PdfPTable compact) BuildHeaderTables(
-        Dictionary<string, string> tr, Dictionary<string, Font> fonts, Clinic? clinic)
+        Dictionary<string, string> tr, Dictionary<string, Font> fonts, Clinic? clinic, float? contentWidth = null)
     {
-        var width = PageSize.A4.Width - MrgSide * 2;
+        var width = contentWidth ?? PageSize.A4.Width - MrgSide * 2;
         var clinicName = string.IsNullOrWhiteSpace(clinic?.ClinicName) ? "—" : clinic!.ClinicName!.Trim();
         var phones = clinic?.ClinicPhoneNumber?
             .Select(p => p.PhoneNumber?.Trim())

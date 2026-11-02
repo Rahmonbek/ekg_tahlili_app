@@ -174,61 +174,92 @@
 
 .ls3-chart { position: relative; height: 260px; }
 
-/* Tartiblangan ro'yxat: raqam, nom, polosa, qiymat */
-.ls3-rank { display: flex; flex-direction: column; gap: 8px; }
-.ls3-rank-row {
-  display: grid;
-  grid-template-columns: 22px minmax(120px, 190px) minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  min-height: 24px;
-}
-.ls3-rank-row--click { cursor: pointer; border-radius: 6px; }
-.ls3-rank-row--click:hover { background: var(--ls3-bg); }
-.ls3-rank-idx { font-size: 12px; color: var(--ls3-faint); text-align: right; }
-.ls3-rank-label { font-size: 13.5px; color: var(--ls3-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ls3-rank-label small { display: block; font-size: 12px; color: var(--ls3-faint); }
-.ls3-rank-track { height: 10px; border-radius: 5px; background: #eef2f7; overflow: hidden; display: flex; }
-.ls3-rank-track span { height: 100%; }
-.ls3-rank-val { font-size: 13px; color: var(--ls3-muted); white-space: nowrap; text-align: right; }
-.ls3-rank-val b { color: var(--ls3-ink); }
+/* Halqa diagramma + legenda (`Ring`) */
+.ls3-rings { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+.ls3-rings > .ls3-card { margin-bottom: 0; }
 
-/* Bo'lingan polosa + legenda (tarkib) */
-.ls3-strip { margin-bottom: 14px; }
-.ls3-strip:last-child { margin-bottom: 0; }
-.ls3-strip-head { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--ls3-text); margin-bottom: 6px; }
-.ls3-strip-head span { color: var(--ls3-faint); font-weight: 500; }
-.ls3-strip-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: #eef2f7; }
-.ls3-strip-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; font-size: 12.5px; color: var(--ls3-muted); }
-.ls3-strip-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: 0; }
-.ls3-strip-legend b { color: var(--ls3-ink); margin-left: 3px; }
+.ls3-ring { display: flex; gap: 14px; }
+.ls3-ring--stack { flex-direction: column; align-items: center; }
+.ls3-ring--split { flex-direction: row-reverse; align-items: center; gap: 28px; }
+.ls3-ring--split .ls3-ring-legend { flex: 1; }
+.ls3-ring-chart { position: relative; flex: none; }
+.ls3-ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  text-align: center;
+}
+.ls3-ring-center b { font-size: 24px; font-weight: 700; line-height: 1.1; color: var(--ls3-ink); }
+.ls3-ring--split .ls3-ring-center b { font-size: 34px; }
+.ls3-ring-center span { font-size: 12px; color: var(--ls3-muted); max-width: 60%; line-height: 1.25; }
+
+.ls3-ring-legend { list-style: none; margin: 0; padding: 0; width: 100%; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ls3-ring-item {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto 46px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--ls3-text);
+  text-align: left;
+}
+.ls3-ring-item--click { cursor: pointer; }
+.ls3-ring-item--click:hover { background: var(--ls3-bg); }
+.ls3-ring-item i { width: 10px; height: 10px; border-radius: 3px; }
+.ls3-ring-name { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ls3-ring-name small { display: block; font-size: 12px; color: var(--ls3-faint); overflow: hidden; text-overflow: ellipsis; }
+.ls3-ring-val { white-space: nowrap; text-align: right; color: var(--ls3-muted); }
+.ls3-ring-val b { color: var(--ls3-ink); font-weight: 700; }
+.ls3-ring-pct { text-align: right; font-weight: 600; color: var(--ls3-ink); font-variant-numeric: tabular-nums; }
+.ls3-ring--split .ls3-ring-item { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; border-radius: 0; }
+/* Tor kartochkada (4 tasi qatorda) nom to'liq ko'rinsin — foiz ustuni ixcham */
+.ls3-ring--stack .ls3-ring-item { grid-template-columns: 9px minmax(0, 1fr) auto 40px; gap: 6px; padding: 3px 2px; font-size: 13px; }
+.ls3-ring--split .ls3-ring-item:last-child { border-bottom: 0; }
 
 /* Jadval */
 .ls3 .ant-table { font-size: 13.5px; }
-.ls3 .ant-table-thead > tr > th { background: transparent; color: var(--ls3-muted); font-size: 12.5px; font-weight: 600; line-height: 1.25; }
+.ls3 .ant-table-wrapper .ant-table-thead > tr > th {
+  /* Umumiy App.css dagi KATTA HARF va keng harf oralig'i shu sahifada yo'q:
+     uzun sarlavhalar («Анализы с патологией») so'z bo'yicha ikki qatorga
+     chiroyli bo'linadi, so'z o'rtasidan emas */
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: var(--ls3-muted) !important;
+  background: #f8fafc !important;
+  padding: 9px 8px !important;
+  line-height: 1.3;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  vertical-align: bottom;
+}
+.ls3 .ant-table-thead > tr > th::before { display: none; }
+.ls3-cell-first { min-width: 190px; }
 .ls3 .ant-table-tbody > tr:nth-child(even) > td { background: #fafbfd; }
+.ls3 .ant-table-wrapper .ant-table-tbody > tr > td { padding: 8px !important; }
 
 .ls3-high { color: var(--ls3-high); font-weight: 600; }
 .ls3-low { color: var(--ls3-low); font-weight: 600; }
 .ls3-muted { color: var(--ls3-muted); font-size: 13px; }
 
 /* Ulush katagi */
-.ls3-pct { display: inline-flex; align-items: center; gap: 8px; min-width: 110px; }
-.ls3-pct-track { flex: 1; height: 7px; border-radius: 4px; background: #eef2f7; overflow: hidden; min-width: 50px; }
+.ls3-pct { display: inline-flex; align-items: center; gap: 6px; min-width: 96px; }
+.ls3-pct-track { flex: 1; height: 7px; border-radius: 4px; background: #eef2f7; overflow: hidden; min-width: 40px; }
 .ls3-pct-track span { display: block; height: 100%; }
 .ls3-pct-text { width: 44px; text-align: right; font-weight: 600; font-size: 13px; color: var(--ls3-ink); }
 .ls3-num { text-align: right; font-variant-numeric: tabular-nums; }
-
-/* Kichik jadvallar to'ri */
-.ls3-minis { display: grid; grid-template-columns: 1fr; gap: 14px; }
-.ls3-mini-title { font-size: 13px; font-weight: 700; color: var(--ls3-text); margin-bottom: 4px; }
-.ls3-mini-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-.ls3-mini-table th { text-align: right; font-size: 11.5px; font-weight: 600; color: var(--ls3-faint); text-transform: uppercase; letter-spacing: .03em; padding: 2px 6px; }
-.ls3-mini-table th:first-child { text-align: left; }
-.ls3-mini-table td { padding: 4px 6px; border-top: 1px solid #f1f5f9; color: var(--ls3-text); }
-.ls3-mini-table td:first-child { padding-left: 0; }
-.ls3-mini-table td:last-child { width: 130px; }
-.ls3-mini-total td { color: var(--ls3-faint); }
 
 /* Davr jadvali: grafik ostida */
 .ls3-period-table { margin-top: 12px; }
@@ -357,3 +388,49 @@
 @media (max-width: 760px) {
   .ls3-cols--half { grid-template-columns: 1fr; }
 }
+
+/* Halqalar: keng ekranda 4 ta qatorda, o'rtada 2 tadan, telefonda bittadan */
+@media (max-width: 1300px) {
+  .ls3-rings { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .ls3-ring--split { flex-direction: column; }
+}
+@media (max-width: 640px) {
+  .ls3-rings { grid-template-columns: 1fr; }
+}
+
+/* ── Filtr maydonlari — FAQAT shu sahifada ixcham (umumiy App.css dagi
+   katta balandlik boshqa formalarda qoladi) ── */
+.ls3-side .ant-select .ant-select-selector,
+.ls3-side .ant-picker,
+.ls3-side .ant-input-number,
+.ls3-side .ant-input-affix-wrapper,
+.ls3-side .ant-input {
+  min-height: 34px !important;
+  height: 34px !important;
+  border-radius: 8px !important;
+  font-size: 13.5px !important;
+}
+.ls3-side .ant-select .ant-select-selector { padding: 0 10px !important; align-items: center; }
+.ls3-side .ant-select-single .ant-select-selector .ant-select-selection-item,
+.ls3-side .ant-select-single .ant-select-selector .ant-select-selection-placeholder,
+.ls3-side .ant-select-single .ant-select-selector .ant-select-selection-search-input {
+  line-height: 32px !important;
+  height: 32px !important;
+}
+.ls3-side .ant-picker { padding: 0 10px !important; }
+.ls3-side .ant-picker input { font-size: 13.5px !important; }
+.ls3-side .ant-input-number-input-wrap,
+.ls3-side .ant-input-number-input { height: 32px !important; }
+.ls3-side .ant-input-number-input { padding: 0 10px !important; font-size: 13.5px !important; }
+.ls3-side .ant-input-search .ant-input-group-addon .ant-btn { height: 34px !important; width: 36px; border-radius: 0 8px 8px 0 !important; }
+.ls3-side .ant-input-search .ant-input-affix-wrapper,
+.ls3-side .ant-input-search > .ant-input-group > .ant-input { border-radius: 8px 0 0 8px !important; }
+.ls3-side .ant-input-affix-wrapper > .ant-input { height: auto !important; min-height: 0 !important; }
+.ls3-presets .ant-btn { height: 30px; font-size: 13px; border-radius: 8px; }
+
+/* Keng ko'rsatkichlar jadvali: sarlavhalar bir qatorda, qisqa (to'liq nomi — title) */
+.ls3 .ls3-wide .ant-table-thead > tr > th { white-space: nowrap; }
+.ls3 .ls3-wide .ant-table-cell-fix-left { background: #fff; }
+.ls3 .ls3-wide .ant-table-tbody > tr:nth-child(even) > td.ant-table-cell-fix-left { background: #fafbfd; }

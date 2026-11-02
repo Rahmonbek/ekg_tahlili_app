@@ -6,7 +6,7 @@ import { Bar } from 'react-chartjs-2';
 
 import { get_lab_stats_indicator } from '../../../host/requests/LabStatisticsRequest';
 import { AGE_GROUPS, COLORS, RESULT_KIND_META, num, pct, pick } from './statsCommon';
-import { Card, RankList, Stat, chartOptions, fmtDate, intAxis } from './statsUi';
+import { Card, Ring, Stat, chartOptions, fmtDate, intAxis } from './statsUi';
 
 export const nameOf = (r, lang) => r[`name_${lang}`] || r.name_uz || r.column_name;
 
@@ -56,7 +56,7 @@ export default function IndicatorDrawer({ row, params, lang, onClose }) {
         label: kindLabel(k.key),
         value: Number(k.n) || 0,
         color: kindColor[k.key] || COLORS.palette[i % COLORS.palette.length],
-        right: <><b>{k.n}</b> <span className="ls3-muted">· {pct(k.n, row?.n)} · {k.patients} {L.patients}</span></>,
+        sub: `${k.patients} ${L.patients}`,
     }));
 
     const histogram = data?.histogram || [];
@@ -97,7 +97,7 @@ export default function IndicatorDrawer({ row, params, lang, onClose }) {
 
                 {categorical && (
                     <Card title={t('stats_kinds', { defaultValue: 'Natijalar taqsimoti' })}>
-                        <RankList rows={kindRows} empty={L.empty} showIndex={false} />
+                        <Ring rows={kindRows} totalLabel={L.n.toLowerCase()} empty={L.empty} />
                     </Card>
                 )}
 

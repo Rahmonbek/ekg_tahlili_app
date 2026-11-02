@@ -96,7 +96,7 @@ export default function StatsSignals({ filters, setFilters, summary, reloadKey, 
         <div>
             <div className="ls3-crumb">
                 <h2>{t('stats_tab_signals', { defaultValue: 'Xavf signallari' })}</h2>
-                <span>{Number(list.total) || 0} {t('stats_signals_list', { defaultValue: 'Signallar' }).toLowerCase()}</span>
+                <span>{t('stats_signals_n', { count: Number(list.total) || 0, defaultValue: '{{count}} ta signal' })}</span>
                 <div className="ls3-crumb-right">
                     {state.last_evaluated_at && <span className="ls3-muted">{t('stats_last_eval', { defaultValue: 'Oxirgi hisob' })}: {new Date(state.last_evaluated_at).toLocaleString('ru-RU')}</span>}
                     <Button size="small" icon={<SyncOutlined />} onClick={recompute}>{t('stats_recompute', { defaultValue: 'Qayta hisoblash' })}</Button>

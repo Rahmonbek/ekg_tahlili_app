@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Input, Spin, Table } from 'antd';
 
 import { get_lab_stats_indicators } from '../../../host/requests/LabStatisticsRequest';
-import { CATEGORY_LABELS, COLORS, num, pct, pick } from './statsCommon';
-import { Card, PctBar, RankList } from './statsUi';
+import { CATEGORY_LABELS, num, pct, pick } from './statsCommon';
+import { Card, PctBar, RING_OTHER, RING_PALETTE, Ring } from './statsUi';
 import IndicatorDrawer, { nameOf } from './IndicatorDrawer';
 
 /**
@@ -43,8 +43,12 @@ export default function StatsIndicators({ params, reloadKey, lang, periodText })
             : enriched;
     }, [enriched, search]);
 
-    const top = useMemo(() => enriched.filter((r) => r.abnormal > 0)
-        .sort((a, b) => (b.abnormal - a.abnormal) || (b.rate - a.rate)).slice(0, 8), [enriched]);
+    // Halqada 10 ta ko'rsatkich, qolganlari bitta «Boshqalar» bo'lagi
+    const TOP_N = 10;
+    const withPathology = useMemo(() => enriched.filter((r) => r.abnormal > 0)
+        .sort((a, b) => (b.abnormal - a.abnormal) || (b.rate - a.rate)), [enriched]);
+    const top = withPathology.slice(0, TOP_N);
+    const rest = withPathology.slice(TOP_N);
 
     const L = {
         n: t('stats_n', { defaultValue: 'Natijalar' }),
@@ -60,34 +64,47 @@ export default function StatsIndicators({ params, reloadKey, lang, periodText })
         empty: t('stats_no_data', { defaultValue: "Tanlangan filtr bo'yicha ma'lumot yo'q" }),
     };
 
-    const topRows = top.map((r) => ({
-        key: r.column_name,
-        label: nameOf(r, lang),
-        sub: pick(CATEGORY_LABELS[r.category], lang) || r.category,
-        value: r.abnormal,
-        color: COLORS.high,
-        right: (
-            <>
-                {Number(r.high) ? <span className="ls3-high">↑{r.high}</span> : null}
-                {Number(r.high) && Number(r.low) ? ' ' : null}
-                {Number(r.low) ? <span className="ls3-low">↓{r.low}</span> : null}
-                <span className="ls3-muted"> · {pct(r.abnormal, r.assessed)} ({r.abnormal}/{r.assessed})</span>
-            </>
-        ),
-        row: r,
-    }));
+    const arrows = (r) => (
+        <>
+            {Number(r.high) ? <span className="ls3-high">↑{r.high}</span> : null}
+            {Number(r.high) && Number(r.low) ? ' ' : null}
+            {Number(r.low) ? <span className="ls3-low">↓{r.low}</span> : null}
+        </>
+    );
+    const ringRows = [
+        ...top.map((r, i) => ({
+            key: r.column_name,
+            label: nameOf(r, lang),
+            sub: `${pick(CATEGORY_LABELS[r.category], lang) || r.category} · ${L.rate.replace(/,\s*%$/, '').toLowerCase()} ${pct(r.abnormal, r.assessed)}`,
+            value: r.abnormal,
+            color: RING_PALETTE[i % RING_PALETTE.length],
+            extra: <>{arrows(r)} <b>{r.abnormal}</b></>,
+            row: r,
+        })),
+        ...(rest.length ? [{
+            key: '__rest',
+            label: `${t('stats_other_indicators', { defaultValue: "Boshqa ko'rsatkichlar" })} (${rest.length})`,
+            value: rest.reduce((s, r) => s + r.abnormal, 0),
+            color: RING_OTHER,
+        }] : []),
+    ];
 
-    const numCol = (title, key, extra = {}) => ({
-        title, dataIndex: key, align: 'right', className: 'ls3-num', width: 90,
-        sorter: (a, b) => (Number(a[key]) || 0) - (Number(b[key]) || 0),
+    // Sarlavhalar bir qatorda; ustun kengligi mazmunga qarab (`max-content`)
+    // Keng jadval: nom ustuni chapda qotadi, sarlavhalar qisqa va BIR qatorda,
+    // to'liq nomi — sichqoncha ustiga borganda (title). Kengliklar aniq —
+    // ilgari sarlavhalar so'z o'rtasidan bo'linardi («Резул ьтаты»)
+    const head = (short, full) => <span title={full}>{short}</span>;
+    const numCol = (title, key, width, extra = {}) => ({
+        title, dataIndex: key, align: 'right', className: 'ls3-num', width,
         render: (x, r) => (r.numeric && x != null ? num(x) : <span className="ls3-muted">—</span>),
         ...extra,
     });
+    const sortBy = (key) => (a, b) => (Number(a[key]) || 0) - (Number(b[key]) || 0);
     const cnt = (x) => (Number(x) ? x : <span className="ls3-muted">0</span>);
 
     const columns = [
         {
-            title: t('stats_indicator', { defaultValue: "Ko'rsatkich" }), key: 'name', fixed: 'left', width: 230,
+            title: t('stats_indicator', { defaultValue: "Ko'rsatkich" }), key: 'name', fixed: 'left', width: 210,
             sorter: (a, b) => (a.sort_order || 0) - (b.sort_order || 0),
             render: (_, r) => (
                 <div>
@@ -96,30 +113,35 @@ export default function StatsIndicators({ params, reloadKey, lang, periodText })
                 </div>
             ),
         },
-        { title: L.unit, dataIndex: 'measure', width: 90, render: (m, r) => (r.numeric ? (m || '—') : <span className="ls3-muted">{t('stats_qualitative', { defaultValue: 'Sifat natijasi' })}</span>) },
-        numCol(L.n, 'n', { render: cnt }),
-        numCol(L.patients, 'patients', { render: cnt }),
-        numCol(L.normal, 'normal', { render: cnt }),
-        numCol(`↑ ${L.high}`, 'high', { render: (x) => (Number(x) ? <span className="ls3-high">{x}</span> : <span className="ls3-muted">0</span>) }),
-        numCol(`↓ ${L.low}`, 'low', { render: (x) => (Number(x) ? <span className="ls3-low">{x}</span> : <span className="ls3-muted">0</span>) }),
         {
-            title: L.rate, key: 'rate', width: 160, defaultSortOrder: 'descend',
+            title: L.unit, dataIndex: 'measure', width: 84,
+            render: (m, r) => (r.numeric ? (m || '—') : <span className="ls3-muted">{t('stats_qualitative_short', { defaultValue: 'sifat' })}</span>),
+        },
+        numCol(head(t('stats_h_n', { defaultValue: 'Natija' }), L.n), 'n', 82, { render: cnt, sorter: sortBy('n') }),
+        numCol(head(t('stats_h_patients', { defaultValue: 'Bemor' }), L.patients), 'patients', 82, { render: cnt, sorter: sortBy('patients') }),
+        numCol(head(t('stats_h_normal', { defaultValue: "Me'yorda" }), L.normal), 'normal', 90, { render: cnt, sorter: sortBy('normal') }),
+        numCol(head('↑', L.high), 'high', 56, { sorter: sortBy('high'), render: (x) => (Number(x) ? <span className="ls3-high">{x}</span> : <span className="ls3-muted">0</span>) }),
+        numCol(head('↓', L.low), 'low', 56, { sorter: sortBy('low'), render: (x) => (Number(x) ? <span className="ls3-low">{x}</span> : <span className="ls3-muted">0</span>) }),
+        {
+            title: head(t('stats_h_rate', { defaultValue: 'Patologiya' }), L.rate), key: 'rate', width: 150, defaultSortOrder: 'descend',
             sorter: (a, b) => (a.abnormal - b.abnormal) || (a.rate - b.rate),
             render: (_, r) => <PctBar part={r.abnormal} total={r.assessed} />,
         },
-        numCol(L.mean, 'mean'),
-        numCol(L.median, 'median'),
-        numCol('Min', 'min'),
-        numCol('Max', 'max'),
+        numCol(head(t('stats_h_mean', { defaultValue: "O'rtacha" }), L.mean), 'mean', 84),
+        numCol(head(t('stats_h_median', { defaultValue: 'Mediana' }), L.median), 'median', 86, { render: (x, r) => (r.numeric && x != null ? <b>{num(x)}</b> : <span className="ls3-muted">—</span>) }),
+        numCol('Min', 'min', 70),
+        numCol('Max', 'max', 70),
         {
             title: 'P10–P90', key: 'p', align: 'right', className: 'ls3-num', width: 130,
             render: (_, r) => (r.numeric && r.p10 != null ? `${num(r.p10)}–${num(r.p90)}` : <span className="ls3-muted">—</span>),
         },
-        numCol(L.unassessed, 'unassessed', {
-            width: 120,
-            render: (x, r) => (Number(x) ? <span>{x}{Number(r.unit_mismatch) ? <span className="ls3-muted"> ({t('stats_unit_mismatch', { defaultValue: 'birlik' })}: {r.unit_mismatch})</span> : null}</span> : <span className="ls3-muted">0</span>),
+        numCol(head(t('stats_h_unassessed', { defaultValue: 'Bahosiz' }), L.unassessed), 'unassessed', 86, {
+            render: (x, r) => (Number(x)
+                ? <span title={Number(r.unit_mismatch) ? `${t('stats_unit_mismatch', { defaultValue: 'birlik' })}: ${r.unit_mismatch}` : undefined}>{x}</span>
+                : <span className="ls3-muted">0</span>),
         }),
     ];
+    const tableWidth = columns.reduce((sum, c) => sum + (c.width || 0), 0);
 
     if (loading && !rows.length) return <div className="ls3-loading"><Spin /></div>;
 
@@ -133,9 +155,16 @@ export default function StatsIndicators({ params, reloadKey, lang, periodText })
             {!rows.length ? <div className="ls3-empty">{L.empty}</div> : (
                 <>
                     <Card title={t('stats_top_abnormal', { defaultValue: "Eng ko'p patologiya aniqlangan ko'rsatkichlar" })}
-                        extra={<span className="ls3-muted">{t('stats_top_hint', { defaultValue: "Polosa — me'yordan tashqari natijalar soni; ↑ yuqori, ↓ past" })}</span>}
+                        extra={<span className="ls3-muted">{t('stats_top_hint', { defaultValue: "Son — me'yordan tashqari natijalar; ↑ yuqori, ↓ past" })}</span>}
                     >
-                        <RankList rows={topRows} empty={t('stats_no_abnormal', { defaultValue: "Patologiya topilmadi" })} onClick={(r) => setSelected(r.row)} />
+                        <Ring
+                            layout="split"
+                            size={250}
+                            rows={ringRows}
+                            totalLabel={t('stats_pathologies', { defaultValue: 'patologik natija' })}
+                            empty={t('stats_no_abnormal', { defaultValue: "Patologiya topilmadi" })}
+                            onPick={(r) => r.row && setSelected(r.row)}
+                        />
                     </Card>
 
                     <Card
@@ -152,7 +181,8 @@ export default function StatsIndicators({ params, reloadKey, lang, periodText })
                             columns={columns}
                             dataSource={visible}
                             pagination={{ pageSize: 25, showSizeChanger: false, size: 'small' }}
-                            scroll={{ x: 1500 }}
+                            className="ls3-wide"
+                            scroll={{ x: tableWidth }}
                             rowClassName="ls3-row-click"
                             onRow={(r) => ({ onClick: () => setSelected(r) })}
                         />

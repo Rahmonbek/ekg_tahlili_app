@@ -1,5 +1,6 @@
 import React from 'react';
 import { Chart as ChartJS } from 'chart.js';
+import { Doughnut } from 'react-chartjs-2';
 
 import { num, pct } from './statsCommon';
 
@@ -44,41 +45,6 @@ export function Card({ title, extra, children, className = '' }) {
     );
 }
 
-/**
- * Tartiblangan ro'yxat: № · nom · polosa · qiymat. `segments` berilsa polosa
- * bo'laklarga bo'linadi; polosa uzunligi eng katta qatorga nisbatan.
- */
-export function RankList({ rows, empty, onClick, showIndex = true }) {
-    if (!rows?.length) return <div className="ls3-empty">{empty}</div>;
-    const max = Math.max(...rows.map((r) => r.value || 0), 1);
-    const Row = onClick ? 'button' : 'div';
-    return (
-        <div className="ls3-rank">
-            {rows.map((r, i) => {
-                const segments = r.segments || [{ value: r.value, color: r.color || '#0f766e' }];
-                const segSum = segments.reduce((s, x) => s + (Number(x.value) || 0), 0) || 1;
-                return (
-                    <Row
-                        key={r.key}
-                        type={onClick ? 'button' : undefined}
-                        className={`ls3-rank-row${onClick ? ' ls3-rank-row--click' : ''}`}
-                        style={onClick ? { border: 0, background: 'none', padding: 0, font: 'inherit', color: 'inherit', textAlign: 'left' } : undefined}
-                        onClick={onClick ? () => onClick(r) : undefined}
-                        title={r.title || r.label}
-                    >
-                        <span className="ls3-rank-idx">{showIndex ? i + 1 : ''}</span>
-                        <span className="ls3-rank-label">{r.label}{r.sub ? <small>{r.sub}</small> : null}</span>
-                        <span className="ls3-rank-track" style={{ width: `${Math.round(((r.value || 0) / max) * 100)}%` }}>
-                            {segments.map((s, j) => <span key={j} style={{ width: `${((Number(s.value) || 0) / segSum) * 100}%`, background: s.color }} />)}
-                        </span>
-                        <span className="ls3-rank-val">{r.right ?? <b>{num(r.value)}</b>}</span>
-                    </Row>
-                );
-            })}
-        </div>
-    );
-}
-
 /** Ulush katagi: foiz raqami va kichik polosa (jadval ustunida). */
 export function PctBar({ part, total, color = '#dc2626' }) {
     const p = Number(part) || 0;
@@ -92,52 +58,69 @@ export function PctBar({ part, total, color = '#dc2626' }) {
     );
 }
 
-/** Kichik jadval: nom · son · ulush. Tarkib (jinsi, yosh, fayl turi) uchun. */
-export function MiniTable({ title, rows, valueLabel, color = '#0f766e', empty }) {
-    const total = rows.reduce((s, r) => s + (Number(r.value) || 0), 0);
-    const shown = rows.filter((r) => r.value > 0);
-    return (
-        <div className="ls3-mini">
-            <div className="ls3-mini-title">{title}</div>
-            {shown.length ? (
-                <table className="ls3-mini-table">
-                    <thead><tr><th /><th>{valueLabel}</th><th>%</th></tr></thead>
-                    <tbody>
-                        {shown.map((r) => (
-                            <tr key={r.key}>
-                                <td>{r.label}</td>
-                                <td className="ls3-num"><b>{r.value}</b></td>
-                                <td><PctBar part={r.value} total={total} color={r.color || color} /></td>
-                            </tr>
-                        ))}
-                        <tr className="ls3-mini-total"><td>Σ</td><td className="ls3-num"><b>{total}</b></td><td /></tr>
-                    </tbody>
-                </table>
-            ) : <div className="ls3-muted">{empty}</div>}
-        </div>
-    );
-}
+/** Halqa diagramma ranglari: ketma-ket bo'laklar bir-biridan aniq farqlansin. */
+export const RING_PALETTE = ['#dc2626', '#f97316', '#f59e0b', '#84cc16', '#14b8a6', '#0ea5e9', '#6366f1', '#a855f7', '#ec4899', '#78716c'];
+export const RING_OTHER = '#cbd5e1';
 
-/** Tarkib polosasi: sarlavha, bo'lingan polosa, legenda (nom · son · %). */
-export function Strip({ title, parts, empty }) {
-    const total = parts.reduce((s, p) => s + (Number(p.value) || 0), 0);
+/**
+ * Halqa diagramma + legenda (rang · nom · son · ulush). Markazda jami.
+ *
+ * `layout="stack"` — halqa tepada, legenda ostida (kichik kartochkalar);
+ * `layout="split"` — legenda chapda, katta halqa o'ngda.
+ * `rows[i]` = { key, label, sub?, value, color, extra? }; `onPick(row)` —
+ * legenda qatori bosilganda.
+ */
+export function Ring({ rows, totalLabel, empty, layout = 'stack', size = 150, onPick }) {
+    const shown = rows.filter((r) => Number(r.value) > 0);
+    const total = shown.reduce((s, r) => s + Number(r.value), 0);
+    if (!total) return <div className="ls3-empty">{empty}</div>;
+    const Item = onPick ? 'button' : 'li';
     return (
-        <div className="ls3-strip">
-            <div className="ls3-strip-head">{title}<span>{total || ''}</span></div>
-            {total ? (
-                <>
-                    <div className="ls3-strip-bar">
-                        {parts.filter((p) => p.value > 0).map((p) => (
-                            <span key={p.key} style={{ width: `${(p.value / total) * 100}%`, background: p.color }} title={`${p.label}: ${p.value}`} />
-                        ))}
-                    </div>
-                    <div className="ls3-strip-legend">
-                        {parts.filter((p) => p.value > 0).map((p) => (
-                            <span key={p.key}><i style={{ background: p.color }} />{p.label}<b>{p.value}</b> · {pct(p.value, total)}</span>
-                        ))}
-                    </div>
-                </>
-            ) : <div className="ls3-muted">{empty}</div>}
+        <div className={`ls3-ring ls3-ring--${layout}`}>
+            <div className="ls3-ring-chart" style={{ width: size, height: size }}>
+                <Doughnut
+                    data={{
+                        labels: shown.map((r) => r.label),
+                        datasets: [{
+                            data: shown.map((r) => r.value),
+                            backgroundColor: shown.map((r) => r.color),
+                            borderColor: '#fff',
+                            borderWidth: 2,
+                            hoverOffset: 6,
+                        }],
+                    }}
+                    options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '66%',
+                        layout: { padding: 4 },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.raw} (${pct(ctx.raw, total)})` } },
+                        },
+                    }}
+                />
+                <div className="ls3-ring-center">
+                    <b>{num(total)}</b>
+                    {totalLabel ? <span>{totalLabel}</span> : null}
+                </div>
+            </div>
+            <ul className="ls3-ring-legend">
+                {shown.map((r) => (
+                    <Item
+                        key={r.key}
+                        type={onPick ? 'button' : undefined}
+                        className={`ls3-ring-item${onPick ? ' ls3-ring-item--click' : ''}`}
+                        onClick={onPick ? () => onPick(r) : undefined}
+                        title={r.title || r.label}
+                    >
+                        <i style={{ background: r.color }} />
+                        <span className="ls3-ring-name">{r.label}{r.sub ? <small>{r.sub}</small> : null}</span>
+                        <span className="ls3-ring-val">{r.extra ?? <b>{num(r.value)}</b>}</span>
+                        <span className="ls3-ring-pct">{pct(r.value, total)}</span>
+                    </Item>
+                ))}
+            </ul>
         </div>
     );
 }

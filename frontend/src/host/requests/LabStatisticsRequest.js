@@ -1,3 +1,4 @@
+import axiosInstance from "../Api";
 import { httpGetRequest, httpPostRequest } from "../Host";
 
 /**
@@ -47,3 +48,22 @@ export const get_patient_lab_signals = (patientId) =>
 /** Bemor kartasidan qaror. `decision`: confirmed | rejected | pending */
 export const review_patient_lab_signal = (id, decision, note) =>
     httpPostRequest(`/lab-signals/${id}/review`, { decision, note });
+
+/** Statistika PDF hisoboti — sahifadagi filtrlar bilan; brauzerda saqlanadi. */
+export const download_lab_stats_pdf = async (filters, lang = "uz") => {
+    const response = await axiosInstance.get("/lab-statistics/pdf", {
+        params: { ...filters, lang },
+        responseType: "blob",
+    });
+    const disposition = response.headers["content-disposition"] || "";
+    const match = disposition.match(/filename="?([^";\n]+)"?/);
+    const filename = match ? match[1] : `lab_statistika_${new Date().toISOString().slice(0, 10)}.pdf`;
+    const url = URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+};
