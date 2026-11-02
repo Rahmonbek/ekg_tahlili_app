@@ -1,0 +1,145 @@
+[
+ {
+  "label": "holter_2",
+  "model": "gpt-5.6-terra",
+  "effort": "high",
+  "seconds": 10.5,
+  "input_tokens": 9801,
+  "cached_tokens": 0,
+  "output_tokens": 712,
+  "reasoning_tokens": 229,
+  "status": "completed"
+ },
+ {
+  "label": "ecg_3",
+  "model": "gpt-5.6-sol",
+  "effort": "high",
+  "seconds": 27.8,
+  "input_tokens": 13567,
+  "cached_tokens": 0,
+  "output_tokens": 3409,
+  "reasoning_tokens": 2427,
+  "status": "completed"
+ },
+ {
+  "label": "holter_1",
+  "model": "gpt-5.6-terra",
+  "effort": "high",
+  "seconds": 28.2,
+  "input_tokens": 30092,
+  "cached_tokens": 0,
+  "output_tokens": 2288,
+  "reasoning_tokens": 1341,
+  "status": "completed"
+ },
+ {
+  "label": "ecg_2",
+  "model": "gpt-5.6-sol",
+  "effort": "high",
+  "seconds": 29.3,
+  "input_tokens": 4051,
+  "cached_tokens": 0,
+  "output_tokens": 2911,
+  "reasoning_tokens": 2070,
+  "status": "completed"
+ },
+ {
+  "label": "ecg_1",
+  "model": "gpt-5.6-sol",
+  "effort": "high",
+  "seconds": 38.7,
+  "input_tokens": 13567,
+  "cached_tokens": 0,
+  "output_tokens": 3593,
+  "reasoning_tokens": 2588,
+  "status": "completed"
+ },
+ {
+  "label": "smad_1",
+  "model": "gpt-5.6-terra",
+  "effort": "high",
+  "seconds": 28.8,
+  "input_tokens": 15585,
+  "cached_tokens": 0,
+  "output_tokens": 2457,
+  "reasoning_tokens": 1552,
+  "status": "completed"
+ },
+ {
+  "label": "classify_lab",
+  "model": "gpt-5-mini",
+  "effort": null,
+  "seconds": 4.8,
+  "input_tokens": 4209,
+  "cached_tokens": 0,
+  "output_tokens": 348,
+  "reasoning_tokens": 256,
+  "status": "completed"
+ },
+ {
+  "label": "lab_1file",
+  "model": "gpt-5.6-terra",
+  "effort": "high",
+  "seconds": 17.9,
+  "input_tokens": 6972,
+  "cached_tokens": 0,
+  "output_tokens": 1383,
+  "reasoning_tokens": 497,
+  "status": "completed"
+ },
+ {
+  "label": "classify_holter",
+  "model": "gpt-5-mini",
+  "effort": null,
+  "seconds": 8.3,
+  "input_tokens": 12348,
+  "cached_tokens": 0,
+  "output_tokens": 553,
+  "reasoning_tokens": 448,
+  "status": "completed"
+ },
+ {
+  "label": "translate_ecg_ru",
+  "model": "gpt-5-mini",
+  "effort": "low",
+  "seconds": 9.3,
+  "input_tokens": 1224,
+  "cached_tokens": 0,
+  "output_tokens": 1074,
+  "reasoning_tokens": 64,
+  "status": "completed"
+ },
+ {
+  "label": "translate_holter_ru",
+  "model": "gpt-5-mini",
+  "effort": "low",
+  "seconds": 10.2,
+  "input_tokens": 936,
+  "cached_tokens": 0,
+  "output_tokens": 907,
+  "reasoning_tokens": 64,
+  "status": "completed"
+ },
+ {
+  "label": "smad_2",
+  "model": "gpt-5.6-terra",
+  "effort": "high",
+  "seconds": 32.2,
+  "input_tokens": 15650,
+  "cached_tokens": 0,
+  "output_tokens": 2889,
+  "reasoning_tokens": 2029,
+  "status": "completed"
+ },
+ {
+  "label": "lab_3files",
+  "model": "gpt-5.6-terra",
+  "effort": "high",
+  "seconds": 56.6,
+  "input_tokens": 20427,
+  "cached_tokens": 0,
+  "output_tokens": 4784,
+  "reasoning_tokens": 3624,
+  "status": "completed"
+ }
+]
