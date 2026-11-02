@@ -1,0 +1,313 @@
+/* Laboratoriya statistikasi — ixcham ko'rinish (`lsx-*`) */
+
+.lsx {
+  --lsx-text: #1e293b;
+  --lsx-text-2: #475569;
+  --lsx-muted: #64748b;
+  --lsx-line: #e8ecf0;
+  --lsx-bg: #f8fafc;
+  --lsx-primary: #00b39a;
+  --lsx-high: #e5484d;
+  --lsx-low: #f5a524;
+  --lsx-blue: #3b82f6;
+  color: var(--lsx-text);
+  font-size: 14px;
+}
+
+.lsx .main_card_content { padding: 12px 16px 16px; }
+
+.lsx-loading { display: flex; justify-content: center; padding: 40px 0; }
+
+/* ── Yuqori panel: bo'limlar + davr ── */
+.lsx-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 10px;
+}
+
+.lsx-bar .ant-segmented { background: #eef2f6; }
+.lsx-bar .ant-segmented .ant-segmented-item-label { font-weight: 600; padding: 0 14px; }
+
+.lsx-count {
+  display: inline-block;
+  min-width: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--lsx-high);
+  color: #fff;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+  vertical-align: 1px;
+}
+
+.lsx-period { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lsx-period .ant-picker { width: 250px; }
+
+/* ── Filtrlar — bitta qator, darhol qo'llanadi ── */
+.lsx-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  background: var(--lsx-bg);
+  border: 1px solid var(--lsx-line);
+  border-radius: 10px;
+}
+
+.lsx-filters .ant-select { width: 165px; flex: 0 0 auto; }
+.lsx-filters .ant-select--wide { width: 230px; }
+.lsx-age { display: flex; align-items: center; gap: 4px; color: var(--lsx-muted); }
+.lsx-age .ant-input-number { width: 68px; }
+.lsx-filters .ant-checkbox-wrapper { margin-left: 4px; white-space: nowrap; }
+.lsx-filters-spacer { flex: 1; }
+
+/* ── Asosiy raqamlar ── */
+.lsx-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.lsx-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid var(--lsx-line);
+  border-left: 4px solid var(--lsx-primary);
+  border-radius: 10px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  min-width: 0;
+}
+
+.lsx-kpi { background: #f0fdf9; }
+.lsx-kpi--high { border-left-color: var(--lsx-high); background: #fff1f2; }
+.lsx-kpi--low { border-left-color: var(--lsx-low); background: #fffbeb; }
+.lsx-kpi--blue { border-left-color: var(--lsx-blue); background: #eff6ff; }
+.lsx-kpi--gray { border-left-color: #94a3b8; background: #f8fafc; }
+
+.lsx-kpi-label { font-size: 13px; color: var(--lsx-muted); line-height: 1.3; }
+.lsx-kpi-value { font-size: 26px; font-weight: 700; line-height: 1.15; color: #0f172a; }
+.lsx-kpi-value small { font-size: 15px; font-weight: 600; color: var(--lsx-muted); margin-left: 4px; }
+.lsx-kpi-sub { font-size: 13px; color: var(--lsx-text-2); line-height: 1.35; }
+
+/* Metama'lumot qatori: "nom: qiymat · nom: qiymat" */
+.lsx-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 0 2px 12px;
+  font-size: 13px;
+  color: var(--lsx-muted);
+}
+
+.lsx-meta b { color: var(--lsx-text); font-weight: 600; }
+
+/* ── Panellar ── */
+.lsx-panel {
+  background: #fff;
+  border: 1px solid var(--lsx-line);
+  border-radius: 10px;
+  padding: 10px 14px 12px;
+  margin-bottom: 10px;
+  min-width: 0;
+}
+
+.lsx-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.lsx-panel-head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--lsx-text);
+}
+
+.lsx-grid { display: grid; gap: 10px; }
+.lsx-grid > .lsx-panel { margin-bottom: 0; }
+.lsx-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.lsx-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.lsx-grid--main { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+.lsx-grid { margin-bottom: 10px; }
+
+.lsx-chart { position: relative; height: 240px; }
+.lsx-chart--tall { height: 300px; }
+
+/* ── Chiziqli ro'yxat (bar list) ── */
+.lsx-bars { display: flex; flex-direction: column; gap: 6px; }
+
+.lsx-bar-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 160px) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  min-height: 24px;
+}
+
+.lsx-bar-row--click { cursor: pointer; border-radius: 6px; }
+.lsx-bar-row--click:hover { background: var(--lsx-bg); }
+.lsx-bar-row--active { background: #e6f7f4; }
+
+.lsx-bar-label { font-size: 13px; color: var(--lsx-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lsx-bar-label small { display: block; color: var(--lsx-muted); font-size: 12px; }
+
+.lsx-bar-track {
+  display: flex;
+  height: 12px;
+  background: #eef2f6;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.lsx-bar-seg { height: 100%; }
+
+.lsx-bar-val { font-size: 13px; color: var(--lsx-text-2); white-space: nowrap; text-align: right; }
+.lsx-bar-val b { color: var(--lsx-text); }
+
+/* Bitta bo'lingan polosa (jiddiylik) */
+.lsx-stack { display: flex; height: 16px; border-radius: 8px; overflow: hidden; background: #eef2f6; margin: 6px 0 10px; }
+.lsx-stack span { height: 100%; }
+
+.lsx-legend { display: flex; flex-direction: column; gap: 6px; }
+.lsx-legend-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.lsx-legend-row i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.lsx-legend-row span { flex: 1; color: var(--lsx-text-2); }
+.lsx-legend-row b { color: var(--lsx-text); }
+.lsx-legend-row small { color: var(--lsx-muted); margin-left: 6px; }
+
+.lsx-empty { padding: 24px 0; text-align: center; color: var(--lsx-muted); font-size: 13px; }
+
+/* ── Matn ── */
+.lsx-high { color: var(--lsx-high); font-weight: 600; }
+.lsx-low { color: var(--lsx-low); font-weight: 600; }
+.lsx-muted { color: var(--lsx-muted); font-size: 13px; }
+.lsx-nowrap { white-space: nowrap; }
+
+/* ── Jadval ── */
+.lsx .ant-table { font-size: 13.5px; }
+.lsx .ant-table-thead > tr > th { white-space: nowrap; font-weight: 600; color: var(--lsx-muted); background: var(--lsx-bg); }
+.lsx .ant-table-tbody > tr > td { padding-top: 8px !important; padding-bottom: 8px !important; }
+.lsx-row-click { cursor: pointer; }
+
+.lsx-cell-name { font-weight: 600; color: var(--lsx-text); }
+.lsx-cell-sub { font-size: 12px; color: var(--lsx-muted); }
+
+.lsx-rate { display: flex; align-items: center; gap: 8px; min-width: 150px; }
+.lsx-rate-track { flex: 1; height: 8px; border-radius: 4px; background: #eef2f6; overflow: hidden; }
+.lsx-rate-fill { height: 100%; background: var(--lsx-high); }
+.lsx-rate-text { width: 44px; text-align: right; font-weight: 600; font-size: 13px; }
+
+/* ── Xavf signallari ── */
+.lsx-kpi--btn { cursor: pointer; transition: box-shadow .15s ease; }
+.lsx-kpi--btn:hover { box-shadow: 0 2px 10px rgba(15, 23, 42, .08); }
+.lsx-kpi--active { box-shadow: 0 0 0 2px rgba(0, 179, 154, .35); }
+
+.lsx-panel > .lsx-filters { margin-bottom: 10px; }
+
+.lsx-sigs { display: flex; flex-direction: column; gap: 8px; }
+
+.lsx-sig-status { font-size: 13px; font-weight: 600; }
+.lsx-sig-rule {
+  margin-left: 8px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: var(--lsx-muted);
+  font-size: 12px;
+  cursor: help;
+}
+
+.lsx-sig-review { font-size: 13px; font-weight: 600; color: var(--lsx-muted); white-space: nowrap; }
+.lsx-sig-review--confirmed { color: #15803d; }
+
+.lsx-sig {
+  display: grid;
+  grid-template-columns: 4px minmax(0, 1fr);
+  background: #fff;
+  border: 1px solid var(--lsx-line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.lsx-sig-bar { background: #94a3b8; }
+.lsx-sig-body { padding: 10px 14px; min-width: 0; }
+
+.lsx-sig-top { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.lsx-sig-top .ant-tag { margin: 0; }
+.lsx-sig-date { margin-left: auto; font-size: 13px; color: var(--lsx-muted); white-space: nowrap; }
+
+.lsx-sig-title { font-size: 15px; font-weight: 700; color: #0f172a; line-height: 1.3; }
+.lsx-sig-msg { font-size: 14px; color: var(--lsx-text-2); line-height: 1.45; margin-top: 2px; }
+
+.lsx-sig-foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 8px;
+}
+
+.lsx-sig-patient { font-size: 14px; }
+.lsx-sig-patient a { font-weight: 600; }
+.lsx-sig-patient span { color: var(--lsx-muted); margin-left: 6px; font-size: 13px; }
+.lsx-sig-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.lsx-sig-actions .ant-tag { margin: 0; }
+
+.lsx-sig-more {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--lsx-primary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.lsx-sig-more:hover { text-decoration: underline; }
+.lsx-sig-details { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--lsx-line); }
+
+.lsx-pager { display: flex; justify-content: flex-end; margin-top: 10px; }
+
+/* ── Ko'rsatkich oynasi ── */
+.lsx-drawer .ant-drawer-body { padding: 14px 18px; }
+.lsx-drawer .lsx-kpis { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+.lsx-drawer .lsx-kpi { padding: 8px 12px; }
+.lsx-drawer .lsx-kpi-value { font-size: 20px; }
+
+/* ── Moslashuv ── */
+@media (max-width: 1200px) {
+  .lsx-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lsx-grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lsx-grid--main { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .lsx-grid--2, .lsx-grid--3 { grid-template-columns: 1fr; }
+  .lsx-filters .ant-select, .lsx-filters .ant-select--wide { width: auto; flex: 1 1 140px; }
+  .lsx-period .ant-picker { width: 100%; }
+  .lsx-chart--tall { height: 260px; }
+  .lsx-sig-date { margin-left: 0; }
+}

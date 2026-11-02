@@ -120,7 +120,11 @@ public class LabStatisticsService
             SELECT t.category AS key,
                    COUNT(*)                                AS value_count,
                    COUNT(*) FILTER (WHERE v.flag IN (-1, 1)) AS abnormal,
-                   COUNT(DISTINCT v.lab_analysis_id)       AS analyses
+                   COUNT(*) FILTER (WHERE v.flag = 1)       AS high,
+                   COUNT(*) FILTER (WHERE v.flag = -1)      AS low,
+                   COUNT(*) FILTER (WHERE v.flag = 0)       AS normal,
+                   COUNT(DISTINCT v.lab_analysis_id)       AS analyses,
+                   COUNT(DISTINCT v.patient_id)            AS patients
               {ValueFrom} WHERE {vWhere}
              GROUP BY t.category
              ORDER BY value_count DESC", vArgs);
