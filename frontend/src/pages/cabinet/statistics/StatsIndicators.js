@@ -9,7 +9,7 @@ import IndicatorDrawer, { nameOf } from './IndicatorDrawer';
 
 /**
  * Ko'rsatkichlar — statistika JADVALI: har bir ko'rsatkich bitta qator, har
- * bir ustun bitta statistika (natijalar, bemorlar, me'yorda, ↑, ↓, chetlanish
+ * bir ustun bitta statistika (natijalar, bemorlar, me'yorda, ↑, ↓, patologiya
  * ulushi, o'rtacha, mediana, min, max, P10–P90, baholanmagan). Saralash —
  * ustun sarlavhasi; qator → batafsil oyna.
  */
@@ -52,7 +52,7 @@ export default function StatsIndicators({ params, reloadKey, lang, periodText })
         normal: t('stats_normal', { defaultValue: "Me'yorda" }),
         high: t('stats_high', { defaultValue: 'Yuqori' }),
         low: t('stats_low', { defaultValue: 'Past' }),
-        rate: t('stats_abnormal_rate', { defaultValue: 'Chetlanish ulushi' }),
+        rate: t('stats_abnormal_rate', { defaultValue: 'Patologiya ulushi' }),
         mean: t('stats_mean', { defaultValue: "O'rtacha" }),
         median: t('stats_median', { defaultValue: 'Mediana' }).replace(/\s*\(.*\)\s*$/, ''),
         unit: t('stats_unit', { defaultValue: 'Birlik' }),
@@ -132,10 +132,10 @@ export default function StatsIndicators({ params, reloadKey, lang, periodText })
 
             {!rows.length ? <div className="ls3-empty">{L.empty}</div> : (
                 <>
-                    <Card title={t('stats_top_abnormal', { defaultValue: "Eng ko'p me'yordan chetlanadigan ko'rsatkichlar" })}
+                    <Card title={t('stats_top_abnormal', { defaultValue: "Eng ko'p patologiya aniqlangan ko'rsatkichlar" })}
                         extra={<span className="ls3-muted">{t('stats_top_hint', { defaultValue: "Polosa — me'yordan tashqari natijalar soni; ↑ yuqori, ↓ past" })}</span>}
                     >
-                        <RankList rows={topRows} empty={t('stats_no_abnormal', { defaultValue: "Me'yordan chetlanish topilmadi" })} onClick={(r) => setSelected(r.row)} />
+                        <RankList rows={topRows} empty={t('stats_no_abnormal', { defaultValue: "Patologiya topilmadi" })} onClick={(r) => setSelected(r.row)} />
                     </Card>
 
                     <Card

@@ -257,7 +257,7 @@ klinika `users.clinic_id` dan, boshqa klinika ko'rinmaydi).
   bo'limlar + BARCHA filtrlar bir xil kenglikda, yorliqli, darhol
   qo'llanadi; signallar bo'limida signal filtrlariga almashadi) +
   `StatsOverview` (hero qator; BITTA ustunli grafik — tahlillar, ichida
-  chetlanishlisi qizil — ostida davr jadvali; guruhlar, bemorlar/tahlillar
+  patologiyalisi qizil — ostida davr jadvali; guruhlar, bemorlar/tahlillar
   tarkibi, xodimlar — JADVALLAR, ulush `PctBar`) / `StatsIndicators`
   (statistika jadvali: har ustun bitta statistika — natijalar, bemorlar,
   me'yorda, ↑, ↓, ulush, o'rtacha, mediana, min, max, P10–P90,

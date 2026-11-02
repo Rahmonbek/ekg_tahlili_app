@@ -18,7 +18,7 @@ function periodLabel(p, bucket) {
 /**
  * Umumiy: asosiy raqamlar, vaqt bo'yicha (ustunli grafik + davr jadvali),
  * tahlil guruhlari jadvali, bemorlar/tahlillar tarkibi jadvallari, xodimlar.
- * Grafik faqat bitta: tahlillar soni, ichida chetlanishlisi qizil.
+ * Grafik faqat bitta: tahlillar soni, ichida patologiyalisi qizil.
  */
 export default function StatsOverview({ params, reloadKey, lang, periodText }) {
     const { t } = useTranslation();
@@ -55,13 +55,13 @@ export default function StatsOverview({ params, reloadKey, lang, periodText }) {
     const L = {
         analyses: t('stats_analyses', { defaultValue: 'Tahlillar' }),
         patients: t('stats_patients', { defaultValue: 'Bemorlar' }),
-        abnormal: t('stats_abnormal_analyses', { defaultValue: 'Chetlanishli tahlillar' }),
-        noAbnormal: t('stats_normal_analyses', { defaultValue: 'Chetlanishsiz tahlillar' }),
+        abnormal: t('stats_abnormal_analyses', { defaultValue: 'Patologiyali tahlillar' }),
+        noAbnormal: t('stats_normal_analyses', { defaultValue: 'Patologiyasiz tahlillar' }),
         normal: t('stats_normal', { defaultValue: "Me'yorda" }),
         out: t('stats_out_of_range', { defaultValue: "Me'yordan tashqari" }),
         high: t('stats_high', { defaultValue: 'Yuqori' }),
         low: t('stats_low', { defaultValue: 'Past' }),
-        rate: t('stats_abnormal_rate', { defaultValue: 'Chetlanish ulushi' }),
+        rate: t('stats_abnormal_rate', { defaultValue: 'Patologiya ulushi' }),
         share: t('stats_by_rate', { defaultValue: 'Ulushi' }),
         values: t('stats_values', { defaultValue: 'Aniqlangan qiymatlar' }),
         severe: t('stats_sev3', { defaultValue: "Og'ir" }),

@@ -134,6 +134,28 @@ def age_at(birthdate, on_date):
     return d.year - b.year - ((d.month, d.day) < (b.month, b.day))
 
 
+GUARD_EVERY = 20   # shuncha yuklashdan keyin AI holati tekshiriladi
+GUARD_SAMPLE = 6   # oxirgi shuncha (4+ daqiqa oldin yuborilgan) tahlil
+
+
+def ai_failing(api, recent):
+    """Oxirgi tahlillarning HAMMASI AI xatosi (-1) bilan tugaganmi.
+
+    OpenAI hisobida pul tugasa yuklash hamon muvaffaqiyatli (fayl saqlanadi),
+    lekin har bir tahlil -1 bo'ladi — import to'xtamasa minglab tahlil
+    xatoga tushib, keyin hammasini qayta yuborishga yana 2 kun ketardi.
+    """
+    old = [lid for lid, t in recent if time.time() - t > 240][-GUARD_SAMPLE:]
+    if len(old) < GUARD_SAMPLE:
+        return False
+    statuses = []
+    for lid in old:
+        r = api.call("GET", f"lab-analyses/{lid}")
+        if r.ok:
+            statuses.append(r.json().get("status"))
+    return len(statuses) == GUARD_SAMPLE and all(s == -1 for s in statuses)
+
+
 def cmd_run(a):
     api = Api(a.api, a.token_file)
     plan = json.load(open(a.plan, encoding="utf-8"))
@@ -141,6 +163,7 @@ def cmd_run(a):
     interval = 60.0 / a.rate
     sent = 0
     last_post = 0.0
+    recent = []  # (lab_id, yuborilgan vaqt) — AI holatini kuzatish uchun
     for p in plan:
         if a.limit and sent >= a.limit:
             break
@@ -181,6 +204,7 @@ def cmd_run(a):
                 lab_id = r.json().get("lab_id")
                 state["uploads"][ukey] = {"lab_id": lab_id, "status": 0, "patient_id": pid}
                 log(f"  lab {lab_id}: {len(u['files'])} fayl, {u.get('date')}")
+                recent = (recent + [(lab_id, time.time())])[-60:]
             elif r.status_code == 409:
                 state["uploads"][ukey] = {"duplicate": True, "patient_id": pid}
                 log(f"  takror — avval yuklangan: {u['files'][0]}")
@@ -189,6 +213,11 @@ def cmd_run(a):
                 log(f"  XATO {r.status_code}: {u['files'][0]} — {r.text[:200]}")
             save_state(a.state, state)
             sent += 1
+            if sent % GUARD_EVERY == 0 and ai_failing(api, recent):
+                log("TO'XTATILDI: oxirgi tahlillarning hammasi AI xatosi bilan tugadi.")
+                log("OpenAI balansini tekshiring. To'lovdan keyin: check → retry → run (joyidan davom etadi).")
+                summary(state)
+                sys.exit(2)
     log(f"yuborildi: {sent}")
     summary(state)
 
