@@ -83,31 +83,74 @@ export default function LabDynamicsChart({ patcientId, showTitle = true }) {
                 { day: '2-digit', month: '2-digit', year: '2-digit' }));
         const values = current.points.map((p) => p.value);
 
-        // Jins ma'lum bo'lsa aniq diapazon, aks holda ikkalasining kengi
-        const min = current.gender === true ? current.normalMinMale
-            : current.gender === false ? current.normalMinFemale
-            : Math.min(...[current.normalMinMale, current.normalMinFemale]
-                .filter((x) => x != null));
-        const max = current.gender === true ? current.normalMaxMale
-            : current.gender === false ? current.normalMaxFemale
-            : Math.max(...[current.normalMaxMale, current.normalMaxFemale]
-                .filter((x) => x != null));
+        // Katalog me'yori — jins ma'lum bo'lsa aniq diapazon, aks holda
+        // ikkalasining kengi. Bir jinsda chegara yo'q bo'lsa (FSG/LG ayol
+        // me'yori) — birlashmada ham yo'q (L-17)
+        const { normalMinMale: mMin, normalMinFemale: fMin,
+                normalMaxMale: mMax, normalMaxFemale: fMax } = current;
+        const min = current.gender === true ? mMin
+            : current.gender === false ? fMin
+            : (mMin == null || fMin == null ? null : Math.min(mMin, fMin));
+        const max = current.gender === true ? mMax
+            : current.gender === false ? fMax
+            : (mMax == null || fMax == null ? null : Math.max(mMax, fMax));
+        const catalogBand = Number.isFinite(min) && Number.isFinite(max);
+
+        // Har nuqtaning o'z me'yori (L-23): laboratoriya blankasidagi me'yor
+        // (`refLow`/`refHigh`) bo'lsa — shu, chunki u assayga xos (erkin T3:
+        // klinika 1.2–4.2, katalog 3.1–6.8) va kartochkadagi baho ham shunga
+        // tayanadi. Bo'lmasa — katalog me'yori. Teskari me'yor (min > max)
+        // e'tiborsiz qoldiriladi (L-38). Faqat yuqori chegara bo'lsa ("≤ 5")
+        // pastki chegara 0.
+        const bands = current.points.map((p) => {
+            const lo = Number.isFinite(p.refLow) ? p.refLow : null;
+            const hi = Number.isFinite(p.refHigh) ? p.refHigh : null;
+            const labOk = (lo != null || hi != null) && !(lo != null && hi != null && lo > hi);
+            if (labOk) return { low: lo ?? (hi != null ? 0 : null), high: hi, lab: true };
+            return catalogBand ? { low: min, high: max, lab: false } : { low: null, high: null, lab: false };
+        });
+        const hasBand = bands.some((b) => b.low != null && b.high != null);
+        const anyLab = bands.some((b) => b.lab);
+
+        // Nuqta bahosi: serverdagi `flag` (-1 past / 0 me'yor / 1 yuqori —
+        // kartochkadagi bilan bir xil). Eski javobda bo'lmasa — me'yor
+        // yo'lagidan hisoblanadi.
+        const flags = current.points.map((p, i) => {
+            if (p.flag === -1 || p.flag === 0 || p.flag === 1) return p.flag;
+            const { low, high } = bands[i];
+            if (low == null && high == null) return null;
+            if (low != null && p.value < low) return -1;
+            if (high != null && p.value > high) return 1;
+            return 0;
+        });
+        const FLAG_COLOR = { 1: '#DC2626', '-1': '#D97706', 0: '#16A34A' };
+        const pointColors = flags.map((f) => (f == null ? '#0EA5E9' : FLAG_COLOR[f]));
 
         const datasets = [{
             label: current[`name${t('data_lang')}`] ?? current.nameUz,
             data: values,
             borderColor: '#0EA5E9',
             backgroundColor: '#0EA5E9',
+            pointBackgroundColor: pointColors,
+            pointBorderColor: pointColors,
             tension: 0.25,
-            pointRadius: 4,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            // Tooltip uchun: nuqta bahosi va me'yor manbasi
+            flags,
+            flagSources: current.points.map((p, i) => p.flagSource ?? (bands[i].lab ? 'lab' : null)),
         }];
 
-        // Norma yo'lagi: pastki va yuqori chegara orasidagi soha
-        if (Number.isFinite(min) && Number.isFinite(max)) {
+        // Norma yo'lagi: pastki va yuqori chegara orasidagi soha. Me'yor
+        // tahlildan tahlilga farq qilishi mumkin (har xil laboratoriya) —
+        // shuning uchun chegaralar nuqtama-nuqta.
+        if (hasBand) {
             datasets.push(
                 {
-                    label: t('normal_range', { defaultValue: 'Norma' }),
-                    data: labels.map(() => max),
+                    label: anyLab
+                        ? `${t('normal_range', { defaultValue: 'Norma' })} (${t('lab_ref_source', { defaultValue: 'laboratoriya' })})`
+                        : t('normal_range', { defaultValue: 'Norma' }),
+                    data: bands.map((b) => b.high),
                     borderColor: 'rgba(22, 163, 74, 0.35)',
                     backgroundColor: 'rgba(22, 163, 74, 0.08)',
                     borderDash: [6, 4],
@@ -116,7 +159,7 @@ export default function LabDynamicsChart({ patcientId, showTitle = true }) {
                 },
                 {
                     label: '',
-                    data: labels.map(() => min),
+                    data: bands.map((b) => b.low),
                     borderColor: 'rgba(22, 163, 74, 0.35)',
                     borderDash: [6, 4],
                     pointRadius: 0,
@@ -185,8 +228,21 @@ export default function LabDynamicsChart({ patcientId, showTitle = true }) {
                             },
                             tooltip: {
                                 callbacks: {
-                                    label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y}`
-                                        + (current.measure ? ` ${current.measure}` : ''),
+                                    label: (ctx) => {
+                                        let text = `${ctx.dataset.label}: ${ctx.parsed.y}`
+                                            + (current.measure ? ` ${current.measure}` : '');
+                                        // Asosiy chiziq nuqtasi — baho va me'yor manbasi
+                                        const flag = ctx.dataset.flags?.[ctx.dataIndex];
+                                        if (flag === 1 || flag === -1) {
+                                            text += flag === 1
+                                                ? ` ↑ ${t('above_normal', { defaultValue: 'Yuqori' })}`
+                                                : ` ↓ ${t('below_normal', { defaultValue: 'Past' })}`;
+                                            if (ctx.dataset.flagSources?.[ctx.dataIndex] === 'lab') {
+                                                text += ` (${t('lab_ref_source', { defaultValue: 'laboratoriya' })})`;
+                                            }
+                                        }
+                                        return text;
+                                    },
                                 },
                             },
                         },

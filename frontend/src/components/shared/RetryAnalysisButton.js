@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { successAlert, dangerAlert } from '../../tools/Alerts'
 import { useStore } from '../../store/Store'
 import { appendPatientMeta } from '../../tools/formatters'
+import { extractApiError } from '../../tools/apiError'
 
 // Qayta tahlil progress elementi uchun tur bo'yicha yorliq va ro'yxat yo'li
 const RETRY_TYPE_META = {
@@ -61,11 +62,12 @@ export default function RetryAnalysisButton({ id, type, onRetry, meta = {}, onDo
             successAlert(t('retry_started', { defaultValue: 'Tahlil qaytadan yuborildi' }))
             if (onDone) onDone()
         } catch (err) {
-            dangerAlert(
-                err?.response?.data?.message ||
-                err?.response?.data?.detail ||
-                t('retry_failed', { defaultValue: 'Qayta yuborib bo\'lmadi' })
-            )
+            // `detail` (Python, masalan 409 "tahlil hali ishlanmoqda") yoki
+            // `message` (.NET) — obyekt ko'rinishidagi `detail` ham o'qiladi
+            // (axios'ning "Request failed with status code …" matni emas —
+            // server sababi bo'lmasa umumiy xabar)
+            const reason = extractApiError({ response: err?.response }, '')
+            dangerAlert(reason || t('retry_failed', { defaultValue: 'Qayta yuborib bo\'lmadi' }))
         } finally {
             setLoading(false)
         }

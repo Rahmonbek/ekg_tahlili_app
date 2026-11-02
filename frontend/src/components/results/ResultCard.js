@@ -9,6 +9,7 @@ import { parseSeverity, SEVERITY, severityLabel } from '../../tools/severity';
 import { dangerAlert, successAlert, warningAlert } from '../../tools/Alerts';
 import { analyzeEkgFileRetry, retryAnalysis } from '../../host/EkgService';
 import { buildFileUrl } from '../../host/Host';
+import { extractApiError } from '../../tools/apiError';
 import AnalysisResultBody from './AnalysisResultBody';
 import ClinicHeader from './ClinicHeader';
 import './AnalysisResult.css';
@@ -127,8 +128,12 @@ export default function ResultCard({
                     defaultValue: 'Tahlil AI ga yuborildi — natija tayyor bo\'lganda xabar beriladi.',
                 }));
             }
-        } catch {
-            dangerAlert(t('api_error'));
+        } catch (err) {
+            // Server sababi ko'rsatiladi — masalan 409 "tahlil hali
+            // ishlanmoqda" (`detail`). Ilgari doim umumiy xato chiqardi.
+            // Faqat server javobidagi matn olinadi (axios'ning texnik
+            // "Request failed…" xabari emas)
+            dangerAlert(extractApiError({ response: err?.response }, '') || t('api_error'));
         } finally {
             setRetrying(false);
         }

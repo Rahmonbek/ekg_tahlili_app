@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using EkgAnalyzerApi.Data;
 using EkgAnalyzerApi.Services.LabStatistics;
@@ -9,13 +11,32 @@ namespace EkgAnalyzerApi.Services.LabRules;
 /// ga yozadi. Baho klinika kesimida: bemorning faqat shu klinikadagi
 /// (o'chirilmagan) tahlillari.
 ///
-/// Signal yangilanganda (yangi tahlil yoki holat o'zgarsa) shifokor qarori
-/// `pending` ga qaytadi — yangi dalilni qayta ko'rishi kerak. Endi ishlamay
-/// qolgan qoidaning signali o'chiriladi (u hosila ma'lumot).
+/// Signal dalili (`evidence_hash`: holat + daraja + dalil qiymatlari)
+/// o'zgarganda shifokor qarori `pending` ga qaytadi va izohi tozalanadi —
+/// yangi dalilni qayta ko'rishi kerak. Dalil AYNAN o'sha bo'lsa (masalan
+/// qayta tahlil xuddi shu qiymatlarni qaytardi) qaror saqlanadi. Endi
+/// ishlamay qolgan qoidaning signali o'chiriladi (u hosila ma'lumot).
+///
+/// Himoyalar:
+///  * statusi 0/1 (AI ishlayapti) lab tahlili bor bemor baholanmaydi va
+///    signallari o'chirilmaydi — qayta tahlil paytida qiymatlar vaqtincha
+///    o'chirilgan bo'ladi (L-10);
+///  * bitta qoidaning xatosi qolganlarini va eski signallarni o'chirmaydi;
+///    xato bergan bemor `MaxErrors` marta qayta uriniladi, keyin ma'lumoti
+///    o'zgarguncha to'xtatiladi (L-11).
 /// </summary>
 public class LabRuleEngine
 {
     private static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+    /// <summary>Ketma-ket shuncha xatodan keyin bemor ma'lumoti o'zgarguncha qayta urinilmaydi.</summary>
+    internal const int MaxErrors = 3;
+
+    /// <summary>Statusi shu bo'lgan lab tahlili bor bemor hozircha baholanmaydi (AI ishlayapti).</summary>
+    private const string InProgressSql = @"
+        EXISTS (SELECT 1 FROM lab_analyses x
+                 WHERE x.patient_id = {0} AND x.clinic_id = {1}
+                   AND x.deleted_at IS NULL AND x.status IN (0, 1))";
 
     private readonly MedDataDB _db;
     private readonly ILogger<LabRuleEngine> _logger;
@@ -29,7 +50,7 @@ public class LabRuleEngine
     /// <summary>Qayta baholanishi kerak bo'lgan (klinika, bemor) juftlari.</summary>
     public async Task<List<(int ClinicId, int PatientId, long LastId, int Count)>> FindDirtyAsync(int batch, int? clinicId = null)
     {
-        var rows = await SqlRows.QueryAsync(_db, @"
+        var rows = await SqlRows.QueryAsync(_db, $@"
             WITH cur AS (
                 SELECT a.clinic_id, v.patient_id, MAX(v.id) AS last_id, COUNT(*)::int AS cnt
                   FROM lab_analysis_values v
@@ -41,10 +62,12 @@ public class LabRuleEngine
               FROM cur
               LEFT JOIN lab_rule_patient_state s
                      ON s.clinic_id = cur.clinic_id AND s.patient_id = cur.patient_id
-             WHERE s.patient_id IS NULL
-                OR s.rules_version <> @version
-                OR s.last_value_id <> cur.last_id
-                OR s.values_count <> cur.cnt
+             WHERE (s.patient_id IS NULL
+                    OR s.rules_version <> @version
+                    OR s.last_value_id <> cur.last_id
+                    OR s.values_count <> cur.cnt)
+               AND NOT {string.Format(InProgressSql, "cur.patient_id", "cur.clinic_id")}
+             ORDER BY COALESCE(s.error_count, 0), cur.clinic_id, cur.patient_id
              LIMIT @batch", new()
         {
             ["@clinic"] = clinicId,
@@ -56,20 +79,26 @@ public class LabRuleEngine
             Convert.ToInt64(r["last_id"]), Convert.ToInt32(r["cnt"]))).ToList();
     }
 
-    /// <summary>Barcha qiymatlari o'chirilgan (tahlili o'chirilgan) bemorlarning signallari.</summary>
+    /// <summary>
+    /// Barcha qiymatlari o'chirilgan (tahlili o'chirilgan) bemorlarning
+    /// signallari. Qayta tahlil qilinayotgan (qiymatlari vaqtincha yo'q)
+    /// bemorga tegilmaydi.
+    /// </summary>
     public async Task<int> PurgeOrphansAsync()
     {
-        return await SqlRows.ExecuteAsync(_db, @"
+        return await SqlRows.ExecuteAsync(_db, $@"
             DELETE FROM lab_rule_signals s
              WHERE NOT EXISTS (
                 SELECT 1 FROM lab_analysis_values v
                   JOIN lab_analyses a ON a.id = v.lab_analysis_id AND a.deleted_at IS NULL
-                 WHERE v.patient_id = s.patient_id AND a.clinic_id = s.clinic_id);
+                 WHERE v.patient_id = s.patient_id AND a.clinic_id = s.clinic_id)
+               AND NOT {string.Format(InProgressSql, "s.patient_id", "s.clinic_id")};
             DELETE FROM lab_rule_patient_state st
              WHERE NOT EXISTS (
                 SELECT 1 FROM lab_analysis_values v
                   JOIN lab_analyses a ON a.id = v.lab_analysis_id AND a.deleted_at IS NULL
-                 WHERE v.patient_id = st.patient_id AND a.clinic_id = st.clinic_id);", new());
+                 WHERE v.patient_id = st.patient_id AND a.clinic_id = st.clinic_id)
+               AND NOT {string.Format(InProgressSql, "st.patient_id", "st.clinic_id")};", new());
     }
 
     public async Task<Dictionary<string, CatalogItem>> LoadCatalogAsync()
@@ -90,9 +119,162 @@ public class LabRuleEngine
     public async Task<int> EvaluateAsync(int clinicId, int patientId, long lastId, int count,
         IReadOnlyDictionary<string, CatalogItem> catalog)
     {
+        List<RuleSignal> signals;
+        List<string> failed;
+        try
+        {
+            var ctx = await LoadContextAsync(clinicId, patientId, catalog);
+            if (ctx == null) return 0;
+            (signals, failed) = LabRules.EvaluateSafe(ctx, (rule, ex) =>
+                _logger.LogError(ex, "Lab qoidasi xatosi: rule={Rule} clinic={Clinic} patient={Patient}",
+                    rule, clinicId, patientId));
+        }
+        catch (Exception ex)
+        {
+            // Kutilmagan ma'lumot: HECH NARSA o'chirilmaydi (eski signallar va
+            // shifokor baholari saqlanadi), keyingi siklda qayta uriniladi
+            _logger.LogError(ex, "Lab qoidalari xatosi: clinic={Clinic} patient={Patient}", clinicId, patientId);
+            await RecordErrorAsync(clinicId, patientId, lastId, count);
+            return 0;
+        }
+
+        // Qayta ko'rish sharti: dalil xeshi o'zgargan. Eski (xeshsiz) yozuvda —
+        // avvalgi shart (boshqa tahlil yoki holat), aks holda migratsiyadan
+        // keyingi birinchi hisobda barcha baholar bekor bo'lardi.
+        const string reset = @"(CASE WHEN lab_rule_signals.evidence_hash IS NULL
+                     THEN lab_rule_signals.latest_analysis_id IS DISTINCT FROM EXCLUDED.latest_analysis_id
+                          OR lab_rule_signals.status <> EXCLUDED.status
+                     ELSE lab_rule_signals.evidence_hash IS DISTINCT FROM EXCLUDED.evidence_hash END)";
+
+        await using var tx = await _db.Database.BeginTransactionAsync();
+        foreach (var s in signals)
+        {
+            await SqlRows.ExecuteAsync(_db, $@"
+                INSERT INTO lab_rule_signals
+                    (clinic_id, patient_id, rule_id, status, severity, title_uz, message_uz, recommendation_uz,
+                     evidence, temporal, missing_data, latest_analysis_id, observed_at, source_version, evaluated_at,
+                     evidence_hash)
+                VALUES (@c, @p, @rule, @status, @sev, @title, @msg, @rec,
+                        CAST(@evidence AS jsonb), CAST(@temporal AS jsonb), CAST(@missing AS jsonb),
+                        @analysis, @observed, @version, NOW(), @hash)
+                ON CONFLICT (clinic_id, patient_id, rule_id) DO UPDATE SET
+                    status = EXCLUDED.status,
+                    severity = EXCLUDED.severity,
+                    title_uz = EXCLUDED.title_uz,
+                    message_uz = EXCLUDED.message_uz,
+                    recommendation_uz = EXCLUDED.recommendation_uz,
+                    evidence = EXCLUDED.evidence,
+                    temporal = EXCLUDED.temporal,
+                    missing_data = EXCLUDED.missing_data,
+                    observed_at = EXCLUDED.observed_at,
+                    source_version = EXCLUDED.source_version,
+                    evaluated_at = NOW(),
+                    -- Yangi dalil — shifokor qayta ko'rishi kerak
+                    reviewer_status = CASE WHEN {reset} THEN 'pending' ELSE lab_rule_signals.reviewer_status END,
+                    reviewed_by_user_id = CASE WHEN {reset} THEN NULL ELSE lab_rule_signals.reviewed_by_user_id END,
+                    reviewed_at = CASE WHEN {reset} THEN NULL ELSE lab_rule_signals.reviewed_at END,
+                    review_note = CASE WHEN {reset} THEN NULL ELSE lab_rule_signals.review_note END,
+                    latest_analysis_id = EXCLUDED.latest_analysis_id,
+                    evidence_hash = EXCLUDED.evidence_hash", new()
+            {
+                ["@c"] = clinicId,
+                ["@p"] = patientId,
+                ["@rule"] = s.RuleId,
+                ["@status"] = s.Status,
+                ["@sev"] = s.Severity,
+                ["@title"] = Trim(s.Title, 200),
+                ["@msg"] = s.Message,
+                ["@rec"] = s.Recommendation,
+                ["@evidence"] = JsonSerializer.Serialize(s.Evidence, Json),
+                ["@temporal"] = s.Temporal == null ? null : JsonSerializer.Serialize(s.Temporal, Json),
+                ["@missing"] = JsonSerializer.Serialize(s.Missing, Json),
+                ["@analysis"] = s.LatestAnalysisId,
+                ["@observed"] = s.ObservedAt,
+                ["@version"] = LabRules.Version,
+                ["@hash"] = EvidenceHash(s),
+            });
+        }
+
+        // Ishlamay qolgan qoidalarning signali o'chiriladi; xato bergan
+        // qoidalarniki esa SAQLANADI (ular baholanmadi)
+        await SqlRows.ExecuteAsync(_db, @"
+            DELETE FROM lab_rule_signals
+             WHERE clinic_id = @c AND patient_id = @p AND NOT (rule_id = ANY(@keep));", new()
+        {
+            ["@c"] = clinicId,
+            ["@p"] = patientId,
+            ["@keep"] = signals.Select(s => s.RuleId).Concat(failed).Distinct().ToArray(),
+        });
+
+        if (failed.Count == 0)
+        {
+            await SqlRows.ExecuteAsync(_db, @"
+                INSERT INTO lab_rule_patient_state
+                    (clinic_id, patient_id, rules_version, last_value_id, values_count, error_count, evaluated_at)
+                VALUES (@c, @p, @version, @last, @cnt, 0, NOW())
+                ON CONFLICT (clinic_id, patient_id) DO UPDATE SET
+                    rules_version = EXCLUDED.rules_version,
+                    last_value_id = EXCLUDED.last_value_id,
+                    values_count = EXCLUDED.values_count,
+                    error_count = 0,
+                    evaluated_at = NOW();", new()
+            {
+                ["@c"] = clinicId,
+                ["@p"] = patientId,
+                ["@version"] = LabRules.Version,
+                ["@last"] = lastId,
+                ["@cnt"] = count,
+            });
+        }
+        await tx.CommitAsync();
+
+        if (failed.Count > 0) await RecordErrorAsync(clinicId, patientId, lastId, count);
+        return signals.Count;
+    }
+
+    /// <summary>
+    /// Xatoni hisoblaydi: `MaxErrors` gacha bemor "o'zgargan" bo'lib qoladi
+    /// (`last_value_id = -1`) va keyingi siklda qayta uriniladi; keyin
+    /// haqiqiy holat yoziladi — ma'lumot yoki qoidalar versiyasi o'zgarguncha
+    /// siklni band qilmaydi.
+    /// </summary>
+    private async Task RecordErrorAsync(int clinicId, int patientId, long lastId, int count)
+    {
+        try
+        {
+            await SqlRows.ExecuteAsync(_db, @"
+                INSERT INTO lab_rule_patient_state
+                    (clinic_id, patient_id, rules_version, last_value_id, values_count, error_count, evaluated_at)
+                VALUES (@c, @p, @version, -1, @cnt, 1, NOW())
+                ON CONFLICT (clinic_id, patient_id) DO UPDATE SET
+                    rules_version = EXCLUDED.rules_version,
+                    last_value_id = CASE WHEN lab_rule_patient_state.error_count + 1 >= @max
+                                         THEN @last ELSE -1 END,
+                    values_count = EXCLUDED.values_count,
+                    error_count = lab_rule_patient_state.error_count + 1,
+                    evaluated_at = NOW();", new()
+            {
+                ["@c"] = clinicId,
+                ["@p"] = patientId,
+                ["@version"] = LabRules.Version,
+                ["@last"] = lastId,
+                ["@cnt"] = count,
+                ["@max"] = MaxErrors,
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lab qoidalari: xato hisoblagichi yozilmadi: clinic={Clinic} patient={Patient}",
+                clinicId, patientId);
+        }
+    }
+
+    private async Task<PatientLabContext?> LoadContextAsync(int clinicId, int patientId,
+        IReadOnlyDictionary<string, CatalogItem> catalog)
+    {
         var patient = (await SqlRows.QueryAsync(_db,
             "SELECT gender, birthdate FROM patients WHERE id = @p", new() { ["@p"] = patientId })).FirstOrDefault();
-        if (patient == null) return 0;
+        if (patient == null) return null;
 
         var obsRows = await SqlRows.QueryAsync(_db, @"
             SELECT t.column_name, v.value, v.measured_at, v.ref_low, v.ref_high, v.flag,
@@ -120,94 +302,39 @@ public class LabRuleEngine
             DateOnly d => d.ToDateTime(TimeOnly.MinValue),
             _ => (DateTime?)null,
         };
-        var ctx = new PatientLabContext(clinicId, patientId, patient["gender"] as bool?, birth, observations, catalog);
+        return new PatientLabContext(clinicId, patientId, patient["gender"] as bool?, birth, observations, catalog);
+    }
 
-        List<RuleSignal> signals;
-        try
+    /// <summary>
+    /// Dalil barmoq izi (SHA-256): holat, daraja, asosiy tahlil va har bir
+    /// dalilning qiymati/sanasi/chegarasi. Matnlar (sarlavha, xabar) va
+    /// katalog nomlari kirmaydi — ular o'zgarsa baho qaytarilmaydi.
+    /// </summary>
+    internal static string EvidenceHash(RuleSignal s)
+    {
+        var canon = new
         {
-            signals = LabRules.Evaluate(ctx).ToList();
-        }
-        catch (Exception ex)
-        {
-            // Bitta bemordagi kutilmagan ma'lumot butun siklni to'xtatmasin
-            _logger.LogError(ex, "Lab qoidalari xatosi: clinic={Clinic} patient={Patient}", clinicId, patientId);
-            signals = new();
-        }
-
-        await using var tx = await _db.Database.BeginTransactionAsync();
-        foreach (var s in signals)
-        {
-            await SqlRows.ExecuteAsync(_db, @"
-                INSERT INTO lab_rule_signals
-                    (clinic_id, patient_id, rule_id, status, severity, title_uz, message_uz, recommendation_uz,
-                     evidence, temporal, missing_data, latest_analysis_id, observed_at, source_version, evaluated_at)
-                VALUES (@c, @p, @rule, @status, @sev, @title, @msg, @rec,
-                        CAST(@evidence AS jsonb), CAST(@temporal AS jsonb), CAST(@missing AS jsonb),
-                        @analysis, @observed, @version, NOW())
-                ON CONFLICT (clinic_id, patient_id, rule_id) DO UPDATE SET
-                    status = EXCLUDED.status,
-                    severity = EXCLUDED.severity,
-                    title_uz = EXCLUDED.title_uz,
-                    message_uz = EXCLUDED.message_uz,
-                    recommendation_uz = EXCLUDED.recommendation_uz,
-                    evidence = EXCLUDED.evidence,
-                    temporal = EXCLUDED.temporal,
-                    missing_data = EXCLUDED.missing_data,
-                    observed_at = EXCLUDED.observed_at,
-                    source_version = EXCLUDED.source_version,
-                    evaluated_at = NOW(),
-                    -- Yangi dalil yoki boshqa holat — shifokor qayta ko'rishi kerak
-                    reviewer_status = CASE
-                        WHEN lab_rule_signals.latest_analysis_id IS DISTINCT FROM EXCLUDED.latest_analysis_id
-                          OR lab_rule_signals.status <> EXCLUDED.status
-                        THEN 'pending' ELSE lab_rule_signals.reviewer_status END,
-                    reviewed_by_user_id = CASE
-                        WHEN lab_rule_signals.latest_analysis_id IS DISTINCT FROM EXCLUDED.latest_analysis_id
-                          OR lab_rule_signals.status <> EXCLUDED.status
-                        THEN NULL ELSE lab_rule_signals.reviewed_by_user_id END,
-                    reviewed_at = CASE
-                        WHEN lab_rule_signals.latest_analysis_id IS DISTINCT FROM EXCLUDED.latest_analysis_id
-                          OR lab_rule_signals.status <> EXCLUDED.status
-                        THEN NULL ELSE lab_rule_signals.reviewed_at END,
-                    latest_analysis_id = EXCLUDED.latest_analysis_id", new()
+            s.Status,
+            s.Severity,
+            s.LatestAnalysisId,
+            Evidence = s.Evidence.Select(e => new
             {
-                ["@c"] = clinicId,
-                ["@p"] = patientId,
-                ["@rule"] = s.RuleId,
-                ["@status"] = s.Status,
-                ["@sev"] = s.Severity,
-                ["@title"] = Trim(s.Title, 200),
-                ["@msg"] = s.Message,
-                ["@rec"] = s.Recommendation,
-                ["@evidence"] = JsonSerializer.Serialize(s.Evidence, Json),
-                ["@temporal"] = s.Temporal == null ? null : JsonSerializer.Serialize(s.Temporal, Json),
-                ["@missing"] = JsonSerializer.Serialize(s.Missing, Json),
-                ["@analysis"] = s.LatestAnalysisId,
-                ["@observed"] = s.ObservedAt,
-                ["@version"] = LabRules.Version,
-            });
-        }
+                e.Indicator,
+                Value = Num(e.Value),
+                e.Text,
+                Date = e.Date.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'"),
+                e.AnalysisId,
+                Threshold = Num(e.Threshold),
+                e.Comparator,
+                e.ThresholdSource,
+            }),
+        };
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(canon)));
+        return Convert.ToHexString(bytes).ToLowerInvariant();
 
-        await SqlRows.ExecuteAsync(_db, @"
-            DELETE FROM lab_rule_signals
-             WHERE clinic_id = @c AND patient_id = @p AND NOT (rule_id = ANY(@rules));
-            INSERT INTO lab_rule_patient_state (clinic_id, patient_id, rules_version, last_value_id, values_count, evaluated_at)
-            VALUES (@c, @p, @version, @last, @cnt, NOW())
-            ON CONFLICT (clinic_id, patient_id) DO UPDATE SET
-                rules_version = EXCLUDED.rules_version,
-                last_value_id = EXCLUDED.last_value_id,
-                values_count = EXCLUDED.values_count,
-                evaluated_at = NOW();", new()
-        {
-            ["@c"] = clinicId,
-            ["@p"] = patientId,
-            ["@rules"] = signals.Select(s => s.RuleId).ToArray(),
-            ["@version"] = LabRules.Version,
-            ["@last"] = lastId,
-            ["@cnt"] = count,
-        });
-        await tx.CommitAsync();
-        return signals.Count;
+        // 5.6 va 5.60 bir xil dalil (numeric ustun kiritilgan aniqlikni saqlaydi)
+        static string? Num(decimal? v) =>
+            v?.ToString("0.############", System.Globalization.CultureInfo.InvariantCulture);
     }
 
     /// <summary>Klinikani to'liq qayta baholashga belgilaydi (worker keyingi sikllarda bajaradi).</summary>

@@ -24,10 +24,18 @@ namespace EkgAnalyzerApi.Services
         /// Multipart form-data so'rovni Python API ga proxy qiladi.
         /// JWT tokenni ham birga yuboradi.
         /// </summary>
+        /// <param name="overrides">
+        /// Server o'zi belgilaydigan maydonlar (L-03): shu kalitlar mijoz
+        /// formasidan OLIB TASHLANADI va qiymati shu yerdan qo'yiladi.
+        /// Masalan `clinic_id` / `created_doctor_id` — ilgari frontend
+        /// yuborgan qiymat o'zgarishsiz ketardi va istalgan foydalanuvchi
+        /// tahlilni boshqa klinika nomidan yarata olardi.
+        /// </param>
         public async Task<HttpResponseMessage> ProxyMultipartAsync(
             string pythonEndpoint,
             HttpRequest originalRequest,
-            string? jwtToken = null)
+            string? jwtToken = null,
+            IReadOnlyDictionary<string, string>? overrides = null)
         {
             var client = _httpClientFactory.CreateClient("PythonApi");
 
@@ -41,10 +49,19 @@ namespace EkgAnalyzerApi.Services
 
                 foreach (var field in form)
                 {
+                    if (overrides != null && overrides.ContainsKey(field.Key))
+                        continue;
+
                     foreach (var value in field.Value)
                     {
                         formContent.Add(new StringContent(value ?? ""), field.Key);
                     }
+                }
+
+                if (overrides != null)
+                {
+                    foreach (var (key, value) in overrides)
+                        formContent.Add(new StringContent(value), key);
                 }
 
                 // Fayllarni ko'chirish
@@ -135,7 +152,7 @@ namespace EkgAnalyzerApi.Services
             }
         }
 
-        private static string NormalizeFileName(string? fileName, string? contentType)
+        private string NormalizeFileName(string? fileName, string? contentType)
         {
             var rawFileName = string.IsNullOrWhiteSpace(fileName) ? "upload" : fileName.Trim();
             var decodedFileName = DecodeEncodedFileName(rawFileName);
@@ -175,7 +192,7 @@ namespace EkgAnalyzerApi.Services
             return $"{safeName}{extension}";
         }
 
-        private static string DecodeEncodedFileName(string fileName)
+        private string DecodeEncodedFileName(string fileName)
         {
             if (!EncodedWordRegex.IsMatch(fileName))
                 return fileName;
@@ -200,8 +217,10 @@ namespace EkgAnalyzerApi.Services
                     return Encoding.GetEncoding(encoding).GetString(bytes);
                 }).Trim();
             }
-            catch
+            catch (Exception ex)
             {
+                // Buzilgan RFC 2047 nom — asl ko'rinishi qoldiriladi
+                _logger.LogWarning(ex, "Fayl nomini dekodlab bo'lmadi: {FileName}", fileName);
                 return fileName;
             }
         }

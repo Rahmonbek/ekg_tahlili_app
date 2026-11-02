@@ -15,12 +15,16 @@ public class ParasitologyAnalyseController : ControllerBase
     private readonly MedDataDB _context;
     private readonly ParasitologyAnalyseService _service;
     private readonly AnalysisProgressTracker _progressTracker;
+    private readonly ICurrentUser _currentUser;
+    private readonly ILogger<ParasitologyAnalyseController> _logger;
 
-    public ParasitologyAnalyseController(MedDataDB context, ParasitologyAnalyseService service, AnalysisProgressTracker progressTracker)
+    public ParasitologyAnalyseController(MedDataDB context, ParasitologyAnalyseService service, AnalysisProgressTracker progressTracker, ICurrentUser currentUser, ILogger<ParasitologyAnalyseController> logger)
     {
         _context = context;
         _service = service;
         _progressTracker = progressTracker;
+        _currentUser = currentUser;
+        _logger = logger;
     }
 
     [HttpPost("save-and-analyze")]
@@ -42,6 +46,14 @@ public class ParasitologyAnalyseController : ControllerBase
 
         var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
 
+        // Klinika va yaratuvchi shifokor — formadan emas, JWT egasidan (L-03)
+        var clinicId = await _currentUser.GetClinicIdAsync();
+        var doctorId = await _currentUser.GetDoctorIdAsync();
+        if (clinicId == null || doctorId == null)
+            return AnalysisUploadGuard.IdentityForbidden();
+        dto.ClinicId = clinicId.Value;
+        dto.CreatedDoctorId = doctorId.Value;
+
         try
         {
             var result = await _service.SaveAndAnalyzeAsync(file, dto, token);
@@ -50,7 +62,8 @@ public class ParasitologyAnalyseController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "Tahlil xizmati xatolik", error = ex.Message });
+            _logger.LogError(ex, "Parazitologiya save-and-analyze bajarilmadi");
+            return StatusCode(500, new { message = "Tahlil xizmati xatolik" });
         }
     }
 

@@ -30,7 +30,11 @@ public sealed class PatientLabContext
         _byCol = observations
             .GroupBy(o => o.Col)
             .ToDictionary(g => g.Key, g => g.OrderBy(o => o.Date).ThenBy(o => o.AnalysisId).ToList());
+        LatestDate = _byCol.Values.SelectMany(l => l).Select(o => (DateTime?)o.Date).Max();
     }
+
+    /// <summary>Bemorning (shu klinikadagi) eng so'nggi laboratoriya yozuvi sanasi.</summary>
+    public DateTime? LatestDate { get; }
 
     /// <summary>Barcha yozuvlar (sifat natijalari ham), vaqt tartibida.</summary>
     public IReadOnlyList<Obs> All(string col) =>
@@ -59,13 +63,16 @@ public sealed class PatientLabContext
     public string RefSource(Obs o, bool high) =>
         (high ? o.RefHigh : o.RefLow).HasValue ? "lab" : "catalog";
 
+    // Jinsi noma'lum: ikkala me'yorning birlashmasi. Biror jinsda shu
+    // tomonda chegara yo'q bo'lsa (FSG/LG ayolda — siklga bog'liq) birlashma
+    // ham chegarasiz: aks holda erkak me'yori ayolga qo'llanardi (L-17,
+    // Python `lab_catalog.norm_bounds` bilan bir xil).
     private decimal? CatalogMax(string col)
     {
         if (!_catalog.TryGetValue(col, out var c)) return null;
         if (Male == true) return c.MaxMale;
         if (Male == false) return c.MaxFemale;
-        var v = new[] { c.MaxMale, c.MaxFemale }.Where(x => x.HasValue).ToList();
-        return v.Count > 0 ? v.Max() : null;
+        return c.MaxMale is { } m && c.MaxFemale is { } f ? Math.Max(m, f) : null;
     }
 
     private decimal? CatalogMin(string col)
@@ -73,8 +80,7 @@ public sealed class PatientLabContext
         if (!_catalog.TryGetValue(col, out var c)) return null;
         if (Male == true) return c.MinMale;
         if (Male == false) return c.MinFemale;
-        var v = new[] { c.MinMale, c.MinFemale }.Where(x => x.HasValue).ToList();
-        return v.Count > 0 ? v.Min() : null;
+        return c.MinMale is { } m && c.MinFemale is { } f ? Math.Min(m, f) : null;
     }
 
     /// <summary>Tahlil sanasidagi to'liq yosh.</summary>

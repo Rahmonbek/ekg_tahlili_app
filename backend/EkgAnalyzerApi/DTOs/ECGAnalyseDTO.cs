@@ -47,6 +47,12 @@ public class ECGAnalyseDTO
     /// </summary>
     public string? AiLang { get; set; }
 
+    /// <summary>
+    /// Shifokor xulosasi (`analysis_diagnoses`) yozilganmi. Faqat by-id
+    /// javobida to'ldiriladi; boshqa joyda <c>null</c> (L-18).
+    /// </summary>
+    public bool? HasDiagnosis { get; set; }
+
     /// <summary>Tahlil aslida o'tkazilgan sana (yozuv yaratilgan sana emas).</summary>
     public DateTime? AnalysisDate { get; set; }
 

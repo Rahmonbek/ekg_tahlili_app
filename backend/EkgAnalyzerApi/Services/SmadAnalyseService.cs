@@ -13,10 +13,13 @@ namespace EkgAnalyzerApi.Services
         /// <summary>Passportni maskalashdan oldin ochish uchun (T-098).</summary>
         private readonly EncryptionService _encryption;
 
-        public SmadAnalyseService(MedDataDB context, EncryptionService encryption)
+        private readonly IConfiguration _config;
+
+        public SmadAnalyseService(MedDataDB context, EncryptionService encryption, IConfiguration config)
         {
             _context = context;
             _encryption = encryption;
+            _config = config;
         }
 
         public async Task<PagedResult<SmadAnalyseDTO>> GetSmadAnalysesByPatientIdAsync(
@@ -150,14 +153,17 @@ namespace EkgAnalyzerApi.Services
 
             if (dateFrom.HasValue)
             {
-                var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
+                // Sana mahalliy (Toshkent) kun sifatida olinadi — `analysis_date`
+                // ham mahalliy yarim tun bo'lib saqlanadi (L-09)
+                var utcFrom = AppTime.ToUtcFromLocalDate(dateFrom.Value, _config);
                 query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) >= utcFrom);
             }
 
             if (dateTo.HasValue)
             {
-                var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
-                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) <= utcTo);
+                // Tanlangan kun to'liq kiradi, keyingi kunning yarim tuni kirmaydi (L-09)
+                var utcTo = AppTime.ToUtcFromLocalDate(dateTo.Value, _config).AddDays(1);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) < utcTo);
             }
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -188,12 +194,12 @@ namespace EkgAnalyzerApi.Services
 
             if (automaticAnalysisBool.HasValue)
             {
+                // `ai_answer_data` — jsonb: `string.Contains` Npgsql da
+                // `strpos(jsonb, jsonb)` ga aylanib 500 berardi (L-08).
+                // Hosila ustun `ai_answer_data ->> 'automatic_analysis_bool'`
+                // `1` va `"1"` ni bir xil `'1'` ga keltiradi.
                 var val = automaticAnalysisBool.Value.ToString();
-                query = query.Where(e => e.AIAnswerData != null && (
-                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": {val}") ||
-                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":{val}") ||
-                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": \"{val}\"") ||
-                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":\"{val}\"")));
+                query = query.Where(e => e.AiSeverityRaw == val);
             }
 
             if (hasDiagnosis.HasValue)
@@ -299,14 +305,17 @@ namespace EkgAnalyzerApi.Services
 
             if (dateFrom.HasValue)
             {
-                var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
+                // Sana mahalliy (Toshkent) kun sifatida olinadi — `analysis_date`
+                // ham mahalliy yarim tun bo'lib saqlanadi (L-09)
+                var utcFrom = AppTime.ToUtcFromLocalDate(dateFrom.Value, _config);
                 query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) >= utcFrom);
             }
 
             if (dateTo.HasValue)
             {
-                var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
-                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) <= utcTo);
+                // Tanlangan kun to'liq kiradi, keyingi kunning yarim tuni kirmaydi (L-09)
+                var utcTo = AppTime.ToUtcFromLocalDate(dateTo.Value, _config).AddDays(1);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) < utcTo);
             }
 
             if (aiStatus.HasValue)
@@ -453,14 +462,17 @@ namespace EkgAnalyzerApi.Services
 
             if (dateFrom.HasValue)
             {
-                var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
+                // Sana mahalliy (Toshkent) kun sifatida olinadi — `analysis_date`
+                // ham mahalliy yarim tun bo'lib saqlanadi (L-09)
+                var utcFrom = AppTime.ToUtcFromLocalDate(dateFrom.Value, _config);
                 query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) >= utcFrom);
             }
 
             if (dateTo.HasValue)
             {
-                var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
-                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) <= utcTo);
+                // Tanlangan kun to'liq kiradi, keyingi kunning yarim tuni kirmaydi (L-09)
+                var utcTo = AppTime.ToUtcFromLocalDate(dateTo.Value, _config).AddDays(1);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) < utcTo);
             }
 
             if (aiStatus.HasValue)
@@ -586,10 +598,15 @@ namespace EkgAnalyzerApi.Services
 
             if (e == null) return null;
 
+            var hasDiagnosis = await _context.AnalysisDiagnoses
+                .AnyAsync(d => d.AnalysisType == "smad" && d.AnalysisId == e.Id);
+
             return new SmadAnalyseDTO
             {
                 Id = e.Id,
                 DocumentNumber = e.DocumentNumber,
+                AiLang = e.AiLang,
+                HasDiagnosis = hasDiagnosis,
                 AIAnswerData = e.AIAnswerData,
                 UpdatedAt = e.UpdatedAt,
                 AnalysisDate = e.AnalysisDate,

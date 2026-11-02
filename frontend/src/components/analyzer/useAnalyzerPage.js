@@ -58,8 +58,15 @@ export function usePatientStep({ onPatientFound } = {}) {
  *                                     backend uni fayldan oladi (laboratoriya — Excel
  *                                     «Дата:» katagi yoki AI). Aks holda bugungi kun
  *                                     qo'yilib, statistika yuklangan kunni ko'rsatardi.
+ * @param {number}   [maxTotalBytes]   bir nechta fayl rejimida tanlangan fayllarning
+ *                                     JAMI hajmi chegarasi (laboratoriya: 50 MB, Python
+ *                                     `MAX_LAB_TOTAL_BYTES`). Ilgari faqat har fayl
+ *                                     alohida tekshirilardi va 10 × 25 MB brauzerdan
+ *                                     o'tib, serverda chalg'ituvchi xato berardi (L-21).
  */
-export function useAnalyzerPage({ fileKind, fetchOldAnalyses, onReset, maxFiles = 1, dateFromFile = false }) {
+export function useAnalyzerPage({
+    fileKind, fetchOldAnalyses, onReset, maxFiles = 1, dateFromFile = false, maxTotalBytes = null,
+}) {
     const { t } = useTranslation();
     const fileTypes = useFileTypes(fileKind);
     const { user } = useStore();
@@ -126,7 +133,8 @@ export function useAnalyzerPage({ fileKind, fetchOldAnalyses, onReset, maxFiles 
     // chegarani darhol (tekshiruv tugashini kutmasdan) hisoblash uchun
     const filesRef = useRef(state.files);
     filesRef.current = state.files;
-    const pendingRef = useRef(new Set());
+    // Tekshirilayotgan fayllar: kalit → hajm (jami hajm chegarasi uchun)
+    const pendingRef = useRef(new Map());
 
     // Fayl tanlangan zahoti sifati tekshiriladi, yaroqli bo'lsagina olinadi
     const handleUploadFile = useCallback((file) => {
@@ -143,7 +151,19 @@ export function useAnalyzerPage({ fileKind, fetchOldAnalyses, onReset, maxFiles 
                 }));
                 return false;
             }
-            pendingRef.current.add(key);
+            if (maxTotalBytes) {
+                const used = filesRef.current.reduce((sum, f) => sum + (f.size || 0), 0)
+                    + Array.from(pendingRef.current.values()).reduce((sum, size) => sum + size, 0);
+                if (used + (file.size || 0) > maxTotalBytes) {
+                    const mb = Math.round(maxTotalBytes / (1024 * 1024));
+                    warningAlert(t('analyzer_max_total_size', {
+                        mb,
+                        defaultValue: `Fayllarning jami hajmi ${mb} MB dan oshmasligi kerak`,
+                    }));
+                    return false;
+                }
+            }
+            pendingRef.current.set(key, file.size || 0);
             return validatedBeforeUpload(file, {
                 t,
                 extensions: fileTypes.extensions,
@@ -158,7 +178,7 @@ export function useAnalyzerPage({ fileKind, fetchOldAnalyses, onReset, maxFiles 
                 if (patcient?.id) getOldAnalyses(patcient.id, 'first');
             },
         });
-    }, [multiple, maxFiles, t, fileTypes.extensions, patcient, getOldAnalyses, dispatch]);
+    }, [multiple, maxFiles, maxTotalBytes, t, fileTypes.extensions, patcient, getOldAnalyses, dispatch]);
 
     /** `file` berilsa — faqat shu fayl, aks holda hammasi olib tashlanadi. */
     const removeFile = useCallback((file) => {

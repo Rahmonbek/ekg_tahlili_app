@@ -5,7 +5,7 @@ import { Drawer, Empty, Input, Segmented, Spin, Table, Tag } from 'antd';
 import { Bar } from 'react-chartjs-2';
 
 import { get_lab_stats_indicator, get_lab_stats_indicators } from '../../../host/requests/LabStatisticsRequest';
-import { AGE_GROUPS, CATEGORY_LABELS, COLORS, Panel, baseOptions, num, pct, pick } from './statsCommon';
+import { AGE_GROUPS, CATEGORY_LABELS, COLORS, Panel, RESULT_KIND_META, baseOptions, num, pct, pick } from './statsCommon';
 
 const nameOf = (r, lang) => r[`name_${lang}`] || r.name_uz || r.column_name;
 
@@ -198,6 +198,14 @@ function IndicatorDrawer({ row, params, lang, onClose }) {
     }[k] || t('stats_unknown', { defaultValue: "Noma'lum" }));
 
     const histogram = data?.histogram || [];
+    // Sifat va kodli ko'rsatkichlar (HBsAg, qon guruhi…) uchun o'rtacha va
+    // gistogramma ma'nosiz — holatlar taqsimoti ko'rsatiladi (L-34)
+    const categorical = row && row.value_kind && row.value_kind !== 'numeric';
+    const kinds = data?.kinds || [];
+    const kindLabel = (k) => (row?.value_kind === 'qualitative' ? pick(RESULT_KIND_META[k], lang) || k : k);
+    // Chekka ustunlarga p01 dan past / p99 dan baland qiymatlar ham kiradi (L-35)
+    const binLabel = (h) => (h.edge === 'low' ? `< ${num(h.to)}`
+        : h.edge === 'high' ? `≥ ${num(h.from)}` : `${num(h.from)}–${num(h.to)}`);
     const monthly = data?.monthly || [];
     const byAge = Object.fromEntries((data?.byAge || []).map((r) => [r.key, r]));
 
@@ -216,18 +224,38 @@ function IndicatorDrawer({ row, params, lang, onClose }) {
                         <div className="lst-mini"><span>{t('stats_patients', { defaultValue: 'Bemorlar' })}</span><b>{row.patients}</b></div>
                         <div className="lst-mini"><span>{t('stats_high', { defaultValue: 'Yuqori' })}</span><b className="lst-high">{row.high}</b></div>
                         <div className="lst-mini"><span>{t('stats_low', { defaultValue: 'Past' })}</span><b className="lst-low">{row.low}</b></div>
-                        <div className="lst-mini"><span>{t('stats_median', { defaultValue: 'Mediana' })}</span><b>{num(row.median)}</b></div>
-                        <div className="lst-mini"><span>P10–P90</span><b>{num(row.p10)}–{num(row.p90)}</b></div>
+                        {!categorical && (
+                            <>
+                                <div className="lst-mini"><span>{t('stats_median', { defaultValue: 'Mediana' })}</span><b>{num(row.median)}</b></div>
+                                <div className="lst-mini"><span>P10–P90</span><b>{num(row.p10)}–{num(row.p90)}</b></div>
+                            </>
+                        )}
                     </div>
                 )}
 
+                {categorical && (
+                    <Panel title={t('stats_kinds', { defaultValue: 'Natijalar taqsimoti' })}>
+                        <Table
+                            size="small" pagination={false} rowKey="key"
+                            dataSource={kinds}
+                            locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} /> }}
+                            columns={[
+                                { title: t('stats_result', { defaultValue: 'Natija' }), dataIndex: 'key', render: kindLabel },
+                                { title: t('stats_n', { defaultValue: 'Natijalar' }), dataIndex: 'n', align: 'right', render: (v) => `${v} (${pct(v, row?.n)})` },
+                                { title: t('stats_patients', { defaultValue: 'Bemorlar' }), dataIndex: 'patients', align: 'right' },
+                            ]}
+                        />
+                    </Panel>
+                )}
+
+                {!categorical && (
                 <div className="lst-grid lst-grid--2">
                     <Panel title={t('stats_distribution', { defaultValue: 'Qiymatlar taqsimoti' })}>
                         <div className="lst-chart">
                             {histogram.length ? (
                                 <Bar
                                     data={{
-                                        labels: histogram.map((h) => `${num(h.from)}–${num(h.to)}`),
+                                        labels: histogram.map(binLabel),
                                         datasets: [
                                             { label: t('stats_normal', { defaultValue: "Me'yorda" }), data: histogram.map((h) => h.count - h.abnormal), backgroundColor: COLORS.primary },
                                             { label: t('stats_out_of_range', { defaultValue: "Me'yordan tashqari" }), data: histogram.map((h) => h.abnormal), backgroundColor: COLORS.high },
@@ -261,6 +289,7 @@ function IndicatorDrawer({ row, params, lang, onClose }) {
                         </div>
                     </Panel>
                 </div>
+                )}
 
                 <div className="lst-grid lst-grid--2">
                     <Panel title={t('stats_by_sex_short', { defaultValue: "Jinsi bo'yicha" })}>

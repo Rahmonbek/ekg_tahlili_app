@@ -21,30 +21,67 @@ namespace EkgAnalyzerApi.Services.LabRules;
 public static class LabRules
 {
     /// <summary>Qoidalar versiyasi — o'zgarsa worker barcha bemorlarni qayta baholaydi.</summary>
-    public const string Version = "1.0.1-2026-11-02";
+    /// <remarks>
+    /// 1.1.0 (2026-11-02): REN-01 faqat yaqindagi epizod uchun CRITERIA_MET
+    /// (eskisi — MONITOR); GLU-02 oxirgi 12 oyda patologik qiymat talab
+    /// qiladi; GLU-01 oraliqlari yarim ochiq (bo'shliqlar yopildi); ELE-02
+    /// Na &lt;120 / &gt;160 — CRITICAL; jinsi noma'lum bemorda katalog me'yori
+    /// birlashmasi bir jinsda chegara bo'lmasa — chegarasiz.
+    /// </remarks>
+    public const string Version = "1.1.0-2026-11-02";
 
-    public static IEnumerable<RuleSignal> Evaluate(PatientLabContext c)
+    /// <summary>REN-01: juftning keyingi qiymati oxirgi kreatinindan shuncha kun ichida bo'lsa — o'tkir.</summary>
+    internal const double AkiRecentDays = 14;
+
+    /// <summary>GLU-02: kamida bitta patologik qiymat bemorning oxirgi tahlilidan shuncha oy ichida bo'lsin.</summary>
+    internal const int DiabetesRecentMonths = 12;
+
+    /// <summary>Qoida ID si va funksiyasi (GLU-01 alohida — GLU-02 ga bog'liq).</summary>
+    private static readonly (string Id, Func<PatientLabContext, RuleSignal?> Fn)[] Rules =
     {
-        var rules = new Func<PatientLabContext, RuleSignal?>[]
-        {
-            Ren01, Ele01, Car01,                    // P0
-            Glu02, Ren02, Hem01, Hem02, Hem03, Hem04, Hem05,
-            Thy01, Thy02, Liv01, Liv02, Pan01,      // P1
-            Car02, Lip01, Ele02, Inf01, Inf02, Coa01, Ur01, Onc01, Met01, // P2
-        };
+        ("REN-01", Ren01), ("ELE-01", Ele01), ("CAR-01", Car01),                       // P0
+        ("GLU-02", Glu02), ("REN-02", Ren02), ("HEM-01", Hem01), ("HEM-02", Hem02),
+        ("HEM-03", Hem03), ("HEM-04", Hem04), ("HEM-05", Hem05),
+        ("THY-01", Thy01), ("THY-02", Thy02), ("LIV-01", Liv01), ("LIV-02", Liv02), ("PAN-01", Pan01), // P1
+        ("CAR-02", Car02), ("LIP-01", Lip01), ("ELE-02", Ele02), ("INF-01", Inf01), ("INF-02", Inf02),
+        ("COA-01", Coa01), ("UR-01", Ur01), ("ONC-01", Onc01), ("MET-01", Met01),   // P2
+    };
+
+    /// <summary>Barcha qoidalar natijasi (xato bergan qoidalar tashlab ketiladi).</summary>
+    public static IEnumerable<RuleSignal> Evaluate(PatientLabContext c) => EvaluateSafe(c, null).Signals;
+
+    /// <summary>
+    /// Har bir qoida ALOHIDA bajariladi: bittasidagi istisno qolganlarini
+    /// to'xtatmaydi (L-11). Xato bergan qoidalar <c>Failed</c> da qaytadi —
+    /// chaqiruvchi ularning eski signalini o'chirmasligi kerak.
+    /// </summary>
+    public static (List<RuleSignal> Signals, List<string> Failed) EvaluateSafe(
+        PatientLabContext c, Action<string, Exception>? onError)
+    {
         var results = new List<RuleSignal>();
-        foreach (var rule in rules)
+        var failed = new List<string>();
+
+        void Run(string id, Func<PatientLabContext, RuleSignal?> fn)
         {
-            var s = rule(c);
-            if (s != null) results.Add(s);
+            try
+            {
+                var s = fn(c);
+                if (s != null) results.Add(s);
+            }
+            catch (Exception ex)
+            {
+                failed.Add(id);
+                onError?.Invoke(id, ex);
+            }
         }
-        // GLU-01 faqat GLU-02 ishlamaganda (prediabet ≠ diabet)
-        if (results.All(r => r.RuleId != "GLU-02"))
-        {
-            var g = Glu01(c);
-            if (g != null) results.Add(g);
-        }
-        return results;
+
+        foreach (var (id, fn) in Rules) Run(id, fn);
+        // GLU-01 faqat GLU-02 ishlamaganda (prediabet ≠ diabet). GLU-02 xato
+        // bergan bo'lsa GLU-01 ham baholanmaydi — eski signallar saqlanadi.
+        // GLU-02 faqat tarixda (MONITOR) bo'lsa hozirgi prediabet ham ko'rsatiladi.
+        if (failed.Contains("GLU-02")) failed.Add("GLU-01");
+        else if (results.All(r => r.RuleId != "GLU-02" || r.Status == RuleStatus.Monitor)) Run("GLU-01", Glu01);
+        return (results, failed);
     }
 
     // ═══ P0 ═══════════════════════════════════════════════════════════════
@@ -53,6 +90,8 @@ public static class LabRules
     private static RuleSignal? Ren01(PatientLabContext c)
     {
         var s = c.Series("creatinine");
+        if (s.Count < 2) return null;
+        var latest = s[^1];
         for (var j = s.Count - 1; j >= 1; j--)
         {
             var cur = s[j];
@@ -65,18 +104,47 @@ public static class LabRules
                 var byAbs = days <= 2.5 && delta >= 26.5m;
                 var byRatio = prev.Value > 0 && cur.Value >= prev.Value * 1.5m;
                 if (!byAbs && !byRatio) continue;
+                var change = $"Kreatinin {D(prev.Date)}: {N(prev.Value)} → {D(cur.Date)}: {N(cur.Value)} µmol/L " +
+                             $"({Math.Round(days)} kunda {(byAbs ? $"+{N(delta)} µmol/L" : $"{N(cur.Value / prev.Value)} baravar")}).";
+                var evidence = new List<Evidence>
+                {
+                    c.Ev(prev), c.Ev(cur, byAbs ? prev.Value + 26.5m : prev.Value * 1.5m, "≥", "criterion"),
+                };
+
+                // AKI — o'tkir holat: faqat oxirgi kreatinin (yoki undan
+                // AkiRecentDays ichidagi qiymat) epizodi "shoshilinch". Eski
+                // epizoddan keyin yangi o'lchovlar bor — u tarix (L-12).
+                if ((latest.Date - cur.Date).TotalDays > AkiRecentDays + 0.5)
+                {
+                    // Dalil — faqat epizod juftligi: keyingi har bir kreatinin
+                    // shifokor bahosini `pending` ga qaytarmasin
+                    return new RuleSignal
+                    {
+                        RuleId = "REN-01",
+                        Status = RuleStatus.Monitor,
+                        Severity = 1,
+                        Title = $"Tarixda AKI epizodi ({D(cur.Date)})",
+                        Message = $"Tarixda AKI epizodi ({D(cur.Date)}): {change} " +
+                                  $"Oxirgi kreatinin {N(latest.Value)} µmol/L ({D(latest.Date)}).",
+                        Recommendation = "Buyrak funksiyasini dinamikada kuzating (kreatinin, eGFR); " +
+                                         "AKI epizodi surunkali buyrak kasalligi xavfini oshiradi.",
+                        Evidence = evidence,
+                        Temporal = Temporal(days, delta, prev.Value),
+                        LatestAnalysisId = cur.AnalysisId,
+                        ObservedAt = cur.Date,
+                    };
+                }
+
                 return new RuleSignal
                 {
                     RuleId = "REN-01",
                     Status = RuleStatus.CriteriaMet,
                     Severity = 3,
                     Title = "O'tkir buyrak shikastlanishi (AKI) mezoni",
-                    Message = $"Kreatinin {D(prev.Date)}: {N(prev.Value)} → {D(cur.Date)}: {N(cur.Value)} µmol/L " +
-                              $"({Math.Round(days)} kunda {(byAbs ? $"+{N(delta)} µmol/L" : $"{N(cur.Value / prev.Value)} baravar")}). " +
-                              "KDIGO: 48 soatda ≥26.5 µmol/L yoki 7 kunda ≥1.5 baravar oshish.",
+                    Message = change + " KDIGO: 48 soatda ≥26.5 µmol/L yoki 7 kunda ≥1.5 baravar oshish.",
                     Recommendation = "Shoshilinch klinik baholash: diurez, nefrotoksik dorilar, qayta kreatinin va elektrolitlar. " +
                                      "Bazal kreatininni klinik algoritm bilan tanlang.",
-                    Evidence = { c.Ev(prev), c.Ev(cur, byAbs ? prev.Value + 26.5m : prev.Value * 1.5m, "≥", "criterion") },
+                    Evidence = evidence,
                     Temporal = Temporal(days, delta, prev.Value),
                     Missing = { "Tahlil soati (48 soat kun aniqligida hisoblandi)", "Diurez" },
                     LatestAnalysisId = cur.AnalysisId,
@@ -152,8 +220,9 @@ public static class LabRules
         var g = c.Latest("glucose");
         var h = c.Latest("hba1c");
         var ev = new List<Evidence>();
-        if (g?.Value is { } gv && gv >= 5.6m && gv <= 6.9m) ev.Add(c.Ev(g, 5.6m, "≥", "criterion"));
-        if (h?.Value is { } hv && hv >= 5.7m && hv <= 6.4m) ev.Add(c.Ev(h, 5.7m, "≥", "criterion"));
+        // Yarim ochiq oraliqlar: GLU-02 chegarasigacha (6.95 / 6.45 bo'shlig'i yo'q — L-27)
+        if (g?.Value is { } gv && gv >= 5.6m && gv < 7.0m) ev.Add(c.Ev(g, 5.6m, "≥", "criterion"));
+        if (h?.Value is { } hv && hv >= 5.7m && hv < 6.5m) ev.Add(c.Ev(h, 5.7m, "≥", "criterion"));
         if (ev.Count == 0) return null;
         var last = ev.OrderBy(e => e.Date).Last();
         if (c.AgeAt(last.Date) is < 18) return null;
@@ -164,7 +233,7 @@ public static class LabRules
             Severity = 1,
             Title = "Prediabet diapazoni",
             Message = string.Join("; ", ev.Select(e => $"{e.Name} {N(e.Value)} {e.Unit} ({D(e.Date)})")) +
-                      ". Mezon: och qoringa glyukoza 5.6–6.9 mmol/L yoki HbA1c 5.7–6.4%.",
+                      ". Mezon: och qoringa glyukoza 5.6 – <7.0 mmol/L yoki HbA1c 5.7 – <6.5%.",
             Recommendation = "3–6 oyda qayta tekshirish (individual qaror); turmush tarzi bo'yicha maslahat. " +
                              "HbA1c anemiya va gemoglobinopatiyada ishonchsiz bo'lishi mumkin.",
             Evidence = ev,
@@ -181,9 +250,33 @@ public static class LabRules
             .Concat(c.Series("hba1c").Where(o => o.Value >= 6.5m).Select(o => (o, thr: 6.5m)))
             .OrderBy(x => x.o.Date).ToList();
         if (path.Count == 0) return null;
-        var confirmed = path.Count >= 2;
         var shown = path.TakeLast(3).ToList();
         var last = shown.Last().o;
+
+        // Kamida bitta patologik qiymat bemorning OXIRGI tahlilidan 12 oy
+        // ichida bo'lsin (L-12). Mos yozuv "hozir"ga emas, bemor tarixiga
+        // nisbatan — natija vaqt o'tishi bilan o'zgarmaydi (worker faqat
+        // ma'lumot o'zgarganda qayta baholaydi).
+        var reference = c.LatestDate ?? last.Date;
+        if (last.Date < reference.AddMonths(-DiabetesRecentMonths))
+        {
+            return new RuleSignal
+            {
+                RuleId = "GLU-02",
+                Status = RuleStatus.Monitor,
+                Severity = 1,
+                Title = "Tarixda qandli diabet mezoniga mos natijalar",
+                Message = string.Join("; ", shown.Select(x => $"{c.Name(x.o.Col)} {N(x.o.Value)} {c.Unit(x.o.Col)} ({D(x.o.Date)})")) +
+                          $". Oxirgi {DiabetesRecentMonths} oyda glyukoza ≥7.0 mmol/L yoki HbA1c ≥6.5% qayd etilmagan.",
+                Recommendation = "Anamnezda diabet bo'lsa — HbA1c bilan nazorat; bo'lmasa — skrining (HbA1c yoki och qoringa glyukoza).",
+                Evidence = shown.Select(x => c.Ev(x.o, x.thr, "≥", "criterion")).ToList(),
+                Missing = MissingAdult(c, last.Date, pregnancy: true),
+                LatestAnalysisId = last.AnalysisId,
+                ObservedAt = last.Date,
+            };
+        }
+
+        var confirmed = path.Count >= 2;
         return new RuleSignal
         {
             RuleId = "GLU-02",
@@ -690,16 +783,24 @@ public static class LabRules
         if (o?.Value is not { } v || (v >= 135m && v <= 145m)) return null;
         var hypo = v < 135m;
         var severe = v <= 125m || v >= 155m;
+        // Na <120 yoki >160 — hayot uchun xavfli (L-27)
+        var critical = v < 120m || v > 160m;
         return new RuleSignal
         {
             RuleId = "ELE-02",
-            Status = RuleStatus.Suspected,
-            Severity = severe ? (short)3 : (short)2,
-            Title = hypo ? "Giponatremiya" : "Gipernatremiya",
-            Message = $"Natriy {N(v)} mmol/L ({D(o.Date)}). <135 — giponatremiya, >145 — gipernatremiya.",
-            Recommendation = "Og'irlik, simptomlar, rivojlanish tezligi, glyukoza va osmolyarlik bilan baholang; " +
-                             "akut (<48 soat) va surunkali holatni anamnez va eski tahlillar bilan ajrating.",
-            Evidence = { c.Ev(o, hypo ? 135m : 145m, hypo ? "<" : ">", "criterion") },
+            Status = critical ? RuleStatus.Critical : RuleStatus.Suspected,
+            Severity = severe || critical ? (short)3 : (short)2,
+            Title = (hypo ? "Giponatremiya" : "Gipernatremiya") + (critical ? " (og'ir)" : ""),
+            Message = $"Natriy {N(v)} mmol/L ({D(o.Date)}). <135 — giponatremiya, >145 — gipernatremiya; " +
+                      "<120 yoki >160 — og'ir (kritik).",
+            Recommendation = critical
+                ? "Shoshilinch klinik baholash: nevrologik simptomlar, volemik holat; korreksiya tezligini nazorat qiling " +
+                  "(osmotik demiyelinizatsiya xavfi). Gemoliz/giperglikemiya sababli soxta qiymatni istisno qiling."
+                : "Og'irlik, simptomlar, rivojlanish tezligi, glyukoza va osmolyarlik bilan baholang; " +
+                  "akut (<48 soat) va surunkali holatni anamnez va eski tahlillar bilan ajrating.",
+            Evidence = { critical
+                ? c.Ev(o, hypo ? 120m : 160m, hypo ? "<" : ">", "criterion")
+                : c.Ev(o, hypo ? 135m : 145m, hypo ? "<" : ">", "criterion") },
             Missing = { "Simptomlar", "Qon osmolyarligi" },
             LatestAnalysisId = o.AnalysisId,
             ObservedAt = o.Date,

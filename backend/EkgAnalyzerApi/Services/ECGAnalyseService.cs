@@ -12,10 +12,13 @@ namespace EkgAnalyzerApi.Services
         private readonly MedDataDB _context;
         private readonly EncryptionService _encryption;
 
-        public ECGAnalyseService(MedDataDB context, EncryptionService encryption)
+        private readonly IConfiguration _config;
+
+        public ECGAnalyseService(MedDataDB context, EncryptionService encryption, IConfiguration config)
         {
             _context = context;
             _encryption = encryption;
+            _config = config;
         }
 
         public async Task<PagedResult<ECGAnalyseDTO>> GetECGAnalysesByPatientIdAsync(
@@ -161,14 +164,17 @@ namespace EkgAnalyzerApi.Services
 
             if (dateFrom.HasValue)
             {
-                var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
+                // Sana mahalliy (Toshkent) kun sifatida olinadi — `analysis_date`
+                // ham mahalliy yarim tun bo'lib saqlanadi (L-09)
+                var utcFrom = AppTime.ToUtcFromLocalDate(dateFrom.Value, _config);
                 query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) >= utcFrom);
             }
 
             if (dateTo.HasValue)
             {
-                var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
-                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) <= utcTo);
+                // Tanlangan kun to'liq kiradi, keyingi kunning yarim tuni kirmaydi (L-09)
+                var utcTo = AppTime.ToUtcFromLocalDate(dateTo.Value, _config).AddDays(1);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) < utcTo);
             }
 
             if (aiStatus.HasValue)
@@ -342,9 +348,13 @@ namespace EkgAnalyzerApi.Services
 
             if (e == null) return null;
 
+            var hasDiagnosis = await _context.AnalysisDiagnoses
+                .AnyAsync(d => d.AnalysisType == "ecg" && d.AnalysisId == e.Id);
+
             return new ECGAnalyseDTO
             {
                 Id = e.Id,
+                HasDiagnosis = hasDiagnosis,
                 DocumentNumber = e.DocumentNumber,
                 AIAnswerData = e.AIAnswerData,
                 AiLang = e.AiLang,
@@ -442,14 +452,17 @@ namespace EkgAnalyzerApi.Services
 
             if (dateFrom.HasValue)
             {
-                var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
+                // Sana mahalliy (Toshkent) kun sifatida olinadi — `analysis_date`
+                // ham mahalliy yarim tun bo'lib saqlanadi (L-09)
+                var utcFrom = AppTime.ToUtcFromLocalDate(dateFrom.Value, _config);
                 query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) >= utcFrom);
             }
 
             if (dateTo.HasValue)
             {
-                var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
-                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) <= utcTo);
+                // Tanlangan kun to'liq kiradi, keyingi kunning yarim tuni kirmaydi (L-09)
+                var utcTo = AppTime.ToUtcFromLocalDate(dateTo.Value, _config).AddDays(1);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) < utcTo);
             }
 
             if (aiStatus.HasValue)
@@ -607,14 +620,17 @@ namespace EkgAnalyzerApi.Services
 
             if (dateFrom.HasValue)
             {
-                var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
+                // Sana mahalliy (Toshkent) kun sifatida olinadi — `analysis_date`
+                // ham mahalliy yarim tun bo'lib saqlanadi (L-09)
+                var utcFrom = AppTime.ToUtcFromLocalDate(dateFrom.Value, _config);
                 query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) >= utcFrom);
             }
 
             if (dateTo.HasValue)
             {
-                var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
-                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) <= utcTo);
+                // Tanlangan kun to'liq kiradi, keyingi kunning yarim tuni kirmaydi (L-09)
+                var utcTo = AppTime.ToUtcFromLocalDate(dateTo.Value, _config).AddDays(1);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) < utcTo);
             }
 
             if (aiStatus.HasValue)

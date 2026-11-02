@@ -204,6 +204,10 @@ public class LabStatisticsService
                 var bin = Convert.ToInt32(h["bin"]);
                 h["from"] = Math.Round(lo + (bin - 1) * width, 3);
                 h["to"] = Math.Round(lo + bin * width, 3);
+                // Chekka ustunlarga p01 dan past / p99 dan baland qiymatlar
+                // ham qo'shiladi (LEAST/GREATEST) — ular ochiq oraliq (L-35):
+                // `edge` = "low" → "< to", "high" → "≥ from"
+                h["edge"] = bin == 1 ? "low" : bin == 20 ? "high" : null;
             }
         }
 
@@ -235,21 +239,38 @@ public class LabStatisticsService
               {ValueFrom} WHERE {vWhere}
              GROUP BY 1", vArgs);
 
-        // Har bir bemorning shu ko'rsatkich bo'yicha OXIRGI natijasi (me'yordan tashqari bo'lsa)
+        // Har bir bemorning shu ko'rsatkich bo'yicha OXIRGI natijasi (me'yordan
+        // tashqari bo'lsa). "Faqat chetlanganlar" filtri DISTINCT ON dan OLDIN
+        // qo'llanmasin: aks holda oxirgi CHETLANGAN qiymat olinardi (ALT mart
+        // 90, oktabr 30 → "hozir me'yordan tashqari") — L-20. Flag sharti
+        // faqat tashqi WHERE da.
+        var (lastWhere, lastArgs) = ValueWhere(clinicId, f, includeAbnormalFilter: false);
         var patients = await Rows($@"
             SELECT * FROM (
                 SELECT DISTINCT ON (v.patient_id)
                        v.patient_id, p.lastname, p.firstname, p.gender, p.birthdate,
                        v.lab_analysis_id, v.measured_at, v.value, v.unit, v.text,
                        v.ref_low, v.ref_high, v.flag, v.flag_source, v.result_kind
-                  {ValueFrom} WHERE {vWhere}
+                  {ValueFrom} WHERE {lastWhere}
                  ORDER BY v.patient_id, v.measured_at DESC, v.id DESC
             ) last
              WHERE last.flag IN (-1, 1)
              ORDER BY last.measured_at DESC
-             LIMIT 200", vArgs);
+             LIMIT 200", lastArgs);
 
-        return new { column, histogram, monthly, bySex, byAge, patients, range };
+        // Sifat va kodli ko'rsatkichlar: holatlar taqsimoti (L-34) —
+        // sifat: NEGATIVE/POSITIVE/EQUIVOCAL…, kod: qon guruhi 1..4, rezus 0/1
+        var kinds = await Rows($@"
+            SELECT CASE WHEN t.value_kind = 'qualitative' THEN COALESCE(v.result_kind, 'UNKNOWN')
+                        ELSE COALESCE(CASE WHEN v.value = trunc(v.value) THEN trunc(v.value)::bigint::text
+                                                  ELSE v.value::text END, v.text, 'UNKNOWN') END AS key,
+                   COUNT(*) AS n,
+                   COUNT(DISTINCT v.patient_id) AS patients
+              {ValueFrom} WHERE {vWhere} AND t.value_kind IN ('qualitative', 'code')
+             GROUP BY 1
+             ORDER BY n DESC", vArgs);
+
+        return new { column, histogram, monthly, bySex, byAge, patients, range, kinds };
     }
 
     // ── Shifokorlar kesimida ───────────────────────────────────────────────
@@ -294,8 +315,14 @@ public class LabStatisticsService
               JOIN patients p        ON p.id = v.patient_id
               JOIN lab_value_types t ON t.id = v.value_type_id";
 
-    /// <summary>Taqsimotga kiradigan qiymat: son, me'yor birligida.</summary>
-    private const string Comparable = "v.value IS NOT NULL AND NOT v.unit_mismatch";
+    /// <summary>
+    /// Taqsimotga kiradigan qiymat: SONLI ko'rsatkich (`value_kind = numeric`),
+    /// me'yor birligida. Qon guruhi/rezus kodi (1..4, 0/1) va sifat natijasi
+    /// indeksi (COI) uchun o'rtacha/mediana/gistogramma ma'nosiz (L-34) —
+    /// ular uchun `kinds` taqsimoti beriladi.
+    /// </summary>
+    private const string Comparable =
+        "v.value IS NOT NULL AND NOT v.unit_mismatch AND COALESCE(t.value_kind, 'numeric') = 'numeric'";
 
     private static string AgeGroupSql(string dateExpr) => $@"
         CASE WHEN p.birthdate IS NULL THEN 'unknown'
@@ -307,14 +334,15 @@ public class LabStatisticsService
                 WHEN date_part('year', age(({dateExpr} AT TIME ZONE '{Tz}')::date, p.birthdate)) < 75 THEN '60-74'
                 ELSE '75+' END END";
 
-    private (string Where, Dictionary<string, object?> Args) ValueWhere(int clinicId, LabStatsFilter f)
+    private (string Where, Dictionary<string, object?> Args) ValueWhere(int clinicId, LabStatsFilter f,
+        bool includeAbnormalFilter = true)
     {
         var sb = new StringBuilder("a.clinic_id = @clinic");
         var args = new Dictionary<string, object?> { ["@clinic"] = clinicId };
         AddCommon(sb, args, f, "v.measured_at");
         if (!string.IsNullOrWhiteSpace(f.Category)) { sb.Append(" AND t.category = @category"); args["@category"] = f.Category; }
         if (!string.IsNullOrWhiteSpace(f.Indicator)) { sb.Append(" AND t.column_name = @indicator"); args["@indicator"] = f.Indicator; }
-        if (f.OnlyAbnormal) sb.Append(" AND v.flag IN (-1, 1)");
+        if (f.OnlyAbnormal && includeAbnormalFilter) sb.Append(" AND v.flag IN (-1, 1)");
         return (sb.ToString(), args);
     }
 

@@ -18,6 +18,30 @@ public class LabSignalsService
 
     public LabSignalsService(MedDataDB db) => _db = db;
 
+    // Ro'yxat ustunlari: statistika sahifasi va bemor kartasi uchun bir xil.
+    // Baholovchi ismi — `doctors` da yozuvi bo'lmasa (admin/direktor)
+    // `users.email` (L-26: ilgari admin baholasa ism bo'sh chiqardi).
+    private const string ItemColumns = @"
+                   s.id, s.clinic_id, s.patient_id, p.lastname, p.firstname, p.gender, p.birthdate,
+                   s.rule_id, s.status, s.severity, s.title_uz, s.message_uz, s.recommendation_uz,
+                   s.evidence::text AS evidence, s.temporal::text AS temporal, s.missing_data::text AS missing_data,
+                   s.latest_analysis_id, s.observed_at, s.evaluated_at, s.source_version,
+                   s.reviewer_status, s.reviewed_at, s.review_note, s.reviewed_by_user_id,
+                   u.role_id AS reviewer_role_id,
+                   COALESCE(NULLIF(TRIM(COALESCE(d.lastname, '') || ' ' || COALESCE(d.firstname, '')), ''),
+                            u.email) AS reviewer_name";
+
+    private const string ItemFrom = @"
+              FROM lab_rule_signals s
+              JOIN patients p ON p.id = s.patient_id
+              LEFT JOIN users u ON u.id = s.reviewed_by_user_id
+              LEFT JOIN doctors d ON d.user_id = u.id";
+
+    private const string ItemOrder = @"s.severity DESC,
+                      CASE s.status WHEN 'CRITICAL' THEN 0 WHEN 'CRITERIA_MET' THEN 1 WHEN 'SUSPECTED' THEN 2
+                                    WHEN 'MONITOR' THEN 3 ELSE 4 END,
+                      s.observed_at DESC NULLS LAST, s.id DESC";
+
     public async Task<object> GetSummaryAsync(int clinicId)
     {
         var args = new Dictionary<string, object?> { ["@c"] = clinicId };
@@ -71,23 +95,29 @@ public class LabSignalsService
             SELECT COUNT(*) AS n FROM lab_rule_signals s JOIN patients p ON p.id = s.patient_id WHERE {where}", args))
             .First()["n"];
         var items = await SqlRows.QueryAsync(_db, $@"
-            SELECT s.id, s.patient_id, p.lastname, p.firstname, p.gender, p.birthdate,
-                   s.rule_id, s.status, s.severity, s.title_uz, s.message_uz, s.recommendation_uz,
-                   s.evidence::text AS evidence, s.temporal::text AS temporal, s.missing_data::text AS missing_data,
-                   s.latest_analysis_id, s.observed_at, s.evaluated_at, s.source_version,
-                   s.reviewer_status, s.reviewed_at, s.review_note,
-                   TRIM(COALESCE(d.lastname, '') || ' ' || COALESCE(d.firstname, '')) AS reviewer_name
-              FROM lab_rule_signals s
-              JOIN patients p ON p.id = s.patient_id
-              LEFT JOIN users u ON u.id = s.reviewed_by_user_id
-              LEFT JOIN doctors d ON d.user_id = u.id
+            SELECT {ItemColumns}
+              {ItemFrom}
              WHERE {where}
-             ORDER BY s.severity DESC,
-                      CASE s.status WHEN 'CRITICAL' THEN 0 WHEN 'CRITERIA_MET' THEN 1 WHEN 'SUSPECTED' THEN 2
-                                    WHEN 'MONITOR' THEN 3 ELSE 4 END,
-                      s.observed_at DESC NULLS LAST, s.id DESC
+             ORDER BY {ItemOrder}
              LIMIT @limit OFFSET @offset", args);
         return new { total, page, pageSize, items };
+    }
+
+    /// <summary>Bitta bemorning shu klinikadagi barcha signallari (bemor kartasi uchun).</summary>
+    public Task<List<Dictionary<string, object?>>> GetPatientSignalsAsync(int clinicId, int patientId) =>
+        SqlRows.QueryAsync(_db, $@"
+            SELECT {ItemColumns}
+              {ItemFrom}
+             WHERE s.clinic_id = @c AND s.patient_id = @p
+             ORDER BY {ItemOrder}", new() { ["@c"] = clinicId, ["@p"] = patientId });
+
+    /// <summary>Signal qaysi klinika va bemorga tegishli (huquq tekshiruvi uchun).</summary>
+    public async Task<(int ClinicId, int PatientId)?> GetOwnerAsync(long id)
+    {
+        var row = (await SqlRows.QueryAsync(_db,
+            "SELECT clinic_id, patient_id FROM lab_rule_signals WHERE id = @id", new() { ["@id"] = id }))
+            .FirstOrDefault();
+        return row == null ? null : (Convert.ToInt32(row["clinic_id"]), Convert.ToInt32(row["patient_id"]));
     }
 
     /// <summary>Shifokor qarori: tasdiqlash yoki rad etish (izoh bilan).</summary>

@@ -85,10 +85,17 @@ public class LabValuesController : ControllerBase
         // ular refleksiya bilan birma-bir o'qilardi. Birligi me'yor birligiga
         // keltirilmagan qiymatlar (`unit_mismatch`) grafikka qo'shilmaydi —
         // ular boshqa birlikda va o'qni buzadi.
+        //
+        // Faqat `value_kind = numeric` (L-23): qon guruhi (1..4) va rezus
+        // (1/0) kodlar — ular chiziq bo'lib chizilmasligi kerak. Har nuqtaga
+        // laboratoriyaning O'Z me'yori va bahosi (`flag`) ham beriladi —
+        // assayga xos ko'rsatkichlarda (erkin T3) katalog me'yori kartochkaga
+        // zid chiqardi.
         var rows = await _context.LabAnalysisValues
             .AsNoTracking()
             .Where(v => v.LabAnalysis.PatcientId == patcientId
                         && v.LabAnalysis.ClinicId == user.ClinicId
+                        && v.ValueType.ValueKind == "numeric"
                         && !v.UnitMismatch
                         && v.Value != null)
             .Select(v => new
@@ -97,12 +104,18 @@ public class LabValuesController : ControllerBase
                 v.LabAnalysisId,
                 Date = v.LabAnalysis.AnalysisDate ?? v.LabAnalysis.CreatedAt,
                 Value = v.Value!.Value,
+                v.RefLow,
+                v.RefHigh,
+                v.Flag,
+                v.FlagSource,
             })
             .ToListAsync();
 
+        // Ekrandagi kartochkalar bilan bir xil tartib — `sort_order`
         var types = await _context.LabValueTypes
             .AsNoTracking()
-            .OrderBy(t => t.Id)
+            .Where(t => t.ValueKind == "numeric")
+            .OrderBy(t => t.SortOrder).ThenBy(t => t.Id)
             .ToListAsync();
 
         var series = new List<object>();
@@ -115,7 +128,13 @@ public class LabValuesController : ControllerBase
                 {
                     date = AppTime.ToLocal(r.Date),
                     analysisId = r.LabAnalysisId,
-                    value = Convert.ToDouble(r.Value)
+                    value = Convert.ToDouble(r.Value),
+                    // Laboratoriya me'yori (bo'lmasa null — frontend katalog me'yorini oladi)
+                    refLow = r.RefLow.HasValue ? Convert.ToDouble(r.RefLow.Value) : (double?)null,
+                    refHigh = r.RefHigh.HasValue ? Convert.ToDouble(r.RefHigh.Value) : (double?)null,
+                    // -1 past / 0 me'yorda / 1 yuqori; kartochkadagi bilan bir xil baho
+                    flag = r.Flag.HasValue ? (int)r.Flag.Value : (int?)null,
+                    flagSource = r.FlagSource,
                 })
                 .ToList();
 

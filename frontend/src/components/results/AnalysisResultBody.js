@@ -125,10 +125,14 @@ function evaluate(value, type, gender) {
         min = type.normalMinFemale;
         max = type.normalMaxFemale;
     } else {
-        const mins = [type.normalMinMale, type.normalMinFemale].filter((x) => x != null);
-        const maxs = [type.normalMaxMale, type.normalMaxFemale].filter((x) => x != null);
-        min = mins.length ? Math.min(...mins) : null;
-        max = maxs.length ? Math.max(...maxs) : null;
+        // Bir jinsda shu tomonda chegara yo'q bo'lsa (FSG/LG da ayol me'yori
+        // siklga bog'liq — ataylab NULL), birlashmada ham chegara yo'q.
+        // Aks holda erkak me'yori menopauzadagi ayolni "yuqori" deb
+        // belgilardi (L-17; Python `lab_catalog.norm_bounds` bilan bir xil).
+        const { normalMinMale: mMin, normalMinFemale: fMin,
+                normalMaxMale: mMax, normalMaxFemale: fMax } = type;
+        min = mMin == null || fMin == null ? null : Math.min(mMin, fMin);
+        max = mMax == null || fMax == null ? null : Math.max(mMax, fMax);
     }
 
     // Chegara qo'yilmagan ko'rsatkichlar bor (masalan sutkalik peshob
@@ -238,10 +242,14 @@ function LabCard({ row }) {
             )}
             {status === 'unit' && (
                 <div className="lab-card-original">
-                    {t('lab_unit_differs', {
-                        unit: row.measure,
-                        defaultValue: `Me'yor ${row.measure} da berilgan — birlik boshqa`,
-                    })}
+                    {row.unitSuspect
+                        ? t('lab_unit_suspect', {
+                            defaultValue: 'Birlik shubhali — laboratoriya blankasini tekshiring',
+                        })
+                        : t('lab_unit_differs', {
+                            unit: row.measure,
+                            defaultValue: `Me'yor ${row.measure} da berilgan — birlik boshqa`,
+                        })}
                 </div>
             )}
             {rangeText && (
@@ -277,8 +285,19 @@ function LabMeasurements({ measurements, gender }) {
             // ustun turadi: me'yor assayga xos — masalan erkin T3 uchun klinika
             // 1.2–4.2 beradi, katalogda 3.1–6.8. Shu me'yor bo'lsa birlik
             // mos kelmagan qiymat ham baholanadi.
-            const labRef = cell.ref_low != null || cell.ref_high != null;
-            const comparable = labRef || (!cell.unit_mismatch && unitsMatch(cell.unit, v.measure));
+            // Teskari me'yor (min > max, masalan "40–20") — AI ustunlarni
+            // adashtirgan; bazaga yozilmaydi, shuning uchun ekranda ham
+            // e'tiborsiz qoldiriladi va katalog me'yori ishlatiladi (L-38).
+            const refLow = Number.parseFloat(cell.ref_low);
+            const refHigh = Number.parseFloat(cell.ref_high);
+            const refInverted = Number.isFinite(refLow) && Number.isFinite(refHigh) && refLow > refHigh;
+            const labRef = !refInverted && (cell.ref_low != null || cell.ref_high != null);
+            // Birlik shubhali (`unit_suspect`): qiymat yozilganidek saqlangan,
+            // lekin uni ishonch bilan baholab bo'lmaydi — laboratoriya me'yori
+            // bo'lsa ham baholanmaydi.
+            const unitSuspect = !!cell.unit_suspect;
+            const comparable = !unitSuspect
+                && (labRef || (!cell.unit_mismatch && unitsMatch(cell.unit, v.measure)));
             // Sifat natijasi va kod (qon guruhi, rezus) — oddiy "norma/yuqori"
             // bahosi ma'nosiz
             const qualitative = v.valueKind === 'qualitative' || v.valueKind === 'code';
@@ -303,6 +322,7 @@ function LabMeasurements({ measurements, gender }) {
                 status,
                 qualitative,
                 labRef,
+                unitSuspect,
                 unit: cell.unit ?? v.measure,
                 measure: v.measure,
                 name: v[`name${t('data_lang')}`],
@@ -312,7 +332,10 @@ function LabMeasurements({ measurements, gender }) {
 
     const isAbnormal = (r) => ['high', 'low', 'positive', 'equivocal'].includes(r.status);
     const abnormal = rows.filter(isAbnormal);
-    const other = rows.filter((r) => !isAbnormal(r));
+    // Birligi shubhali yoki keltirib bo'lmagan qiymatlar "me'yordagi"
+    // guruhga tushmasin — shifokor ularni blanka bilan tekshirishi kerak
+    const unevaluated = rows.filter((r) => r.status === 'unit');
+    const other = rows.filter((r) => !isAbnormal(r) && r.status !== 'unit');
     // Chetlanish bo'lmasa yig'ishning ma'nosi yo'q — hammasi ko'rinadi
     const normalOpen = showNormal || abnormal.length === 0;
 
@@ -325,6 +348,16 @@ function LabMeasurements({ measurements, gender }) {
                     </div>
                     <div className="lab-grid">
                         {abnormal.map((row) => <LabCard key={row.id} row={row} />)}
+                    </div>
+                </>
+            )}
+            {unevaluated.length > 0 && (
+                <>
+                    <div className="arb-subtitle">
+                        {t('lab_not_evaluated', { defaultValue: 'Baholanmagan (birlik tekshirilsin)' })} ({unevaluated.length})
+                    </div>
+                    <div className="lab-grid">
+                        {unevaluated.map((row) => <LabCard key={row.id} row={row} />)}
                     </div>
                 </>
             )}
@@ -363,7 +396,14 @@ function hasMeasurements(measurements) {
     if (!measurements || typeof measurements !== 'object') return false;
     return Object.values(measurements).some((v) => {
         if (v == null) return false;
-        if (typeof v === 'object') return v.value != null;
+        // Sifat natijasi (HBsAg, RW…) COI indeksisiz `{value: null, text,
+        // result_kind}` bo'lib keladi — u ham ko'rsatiladigan natija (L-04).
+        // Aks holda faqat serologiyadan iborat tahlilda bo'lim yashirinardi.
+        if (typeof v === 'object') {
+            return v.value != null
+                || (typeof v.text === 'string' && v.text.trim() !== '')
+                || !!v.result_kind;
+        }
         return String(v).trim() !== '';
     });
 }

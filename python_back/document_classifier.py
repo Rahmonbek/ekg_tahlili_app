@@ -27,6 +27,7 @@ from typing import Optional
 
 from openai import OpenAI
 
+import ai_config
 from config import OPENAI_API_KEY
 
 logger = logging.getLogger(__name__)
@@ -200,6 +201,7 @@ def classify_document(
             max_retries=1,
         )
 
+        uploaded_ids = []
         if filename.lower().endswith(".xlsx"):
             # Excel faylni model o'qiy olmaydi — natija jadvali matn sifatida
             import excel_to_text
@@ -208,19 +210,24 @@ def classify_document(
             fobj = io.BytesIO(content)
             fobj.name = filename
             uploaded = client.files.create(file=fobj, purpose="user_data")
+            uploaded_ids.append(uploaded.id)
             is_image = filename.lower().endswith((".png", ".jpg", ".jpeg"))
             file_part = {"type": "input_image" if is_image else "input_file", "file_id": uploaded.id}
 
-        resp = client.responses.create(
-            model=CLASSIFIER_MODEL,
-            input=[{
-                "role": "user",
-                "content": [
-                    {"type": "input_text", "text": _SYSTEM_PROMPT},
-                    file_part,
-                ],
-            }],
-        )
+        try:
+            resp = client.responses.create(
+                model=CLASSIFIER_MODEL,
+                input=[{
+                    "role": "user",
+                    "content": [
+                        {"type": "input_text", "text": _SYSTEM_PROMPT},
+                        file_part,
+                    ],
+                }],
+            )
+        finally:
+            # Bemor fayli provayderda qolmasin (L-14)
+            ai_config.delete_uploaded_files(client, uploaded_ids, "classifier")
 
         parsed = _extract_json(resp.output_text)
         detected = str(parsed.get("tur", "aniqlanmadi")).strip().lower()

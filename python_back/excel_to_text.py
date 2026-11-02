@@ -229,13 +229,21 @@ def _sheet_blocks(ws) -> tuple[list[str], bool, list[str], datetime.date | None]
 
 
 def _fallback_blocks(ws) -> list[str]:
-    """Sarlavhasiz oddiy jadval: barcha to'ldirilgan qatorlar."""
+    """Sarlavhasiz oddiy jadval: barcha to'ldirilgan qatorlar.
+
+    Bitta katakli qator (faqat nom yoki bo'lim sarlavhasi) natija emas —
+    unda qiymat yo'q. Faqat shunday qatorlardan iborat list yuborilmaydi:
+    aks holda AI ga qiymatsiz matn ketardi ("### Биохимия\\nНаименование",
+    L-22) va fayl bo'sh deb rad etilmasdi.
+    """
     lines = []
     for index, row in enumerate(ws.iter_rows(values_only=True)):
         if index >= MAX_ROWS_PER_SHEET:
             break
         cells = [c for c in (_cell_text(v) for v in row) if c]
         if not cells or _SKIP_ROW.match(cells[0]) or any(_SIGNATURE.search(c) for c in cells):
+            continue
+        if len(cells) < 2:
             continue
         lines.append(" | ".join(cells))
     return ([f"### {ws.title}"] + lines) if lines else []
@@ -293,6 +301,10 @@ def _xlsx_read(content: bytes) -> tuple[str, datetime.date | None]:
         logger.info("Excel ochilmadi: %s", exc)
         raise ExcelReadError("broken") from exc
 
+    # read_only rejimida listlar DANGASA o'qiladi: buzilgan `sheet1.xml`
+    # `load_workbook` da emas, iteratsiyada (`ParseError`, `KeyError`…)
+    # xato beradi. Ilgari bu try dan tashqarida qolib, foydalanuvchiga 500
+    # qaytardi (L-22) — endi butun o'qish "buzilgan fayl" deb turkumlanadi.
     try:
         sheets = [ws for ws in wb.worksheets[:MAX_SHEETS]
                   if getattr(ws, "sheet_state", "visible") == "visible"]
@@ -301,6 +313,11 @@ def _xlsx_read(content: bytes) -> tuple[str, datetime.date | None]:
         header_found = False
         content_dates, weak_dates, all_dates = [], [], []
         for ws in sheets:
+            # Ba'zi LIS eksportlari `<dimension ref="A1"/>` yozadi — read_only
+            # rejim unga ishonib faqat A ustunni o'qirdi (L-22). Haqiqiy
+            # o'lcham kataklarning o'zidan olinadi.
+            if hasattr(ws, "reset_dimensions"):
+                ws.reset_dimensions()
             lines, has_header, weak_lines, sheet_date = _sheet_blocks(ws)
             header_found = header_found or has_header
             all_dates.append(sheet_date)
@@ -318,8 +335,16 @@ def _xlsx_read(content: bytes) -> tuple[str, datetime.date | None]:
                 lines = _fallback_blocks(ws)
                 if lines:
                     blocks.append("\n".join(lines))
+    except ExcelReadError:
+        raise
+    except Exception as exc:
+        logger.info("Excel listini o'qib bo'lmadi: %s: %s", type(exc).__name__, exc)
+        raise ExcelReadError("broken") from exc
     finally:
-        wb.close()
+        try:
+            wb.close()
+        except Exception as exc:  # noqa: BLE001 — yopish xatosi natijaga ta'sir qilmaydi
+            logger.debug("Excel yopishda xato: %s", exc)
 
     text = "\n\n".join(blocks).strip()
     if not text:

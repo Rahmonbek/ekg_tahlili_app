@@ -47,7 +47,8 @@ export default function HolterAnalysesList() {
     const isNurse = user && user.roleId === 5;
     // O'chirish: Admin/Direktor har qanday; Shifokor/Hamshira faqat o'zi yuklagan
     const canDeleteRow = (row) => isClinicManager
-        || ((isDoctor || isNurse) && row?.createdDoctorId === user?.doctor?.id);
+        || ((isDoctor || isNurse) && user?.doctor?.id != null
+            && (row?.createdDoctor?.id ?? row?.createdDoctorId) === user.doctor.id);
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -73,7 +74,13 @@ export default function HolterAnalysesList() {
         hasDiagnosis: null,
     });
 
+    // Har so'rovga tartib raqami: filtr/sahifa o'zgarganda yoki 10 soniyalik
+    // yangilashda kech kelgan ESKI javob yangisini bosib ketmasin (L-37) —
+    // faqat oxirgi yuborilgan so'rov javobi qabul qilinadi.
+    const requestSeq = useRef(0);
+
     const fetchData = useCallback(async (p) => {
+        const seq = ++requestSeq.current;
         setLoading(true);
         try {
             const { search, status, aiStatus, dateRange: dr, hasDiagnosis } = filterRef.current;
@@ -89,21 +96,27 @@ export default function HolterAnalysesList() {
                 : isNurse
                     ? await get_holter_analyses_by_nurse(params)
                     : await get_holter_analyses_by_clinic(params);
+            if (seq !== requestSeq.current) return;
             setData(res.data.items);
             setTotal(res.data.totalCount);
         } catch (err) {
             // handleApiError
         } finally {
-            setLoading(false);
+            if (seq === requestSeq.current) setLoading(false);
         }
     }, [isDoctor, isNurse]);
 
     useEffect(() => {
         fetchData(page);
+    }, [page, fetchData]);
+
+    // "Ko'rildi" belgisi sahifaga kirganda bir marta qo'yiladi — ilgari har
+    // sahifa almashganda qayta yuborilardi (L-37)
+    useEffect(() => {
         if (isDoctor) {
             mark_holter_viewed().then(() => setholter_unread(0)).catch(() => { });
         }
-    }, [page, isDoctor, fetchData]);
+    }, [isDoctor]);
 
 
     // Ro'yxat va sana filtrlari DARHOL qo'llanadi. Ilgari ular ham
@@ -218,7 +231,7 @@ export default function HolterAnalysesList() {
             width: 36,
             render: (val) => val
                 ? <Tag color="green" style={{ margin: 0 }}>✓</Tag>
-                : <Tag color="gold" style={{ margin: 0 }}>Yangi</Tag>,
+                : <Tag color="gold" style={{ margin: 0 }}>{t('badge_new', { defaultValue: 'Yangi' })}</Tag>,
         }] : []),
         // {
         //     title: t('clinic', { defaultValue: 'Shifoxona' }),

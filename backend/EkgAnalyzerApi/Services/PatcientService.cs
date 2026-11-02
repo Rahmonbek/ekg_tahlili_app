@@ -20,6 +20,18 @@ namespace EkgAnalyzerApi.Services
         }
 
         /// <summary>
+        /// Bemorning jinsi yoki tug'ilgan sanasi o'zgarganda laboratoriya xavf
+        /// signallarini qayta hisoblashga belgilaydi (L-19): HEM-01 (jinsga
+        /// xos Hb), REN-02 (eGFR — yosh va jins), LIV-02 (FIB-4 — yosh) va
+        /// katalog me'yorlari shularga bog'liq. `LabRuleWorker` faqat
+        /// qiymatlar o'zgarishini sezadi — holat qatori o'chirilgach keyingi
+        /// siklda bemor qayta baholanadi.
+        /// </summary>
+        public Task<int> InvalidateLabRuleStateAsync(int patientId) =>
+            _context.Database.ExecuteSqlInterpolatedAsync(
+                $"DELETE FROM lab_rule_patient_state WHERE patient_id = {patientId}");
+
+        /// <summary>
         /// Klinika (yoki shifokor) ko'ra oladigan bemorlar ro'yxati.
         ///
         /// Muhim tuzatishlar:

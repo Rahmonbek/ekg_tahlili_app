@@ -4,6 +4,8 @@ import { UploadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { successAlert, dangerAlert } from '../../tools/Alerts';
 import { appendPatientMeta } from '../../tools/formatters';
+import { extractApiError } from '../../tools/apiError';
+import { validateAnalysisFile } from '../../tools/fileQualityValidator';
 
 const { Text } = Typography;
 
@@ -25,6 +27,8 @@ const { Text } = Typography;
  * @param {string}   accept    input accept atributi
  * @param {boolean}  multiple  bir nechta fayl (laboratoriya) — tanlanganlar
  *                             tahlilning BARCHA fayllarini almashtiradi
+ * @param {number}   [maxFiles]       fayllar soni chegarasi (`multiple` da)
+ * @param {number}   [maxTotalBytes]  fayllarning jami hajmi chegarasi
  */
 export default function FileMismatchBanner({
     info,
@@ -34,6 +38,8 @@ export default function FileMismatchBanner({
     onSuccess,
     accept = '.pdf,.png,.jpg,.jpeg',
     multiple = false,
+    maxFiles = null,
+    maxTotalBytes = null,
 }) {
     const { t } = useTranslation();
     const [uploading, setUploading] = useState(false);
@@ -41,11 +47,47 @@ export default function FileMismatchBanner({
 
     if (!info) return null;
 
+    /**
+     * Tanlangan fayllarni yuborishdan OLDIN tekshiradi (L-21): soni, jami
+     * hajmi, har birining kengaytmasi/hajmi/sifati — yuklash sahifasidagi
+     * bilan bir xil qoidalar. Ilgari hech narsa tekshirilmasdi va katta
+     * fayllar to'liq yuklanib bo'lgach server rad etardi.
+     * @returns {Promise<string|null>} xato matni yoki `null`
+     */
+    const checkFiles = async (files) => {
+        const limit = multiple ? maxFiles : 1;
+        if (limit && files.length > limit) {
+            return t('analyzer_max_files', {
+                count: limit,
+                defaultValue: `Ko'pi bilan ${limit} ta fayl biriktirish mumkin`,
+            });
+        }
+        const total = files.reduce((sum, f) => sum + (f.size || 0), 0);
+        if (maxTotalBytes && total > maxTotalBytes) {
+            const mb = Math.round(maxTotalBytes / (1024 * 1024));
+            return t('analyzer_max_total_size', {
+                mb,
+                defaultValue: `Fayllarning jami hajmi ${mb} MB dan oshmasligi kerak`,
+            });
+        }
+        const exts = accept.split(',').map((e) => e.trim().replace(/^\./, '').toLowerCase()).filter(Boolean);
+        for (const file of files) {
+            const res = await validateAnalysisFile(file, t, exts);
+            if (!res.ok) return files.length > 1 ? `${file.name}: ${res.message}` : res.message;
+        }
+        return null;
+    };
+
     const handleFiles = async (fileList) => {
         const files = Array.from(fileList || []);
         if (files.length === 0) return;
         setUploading(true);
         try {
+            const problem = await checkFiles(files);
+            if (problem) {
+                dangerAlert(problem);
+                return;
+            }
             const formData = new FormData();
             formData.append('id', analysisId);
             files.forEach((file) => formData.append('file', file));
@@ -58,10 +100,11 @@ export default function FileMismatchBanner({
             );
             if (onSuccess) onSuccess();
         } catch (err) {
+            // Server sababi: 409 `detail` ("tahlil hali ishlanmoqda"), 413
+            // `message` (jami hajm) va h.k.; bo'lmasa umumiy xabar
             dangerAlert(
-                err?.response?.data?.message ||
-                err?.response?.data?.detail ||
-                t('file_replace_failed', { defaultValue: 'Faylni almashtirib bo\'lmadi. Qaytadan urinib ko\'ring.' })
+                extractApiError({ response: err?.response }, '')
+                || t('file_replace_failed', { defaultValue: 'Faylni almashtirib bo\'lmadi. Qaytadan urinib ko\'ring.' })
             );
         } finally {
             setUploading(false);

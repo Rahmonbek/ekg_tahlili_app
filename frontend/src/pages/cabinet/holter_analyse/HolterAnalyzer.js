@@ -21,7 +21,7 @@ export default function HolterAnalyzer() {
         fetchOldAnalyses: get_holter_analyses_by_patcient_id,
         OldResult: HolterOldResult,
         listPath: '/holter-analyses',
-        bgLabel: 'Holter tahlil',
+        bgLabel: t('bg_label_holter', { defaultValue: 'Holter tahlil' }),
         text: {
             title: t('create_new_holter_analyse', { defaultValue: 'Holter tahlil yuklash' }),
             subtitle: t('holter_upload_subtitle', { defaultValue: '3 ta qadam: bemorni toping, Holter hisobotini yuklang va tahlilga yuboring.' }),

@@ -21,7 +21,7 @@ export default function SmadAnalyzer() {
         fetchOldAnalyses: get_smad_analyses_by_patcient_id,
         OldResult: SmadOldResult,
         listPath: '/smad-analyses',
-        bgLabel: 'SMAD tahlil',
+        bgLabel: t('bg_label_smad', { defaultValue: 'SMAD tahlil' }),
         text: {
             title: t('create_new_smad_analyse', { defaultValue: 'SMAD tahlil yuklash' }),
             subtitle: t('smad_upload_subtitle', { defaultValue: '3 ta qadam: bemorni toping, SMAD hisobotini yuklang va tahlilga yuboring.' }),

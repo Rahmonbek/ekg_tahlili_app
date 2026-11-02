@@ -20,14 +20,16 @@ public class HolterAnalyseController : ControllerBase
     private readonly PythonApiProxyService _proxyService;
     private readonly AnalysisProgressTracker _progressTracker;
     private readonly ICurrentUser _currentUser;
+    private readonly ILogger<HolterAnalyseController> _logger;
 
-    public HolterAnalyseController(MedDataDB context, HolterAnalyseService holterService, PythonApiProxyService proxyService, AnalysisProgressTracker progressTracker, ICurrentUser currentUser)
+    public HolterAnalyseController(MedDataDB context, HolterAnalyseService holterService, PythonApiProxyService proxyService, AnalysisProgressTracker progressTracker, ICurrentUser currentUser, ILogger<HolterAnalyseController> logger)
     {
         _context = context;
         _holterService = holterService;
         _proxyService = proxyService;
         _progressTracker = progressTracker;
         _currentUser = currentUser;
+        _logger = logger;
     }
 
 
@@ -52,17 +54,28 @@ public class HolterAnalyseController : ControllerBase
     public async Task<IActionResult> Analyze()
     {
         var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+        // Klinika va yaratuvchi shifokor — formadan emas, JWT egasidan (L-03)
+        var identity = await AnalysisUploadGuard.GetIdentityOverridesAsync(_currentUser);
+        if (identity == null) return AnalysisUploadGuard.IdentityForbidden();
+
         try
         {
-            var response = await _proxyService.ProxyMultipartAsync("/holter/analyze", Request, token);
+            var response = await _proxyService.ProxyMultipartAsync("/holter/analyze", Request, token, identity);
             var result = await ProxyHttpResponseMapper.ToContentResultAsync(response);
             if (response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(result.Content))
                 TrackAnalysisProgress(result.Content, "holter", "holter_id");
             return result;
         }
+        catch (Exception ex) when (AnalysisUploadGuard.IsRequestTooLarge(ex))
+        {
+            _logger.LogWarning(ex, "Holter analyze: so'rov hajmi chegaradan oshdi");
+            return AnalysisUploadGuard.TooLarge();
+        }
         catch (Exception ex)
         {
-            return StatusCode(502, new { message = "AI tahlil xizmati bilan bog'lanib bo'lmadi", error = ex.Message });
+            _logger.LogError(ex, "Holter analyze: AI xizmatiga proksi bajarilmadi");
+            return StatusCode(502, new { message = "AI tahlil xizmati bilan bog'lanib bo'lmadi" });
         }
     }
 
@@ -81,18 +94,21 @@ public class HolterAnalyseController : ControllerBase
         return int.TryParse(claim, out userId);
     }
 
-    private static int? ExtractInt(string json, string key)
+    private int? ExtractInt(string json, string key)
     {
         if (string.IsNullOrWhiteSpace(json)) return null;
         try
         {
             using var doc = JsonDocument.Parse(json);
-            return doc.RootElement.TryGetProperty(key, out var prop) && prop.TryGetInt32(out var value)
+            return doc.RootElement.ValueKind == JsonValueKind.Object
+                && doc.RootElement.TryGetProperty(key, out var prop) && prop.TryGetInt32(out var value)
                 ? value
                 : null;
         }
-        catch
+        catch (JsonException ex)
         {
+            // Faqat progress kuzatuvi uchun ID olinmaydi — tahlilning o'zi ishlayveradi
+            _logger.LogWarning(ex, "Python javobidan {Key} ni o'qib bo'lmadi", key);
             return null;
         }
     }
@@ -227,8 +243,21 @@ public class HolterAnalyseController : ControllerBase
     {
         var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
 
+        // Forma shu yerda o'qiladi (proksi keyin keshdan oladi): hajm
+        // chegarasidan oshsa aniq 413 qaytsin, chalg'ituvchi 502 emas (L-21)
+        IFormCollection form;
+        try
+        {
+            form = await Request.ReadFormAsync();
+        }
+        catch (Exception ex) when (AnalysisUploadGuard.IsRequestTooLarge(ex))
+        {
+            _logger.LogWarning(ex, "Holter replace-file: so'rov hajmi chegaradan oshdi");
+            return AnalysisUploadGuard.TooLarge();
+        }
+
         // Klinika izolyatsiyasi: faqat o'z klinikasining tahlilini almashtirish mumkin
-        if (!int.TryParse(Request.Form["id"].ToString(), out var analysisId))
+        if (!int.TryParse(form["id"].ToString(), out var analysisId))
             return BadRequest(new { message = "id ko'rsatilmagan" });
 
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
@@ -251,9 +280,15 @@ public class HolterAnalyseController : ControllerBase
                 TrackAnalysisProgress(result.Content, "holter", "holter_id");
             return result;
         }
+        catch (Exception ex) when (AnalysisUploadGuard.IsRequestTooLarge(ex))
+        {
+            _logger.LogWarning(ex, "Holter replace-file: so'rov hajmi chegaradan oshdi, id={Id}", analysisId);
+            return AnalysisUploadGuard.TooLarge();
+        }
         catch (Exception ex)
         {
-            return StatusCode(502, new { message = "AI tahlil xizmati bilan bog'lanib bo'lmadi", error = ex.Message });
+            _logger.LogError(ex, "Holter replace-file: AI xizmatiga proksi bajarilmadi, id={Id}", analysisId);
+            return StatusCode(502, new { message = "AI tahlil xizmati bilan bog'lanib bo'lmadi" });
         }
     }
 
@@ -293,7 +328,8 @@ public class HolterAnalyseController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(502, new { message = "AI tahlil xizmati bilan bog'lanib bo'lmadi", error = ex.Message });
+            _logger.LogError(ex, "Holter retry: AI xizmatiga proksi bajarilmadi, id={Id}", analysisId);
+            return StatusCode(502, new { message = "AI tahlil xizmati bilan bog'lanib bo'lmadi" });
         }
     }
 

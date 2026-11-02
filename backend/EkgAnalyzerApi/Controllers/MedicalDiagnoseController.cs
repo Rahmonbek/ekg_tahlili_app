@@ -16,12 +16,16 @@ public class MedicalDiagnoseController : ControllerBase
     private readonly MedDataDB _context;
     private readonly MedicalDiagnoseService _diagnoseService;
     private readonly PythonApiProxyService _proxyService;
+    private readonly ICurrentUser _currentUser;
+    private readonly ILogger<MedicalDiagnoseController> _logger;
 
-    public MedicalDiagnoseController(MedDataDB context, MedicalDiagnoseService diagnoseService, PythonApiProxyService proxyService)
+    public MedicalDiagnoseController(MedDataDB context, MedicalDiagnoseService diagnoseService, PythonApiProxyService proxyService, ICurrentUser currentUser, ILogger<MedicalDiagnoseController> logger)
     {
         _context = context;
         _diagnoseService = diagnoseService;
         _proxyService = proxyService;
+        _currentUser = currentUser;
+        _logger = logger;
     }
 
 
@@ -48,14 +52,25 @@ public class MedicalDiagnoseController : ControllerBase
     public async Task<IActionResult> Save()
     {
         var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+        // Klinika va yaratuvchi shifokor — formadan emas, JWT egasidan (L-03)
+        var identity = await AnalysisUploadGuard.GetIdentityOverridesAsync(_currentUser);
+        if (identity == null) return AnalysisUploadGuard.IdentityForbidden();
+
         try
         {
-            var response = await _proxyService.ProxyMultipartAsync("/api/med-diagnoses-save", Request, token);
+            var response = await _proxyService.ProxyMultipartAsync("/api/med-diagnoses-save", Request, token, identity);
             return await ProxyHttpResponseMapper.ToContentResultAsync(response);
+        }
+        catch (Exception ex) when (AnalysisUploadGuard.IsRequestTooLarge(ex))
+        {
+            _logger.LogWarning(ex, "Tibbiy xulosa save: so'rov hajmi chegaradan oshdi");
+            return AnalysisUploadGuard.TooLarge();
         }
         catch (Exception ex)
         {
-            return StatusCode(502, new { message = "AI tahlil xizmati bilan bog'lanib bo'lmadi", error = ex.Message });
+            _logger.LogError(ex, "Tibbiy xulosa save: AI xizmatiga proksi bajarilmadi");
+            return StatusCode(502, new { message = "AI tahlil xizmati bilan bog'lanib bo'lmadi" });
         }
     }
     [HttpGet("get-by-clinic")]

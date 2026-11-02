@@ -234,6 +234,11 @@ public class PatcientController : ControllerBase
                 NormalizeDocumentSeries(p.Passport) == normalizedPassport);
         }
 
+        // Yosh/jins xavf signallariga ta'sir qiladi (L-19) — o'zgarsa qayta hisob
+        var isNew = patient == null;
+        var demographicsChanged = patient != null
+            && (patient.Gender != patientDto.gender || patient.BirthDate != birthDate);
+
         if (patient == null)
         {
             patient = new Patcient { CreatedAt = DateTime.UtcNow };
@@ -252,6 +257,8 @@ public class PatcientController : ControllerBase
         patient.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+        if (!isNew && demographicsChanged)
+            await _patcientService.InvalidateLabRuleStateAsync(patient.Id);
 
         // Frontend tahrirlash formasini viloyat/tuman bilan to'ldiradi
         var saved = await _context.Patcients.AsNoTracking()

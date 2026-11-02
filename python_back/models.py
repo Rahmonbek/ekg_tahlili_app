@@ -74,10 +74,10 @@ class LabAnalyses(Base):
     # boshqa bo'lsa foydalanuvchiga buni aytish uchun.
     ai_lang = Column(String(5), nullable=True)
 
-    # Ko'rsatkich qiymatlari endi `lab_analysis_values` da (har biri alohida
-    # qator) — `LabAnalysisValues`. Eski 87 ta ustun bazada zaxira sifatida
-    # turibdi (migratsiya 20261101000000_LabAnalysisValues), lekin ularga
-    # endi yozilmaydi va ulardan o'qilmaydi.
+    # Ko'rsatkich qiymatlari `lab_analysis_values` da (har biri alohida
+    # qator) — `LabAnalysisValues` (migratsiya 20261101000000_LabAnalysisValues).
+    # Eski 87 ta ko'rsatkich ustuni bazadan O'CHIRILGAN
+    # (20261103000000_LabAnalysisDateSource) — ularni bu yerga qaytarmang.
 
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)

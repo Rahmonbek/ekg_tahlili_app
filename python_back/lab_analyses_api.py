@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import ai_config
 import ai_schema
 import logging
@@ -15,6 +16,7 @@ from database import get_db, SessionLocal
 from lab_analyse_categories import create_lab_analyse_category
 from lab_analyse import (
     get_lab_analyse_by_id,
+    lock_lab_analyse,
     create_lab_analyse,
     update_lab_analyse,
     set_lab_analysis_files,
@@ -181,13 +183,19 @@ yozishning hojati yo'q. Har bir maydonga nima yozilishi:
   ❗️Klinika blankalarida birlik ko'pincha XATO yozilgan. Qiymat blankadagi
   birlikda fiziologik imkonsiz bo'lsa, uni haqiqiy birlikda baholang va
   "keskin past/yuqori" deb xulosa QILMANG:
-  kortizol 3–30 "нмоль/л" — aslida µg/dL (×27.6 = nmol/L);
   insulin 2–60 "нг/мл" — aslida µIU/mL; erkin T4 0.3–3 "нг/мл" —
-  aslida ng/dL (×12.9 = pmol/L); prolaktin 3–60 "мМЕ/л" — aslida ng/mL;
+  aslida ng/dL (×12.9 = pmol/L);
   D-dimer 0.1–10 "нг/мл" — aslida mg/L; FSG/LG "мМЕ/л" — aslida mIU/mL;
   mochevina 2–40 "мкмоль/л" — aslida mmol/L; siydik kislotasi 100–700
-  "ммоль/л" — aslida µmol/L. `unit` ga baribir fayldagi yozuvni yozing
-  (aylantirishni tizim bajaradi).
+  "ммоль/л" — aslida µmol/L.
+  ❗️Kortizol "нмоль/л" da 40 dan past yoki prolaktin "мМЕ/л" ("мкМЕ/мл",
+  "mIU/L") da 40 dan past bo'lsa — birlik SHUBHALI: bu blankadagi birlik
+  xatosi ham, HAQIQIY past qiymat ham (buyrak usti bezi yetishmovchiligi,
+  deksametazon testi; kabergolin, gipopituitarizm) bo'lishi mumkin.
+  Qiymatni boshqa birlikka O'GIRMA, "aslida µg/dL" yoki "aslida ng/mL"
+  deb AYTMA, normal ham, past ham deb xulosa QILMA — matnda "birligi
+  shubhali, laboratoriya blankasini tekshirish kerak" deb yoz.
+  `unit` ga baribir fayldagi yozuvni yozing (aylantirishni tizim bajaradi).
 
 - **analysis_date** — hujjatdagi tahlil sanasi YYYY-MM-DD: namuna olingan
   kun ("Дата забора", "Дата взятия"), u bo'lmasa natija berilgan kun
@@ -247,47 +255,96 @@ def _sync_lab_openai(
         prompt += _multi_file_note(len(files))
 
     content_parts = [{"type": "input_text", "text": prompt}]
-    for index, (content, fname) in enumerate(files, start=1):
-        fname = prepare_upload_filename(fname, content, default_stem="lab_upload").lower()
-
-        # Excel — matnli jadval sifatida (model xlsx faylni o'qiy olmaydi).
-        # Bemor F.I.O. va shifokor imzosi matnga kirmaydi (`excel_to_text`).
-        if excel_to_text.is_xlsx(fname):
-            table = excel_to_text.xlsx_to_text(content)
-            label = f"Fayl {index}/{len(files)} — " if len(files) > 1 else ""
-            content_parts.append({
-                "type": "input_text",
-                "text": f"{label}Excel jadvali (faqat to'ldirilgan natija qatorlari):\n{table}",
-            })
-            continue
-
-        # 1. Faylni OpenAI ga yuklash
-        fobj = io.BytesIO(content)
-        fobj.name = fname
-        uploaded = client.files.create(file=fobj, purpose="user_data")
-
-        is_image = fname.endswith(('.png', '.jpg', '.jpeg'))
-        if len(files) > 1:
-            content_parts.append({"type": "input_text", "text": f"Fayl {index}/{len(files)}:"})
-        content_parts.append({
-            "type": "input_image" if is_image else "input_file",
-            "file_id": uploaded.id,
-        })
-
-    # 2. AI tahlil
-    resp = client.responses.create(
-        # Model va fikrlash chuqurligi bitta joyda (A-11)
-        **ai_config.holter_smad_lab_request(),
-        input=[{"role": "user", "content": content_parts}],
-        # Qat'iy JSON sxema (A-7). Ko'rsatkichlar massiv sifatida
-        # qaytadi va `column_name` `enum` bilan cheklangan — model
-        # mavjud bo'lmagan ustun nomini o'ylab topa olmaydi.
-        text=ai_schema.response_format("lab", lab_columns=columns),
-    )
+    # Provayderga yuklangan fayllar — javobdan keyin o'chiriladi (L-14)
+    uploaded_ids: list[str] = []
     try:
-        return json.loads(resp.output_text)
-    except Exception:
-        return {"raw": resp.output_text}
+        for index, (content, fname) in enumerate(files, start=1):
+            fname = prepare_upload_filename(fname, content, default_stem="lab_upload").lower()
+
+            # Excel — matnli jadval sifatida (model xlsx faylni o'qiy olmaydi).
+            # Bemor F.I.O. va shifokor imzosi matnga kirmaydi (`excel_to_text`).
+            if excel_to_text.is_xlsx(fname):
+                table = excel_to_text.xlsx_to_text(content)
+                label = f"Fayl {index}/{len(files)} — " if len(files) > 1 else ""
+                content_parts.append({
+                    "type": "input_text",
+                    "text": f"{label}Excel jadvali (faqat to'ldirilgan natija qatorlari):\n{table}",
+                })
+                continue
+
+            # 1. Faylni OpenAI ga yuklash
+            fobj = io.BytesIO(content)
+            fobj.name = fname
+            uploaded = client.files.create(file=fobj, purpose="user_data")
+            uploaded_ids.append(uploaded.id)
+
+            is_image = fname.endswith(('.png', '.jpg', '.jpeg'))
+            if len(files) > 1:
+                content_parts.append({"type": "input_text", "text": f"Fayl {index}/{len(files)}:"})
+            content_parts.append({
+                "type": "input_image" if is_image else "input_file",
+                "file_id": uploaded.id,
+            })
+
+        # 2. AI tahlil
+        resp = client.responses.create(
+            # Model va fikrlash chuqurligi bitta joyda (A-11). Token byudjeti
+            # laboratoriya uchun kengroq — ko'p faylli javob kesilmasin (L-05)
+            **ai_config.holter_smad_lab_request(
+                max_output_tokens=ai_config.LAB_MAX_OUTPUT_TOKENS),
+            input=[{"role": "user", "content": content_parts}],
+            # Qat'iy JSON sxema (A-7). Ko'rsatkichlar massiv sifatida
+            # qaytadi va `column_name` `enum` bilan cheklangan — model
+            # mavjud bo'lmagan ustun nomini o'ylab topa olmaydi.
+            text=ai_schema.response_format("lab", lab_columns=columns),
+        )
+    finally:
+        # Bemor fayllari provayderda qolmasin — xato bo'lsa ham (L-14)
+        ai_config.delete_uploaded_files(client, uploaded_ids, "lab")
+    return _parse_lab_response(resp)
+
+
+def _parse_lab_response(resp) -> dict:
+    """AI javobini lug'atga o'giradi; to'liq bo'lmasa — istisno (L-05).
+
+    Ilgari `json.loads` xatosida `{"raw": matn}` qaytardi: keyingi kod
+    barcha maydonlarni bo'sh olib, natijani "tayyor" (status 2) deb
+    saqlardi — kulrang bo'sh kartochka, xato ham, "qayta urinish" ham
+    yo'q. Endi istisno `_lab_ai_background` dagi `except` ga tushadi:
+    status -1 va tarjima qilingan xabar.
+    """
+    output = getattr(resp, "output_text", None)
+    incomplete = getattr(resp, "status", None) == "incomplete"
+    if incomplete:
+        reason = getattr(getattr(resp, "incomplete_details", None), "reason", None)
+        raise ai_errors.AIOutputIncomplete(
+            f"AI javobi to'liq emas (token chegarasi; reason={reason})")
+    if not output or not str(output).strip():
+        raise ai_errors.AIOutputIncomplete("AI bo'sh natija qaytardi")
+    try:
+        parsed = json.loads(output)
+    except (TypeError, ValueError) as exc:
+        # Matn o'rtada uzilgan (yopilmagan satr/massiv) — bu ham kesilish
+        text_out = str(output).rstrip()
+        pos = getattr(exc, "pos", None)
+        if "Unterminated" in str(exc) or (pos is not None and pos >= len(text_out) - 1):
+            raise ai_errors.AIOutputIncomplete(
+                f"AI javobi to'liq emas (JSON uzilgan, uzunligi {len(text_out)})") from exc
+        raise ai_errors.AIInvalidOutput(
+            f"AI javobi JSON emas (uzunligi {len(text_out)})") from exc
+    if not isinstance(parsed, dict):
+        raise ai_errors.AIInvalidOutput(
+            f"AI javobi kutilgan tuzilmada emas ({type(parsed).__name__})")
+    return parsed
+
+
+def _is_inverted_ref(low, high) -> bool:
+    """Me'yor teskari yozilganmi (min > max) — `lab_analyse.replace_lab_values`
+    dagi shart bilan bir xil (L-38)."""
+    def num(x):
+        return x if isinstance(x, (int, float)) and not isinstance(x, bool) else None
+    low, high = num(low), num(high)
+    return low is not None and high is not None and low > high
 
 
 def _measurements_to_dict(raw, columns: set[str]) -> dict:
@@ -310,7 +367,14 @@ def _measurements_to_dict(raw, columns: set[str]) -> dict:
     """
     if isinstance(raw, dict):
         # Sxemasiz eski javob: ham katalog bo'yicha filtrlanadi
-        return {k: v for k, v in raw.items() if k in columns}
+        out = {}
+        for k, v in raw.items():
+            if k not in columns:
+                continue
+            if isinstance(v, dict) and _is_inverted_ref(v.get("ref_low"), v.get("ref_high")):
+                v = {key: val for key, val in v.items() if key not in ("ref_low", "ref_high")}
+            out[k] = v
+        return out
     if not isinstance(raw, list):
         return {}
 
@@ -343,6 +407,14 @@ def _measurements_to_dict(raw, columns: set[str]) -> dict:
             ref = item.get(key)
             if isinstance(ref, (int, float)) and not isinstance(ref, bool):
                 cell[key] = ref
+        # Teskari yozilgan me'yor (masalan 40–20) ishonchsiz — JSON ga ham
+        # tushmaydi (L-38). `replace_lab_values` bazaga yozishda ham xuddi
+        # shunday tashlaydi; ilgari ekran uni ishlatardi, PDF/statistika esa
+        # katalog me'yorini — bitta tahlil ikki xil baholanardi.
+        if _is_inverted_ref(cell.get("ref_low"), cell.get("ref_high")):
+            logger.info("Lab: teskari me'yor tashlab yuborildi: %s (%s > %s)",
+                        name, cell["ref_low"], cell["ref_high"])
+            del cell["ref_low"], cell["ref_high"]
         ref_text = item.get("ref_text")
         if isinstance(ref_text, str) and ref_text.strip():
             cell["ref_text"] = ref_text.strip()[:300]
@@ -500,6 +572,13 @@ async def _lab_ai_background(
         logger.info("Lab AI muvaffaqiyatli: analyse_id=%d, ko'rsatkichlar=%d", analyse_id, written)
 
     except Exception as exc:
+        # DB xatosidan (IntegrityError, uzilish) keyin sessiya "pending
+        # rollback" holatida — rollback qilinmasa quyidagi yozuv ham xato
+        # berib, tahlil watchdog gacha status 0 da qolardi (L-29)
+        try:
+            db.rollback()
+        except Exception:
+            logger.exception("Lab AI: sessiyani rollback qilib bo'lmadi analyse_id=%d", analyse_id)
         logger.error("Lab AI fon xatolik analyse_id=%d [%s]: %s",
                      analyse_id, ai_errors.classify(exc), ai_errors.log_message(exc))
         try:
@@ -512,7 +591,7 @@ async def _lab_ai_background(
                 ai_answer_data=ai_errors.to_ai_answer(exc, lang),
             )
         except Exception:
-            pass
+            logger.exception("Lab AI: xatolik holatini yozib bo'lmadi analyse_id=%d", analyse_id)
     finally:
         db.close()
 
@@ -590,6 +669,95 @@ async def _read_lab_uploads(
     return result
 
 
+def _tr(lang: str, uz: str, ru: str, en: str) -> str:
+    """So'rov tilidagi xabar (uz | ru | en; noma'lum til — uz)."""
+    return {"ru": ru, "en": en}.get((lang or "uz")[:2], uz)
+
+
+# ─── Retry / replace-file parallel himoyasi (L-16) ───────────────────────────
+#: Status 0/1 dagi yozuv shu daqiqadan yangi bo'lsa — AI hali ishlayapti
+#: deb hisoblanadi. .NET `StuckAnalysisWatchdog` chegarasi bilan bir xil:
+#: undan eski 0/1 yozuv muzlagan, uni qayta ishga tushirish mumkin.
+IN_PROGRESS_MINUTES = 30
+
+
+def _is_in_progress(status, updated_at, created_at=None, now=None) -> bool:
+    """Tahlil hali ishlanmoqdami (status 0/1 va oxirgi o'zgarish yangi)."""
+    if status not in (0, 1):
+        return False
+    stamp = updated_at or created_at
+    if stamp is None:
+        return False
+    if stamp.tzinfo is None:
+        # Python naive UTC yozadi; `timestamptz` drayverdan aware keladi
+        stamp = stamp.replace(tzinfo=datetime.timezone.utc)
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    return now - stamp < datetime.timedelta(minutes=IN_PROGRESS_MINUTES)
+
+
+def _ensure_not_running(db: Session, analyse, lang: str) -> None:
+    """Tahlil hali ishlanayotgan bo'lsa 409 (ikkinchi pullik AI chaqiruv va
+    `lab_analysis_values` dagi IntegrityError oldini olish uchun)."""
+    if not _is_in_progress(analyse.status, analyse.updated_at, analyse.created_at):
+        return
+    db.rollback()  # `FOR UPDATE` qulfi darhol bo'shasin
+    logger.info("Lab: tahlil hali davom etmoqda, so'rov rad etildi: analyse_id=%d", analyse.id)
+    raise HTTPException(status_code=409, detail=_tr(
+        lang,
+        "Tahlil hali davom etmoqda. Natija tayyor bo'lishini kuting.",
+        "Анализ ещё выполняется. Дождитесь результата.",
+        "The analysis is still in progress. Please wait for the result.",
+    ))
+
+
+def _patient_birthdate(db: Session, patcient_id: int):
+    return db.execute(
+        text("SELECT birthdate FROM patients WHERE id = :id"), {"id": patcient_id}
+    ).scalar()
+
+
+def _parse_form_date(value: str | None, lang: str, birthdate=None) -> datetime.datetime | None:
+    """Formadagi tahlil sanasi (L-30): ISO matn → datetime, `lab_dates.validate`
+    bilan tekshirilgan (2000..bugun+1, tug'ilgan kundan keyin). Xato — 400."""
+    if value is None or not str(value).strip():
+        return None
+    try:
+        parsed = datetime.datetime.fromisoformat(str(value).strip().replace("Z", "+00:00"))
+    except ValueError:
+        raise HTTPException(status_code=400, detail=_tr(
+            lang,
+            "Tahlil sanasi noto'g'ri formatda.",
+            "Неверный формат даты анализа.",
+            "The analysis date has an invalid format.",
+        ))
+    # Taqqoslash mahalliy kun bo'yicha (forma mahalliy yarim tunni UTC da yuboradi)
+    local_day = (parsed.astimezone(lab_dates.TZ) if parsed.tzinfo else parsed).date()
+    if lab_dates.validate(local_day, birthdate) is None:
+        raise HTTPException(status_code=400, detail=_tr(
+            lang,
+            "Tahlil sanasi noto'g'ri: u 2000-yildan keyin, bugundan kech emas "
+            "va bemorning tug'ilgan kunidan keyin bo'lishi kerak.",
+            "Неверная дата анализа: она должна быть после 2000 года, не позже "
+            "сегодняшнего дня и после даты рождения пациента.",
+            "Invalid analysis date: it must be after 2000, not later than today "
+            "and after the patient's date of birth.",
+        ))
+    return parsed
+
+
+def _lock_patient_uploads(db: Session, patcient_id: int) -> None:
+    """Bemorning laboratoriya yuklashlari uchun tranzaksiya qulfi (L-39).
+
+    `pg_advisory_xact_lock` — sxema o'zgarishisiz; tranzaksiya commit yoki
+    rollback bo'lganda o'zi bo'shaydi. Parallel so'rov shu yerda kutadi va
+    takror tekshiruvida birinchi so'rov yozgan fayllarni ko'radi.
+    """
+    db.execute(
+        text("SELECT pg_advisory_xact_lock(hashtext(:key))"),
+        {"key": f"lab:{patcient_id}"},
+    )
+
+
 def _start_lab_ai(analyse_id: int, uploads: list[_LabUpload], age: int, gender: str, lang: str) -> None:
     """Fon rejimida AI tahlilni ishga tushiradi (browser yopilsa ham davom etadi)."""
     task = asyncio.create_task(_lab_ai_background(
@@ -646,6 +814,18 @@ async def analyze(
     except reference_validator.ReferenceError as ref_exc:
         raise HTTPException(status_code=400, detail=str(ref_exc))
 
+    # Formadagi sana — fayllar diskka yozilishidan OLDIN tekshiriladi (L-30):
+    # ilgari noto'g'ri format `fromisoformat` da 500 berib, yetim fayllar
+    # qolardi; 1926 kabi xato yil esa qabul qilinib, manba `user` bo'lgani
+    # uchun AI uni hech qachon tuzatmasdi.
+    parsed_date = _parse_form_date(analysis_date, lang, _patient_birthdate(db, patcient_id))
+
+    # Takror tekshiruvi va yozuv yaratish bitta qulf ostida (L-39): bir
+    # vaqtda kelgan ikkita bir xil yuklash ikkalasi ham tekshiruvdan o'tib
+    # ketardi. Qulf tranzaksiya oxirida (quyidagi commit) bo'shaydi — shuning
+    # uchun yozuv va fayllar ro'yxati oraliq commit siz yoziladi.
+    _lock_patient_uploads(db, patcient_id)
+
     # Fayllardan biri shu bemorga allaqachon yuklanganmi? Tekshiruv
     # fayllar diskka yozilishidan va yozuv yaratilishidan OLDIN — takror
     # bo'lsa hech narsa qoldirmasdan to'xtaydi.
@@ -663,7 +843,6 @@ async def analyze(
     ]
 
     # Lab analyse yozuvini yaratish (status=0 — kutmoqda)
-    import datetime
     lab_analyse = create_lab_analyse(
         session=db,
         patient_id=patcient_id,
@@ -671,7 +850,8 @@ async def analyze(
         clinic_id=clinic_id,
         status=0,
         analyse_file_link=saved[0]["file_link"],
-        analysis_date=datetime.datetime.fromisoformat(analysis_date.replace("Z", "+00:00")) if analysis_date else None
+        analysis_date=parsed_date,
+        commit=False,
     )
 
     # AI qaysi tilda javob berishi shu yerda qayd etiladi: natija
@@ -679,13 +859,13 @@ async def analyze(
     lab_analyse.ai_lang = (lang or 'uz')[:5]
     # Formada kiritilgan sana — AI fayldagi sana bilan almashtirmaydi.
     # Kiritilmagan bo'lsa u fayldan olinadi (`_apply_document_date`).
-    if analysis_date:
+    if parsed_date:
         lab_analyse.analysis_date_source = lab_dates.SOURCE_USER
-    db.commit()
 
     # Fayllar ro'yxati; birinchisi `analyse_file_link`, `original_filename`
     # va `file_hash` ustunlariga ham yoziladi (eski kod uchun)
-    set_lab_analysis_files(db, lab_analyse.id, saved)
+    set_lab_analysis_files(db, lab_analyse.id, saved, commit=False)
+    db.commit()  # takror tekshiruvi qulfi shu yerda bo'shaydi
 
     # Shifokorlarni bog'lash
     if doctor_id:
@@ -734,9 +914,18 @@ async def replace_file(
     analyse = get_lab_analyse_by_id(db, id)
     if not analyse:
         raise HTTPException(status_code=404, detail="Tahlil topilmadi")
+    # Tahlil hali ishlanayotgan bo'lsa — fayllarni o'qimasdan 409 (L-16)
+    _ensure_not_running(db, analyse, lang)
 
     names = original_filenames or ([original_filename] if original_filename else None)
     uploads = await _read_lab_uploads(file, names, lang)
+
+    # Tekshiruv va status 0 ga o'tkazish orasida parallel so'rov o'tmasin:
+    # yozuv qulflanadi va holat qayta tekshiriladi (qulf commit gacha)
+    analyse = lock_lab_analyse(db, id)
+    if not analyse:
+        raise HTTPException(status_code=404, detail="Tahlil topilmadi")
+    _ensure_not_running(db, analyse, lang)
 
     saved = [
         {
@@ -746,14 +935,16 @@ async def replace_file(
         }
         for u in uploads
     ]
-    set_lab_analysis_files(db, id, saved)
+    set_lab_analysis_files(db, id, saved, commit=False)
 
-    # Yozuvni qayta tahlilga tayyorlash: eski AI natijasi tozalanadi
+    # Yozuvni qayta tahlilga tayyorlash: eski AI natijasi va uning tarjima
+    # keshi tozalanadi; yangi natija so'rov tilida bo'ladi (L-13)
     update_lab_analyse(
         session=db,
         analyse_id=id,
         status=0,
         clear_ai_answer=True,
+        ai_lang=(lang or 'uz')[:5],
     )
 
     _start_lab_ai(id, uploads, age, gender, lang)
@@ -795,6 +986,8 @@ async def retry_analyse(
     analyse = get_lab_analyse_by_id(db, id)
     if not analyse:
         raise HTTPException(status_code=404, detail="Tahlil topilmadi")
+    # Tahlil hali ishlanayotgan bo'lsa — ikkinchi pullik AI chaqiruv yo'q (L-16)
+    _ensure_not_running(db, analyse, lang)
 
     uploads: list[_LabUpload] = []
     for link in get_lab_analysis_file_links(db, analyse):
@@ -811,12 +1004,20 @@ async def retry_analyse(
             detail="Tahlil fayli topilmadi. Faylni qaytadan yuklang.",
         )
 
-    # Yozuvni qayta tahlilga tayyorlash: eski xatolik matni tozalanadi
+    # Qulf ostida holat qayta tekshiriladi — parallel retry o'tib ketmasin
+    analyse = lock_lab_analyse(db, id)
+    if not analyse:
+        raise HTTPException(status_code=404, detail="Tahlil topilmadi")
+    _ensure_not_running(db, analyse, lang)
+
+    # Yozuvni qayta tahlilga tayyorlash: eski natija/xatolik matni va uning
+    # tarjima keshi tozalanadi; retry UI tilida yuboriladi (L-13)
     update_lab_analyse(
         session=db,
         analyse_id=id,
         status=0,
         clear_ai_answer=True,
+        ai_lang=(lang or 'uz')[:5],
     )
 
     _start_lab_ai(id, uploads, age, gender, lang)

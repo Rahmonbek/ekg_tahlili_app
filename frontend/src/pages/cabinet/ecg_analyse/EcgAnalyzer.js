@@ -93,7 +93,7 @@ export default function EcgAnalyzer() {
             // ─── AI rejimi: fonda ishlaydi, forma darhol tozalanadi ───
             const send = (data) => runInBackground({
                 type: 'ecg',
-                label: 'EKG AI tahlil',
+                label: t('bg_label_ecg', { defaultValue: 'EKG tahlil' }),
                 listPath: '/ecg-analyses',
                 makeRequest: (handlers) => analyzeEkgFile(data, { ...handlers, signal: page.newSignal() }),
                 onDuplicate: async (err) => {

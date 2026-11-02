@@ -364,21 +364,27 @@ def _sync_openai(patient: dict, entries: list[dict], images, lang: str) -> tuple
     # Rasmlar loyihada allaqachon ishlatilayotgan yo'l bilan yuboriladi:
     # avval provayderga fayl sifatida yuklanadi, keyin `file_id` beriladi
     # (main.py dagi EKG tahlili bilan bir xil naqsh)
-    for name, blob in images:
-        fobj = io.BytesIO(blob)
-        fobj.name = name
-        uploaded = client.files.create(file=fobj, purpose="user_data")
-        content.append({
-            "type": "input_image",
-            "file_id": uploaded.id,
-            "detail": ai_config.ECG_IMAGE_DETAIL,
-        })
+    uploaded_ids: list[str] = []
+    try:
+        for name, blob in images:
+            fobj = io.BytesIO(blob)
+            fobj.name = name
+            uploaded = client.files.create(file=fobj, purpose="user_data")
+            uploaded_ids.append(uploaded.id)
+            content.append({
+                "type": "input_image",
+                "file_id": uploaded.id,
+                "detail": ai_config.ECG_IMAGE_DETAIL,
+            })
 
-    resp = client.responses.create(
-        **ai_config.combined_request(),
-        input=[{"role": "user", "content": content}],
-        text=ai_schema.response_format("combined"),
-    )
+        resp = client.responses.create(
+            **ai_config.combined_request(),
+            input=[{"role": "user", "content": content}],
+            text=ai_schema.response_format("combined"),
+        )
+    finally:
+        # Bemor EKG rasmlari provayderda qolmasin — xato bo'lsa ham (L-14)
+        ai_config.delete_uploaded_files(client, uploaded_ids, "combined")
 
     usage = {}
     if getattr(resp, "usage", None) is not None:
@@ -400,6 +406,14 @@ def _update(db: Session, combined_id: int, **fields) -> None:
         return
     for key, value in fields.items():
         setattr(row, key, value)
+    if "ai_answer_data" in fields:
+        # Javob o'zgardi — tarjima keshi eski javobniki (L-13). Qayta
+        # yuborishda eski xato matni ishlov davomida ham turadi va shu
+        # paytda keshlangan tarjimasi yangi natija o'rniga qaytarilardi.
+        db.execute(
+            text("UPDATE combined_analyses SET ai_translations = NULL WHERE id = :id"),
+            {"id": combined_id},
+        )
     row.updated_at = datetime.datetime.utcnow()
     db.commit()
 
@@ -515,6 +529,12 @@ async def analyze(
     combined.status = 1
     combined.ai_lang = lang
     combined.updated_at = datetime.datetime.utcnow()
+    # Xatolikdan keyin qayta yuborilsa — eski javobning (xato matnining)
+    # tarjima keshi yangi natijaga tegishli emas (L-13)
+    db.execute(
+        text("UPDATE combined_analyses SET ai_translations = NULL WHERE id = :id"),
+        {"id": combined.id},
+    )
     db.commit()
 
     task = asyncio.create_task(_combined_ai_background(combined.id, lang, mode))

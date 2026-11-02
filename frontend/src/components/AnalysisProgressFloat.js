@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { notification } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { useStore } from '../store/Store';
 
 const statusIcon = {
@@ -19,6 +20,21 @@ const statusIcon = {
     error:   <span style={{ color: '#ff4d4f', marginRight: 8, fontSize: 16 }}>✗</span>,
 };
 
+/**
+ * Tahlil turining nomi — joriy tilda. Yorliq (`item.label`) yuklash
+ * sahifasida yoki serverda (SignalR) o'zbekcha yoziladi, shuning uchun
+ * Ru/En interfeysida ham o'zbekcha chiqardi (L-36). Tur ma'lum bo'lsa
+ * nom shu yerda tarjima qilinadi, aks holda kelgan yorliq ishlatiladi.
+ */
+const TYPE_LABEL = {
+    ecg: ['bg_label_ecg', 'EKG tahlil'],
+    holter: ['bg_label_holter', 'Holter tahlil'],
+    smad: ['bg_label_smad', 'SMAD tahlil'],
+    lab: ['bg_label_lab', 'Laboratoriya tahlil'],
+    combined: ['bg_label_combined', 'Kompleks AI xulosa'],
+    parasitology: ['bg_label_parasitology', 'Parazitologiya tahlil'],
+};
+
 const itemStyle = (status) => ({
     display: 'flex',
     alignItems: 'center',
@@ -31,7 +47,14 @@ const itemStyle = (status) => ({
 export default function AnalysisProgressFloat() {
     const { pendingAnalyses, removePendingAnalysis } = useStore();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const notifiedKeys = useRef(new Set());
+
+    const labelOf = useCallback((item) => {
+        const entry = TYPE_LABEL[item.type];
+        if (entry) return t(entry[0], { defaultValue: entry[1] });
+        return item.label || t('bg_label_default', { defaultValue: 'Tahlil' });
+    }, [t]);
 
     /**
      * "Ko'rish" bosilganda AYNAN SHU tahlilni ochadi.
@@ -53,13 +76,13 @@ export default function AnalysisProgressFloat() {
 
             if (item.status === 'done') {
                 notification.success({
-                    message: `${item.label} tayyor!`,
+                    message: t('bg_analysis_ready', { label: labelOf(item), defaultValue: '{{label}} tayyor!' }),
                     description: (
                         <span
                             style={{ color: '#0f766e', cursor: 'pointer', textDecoration: 'underline' }}
                             onClick={() => { openAnalysis(item); notification.destroy(item.key); }}
                         >
-                            Natijalarni ko'rish →
+                            {t('bg_view_results', { defaultValue: "Natijalarni ko'rish →" })}
                         </span>
                     ),
                     key: item.key,
@@ -71,7 +94,7 @@ export default function AnalysisProgressFloat() {
                 // ko'rinardi. Endi u "Ko'rish" yoki "✕" bosilguncha turadi.
             } else if (item.status === 'error') {
                 notification.error({
-                    message: `${item.label} xatolik bilan tugadi`,
+                    message: t('bg_analysis_failed', { label: labelOf(item), defaultValue: '{{label}} xatolik bilan tugadi' }),
                     description: item.errorMsg,
                     key: item.key,
                     duration: 8,
@@ -79,7 +102,7 @@ export default function AnalysisProgressFloat() {
                 // Xatolik ham o'zi yo'qolmaydi — sababini o'qishga vaqt kerak
             }
         });
-    }, [pendingAnalyses, openAnalysis, removePendingAnalysis]);
+    }, [pendingAnalyses, openAnalysis, removePendingAnalysis, labelOf, t]);
 
     const visible = pendingAnalyses.length > 0;
     if (!visible) return null;
@@ -103,14 +126,14 @@ export default function AnalysisProgressFloat() {
                 fontWeight: 600,
                 fontSize: 13,
             }}>
-                Tahlillar
+                {t('analyses', { defaultValue: 'Tahlillar' })}
             </div>
             <div style={{ padding: '4px 14px 8px' }}>
                 {pendingAnalyses.map((item) => (
                     <div key={item.key} style={itemStyle(item.status)}>
                         <span style={{ fontSize: 13, color: '#333', display: 'flex', alignItems: 'center' }}>
                             {statusIcon[item.status]}
-                            {item.label}
+                            {labelOf(item)}
                         </span>
                         {item.status === 'loading' ? (
                             /* Fayl hali yuklanayotgan bo'lsa foiz ko'rsatiladi:
@@ -120,7 +143,7 @@ export default function AnalysisProgressFloat() {
                             <span style={{ fontSize: 11, color: '#999' }}>
                                 {item.uploadPercent != null && item.uploadPercent < 100
                                     ? `${item.uploadPercent}%`
-                                    : 'davom etmoqda...'}
+                                    : t('bg_in_progress', { defaultValue: 'davom etmoqda...' })}
                             </span>
                         ) : item.status === 'done' ? (
                             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -128,12 +151,12 @@ export default function AnalysisProgressFloat() {
                                     style={{ fontSize: 12, color: '#0f766e', cursor: 'pointer', textDecoration: 'underline' }}
                                     onClick={() => { openAnalysis(item); removePendingAnalysis(item.key); }}
                                 >
-                                    Ko'rish
+                                    {t('view', { defaultValue: "Ko'rish" })}
                                 </span>
                                 {/* Ko'rmasdan yopish imkoniyati — aks holda
                                     element abadiy osilib turardi */}
                                 <span
-                                    title="Yopish"
+                                    title={t('bg_close', { defaultValue: 'Yopish' })}
                                     style={{ fontSize: 13, color: '#bbb', cursor: 'pointer', lineHeight: 1 }}
                                     onClick={() => removePendingAnalysis(item.key)}
                                 >
@@ -145,7 +168,7 @@ export default function AnalysisProgressFloat() {
                                 style={{ fontSize: 12, color: '#999', cursor: 'pointer' }}
                                 onClick={() => removePendingAnalysis(item.key)}
                             >
-                                Yopish
+                                {t('bg_close', { defaultValue: 'Yopish' })}
                             </span>
                         )}
                     </div>

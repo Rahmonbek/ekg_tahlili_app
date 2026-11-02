@@ -13,10 +13,72 @@ namespace EkgAnalyzerApi.Services
         /// <summary>Passportni maskalashdan oldin ochish uchun (T-098).</summary>
         private readonly EncryptionService _encryption;
 
-        public LabAnalyseService(MedDataDB context, EncryptionService encryption)
+        private readonly IConfiguration _config;
+
+        public LabAnalyseService(MedDataDB context, EncryptionService encryption, IConfiguration config)
         {
             _context = context;
             _encryption = encryption;
+            _config = config;
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex PassportPattern =
+            new(@"^[A-Za-z]{2}\d+$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        /// <summary>
+        /// Ro'yxatdagi qidiruv: passport (2 harf + raqamlar) yoki ism so'zlari.
+        /// </summary>
+        /// <remarks>
+        /// Passport shifrlangan bo'lishi mumkin (AES-256-CBC, tasodifiy IV —
+        /// onlayn konsultatsiya orqali yaratilgan bemorlar), shuning uchun
+        /// SQL `LIKE` ularni topmaydi (L-33). Joriy so'rov doirasidagi
+        /// bemorlarning passportlari xotirada ochilib taqqoslanadi
+        /// (`PatcientService.SearchByPassportAsync` dagi kabi). Ochiq matnli
+        /// eski yozuvlar `Decrypt` dan o'zgarishsiz qaytadi.
+        /// </remarks>
+        private async Task<IQueryable<LabAnalyses>> ApplySearchAsync(IQueryable<LabAnalyses> query, string? search)
+        {
+            if (string.IsNullOrWhiteSpace(search)) return query;
+
+            var s = search.Trim();
+            var compact = s.Replace(" ", "");
+
+            if (PassportPattern.IsMatch(compact))
+            {
+                var normalized = compact.ToUpperInvariant();
+                var scopePatientIds = query.Select(e => e.PatcientId).Distinct();
+                var patients = await _context.Patcients.AsNoTracking()
+                    .Where(p => p.Passport != null && scopePatientIds.Contains(p.Id))
+                    .Select(p => new { p.Id, p.Passport })
+                    .ToListAsync();
+
+                var matchingIds = patients
+                    .Where(p => PassportKey(p.Passport).Contains(normalized))
+                    .Select(p => p.Id)
+                    .ToList();
+
+                return query.Where(e => matchingIds.Contains(e.PatcientId));
+            }
+
+            var words = s.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var word in words)
+            {
+                query = query.Where(e =>
+                    (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(word)) ||
+                    (e.Patcient.LastName  != null && e.Patcient.LastName.ToLower().Contains(word))  ||
+                    (e.Patcient.SureName  != null && e.Patcient.SureName.ToLower().Contains(word)) ||
+                    (e.Patcient.Passport  != null && e.Patcient.Passport.Replace(" ", "").Contains(compact.ToUpper())));
+            }
+            return query;
+        }
+
+        /// <summary>Passportni taqqoslash uchun: ochilgan, bo'shliqsiz, katta harf.</summary>
+        private string PassportKey(string? stored)
+        {
+            if (string.IsNullOrWhiteSpace(stored)) return string.Empty;
+            // `Decrypt` ochib bo'lmagan qiymatni (ochiq matnli eski yozuv) o'zi qaytaradi
+            var plain = _encryption.Decrypt(stored) ?? string.Empty;
+            return plain.Replace(" ", "").ToUpperInvariant();
         }
 
         public async Task<PagedResult<LabAnalyseDTO>> GetLabAnalysesByPatientIdAsync(
@@ -40,7 +102,8 @@ namespace EkgAnalyzerApi.Services
                 .Include(e => e.CreatedDoctor!).ThenInclude(c => c.User!).ThenInclude(c => c.Role!)
                 .Include(e => e.Categories).ThenInclude(c => c.LabCategory)
                 .Include(e => e.Doctors!).ThenInclude(c => c.Doctor!).ThenInclude(c => c.User!).ThenInclude(c => c.Role!)
-                .OrderByDescending(e => e.CreatedAt)
+                // Tahlilning O'Z sanasi bo'yicha (yuklangan vaqt emas) — L-25
+                .OrderByDescending(e => e.AnalysisDate ?? e.CreatedAt).ThenByDescending(e => e.Id)
                 .ApplyPaging(page, pageSize)
                 .Select(e => new LabAnalyseDTO
                 {
@@ -168,50 +231,29 @@ namespace EkgAnalyzerApi.Services
 
             if (dateFrom.HasValue)
             {
-                var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
+                // Sana mahalliy (Toshkent) kun sifatida olinadi — `analysis_date`
+                // ham mahalliy yarim tun bo'lib saqlanadi (L-09)
+                var utcFrom = AppTime.ToUtcFromLocalDate(dateFrom.Value, _config);
                 query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) >= utcFrom);
             }
 
             if (dateTo.HasValue)
             {
-                var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
-                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) <= utcTo);
+                // Tanlangan kun to'liq kiradi, keyingi kunning yarim tuni kirmaydi (L-09)
+                var utcTo = AppTime.ToUtcFromLocalDate(dateTo.Value, _config).AddDays(1);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) < utcTo);
             }
 
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                var s = search.Trim();
-                var isPassport = System.Text.RegularExpressions.Regex.IsMatch(search.Replace(" ", ""), @"^[A-Za-z]{2}\d+$");
-                if (isPassport)
-                {
-                    var normalizedSearch = search.Replace(" ", "").ToUpper();
-                    var clinicPatientIds = await _context.LabAnalyse.Where(e => e.ClinicId == clinicId).Select(e => e.PatcientId).Distinct().ToListAsync();
-                    var patients = await _context.Patcients.Where(p => clinicPatientIds.Contains(p.Id)).Select(p => new { p.Id, p.Passport }).ToListAsync();
-                    var matchingIds = patients.Where(p => p.Passport != null && p.Passport.Replace(" ", "").ToUpper().Contains(normalizedSearch)).Select(p => p.Id).ToList();
-                    query = query.Where(e => matchingIds.Contains(e.PatcientId));
-                }
-                else
-                {
-                    var words = s.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var word in words)
-                    {
-                        query = query.Where(e =>
-                            (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(word)) ||
-                            (e.Patcient.LastName != null && e.Patcient.LastName.ToLower().Contains(word)) ||
-                            (e.Patcient.SureName != null && e.Patcient.SureName.ToLower().Contains(word)) ||
-                            (e.Patcient.Passport != null && e.Patcient.Passport.Replace(" ", "").Contains(s.Replace(" ", "").ToUpper())));
-                    }
-                }
-            }
+            query = await ApplySearchAsync(query, search);
 
             if (automaticAnalysisBool.HasValue)
             {
+                // `ai_answer_data` — jsonb: `string.Contains` Npgsql da
+                // `strpos(jsonb, jsonb)` ga aylanib 500 berardi (L-08).
+                // Hosila ustun `ai_answer_data ->> 'automatic_analysis_bool'`
+                // `1` va `"1"` ni bir xil `'1'` ga keltiradi.
                 var val = automaticAnalysisBool.Value.ToString();
-                query = query.Where(e => e.AIAnswerData != null && (
-                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": {val}") ||
-                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":{val}") ||
-                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\": \"{val}\"") ||
-                    e.AIAnswerData.Contains($"\"automatic_analysis_bool\":\"{val}\"")));
+                query = query.Where(e => e.AiSeverityRaw == val);
             }
 
             if (hasDiagnosis.HasValue)
@@ -229,7 +271,8 @@ namespace EkgAnalyzerApi.Services
             var totalCount = await query.CountAsync();
 
             var items = await query
-                .OrderByDescending(e => e.CreatedAt)
+                // Tahlilning O'Z sanasi bo'yicha (yuklangan vaqt emas) — L-25
+                .OrderByDescending(e => e.AnalysisDate ?? e.CreatedAt).ThenByDescending(e => e.Id)
                 .ApplyPaging(page, pageSize)
                 .Select(e => new LabAnalyseListDTO
                 {
@@ -319,14 +362,17 @@ namespace EkgAnalyzerApi.Services
 
             if (dateFrom.HasValue)
             {
-                var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
+                // Sana mahalliy (Toshkent) kun sifatida olinadi — `analysis_date`
+                // ham mahalliy yarim tun bo'lib saqlanadi (L-09)
+                var utcFrom = AppTime.ToUtcFromLocalDate(dateFrom.Value, _config);
                 query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) >= utcFrom);
             }
 
             if (dateTo.HasValue)
             {
-                var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
-                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) <= utcTo);
+                // Tanlangan kun to'liq kiradi, keyingi kunning yarim tuni kirmaydi (L-09)
+                var utcTo = AppTime.ToUtcFromLocalDate(dateTo.Value, _config).AddDays(1);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) < utcTo);
             }
 
             if (aiStatus.HasValue)
@@ -351,25 +397,13 @@ namespace EkgAnalyzerApi.Services
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                var s = search.Trim();
-                var words = s.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-                foreach (var word in words)
-                {
-                    query = query.Where(e =>
-                        (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(word)) ||
-                        (e.Patcient.LastName  != null && e.Patcient.LastName.ToLower().Contains(word))  ||
-                        (e.Patcient.SureName  != null && e.Patcient.SureName.ToLower().Contains(word)) ||
-                        (e.Patcient.Passport  != null && e.Patcient.Passport.Replace(" ", "").Contains(s.Replace(" ", "").ToUpper())));
-                }
-            }
+            query = await ApplySearchAsync(query, search);
 
             var totalCount = await query.CountAsync();
 
             var items = await query
-                .OrderByDescending(e => e.Id)
+                // Tahlilning O'Z sanasi bo'yicha (yuklangan vaqt emas) — L-25
+                .OrderByDescending(e => e.AnalysisDate ?? e.CreatedAt).ThenByDescending(e => e.Id)
                 .ApplyPaging(page, pageSize)
                 .Select(e => new LabAnalyseListDTO
                 {
@@ -475,14 +509,17 @@ namespace EkgAnalyzerApi.Services
 
             if (dateFrom.HasValue)
             {
-                var utcFrom = DateTime.SpecifyKind(dateFrom.Value, DateTimeKind.Utc);
+                // Sana mahalliy (Toshkent) kun sifatida olinadi — `analysis_date`
+                // ham mahalliy yarim tun bo'lib saqlanadi (L-09)
+                var utcFrom = AppTime.ToUtcFromLocalDate(dateFrom.Value, _config);
                 query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) >= utcFrom);
             }
 
             if (dateTo.HasValue)
             {
-                var utcTo = DateTime.SpecifyKind(dateTo.Value.Date.AddDays(1), DateTimeKind.Utc);
-                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) <= utcTo);
+                // Tanlangan kun to'liq kiradi, keyingi kunning yarim tuni kirmaydi (L-09)
+                var utcTo = AppTime.ToUtcFromLocalDate(dateTo.Value, _config).AddDays(1);
+                query = query.Where(e => (e.AnalysisDate ?? e.CreatedAt) < utcTo);
             }
 
             if (aiStatus.HasValue)
@@ -507,25 +544,13 @@ namespace EkgAnalyzerApi.Services
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                var s = search.Trim();
-                var words = s.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-                foreach (var word in words)
-                {
-                    query = query.Where(e =>
-                        (e.Patcient.FirstName != null && e.Patcient.FirstName.ToLower().Contains(word)) ||
-                        (e.Patcient.LastName  != null && e.Patcient.LastName.ToLower().Contains(word))  ||
-                        (e.Patcient.SureName  != null && e.Patcient.SureName.ToLower().Contains(word)) ||
-                        (e.Patcient.Passport  != null && e.Patcient.Passport.Replace(" ", "").Contains(s.Replace(" ", "").ToUpper())));
-                }
-            }
+            query = await ApplySearchAsync(query, search);
 
             var totalCount = await query.CountAsync();
 
             var items = await query
-                .OrderByDescending(e => e.Id)
+                // Tahlilning O'Z sanasi bo'yicha (yuklangan vaqt emas) — L-25
+                .OrderByDescending(e => e.AnalysisDate ?? e.CreatedAt).ThenByDescending(e => e.Id)
                 .ApplyPaging(page, pageSize)
                 .Select(e => new LabAnalyseListDTO
                 {
@@ -611,10 +636,15 @@ namespace EkgAnalyzerApi.Services
 
             if (e == null) return null;
 
+            var hasDiagnosis = await _context.AnalysisDiagnoses
+                .AnyAsync(d => d.AnalysisType == "lab" && d.AnalysisId == e.Id);
+
             return new LabAnalyseDTO
             {
                 Id = e.Id,
                 DocumentNumber = e.DocumentNumber,
+                AiLang = e.AiLang,
+                HasDiagnosis = hasDiagnosis,
                 AIAnswerData = e.AIAnswerData,
                 UpdatedAt = e.UpdatedAt,
                 AnalysisDate = e.AnalysisDate,

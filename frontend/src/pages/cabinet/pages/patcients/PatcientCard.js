@@ -24,6 +24,7 @@ import { usePageTour } from '../../../../components/shared/TourProvider'
 import useDocumentTitle from '../../../../tools/useDocumentTitle'
 import LabDynamicsChart from '../../../../components/results/LabDynamicsChart'
 import DownloadReportButton from '../../../../components/DownloadReportButton'
+import PatientSignals from '../../statistics/PatientSignals'
 import { delete_discharge, get_discharges_by_patient } from '../../../../host/requests/DischargeRequest'
 import './PatcientCard.css'
 
@@ -616,6 +617,11 @@ export default function PatcientCard() {
                     </ul>
                 </section>
             )}
+
+            {/* ═══════ Laboratoriya xavf signallari ═══════ */}
+            {/* Shifokor shu yerda ko'radi va tasdiqlaydi/rad etadi (L-26).
+                Ruxsat yoki signal bo'lmasa blok chiqmaydi. */}
+            <PatientSignals patientId={card.patcient?.id ?? Number(id)} />
 
             {/* ═══════ 5. Ko'rsatkich dinamikasi ═══════ */}
             {/* Bemor kartasi — dinamikaning eng tabiiy joyi: bu yerda savol

@@ -123,13 +123,21 @@ public class StuckAnalysisWatchdog : BackgroundService
         MedDataDB context, DbSet<T> set, DateTime cutoff, string kind, CancellationToken token)
         where T : class, IStuckDetectable
     {
+        // `updated_at` bo'yicha (L-16): retry/replace-file eski yozuvni qayta
+        // 0/1 holatiga o'tkazadi va `updated_at` ni yangilaydi. Ilgari
+        // `created_at` ga qaralardi — 30 daqiqadan eski tahlil qayta
+        // yuborilsa, AI hali ishlayotganda 5 daqiqa ichida "muzlab qoldi"
+        // (-1) bo'lib qolardi.
         var stuck = await set
-            .Where(x => (x.Status == 0 || x.Status == 1) && x.CreatedAt != null && x.CreatedAt < cutoff)
+            .Where(x => (x.Status == 0 || x.Status == 1)
+                && (x.UpdatedAt ?? x.CreatedAt) != null
+                && (x.UpdatedAt ?? x.CreatedAt) < cutoff)
             .ToListAsync(token);
 
         foreach (var item in stuck)
         {
             item.Status = -1;
+            item.UpdatedAt = DateTime.UtcNow;
 
             // Foydalanuvchi sababni ko'rishi uchun — `ai_errors` bilan bir xil format
             if (string.IsNullOrWhiteSpace(item.AIAnswerData))
@@ -158,5 +166,9 @@ public interface IStuckDetectable
     int Id { get; }
     int? Status { get; set; }
     DateTime? CreatedAt { get; }
+
+    /// <summary>Oxirgi o'zgarish (retry/replace-file da yangilanadi) — `updated_at`.</summary>
+    DateTime? UpdatedAt { get; set; }
+
     string? AIAnswerData { get; set; }
 }

@@ -30,7 +30,8 @@ export default function DiagnosesList() {
     const isNurse  = user && user.roleId === 5;
     // O'chirish: Admin/Direktor har qanday; Shifokor/Hamshira faqat o'zi yuklagan
     const canDeleteRow = (row) => isClinicManager
-        || ((isDoctor || isNurse) && row?.createdDoctorId === user?.doctor?.id);
+        || ((isDoctor || isNurse) && user?.doctor?.id != null
+            && (row?.createdDoctor?.id ?? row?.createdDoctorId) === user.doctor.id);
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -107,7 +108,7 @@ export default function DiagnosesList() {
             width: 36,
             render: (val) => val
                 ? <Tag color="green" style={{ margin: 0 }}>✓</Tag>
-                : <Tag color="gold" style={{ margin: 0 }}>Yangi</Tag>,
+                : <Tag color="gold" style={{ margin: 0 }}>{t('badge_new', { defaultValue: 'Yangi' })}</Tag>,
         }] : []),
         // {
         //     title: t('clinic', { defaultValue: 'Shifoxona' }),

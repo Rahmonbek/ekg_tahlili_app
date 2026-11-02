@@ -34,7 +34,11 @@ import { askDuplicate, withForce } from '../../../components/shared/duplicateUpl
 
 // Bitta tahlilga biriktiriladigan fayllar chegarasi — Python
 // `lab_analyses_api.MAX_LAB_FILES` bilan bir xil bo'lishi SHART
-const MAX_LAB_FILES = 10;
+export const MAX_LAB_FILES = 10;
+// Fayllarning jami hajmi — Python `lab_analyses_api.MAX_LAB_TOTAL_BYTES` bilan
+// bir xil (L-21). Brauzerda oldindan tekshiriladi: aks holda katta fayllar
+// to'liq yuklanib bo'lgach rad etilardi.
+export const MAX_LAB_TOTAL_MB = 50;
 
 export default function LabAnalyzer() {
     usePageTour(analyzerTour, { keepMissing: true });
@@ -44,6 +48,7 @@ export default function LabAnalyzer() {
         fileKind: 'lab',
         fetchOldAnalyses: get_lab_analyses_by_patcient_id,
         maxFiles: MAX_LAB_FILES,
+        maxTotalBytes: MAX_LAB_TOTAL_MB * 1024 * 1024,
         // Sana kiritilmasa — fayldagi tahlil sanasi (Excel «Дата:» / AI)
         dateFromFile: true,
     });
@@ -61,7 +66,7 @@ export default function LabAnalyzer() {
         // aynan shu forma `force_duplicate` bilan qayta yuboriladi (T-096)
         const send = (data) => runInBackground({
             type: 'lab',
-            label: 'Laboratoriya tahlil',
+            label: t('bg_label_lab', { defaultValue: 'Laboratoriya tahlil' }),
             listPath: '/lab-analyses',
             makeRequest: (handlers) => analyzeLabFile(data, { ...handlers, signal: page.newSignal() }),
             onDuplicate: async (err) => {
@@ -137,7 +142,8 @@ export default function LabAnalyzer() {
                     tour="analyzer-file"
                     title={t('lab_upload_step_file', { defaultValue: 'Laboratoriya natijasi' })}
                     hint={`${t('access_file_types')}: ${page.fileTypes.label}`
-                        + ` · ${t('lab_upload_max_files', { count: MAX_LAB_FILES, defaultValue: `${MAX_LAB_FILES} tagacha fayl` })}`}
+                        + ` · ${t('lab_upload_max_files', { count: MAX_LAB_FILES, defaultValue: `${MAX_LAB_FILES} tagacha fayl` })}`
+                        + `, ${t('lab_upload_max_total', { mb: MAX_LAB_TOTAL_MB, defaultValue: `jami ${MAX_LAB_TOTAL_MB} MB gacha` })}`}
                     done={checkReady && page.hasFile}
                     locked={locked}
                     lockedText={lockedText}

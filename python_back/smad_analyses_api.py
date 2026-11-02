@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from database import get_db, SessionLocal
 from smad_analyse_doctors import create_smad_analyse_doctor
@@ -176,25 +177,28 @@ def _sync_smad_openai(content: bytes, fname: str, age: int, gender: str, lang: s
     fobj.name = fname
     uploaded = client.files.create(file=fobj, purpose="user_data")
     file_id = uploaded.id
+    try:
+        is_image = fname.endswith(('.png', '.jpg', '.jpeg'))
+        ai_type = "input_image" if is_image else "input_file"
+        prompt = compose_prompt_for_openai(age, gender, lang)
 
-    is_image = fname.endswith(('.png', '.jpg', '.jpeg'))
-    ai_type = "input_image" if is_image else "input_file"
-    prompt = compose_prompt_for_openai(age, gender, lang)
-
-    # `text` orqali JSON Schema beriladi — model maydonlarni tashlab
-    # keta olmaydi va javobni ``` ichiga o'rab yubormaydi (T-031, T-032)
-    resp = client.responses.create(
-        # Model va fikrlash chuqurligi bitta joyda (A-11)
-        **ai_config.holter_smad_lab_request(),
-        input=[{
-            "role": "user",
-            "content": [
-                {"type": "input_text", "text": prompt},
-                {"type": ai_type, "file_id": file_id}
-            ]
-        }],
-        text=ai_schema.response_format("smad"),
-    )
+        # `text` orqali JSON Schema beriladi — model maydonlarni tashlab
+        # keta olmaydi va javobni ``` ichiga o'rab yubormaydi (T-031, T-032)
+        resp = client.responses.create(
+            # Model va fikrlash chuqurligi bitta joyda (A-11)
+            **ai_config.holter_smad_lab_request(),
+            input=[{
+                "role": "user",
+                "content": [
+                    {"type": "input_text", "text": prompt},
+                    {"type": ai_type, "file_id": file_id}
+                ]
+            }],
+            text=ai_schema.response_format("smad"),
+        )
+    finally:
+        # Bemor fayli provayderda qolmasin — xato bo'lsa ham (L-14)
+        ai_config.delete_uploaded_files(client, [file_id], "smad")
     try:
         return json.loads(resp.output_text)
     except Exception:
@@ -202,6 +206,20 @@ def _sync_smad_openai(content: bytes, fname: str, age: int, gender: str, lang: s
             "SMAD: javobni JSON sifatida o'qib bo'lmadi, xom matn saqlanadi"
         )
         return {"raw": resp.output_text}
+
+
+def _reset_ai_language(db: Session, analyse_id: int, lang: str) -> None:
+    """Qayta tahlil / fayl almashtirishda tarjima keshi va AI tili (L-13).
+
+    `ai_translations` — ESKI natijaning tarjimasi; tozalanmasa tarjima
+    endpointi eski fayl natijasini qaytaraverardi. `ai_lang` — yangi natija
+    so'ralgan til (retry UI tilida yuboriladi). Commit chaqiruvchida
+    (`update_smad_analyse`).
+    """
+    db.execute(
+        text("UPDATE smad_analyses SET ai_translations = NULL, ai_lang = :lang WHERE id = :id"),
+        {"lang": (lang or "uz")[:5], "id": analyse_id},
+    )
 
 
 # ─── Fon rejimidagi AI tahlil ─────────────────────────────────────────────────
@@ -410,6 +428,7 @@ async def replace_file(
     analyse_file_path = save_analyse_file(content, fname)
 
     # Yozuvni qayta tahlilga tayyorlash: eski AI natijasi tozalanadi
+    _reset_ai_language(db, id, lang)
     update_smad_analyse(
         session=db,
         analyse_id=id,
@@ -471,6 +490,7 @@ async def retry_analyse(
     fname = path.name
 
     # Yozuvni qayta tahlilga tayyorlash: eski xatolik matni tozalanadi
+    _reset_ai_language(db, id, lang)
     update_smad_analyse(
         session=db,
         analyse_id=id,

@@ -27,7 +27,21 @@ ERR_PROVIDER_QUOTA = "provider_quota_exceeded"  # hisob tugagan — ADMIN muammo
 ERR_PROVIDER_TIMEOUT = "provider_timeout"       # xizmat javob bermadi
 ERR_PROVIDER_UNAVAILABLE = "provider_unavailable"
 ERR_INVALID_FILE = "invalid_file"               # fayl o'qilmadi — FOYDALANUVCHI muammosi
+ERR_OUTPUT_TRUNCATED = "ai_output_truncated"    # javob token chegarasida kesildi (L-05)
 ERR_INTERNAL = "internal_error"
+
+
+class AIOutputIncomplete(RuntimeError):
+    """AI javobi to'liq emas: token chegarasida kesilgan yoki bo'sh (L-05).
+
+    Ilgari kesilgan JSON `{"raw": ...}` ga aylanib, bo'sh natija "tayyor"
+    (status 2) bo'lib saqlanardi. Endi istisno — yozuv xatolik holatiga
+    (-1) o'tadi va foydalanuvchi tushunarli xabar oladi.
+    """
+
+
+class AIInvalidOutput(RuntimeError):
+    """AI javobi JSON emas yoki kutilgan tuzilmada emas (L-05)."""
 
 # Foydalanuvchiga ko'rsatiladigan xabarlar
 _MESSAGES = {
@@ -56,6 +70,11 @@ _MESSAGES = {
         "ru": "Не удалось прочитать файл. Попробуйте загрузить другой файл.",
         "en": "The file could not be read. Please try uploading a different file.",
     },
+    ERR_OUTPUT_TRUNCATED: {
+        "uz": "Fayl juda katta — AI javobi to'liq chiqmadi. Kamroq varaq (fayl) bilan qayta yuboring.",
+        "ru": "Файл слишком большой — ответ AI получился неполным. Отправьте повторно с меньшим числом страниц (файлов).",
+        "en": "The file is too large — the AI response was incomplete. Please resend with fewer pages (files).",
+    },
     ERR_INTERNAL: {
         "uz": "Tahlil qilishda xatolik yuz berdi. Qayta urinib ko'ring yoki administratorga murojaat qiling.",
         "ru": "При анализе произошла ошибка. Попробуйте снова или обратитесь к администратору.",
@@ -73,6 +92,8 @@ _SECRET_PATTERNS = [
 
 def classify(exc: BaseException) -> str:
     """Istisnoni turkumga ajratadi."""
+    if isinstance(exc, AIOutputIncomplete):
+        return ERR_OUTPUT_TRUNCATED
     text = f"{type(exc).__name__}: {exc}".lower()
 
     if "401" in text or "invalid_api_key" in text or "incorrect api key" in text or "unauthorized" in text:

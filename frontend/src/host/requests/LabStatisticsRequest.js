@@ -35,3 +35,15 @@ export const review_lab_signal = (id, decision, note) =>
 
 export const recompute_lab_signals = () =>
     httpPostRequest("/lab-statistics/signals/recompute", {});
+
+/**
+ * Bemor kartasidagi xavf signallari bloki (admin/direktor — klinikasi
+ * bemorlari; shifokor — ro'yxatida ko'radigan bemorlari).
+ * Javob: { canView, items }
+ */
+export const get_patient_lab_signals = (patientId) =>
+    httpGetRequest(`/lab-signals/patient/${patientId}`);
+
+/** Bemor kartasidan qaror. `decision`: confirmed | rejected | pending */
+export const review_patient_lab_signal = (id, decision, note) =>
+    httpPostRequest(`/lab-signals/${id}/review`, { decision, note });

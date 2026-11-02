@@ -451,29 +451,39 @@ def _validate_xlsx(content: bytes, lang: str) -> None:
         excel_to_text.xlsx_to_text(content)
     except excel_to_text.ExcelReadError as exc:
         reason = str(exc)
-        if reason == "empty":
-            raise FileValidationError("xlsx_empty", _msg(
-                lang,
-                "Excel faylda laboratoriya natijasi topilmadi — "
-                "\"Результат\" ustuni bo'sh (to'ldirilmagan shablon).",
-                "В Excel-файле не найдено результатов анализа — "
-                "столбец «Результат» пуст (незаполненный шаблон).",
-                "No laboratory results were found in the Excel file — "
-                "the \"Result\" column is empty (blank template).",
-            ))
-        if reason == "too_large":
-            raise FileValidationError("xlsx_too_large", _msg(
-                lang,
-                "Excel fayl juda katta. Faqat natija listlarini qoldirib, qayta saqlang.",
-                "Excel-файл слишком большой. Оставьте только листы с результатами и сохраните снова.",
-                "The Excel file is too large. Keep only the result sheets and save it again.",
-            ))
-        raise FileValidationError("broken_xlsx", _msg(
+    except Exception as exc:  # noqa: BLE001
+        # Kutilmagan o'qish xatosi ham foydalanuvchiga 500 emas, "buzilgan
+        # fayl" bo'lib qaytsin (L-22)
+        import logging
+        logging.getLogger(__name__).warning(
+            "Excel tekshiruvida kutilmagan xato: %s: %s", type(exc).__name__, exc)
+        reason = "broken"
+    else:
+        return
+
+    if reason == "empty":
+        raise FileValidationError("xlsx_empty", _msg(
             lang,
-            "Excel faylni ochib bo'lmadi. Fayl .xlsx formatida (Excel 2007+) va buzilmaganligiga ishonch hosil qiling.",
-            "Не удалось открыть Excel-файл. Убедитесь, что он в формате .xlsx (Excel 2007+) и не повреждён.",
-            "The Excel file could not be opened. Make sure it is an .xlsx file (Excel 2007+) and is not corrupted.",
+            "Excel faylda laboratoriya natijasi topilmadi — "
+            "\"Результат\" ustuni bo'sh (to'ldirilmagan shablon).",
+            "В Excel-файле не найдено результатов анализа — "
+            "столбец «Результат» пуст (незаполненный шаблон).",
+            "No laboratory results were found in the Excel file — "
+            "the \"Result\" column is empty (blank template).",
         ))
+    if reason == "too_large":
+        raise FileValidationError("xlsx_too_large", _msg(
+            lang,
+            "Excel fayl juda katta. Faqat natija listlarini qoldirib, qayta saqlang.",
+            "Excel-файл слишком большой. Оставьте только листы с результатами и сохраните снова.",
+            "The Excel file is too large. Keep only the result sheets and save it again.",
+        ))
+    raise FileValidationError("broken_xlsx", _msg(
+        lang,
+        "Excel faylni ochib bo'lmadi. Fayl .xlsx formatida (Excel 2007+) va buzilmaganligiga ishonch hosil qiling.",
+        "Не удалось открыть Excel-файл. Убедитесь, что он в формате .xlsx (Excel 2007+) и не повреждён.",
+        "The Excel file could not be opened. Make sure it is an .xlsx file (Excel 2007+) and is not corrupted.",
+    ))
 
 
 def get_allowed_for(analysis_type: str) -> list[str]:

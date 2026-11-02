@@ -11,6 +11,18 @@ public class HolterAnalyseDTO
     /// <summary>Hujjat raqami (masalan NMED-EKG-00000096).</summary>
     public string? DocumentNumber { get; set; }
 
+    /// <summary>
+    /// AI xulosasi qaysi tilda yaratilgan (`uz`/`ru`/`en`). Interfeys tili
+    /// boshqa bo'lsa sahifa tarjima taklif qiladi (L-18).
+    /// </summary>
+    public string? AiLang { get; set; }
+
+    /// <summary>
+    /// Shifokor xulosasi (`analysis_diagnoses`) yozilganmi. Faqat by-id
+    /// javobida to'ldiriladi; boshqa joyda <c>null</c> (L-18).
+    /// </summary>
+    public bool? HasDiagnosis { get; set; }
+
     /// <summary>Tahlil aslida o'tkazilgan sana (yozuv yaratilgan sana emas).</summary>
     public DateTime? AnalysisDate { get; set; }
 

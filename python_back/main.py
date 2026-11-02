@@ -1301,20 +1301,24 @@ def _sync_ecg_process_and_ai(
         # (detail + kattaroq token byudjeti), PDF uchun esa oddiy so'rov,
         # lekin AYNI model (sol). Holter/SMAD/Lab dan farqli (ular terra).
         _req = ai_config.ecg_image_request() if is_image else ai_config.diagnosis_request(model=ai_config.ECG_IMAGE_MODEL)
-        resp = client.responses.create(
-            # Model va fikrlash chuqurligi bitta joyda (A-11)
-            **_req,
-            input=[{
-                "role": "user",
-                "content": [
-                    {"type": "input_text", "text": prompt},
-                    {"type": "input_image", "file_id": file_id, "detail": ai_config.ECG_IMAGE_DETAIL}
-                ]
-            }],
-            # Qat'iy JSON sxema: model maydonni tashlab keta olmaydi
-            # va format buzilgan javob qaytarmaydi (T-031, T-033)
-            text=ai_schema.response_format("ecg"),
-        )
+        try:
+            resp = client.responses.create(
+                # Model va fikrlash chuqurligi bitta joyda (A-11)
+                **_req,
+                input=[{
+                    "role": "user",
+                    "content": [
+                        {"type": "input_text", "text": prompt},
+                        {"type": "input_image", "file_id": file_id, "detail": ai_config.ECG_IMAGE_DETAIL}
+                    ]
+                }],
+                # Qat'iy JSON sxema: model maydonni tashlab keta olmaydi
+                # va format buzilgan javob qaytarmaydi (T-031, T-033)
+                text=ai_schema.response_format("ecg"),
+            )
+        finally:
+            # Bemor EKG rasmi provayderda qolmasin — xato bo'lsa ham (L-14)
+            ai_config.delete_uploaded_files(client, [file_id], f"ecg#{ecg_id}")
         # AI matnda "tahlil qilib bo'lmadi" desa ham jiddiylik darajasiga
         # 1 (= yashil "Normal") qo'yib yuborishi mumkin — T-092. Guard shu
         # holatda darajani olib tashlaydi.
@@ -1912,6 +1916,21 @@ async def analyze_retry(
         ai_answer_text = None
         status_to_save = -1
         ai_error = True
+    finally:
+        # Bemor EKG rasmi provayderda qolmasin — xato bo'lsa ham (L-14)
+        try:
+            ai_config.delete_uploaded_files(
+                OpenAI(api_key=OPENAI_API_KEY), [file_id], f"ecg#{analyse_data.id}")
+        except Exception as cleanup_exc:  # noqa: BLE001 — klient yaratilmasa ham oqim buzilmasin
+            _logger.warning("EKG: yuklangan faylni tozalab bo'lmadi: %s", type(cleanup_exc).__name__)
+
+    if ai_answer_text is not None:
+        # Yangi natija — eski natijaning tarjima keshi yaroqsiz, AI tili esa
+        # retry so'ralgan til (L-13). Commit quyidagi `update_ecg_analyse` da.
+        db.execute(
+            text("UPDATE ecg_analyses SET ai_translations = NULL, ai_lang = :lang WHERE id = :id"),
+            {"lang": (lang or "uz")[:5], "id": analyse_data.id},
+        )
 
     analyse_data = update_ecg_analyse(
         session=db,
@@ -2016,6 +2035,13 @@ async def analyze_replace_file(
         raise HTTPException(status_code=400, detail="Yuklangan fayl bo'sh")
 
     analyse_file_path = save_analyse_file(content, fname)
+
+    # Eski natijaning tarjima keshi yaroqsiz; yangi natija so'rov tilida (L-13).
+    # Commit quyidagi `update_ecg_analyse` da.
+    db.execute(
+        text("UPDATE ecg_analyses SET ai_translations = NULL, ai_lang = :lang WHERE id = :id"),
+        {"lang": (lang or "uz")[:5], "id": id},
+    )
 
     # Yozuvni qayta tahlilga tayyorlash: eski AI natijasi va grafiklar tozalanadi
     update_ecg_analyse(

@@ -209,7 +209,8 @@ public partial class PdfReportService
         var aiData = ParseAi(row.AIAnswerData);
 
         return Build(tr, docNum, row.CreatedAt, row.Clinic, row.Patcient,
-            tr["lab_title"], row.AnalysisDate,
+            // Sana kiritilmagan va hujjatdan topilmagan tahlil — yaratilgan vaqt (L-31)
+            tr["lab_title"], row.AnalysisDate ?? row.CreatedAt,
             GetAnalysisTypeName(tr, "lab"),
             row.CreatedDoctor,
             DoctorNames(row.Doctors?.Select(d => d.Doctor).ToList()),
@@ -485,7 +486,8 @@ public partial class PdfReportService
             .Include(e => e.Clinic).ThenInclude(c => c.ClinicPhoneNumber)
             .Include(e => e.CreatedDoctor)
             .Include(e => e.Doctors).ThenInclude(d => d.Doctor)
-            .OrderByDescending(e => e.CreatedAt).ToListAsync();
+            // Tahlilning O'Z sanasi bo'yicha (yuklangan vaqt emas) — L-25
+            .OrderByDescending(e => e.AnalysisDate ?? e.CreatedAt).ThenByDescending(e => e.Id).ToListAsync();
 
         var paraList = await _context.ParasitologyAnalyses
             .Where(e => e.PatcientId == patientId && e.AnalysisStatus == "analyzed")
@@ -1506,7 +1508,8 @@ public partial class PdfReportService
     {
         var values = lab.Values?
             .Where(v => v.ValueType != null && (v.Value != null || !string.IsNullOrWhiteSpace(v.Text)))
-            .OrderBy(v => v.ValueType.Id)
+            // Ekrandagi kartochkalar bilan bir xil tartib (L-31)
+            .OrderBy(v => v.ValueType.SortOrder).ThenBy(v => v.ValueTypeId)
             .ToList();
         if (values == null || values.Count == 0) return;
 
@@ -1581,9 +1584,13 @@ public partial class PdfReportService
     {
         if (gender == true)  return (t.NormalMinMale, t.NormalMaxMale);
         if (gender == false) return (t.NormalMinFemale, t.NormalMaxFemale);
-        var mins = new[] { t.NormalMinMale, t.NormalMinFemale }.Where(x => x.HasValue).Select(x => x!.Value).ToList();
-        var maxs = new[] { t.NormalMaxMale, t.NormalMaxFemale }.Where(x => x.HasValue).Select(x => x!.Value).ToList();
-        return (mins.Count > 0 ? mins.Min() : null, maxs.Count > 0 ? maxs.Max() : null);
+        // Bir jinsda shu tomonda chegara yo'q bo'lsa (FSG/LG ayol me'yori
+        // siklga bog'liq) — birlashmada ham yo'q (L-17, `lab_catalog.norm_bounds`)
+        double? lo = t.NormalMinMale.HasValue && t.NormalMinFemale.HasValue
+            ? Math.Min(t.NormalMinMale.Value, t.NormalMinFemale.Value) : null;
+        double? hi = t.NormalMaxMale.HasValue && t.NormalMaxFemale.HasValue
+            ? Math.Max(t.NormalMaxMale.Value, t.NormalMaxFemale.Value) : null;
+        return (lo, hi);
     }
 
     private static string LabNormText(double? lo, double? hi)

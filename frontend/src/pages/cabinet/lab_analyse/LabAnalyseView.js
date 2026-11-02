@@ -16,6 +16,7 @@ import { replaceLabFile } from '../../../host/LabService';
 import useDocumentTitle from '../../../tools/useDocumentTitle';
 import useFileTypes from '../../../hooks/useFileTypes';
 import AiLanguageNotice from '../../../components/shared/AiLanguageNotice';
+import { MAX_LAB_FILES, MAX_LAB_TOTAL_MB } from './LabAnalyzer';
 
 const { Title, Text } = Typography;
 
@@ -146,6 +147,9 @@ export default function LabAnalyseView() {
                 onReplace={replaceLabFile}
                 accept={labFileTypes.accept}
                 multiple
+                // Yuklash sahifasidagi chegaralar bilan bir xil (L-21)
+                maxFiles={MAX_LAB_FILES}
+                maxTotalBytes={MAX_LAB_TOTAL_MB * 1024 * 1024}
                 meta={{
                     age: data.patcient?.birthDate ? calculateAge(data.patcient.birthDate) : null,
                     gender: genderForAi(data.patcient?.gender),

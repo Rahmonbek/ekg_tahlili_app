@@ -128,9 +128,16 @@ Aylantirib bo'lmasa `unit_mismatch: true` — baholanmaydi, dinamika va
 statistikaga kirmaydi. Ruscha "мЕ/л" va "МЕ/л" (1000× farq) — katta-kichik
 harf bilan, `lower()` dan OLDIN taniladi. Klinika blankalaridagi
 MA'LUM xato birliklar (`_MISLABELED`: insulin/erkin T4 "нг/мл",
-kortizol "нмоль/л", prolaktin/FSG/LG "мМЕ/л", D-dimer "нг/мл", AT-TPO
-"МЕ/л") qiymat oralig'i bo'yicha tuzatiladi; promptda ham shu ro'yxat bor
-(aks holda AI matnda "kortizol keskin past" derdi). "сек", "фл",
+FSG/LG "мМЕ/л", D-dimer "нг/мл", AT-TPO "МЕ/л") qiymat oralig'i bo'yicha
+tuzatiladi; promptda ham shu ro'yxat bor. **Kortizol < 40 "нмоль/л" va
+prolaktin < 40 "мМЕ/л" AYLANTIRILMAYDI** (`_SUSPECT`, 2026-11-02, L-01):
+haqiqiy past qiymat bilan blanka xatosini ajratib bo'lmaydi — katakda
+`unit_suspect: true`, bazada `unit_mismatch = true`, baholanmaydi,
+ekranda "Baholanmagan (birlik tekshirilsin)" guruhida. Birlik katalognikiga
+teng bo'lsa ham `PLAUSIBLE` tekshiriladi (Hb 14.5 "g/L" → shubhali).
+Jins noma'lum bo'lsa me'yor birlashmasi: bir jinsda chegara yo'q bo'lsa
+birlashmada ham yo'q (FSG/LG; Python, frontend, PDF, qoidalar bir xil).
+Flag yaxlitlanmagan qiymatda hisoblanadi (troponin 14.4 ng/L > 14). "сек", "фл",
 "в п.з.", "109/л" (Excel yuqori indeksni yo'qotadi) taniladi. Frontend
 `AnalysisResultBody.normUnit` — tuzatilmagan yozuvlar uchun himoya.
 Eski yozuvlar: `python repair_lab_units.py [--apply]` (JSON va
@@ -220,7 +227,10 @@ klinika `users.clinic_id` dan, boshqa klinika ko'rinmaydi).
   jins/yosh, oxirgi natijasi me'yordan tashqari bemorlar). `unit_mismatch`
   qatorlar statistikaga kirmaydi.
 * **Xavf signallari** — «NMED laboratoriya klinik qoidalari» v1.0
-  spetsifikatsiyasi: `Services/LabRules/` (24 qoida: REN-01 AKI, REN-02 CKD
+  spetsifikatsiyasi (kod versiyasi `LabRules.Version` 1.1.0: REN-01
+  faqat oxirgi 14 kun ichidagi juftlik uchun CRITERIA_MET, eskisi MONITOR;
+  GLU-02 kamida bitta qiymat oxirgi 12 oyda; GLU-01 yarim ochiq oraliq;
+  Na < 120 / > 160 CRITICAL): `Services/LabRules/` (24 qoida: REN-01 AKI, REN-02 CKD
   CKD-EPI 2021, ELE-01/02, CAR-01/02, GLU-01/02, HEM-01..05, THY-01/02,
   LIV-01/02 FIB-4, PAN-01, LIP-01, INF-01/02, COA-01, UR-01, ONC-01,
   MET-01). Bemorning SHU klinikadagi tahlillari vaqt bo'yicha solishtiriladi.
@@ -228,13 +238,23 @@ klinika `users.clinic_id` dan, boshqa klinika ko'rinmaydi).
   vaqt/yetishmayotgan ma'lumot jsonb). Foizli ehtimol YO'Q — holat
   (CRITICAL/CRITERIA_MET/SUSPECTED/MONITOR/INSUFFICIENT_DATA) + dalil +
   keyingi qadam. Signal tashxis emas: shifokor tasdiqlaydi/rad etadi
-  (`reviewer_status`; dalil o'zgarsa `pending` ga qaytadi).
+  (`reviewer_status`; dalil o'zgarsa — `evidence_hash` farq qilsa —
+  `pending` ga qaytadi, izoh tozalanadi).
+* **Kim baholaydi**: admin/direktor (`/lab-statistics` → «Xavf signallari»)
+  VA shifokor — bemor kartasidagi «Laboratoriya xavf signallari» blokida,
+  faqat o'ziga ko'rinadigan bemorlar (`PatientVisibility`). API:
+  `GET api/lab-signals/patient/{id}`, `POST api/lab-signals/{id}/review`.
 * `LabRuleWorker` (`LabRules:Enabled/IntervalSeconds/BatchSize`) faqat
   o'zgargan bemorlarni qayta baholaydi (`lab_rule_patient_state`:
-  last_value_id, values_count, rules_version). Qoida o'zgarsa
+  last_value_id, values_count, rules_version, error_count). Qoida o'zgarsa
   `LabRules.Version` ni oshiring — hammasi qayta hisoblanadi. Faqat
-  `measured_at` o'zgartirilsa worker sezmaydi — state qatorini o'chiring.
-* Frontend: `pages/cabinet/statistics/` (`lst-*`, chart.js).
+  `measured_at` o'zgartirilsa worker sezmaydi — state qatorini o'chiring
+  (bemor jinsi/tug'ilgan sanasi o'zgarsa `save-patient-data` buni o'zi
+  qiladi). Lab tahlili 0/1 holatidagi bemor O'TKAZIB yuboriladi — retry
+  paytida signallar va baholar o'chmasin. Bitta qoida xatosi qolganlarini
+  to'xtatmaydi; xato bergan qoidaning eski signali saqlanadi.
+* Frontend: `pages/cabinet/statistics/` (`lst-*`, chart.js),
+  `statistics/PatientSignals.js` (bemor kartasi).
 
 **Vipiska** (`discharge_summaries`) — statsionardan chiqarish epikrizi
 («Выписка из истории болезни»).
@@ -313,13 +333,27 @@ klinika `users.clinic_id` dan, boshqa klinika ko'rinmaydi).
 ```
 `automatic_analysis_bool` ba'zan int (1), ba'zan string ("1") — ikkalasi handle qilinishi SHART.
 
-### `automatic_analysis_bool` Filter (DB darajasida emas, `Contains` orqali)
+### `automatic_analysis_bool` Filter — `AiSeverityRaw` orqali
+`ai_answer_data` ustuni `jsonb` (T-036): unda `string.Contains` Npgsql da
+`strpos(jsonb, jsonb)` bo'lib 500 beradi (L-08, 2026-11-02 da Lab/Holter/SMAD
+klinika ro'yxatlarida tuzatildi). Generatsiya qilingan matn ustuni ishlatiladi
+(int va string ikkalasini qamraydi):
 ```csharp
-e.AIAnswerData.Contains($"\"automatic_analysis_bool\": {val}") ||
-e.AIAnswerData.Contains($"\"automatic_analysis_bool\":{val}") ||
-e.AIAnswerData.Contains($"\"automatic_analysis_bool\": \"{val}\"") ||
-e.AIAnswerData.Contains($"\"automatic_analysis_bool\":\"{val}\"")
+query = query.Where(e => e.AiSeverityRaw == val);
 ```
+
+### Tahlil yuklash: klinika va xodim tokendan
+`clinic_id` va `created_doctor_id` formadan EMAS — .NET proksi
+(`PythonApiProxyService.ProxyMultipartAsync` `overrides`,
+`AnalysisUploadGuard`) ularni `ICurrentUser` dan qo'yadi (barcha analyze/save
+endpointlari). Aniqlanmasa 403. 60 MB dan katta so'rov — 413
+"Fayllar jami hajmi juda katta" (ilgari 502 edi).
+
+### EF migratsiyalari QO'LDA yoziladi
+`EkgDataDBModelSnapshot.cs` 2026-09 dan beri eskirgan (lab fayllari/qiymatlari,
+kompleks, vipiska jadvallari unda yo'q). `dotnet ef migrations add` mavjud
+jadvallarni qayta yaratishga urinadi — ISHLATMANG; yangi migratsiyani
+mavjudlari (`20261104*`) uslubida qo'lda yozing.
 
 ### Token Muddati va Sessiya
 

@@ -102,6 +102,13 @@ def ecg_image_request(**overrides) -> dict:
 HOLTER_SMAD_LAB_MODEL: str = os.getenv("AI_HOLTER_SMAD_LAB_MODEL", "gpt-5.6-terra")
 
 
+#: Laboratoriya javobi uchun token byudjeti (L-05). Umumiy 8000 ga reasoning
+#: ham kiradi; 10 ta fayl yoki ko'p listli Excel'da 100+ ko'rsatkich (har
+#: biri me'yor va asl yozuvi bilan) shu chegaraga yetib, JSON kesilib
+#: qolardi. Byudjet — yuqori CHEGARA, sarflanmagan tokenga haq olinmaydi.
+LAB_MAX_OUTPUT_TOKENS: int = int(os.getenv("AI_LAB_MAX_OUTPUT_TOKENS", "16000"))
+
+
 def holter_smad_lab_request(**overrides) -> dict:
     """Holter, SMAD va laboratoriya tahlili uchun so'rov parametrlari.
 
@@ -187,3 +194,25 @@ def combined_request(**overrides) -> dict:
     }
     params.update(overrides)
     return params
+
+
+# ─── Provayderga yuklangan fayllarni tozalash (L-14) ──────────────────────
+def delete_uploaded_files(client, file_ids, context: str = "") -> None:
+    """`client.files.create` bilan yuklangan fayllarni provayderdan o'chiradi.
+
+    Bemor fayllari (F.I.O., tug'ilgan sana bor) javob olingandan keyin
+    provayder saqlash joyida muddatsiz qolardi — O'z DSt 2814:2014 (C4) va
+    shaxsiy ma'lumotlar talablariga zid. Chaqiruvchi buni `finally` da
+    chaqiradi: tahlil xato bilan tugasa ham fayl qolmaydi.
+
+    Xatolik faqat logga yoziladi — tozalash asosiy oqimni (natijani
+    saqlash yoki xatolik holatini yozish) HECH QACHON buzmaydi.
+    """
+    import logging
+    log = logging.getLogger(__name__)
+    for file_id in [f for f in (file_ids or []) if f]:
+        try:
+            client.files.delete(file_id)
+        except Exception as exc:  # noqa: BLE001 — tozalash ixtiyoriy
+            log.warning("OpenAI faylini o'chirib bo'lmadi (%s, %s): %s",
+                        context or "-", file_id, type(exc).__name__)

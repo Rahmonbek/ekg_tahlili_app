@@ -69,33 +69,47 @@ export const REVIEW_META = {
     rejected: { tag: 'default', uz: 'Rad etilgan', ru: 'Отклонён', en: 'Rejected' },
 };
 
-/** Qoidalar ("NMED laboratoriya klinik qoidalari" v1.0). */
+/** Qoidalar ("NMED laboratoriya klinik qoidalari" v1.0) — 3 tilda (`pick` bilan). */
 export const RULE_LABELS = {
-    'REN-01': "O'tkir buyrak shikastlanishi (AKI)",
-    'REN-02': 'Surunkali buyrak kasalligi (eGFR)',
-    'ELE-01': 'Giperkalemiya',
-    'ELE-02': 'Giponatremiya / gipernatremiya',
-    'CAR-01': 'Miokard shikastlanishi (troponin)',
-    'CAR-02': 'Yurak yetishmovchiligi (NT-proBNP)',
-    'GLU-01': 'Prediabet',
-    'GLU-02': 'Qandli diabet mezoni',
-    'HEM-01': 'Anemiya',
-    'HEM-02': 'Temir tanqisligi anemiyasi',
-    'HEM-03': 'B12 yetishmovchiligi',
-    'HEM-04': 'Folat tanqisligi',
-    'HEM-05': 'Trombotsitopeniya / neytropeniya',
-    'THY-01': 'Gipotireoz',
-    'THY-02': 'Tireotoksikoz',
-    'LIV-01': 'Jigar fermentlari oshishi',
-    'LIV-02': 'Jigar fibrozi xavfi (FIB-4)',
-    'PAN-01': "O'tkir pankreatitga shubha",
-    'LIP-01': 'Gipertrigliseridemiya',
-    'INF-01': "Yallig'lanish profili",
-    'INF-02': 'Gepatit B/C, OIV skrining',
-    'COA-01': 'Koagulyatsiya buzilishi',
-    'UR-01': 'Proteinuriya',
-    'ONC-01': 'Onkomarkerlar',
-    'MET-01': 'Vitamin D / minerallar',
+    'REN-01': { uz: "O'tkir buyrak shikastlanishi (AKI)", ru: 'Острое повреждение почек (ОПП)', en: 'Acute kidney injury (AKI)' },
+    'REN-02': { uz: 'Surunkali buyrak kasalligi (eGFR)', ru: 'Хроническая болезнь почек (рСКФ)', en: 'Chronic kidney disease (eGFR)' },
+    'ELE-01': { uz: 'Giperkalemiya', ru: 'Гиперкалиемия', en: 'Hyperkalaemia' },
+    'ELE-02': { uz: 'Giponatremiya / gipernatremiya', ru: 'Гипонатриемия / гипернатриемия', en: 'Hyponatraemia / hypernatraemia' },
+    'CAR-01': { uz: 'Miokard shikastlanishi (troponin)', ru: 'Повреждение миокарда (тропонин)', en: 'Myocardial injury (troponin)' },
+    'CAR-02': { uz: 'Yurak yetishmovchiligi (NT-proBNP)', ru: 'Сердечная недостаточность (NT-proBNP)', en: 'Heart failure (NT-proBNP)' },
+    'GLU-01': { uz: 'Prediabet', ru: 'Предиабет', en: 'Prediabetes' },
+    'GLU-02': { uz: 'Qandli diabet mezoni', ru: 'Критерий сахарного диабета', en: 'Diabetes criterion' },
+    'HEM-01': { uz: 'Anemiya', ru: 'Анемия', en: 'Anaemia' },
+    'HEM-02': { uz: 'Temir tanqisligi anemiyasi', ru: 'Железодефицитная анемия', en: 'Iron deficiency anaemia' },
+    'HEM-03': { uz: 'B12 yetishmovchiligi', ru: 'Дефицит B12', en: 'Vitamin B12 deficiency' },
+    'HEM-04': { uz: 'Folat tanqisligi', ru: 'Дефицит фолатов', en: 'Folate deficiency' },
+    'HEM-05': { uz: 'Trombotsitopeniya / neytropeniya', ru: 'Тромбоцитопения / нейтропения', en: 'Thrombocytopenia / neutropenia' },
+    'THY-01': { uz: 'Gipotireoz', ru: 'Гипотиреоз', en: 'Hypothyroidism' },
+    'THY-02': { uz: 'Tireotoksikoz', ru: 'Тиреотоксикоз', en: 'Thyrotoxicosis' },
+    'LIV-01': { uz: 'Jigar fermentlari oshishi', ru: 'Повышение печёночных ферментов', en: 'Elevated liver enzymes' },
+    'LIV-02': { uz: 'Jigar fibrozi xavfi (FIB-4)', ru: 'Риск фиброза печени (FIB-4)', en: 'Liver fibrosis risk (FIB-4)' },
+    'PAN-01': { uz: "O'tkir pankreatitga shubha", ru: 'Подозрение на острый панкреатит', en: 'Suspected acute pancreatitis' },
+    'LIP-01': { uz: 'Gipertrigliseridemiya', ru: 'Гипертриглицеридемия', en: 'Hypertriglyceridaemia' },
+    'INF-01': { uz: "Yallig'lanish profili", ru: 'Воспалительный профиль', en: 'Inflammation profile' },
+    'INF-02': { uz: 'Gepatit B/C, OIV skrining', ru: 'Скрининг гепатитов B/C, ВИЧ', en: 'Hepatitis B/C, HIV screening' },
+    'COA-01': { uz: 'Koagulyatsiya buzilishi', ru: 'Нарушение коагуляции', en: 'Coagulation disorder' },
+    'UR-01': { uz: 'Proteinuriya', ru: 'Протеинурия', en: 'Proteinuria' },
+    'ONC-01': { uz: 'Onkomarkerlar', ru: 'Онкомаркеры', en: 'Tumour markers' },
+    'MET-01': { uz: 'Vitamin D / minerallar', ru: 'Витамин D / минералы', en: 'Vitamin D / minerals' },
+};
+
+/** Qoida nomi tanlangan tilda (noma'lum qoida — bo'sh satr). */
+export function ruleLabel(ruleId, lang) {
+    return pick(RULE_LABELS[ruleId], lang);
+}
+
+/** Sifat natijasi holatlari (`result_kind`) — statistikada taqsimot uchun. */
+export const RESULT_KIND_META = {
+    NEGATIVE: { uz: 'Manfiy', ru: 'Отрицательный', en: 'Negative' },
+    POSITIVE: { uz: 'Musbat', ru: 'Положительный', en: 'Positive' },
+    EQUIVOCAL: { uz: 'Shubhali', ru: 'Сомнительный', en: 'Equivocal' },
+    INVALID: { uz: 'Yaroqsiz', ru: 'Недействительный', en: 'Invalid' },
+    UNKNOWN: { uz: "Noma'lum", ru: 'Неизвестно', en: 'Unknown' },
 };
 
 export const AGE_GROUPS = ['0-17', '18-29', '30-44', '45-59', '60-74', '75+', 'unknown'];
@@ -115,7 +129,12 @@ export function num(v, digits = 2) {
     if (v == null || v === '') return '—';
     const n = Number(v);
     if (!Number.isFinite(n)) return String(v);
-    return Number.isInteger(n) ? String(n) : n.toFixed(digits).replace(/\.?0+$/, '');
+    if (Number.isInteger(n)) return String(n);
+    // 1 dan kichik qiymatlar (troponin 0.0144 ng/mL) 2 xonada "0.01" bo'lib
+    // qolardi — kamida 3 ta muhim raqam saqlanadi (Python `lab_units._round`)
+    const abs = Math.abs(n);
+    const d = abs > 0 && abs < 1 ? Math.max(digits, 2 - Math.floor(Math.log10(abs))) : digits;
+    return n.toFixed(d).replace(/\.?0+$/, '');
 }
 
 export function pct(part, total) {

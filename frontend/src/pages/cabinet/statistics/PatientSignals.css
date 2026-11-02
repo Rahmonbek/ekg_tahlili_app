@@ -1,0 +1,63 @@
+/* Bemor kartasidagi xavf signallari bloki (`psg-*`) — `ptc-panel` ichida */
+
+.psg-note {
+  margin: -6px 0 12px;
+  color: var(--ptc-muted, #64748b);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.psg-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.psg-item {
+  border: 1px solid var(--ptc-border, #e2e8f0);
+  border-left: 4px solid #94a3b8;
+  border-radius: 10px;
+  padding: 10px 14px;
+  min-width: 0;
+}
+
+.psg-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
+.psg-rule {
+  font-size: 0.8125rem;
+  color: var(--ptc-muted, #64748b);
+}
+
+.psg-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+
+.psg-review {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.psg .lst-expand {
+  margin-top: 8px;
+  overflow-x: auto;
+}
+
+/* Karta mavzusiga (yorug'/qorong'i) moslashsin */
+.psg .lst-signal-title { color: var(--ptc-text, #0f172a); }
+.psg .lst-signal-msg { color: var(--ptc-text-2, #475569); }

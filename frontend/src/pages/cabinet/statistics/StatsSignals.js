@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Alert, Button, Empty, Input, Modal, Select, Space, Spin, Table, Tag, Tooltip, message } from 'antd';
+import { Alert, Button, Empty, Input, Select, Space, Spin, Table, Tag, Tooltip, message } from 'antd';
 import { CheckOutlined, CloseOutlined, RedoOutlined, SyncOutlined } from '@ant-design/icons';
 import { Bar } from 'react-chartjs-2';
 
@@ -9,15 +9,11 @@ import {
     get_lab_signals, get_lab_signals_summary, recompute_lab_signals, review_lab_signal,
 } from '../../../host/requests/LabStatisticsRequest';
 import {
-    COLORS, KpiCard, Panel, REVIEW_META, RULE_LABELS, SEVERITY_META, STATUS_META, baseOptions, num, pick,
+    COLORS, KpiCard, Panel, REVIEW_META, RULE_LABELS, SEVERITY_META, STATUS_META, baseOptions, pick, ruleLabel,
 } from './statsCommon';
+import { SignalDetails, SignalReviewModal } from './signalParts';
 
 const STATUS_ORDER = ['CRITICAL', 'CRITERIA_MET', 'SUSPECTED', 'MONITOR', 'INSUFFICIENT_DATA'];
-
-function parseJson(text, fallback) {
-    if (!text) return fallback;
-    try { return JSON.parse(text); } catch { return fallback; }
-}
 
 function ageOf(birthdate) {
     if (!birthdate) return null;
@@ -42,7 +38,6 @@ export default function StatsSignals({ reloadKey, lang }) {
     const [page, setPage] = useState(1);
     const [refresh, setRefresh] = useState(0);
     const [reviewing, setReviewing] = useState(null); // { row, decision }
-    const [note, setNote] = useState('');
 
     useEffect(() => {
         get_lab_signals_summary().then((r) => setSummary(r.data)).catch(() => setSummary(null));
@@ -80,13 +75,11 @@ export default function StatsSignals({ reloadKey, lang }) {
         ],
     };
 
-    const submitReview = async () => {
-        if (!reviewing) return;
+    const submitReview = async (row, decision, note) => {
         try {
-            await review_lab_signal(reviewing.row.id, reviewing.decision, note);
+            await review_lab_signal(row.id, decision, note);
             message.success(t('stats_review_saved', { defaultValue: 'Qaror saqlandi' }));
             setReviewing(null);
-            setNote('');
             setRefresh((x) => x + 1);
         } catch {
             message.error(t('stats_review_failed', { defaultValue: 'Saqlab bo\'lmadi' }));
@@ -129,7 +122,7 @@ export default function StatsSignals({ reloadKey, lang }) {
                 <div>
                     <Space size={6} wrap>
                         <Tag color={STATUS_META[r.status]?.tag}>{pick(STATUS_META[r.status], lang)}</Tag>
-                        <Tooltip title={RULE_LABELS[r.rule_id]}><Tag>{r.rule_id}</Tag></Tooltip>
+                        <Tooltip title={ruleLabel(r.rule_id, lang)}><Tag>{r.rule_id}</Tag></Tooltip>
                     </Space>
                     <div className="lst-signal-title">{r.title_uz}</div>
                     <div className="lst-signal-msg">{r.message_uz}</div>
@@ -168,47 +161,7 @@ export default function StatsSignals({ reloadKey, lang }) {
         },
     ];
 
-    const expanded = (r) => {
-        const evidence = parseJson(r.evidence, []);
-        const temporal = parseJson(r.temporal, null);
-        const missing = parseJson(r.missing_data, []);
-        return (
-            <div className="lst-expand">
-                {r.recommendation_uz && (
-                    <div className="lst-rec"><b>{t('stats_recommendation', { defaultValue: 'Tavsiya etilgan keyingi qadam' })}:</b> {r.recommendation_uz}</div>
-                )}
-                <Table
-                    size="small"
-                    pagination={false}
-                    rowKey={(e) => `${e.indicator}-${e.analysisId}-${e.date}`}
-                    dataSource={evidence}
-                    columns={[
-                        { title: t('stats_indicator', { defaultValue: "Ko'rsatkich" }), dataIndex: 'name' },
-                        { title: t('stats_value', { defaultValue: 'Qiymat' }), key: 'v', render: (_, e) => `${e.text || num(e.value)} ${e.unit || ''}` },
-                        {
-                            title: t('stats_threshold', { defaultValue: 'Chegara' }), key: 't',
-                            render: (_, e) => (e.threshold != null ? `${e.comparator || ''} ${num(e.threshold)} ${({ lab: `(${t('lab_ref_source', { defaultValue: 'laboratoriya' })})`, catalog: `(${t('stats_catalog_ref', { defaultValue: 'katalog' })})`, criterion: `(${t('stats_criterion', { defaultValue: 'mezon' })})` })[e.thresholdSource] || ''}` : '—'),
-                        },
-                        { title: t('stats_date', { defaultValue: 'Sana' }), dataIndex: 'date', render: (d) => (d ? new Date(d).toLocaleDateString('ru-RU') : '—') },
-                        { title: '', key: 'a', render: (_, e) => <Link to={`/lab-analyses/view/${e.analysisId}`}>{t('stats_open', { defaultValue: 'Tahlil' })} →</Link> },
-                    ]}
-                />
-                {temporal && (
-                    <div className="lst-temporal">
-                        <b>{t('stats_temporal', { defaultValue: "Vaqt bo'yicha o'zgarish" })}:</b>{' '}
-                        {Object.entries(temporal).filter(([, v]) => v != null).map(([k, v]) => `${k}: ${typeof v === 'number' ? num(v) : String(v).slice(0, 10)}`).join(' · ')}
-                    </div>
-                )}
-                {missing.length > 0 && (
-                    <div className="lst-missing">
-                        <b>{t('stats_missing', { defaultValue: "Yetishmayotgan ma'lumot" })}:</b> {missing.join('; ')}
-                    </div>
-                )}
-                {r.review_note && <div className="lst-muted">{t('stats_review_note', { defaultValue: 'Izoh' })}: {r.review_note}</div>}
-                <div className="lst-muted">{t('stats_rules_version', { defaultValue: 'Qoidalar versiyasi' })}: {r.source_version}</div>
-            </div>
-        );
-    };
+    const expanded = (r) => <SignalDetails row={r} />;
 
     return (
         <div>
@@ -270,7 +223,7 @@ export default function StatsSignals({ reloadKey, lang }) {
                                 onClick: (_, els) => { if (els[0]) setFilter({ rule: byRule[els[0].index].key }); },
                                 plugins: {
                                     ...baseOptions.plugins,
-                                    tooltip: { callbacks: { title: (items) => `${items[0].label} — ${RULE_LABELS[items[0].label] || ''}` } },
+                                    tooltip: { callbacks: { title: (items) => `${items[0].label} — ${ruleLabel(items[0].label, lang)}` } },
                                 },
                                 scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } },
                             }}
@@ -292,7 +245,7 @@ export default function StatsSignals({ reloadKey, lang }) {
                         placeholder={t('stats_rule', { defaultValue: 'Qoida' })}
                         value={filters.rule}
                         onChange={(v) => setFilter({ rule: v ?? null })}
-                        options={Object.keys(RULE_LABELS).map((k) => ({ value: k, label: `${k} — ${RULE_LABELS[k]}` }))}
+                        options={Object.keys(RULE_LABELS).map((k) => ({ value: k, label: `${k} — ${ruleLabel(k, lang)}` }))}
                         style={{ width: 280 }}
                     />
                     <Select
@@ -340,31 +293,12 @@ export default function StatsSignals({ reloadKey, lang }) {
                 </Spin>
             </Panel>
 
-            <Modal
-                open={!!reviewing}
-                onCancel={() => { setReviewing(null); setNote(''); }}
-                onOk={submitReview}
-                okText={t('save', { defaultValue: 'Saqlash' })}
-                title={reviewing ? `${reviewing.row.rule_id}: ${({
-                    confirmed: t('stats_confirm', { defaultValue: 'Tasdiqlash' }),
-                    rejected: t('stats_reject', { defaultValue: 'Rad etish' }),
-                    pending: t('stats_reset_review', { defaultValue: 'Qaror bekor qilinsin' }),
-                })[reviewing.decision]}` : ''}
-            >
-                {reviewing && (
-                    <>
-                        <p className="lst-signal-title">{reviewing.row.title_uz}</p>
-                        <p className="lst-muted">{`${reviewing.row.lastname || ''} ${reviewing.row.firstname || ''}`}</p>
-                        <Input.TextArea
-                            rows={3}
-                            maxLength={1000}
-                            value={note}
-                            onChange={(e) => setNote(e.target.value)}
-                            placeholder={t('stats_review_note_ph', { defaultValue: "Izoh (ixtiyoriy): klinik asos, keyingi qadam…" })}
-                        />
-                    </>
-                )}
-            </Modal>
+            <SignalReviewModal
+                reviewing={reviewing}
+                lang={lang}
+                onCancel={() => setReviewing(null)}
+                onSubmit={submitReview}
+            />
         </div>
     );
 }

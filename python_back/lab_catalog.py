@@ -18,6 +18,7 @@ beradi. Yangi ko'rsatkich = `lab_value_types` ga bitta qator (`ai_hint` bilan).
 from __future__ import annotations
 
 import logging
+import re
 import threading
 import time
 from dataclasses import dataclass
@@ -104,17 +105,50 @@ def prompt_lines(db) -> str:
 def norm_bounds(t: LabType, gender: bool | None) -> tuple[float | None, float | None]:
     """Bemor jinsiga mos me'yor chegaralari.
 
-    Jinsi noma'lum bo'lsa ikkala me'yorning birlashmasi olinadi (frontend
-    `evaluate` va .NET PDF bilan bir xil) — NULL jinsni erkak yoki ayol deb
-    hisoblash noto'g'ri baho berardi.
+    Jinsi noma'lum bo'lsa ikkala me'yorning birlashmasi olinadi — NULL jinsni
+    erkak yoki ayol deb hisoblash noto'g'ri baho berardi. Biror jinsning shu
+    tomondagi chegarasi YO'Q bo'lsa (masalan FSG/LG ning ayol me'yori siklga
+    bog'liq, ataylab NULL), birlashmada ham o'sha tomonda chegara yo'q:
+    aks holda faqat erkak me'yori qolib, menopauzadagi ayolning FSG 60 si
+    "yuqori" bo'lardi (L-17).
     """
     if gender is True:
         return t.min_male, t.max_male
     if gender is False:
         return t.min_female, t.max_female
-    mins = [x for x in (t.min_male, t.min_female) if x is not None]
-    maxs = [x for x in (t.max_male, t.max_female) if x is not None]
-    return (min(mins) if mins else None), (max(maxs) if maxs else None)
+    lo = None if (t.min_male is None or t.min_female is None) else min(t.min_male, t.min_female)
+    hi = None if (t.max_male is None or t.max_female is None) else max(t.max_male, t.max_female)
+    return lo, hi
+
+
+# ─── Sifat natijasini matndan tasniflash ──────────────────────────────────────
+# Migratsiya `20261102000000_LabValueReferenceAndKind` dagi SQL bilan bir xil
+# (tartib muhim: "shubhali" birinchi, "не обнаруж" — "обнаруж" dan oldin).
+# `result_kind` siz eski JSON dan qatorlar qayta yozilganda
+# (`repair_lab_units.py`) migratsiya qo'ygan holat yo'qolmasligi uchun (L-24).
+# Yagona farq: "Non-reactive" (defis bilan) — SQL da "reactiv" ga tushib
+# MUSBAT bo'lardi, bu yerda manfiy.
+_QUAL_EQUIVOCAL = re.compile(r"(сомнит|shubha|equivoc|\(\+-\)|\(-\+\)|±)", re.IGNORECASE)
+_QUAL_NEGATIVE = re.compile(r"(отриц|manfiy|negativ|non-?react|не обнаруж|\(-\))", re.IGNORECASE)
+_QUAL_POSITIVE = re.compile(r"(полож|musbat|positiv|reactiv|обнаруж|\(\+\))", re.IGNORECASE)
+
+
+def classify_qualitative(text_value, value) -> str:
+    """Sifat natijasi holati: matn bo'yicha, matn yo'q bo'lsa indeks (COI ≥ 1)."""
+    if isinstance(text_value, str) and text_value.strip():
+        if _QUAL_EQUIVOCAL.search(text_value):
+            return "EQUIVOCAL"
+        if _QUAL_NEGATIVE.search(text_value):
+            return "NEGATIVE"
+        if _QUAL_POSITIVE.search(text_value):
+            return "POSITIVE"
+        return "UNKNOWN"
+    if value is not None:
+        try:
+            return "POSITIVE" if float(value) >= 1 else "NEGATIVE"
+        except (TypeError, ValueError):
+            return "UNKNOWN"
+    return "UNKNOWN"
 
 
 #: Sifat natijasi holati → baho (shubhali ham e'tibor talab qiladi, lekin
@@ -130,9 +164,12 @@ def flag_for(
     ref_low=None,
     ref_high=None,
     result_kind: str | None = None,
+    unit_suspect: bool = False,
 ) -> tuple[int | None, str | None]:
     """Baho va uning manbasi: `(-1 | 0 | 1 | None, "lab" | "catalog" | None)`.
 
+    * Birligi shubhali qiymat (`unit_suspect`, `lab_units`) — BAHOLANMAYDI,
+      laboratoriya me'yori bo'lsa ham: qiymat qaysi birlikda ekani noma'lum.
     * Sifat natijasi — `result_kind` bo'yicha.
     * Sonli — avval LABORATORIYANING o'z me'yori (`ref_low`/`ref_high`,
       fayldan): me'yor assayga xos, klinik qoidalar ham "laboratoriya
@@ -141,6 +178,8 @@ def flag_for(
     * Fayldagi me'yor bo'lmasa — katalog me'yori (birligi mos bo'lsa).
     """
     if t.value_kind == "code":
+        return None, None
+    if unit_suspect and t.value_kind != "qualitative":
         return None, None
     if t.value_kind == "qualitative":
         flag = _KIND_FLAG.get(result_kind or "")
