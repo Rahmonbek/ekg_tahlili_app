@@ -23,7 +23,7 @@ yuboradi — to'xtatish shart emas.
 
 | Papka | Ichida | Serverda qayerga |
 |---|---|---|
-| `frontend\` | `index.html`, `asset-manifest.json`, `static\` (`__MAIN_JS__`), rasmlar | `/projects/nmed/nmed.uz` |
+| `frontend\` | `index.html`, `asset-manifest.json`, `static\` (`main.3f641b5d.js`), rasmlar | `/projects/nmed/nmed.uz` |
 | `api\` | `EkgAnalyzerApi.dll`, `.pdb`, `.deps.json`, `.runtimeconfig.json` | `/projects/nmed/api.nmed.uz` |
 
 ---
@@ -50,7 +50,7 @@ API `active (running)`, import jarayoni qatori chiqishi kerak. Logda bir-ikki
 
 ### 3. Brauzerda (`Ctrl+F5`)
 - `curl -s https://nmed.uz/asset-manifest.json | grep main.js` →
-  `/static/js/__MAIN_JS__`.
+  `/static/js/main.3f641b5d.js`.
 - «Statistika»: «Umumiy» da 4 ta halqa, «Ko'rsatkichlar» da ro'yxat + halqa.
 - **«PDF yuklab olish»** tugmasi — fayl yuklanadi, ochilganda halqalar va
   jadvallar ko'rinadi. PDF ochilmasa yoki xato bersa:
