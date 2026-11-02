@@ -1,37 +1,35 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, DatePicker, InputNumber, Select, Switch, Tabs } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { Button, Checkbox, DatePicker, Divider, InputNumber, Select, Input } from 'antd';
+import { AlertOutlined, BarChartOutlined, ExperimentOutlined, ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 import { useStore } from '../../../store/Store';
 import useDocumentTitle from '../../../tools/useDocumentTitle';
-import { get_lab_stats_doctor_options } from '../../../host/requests/LabStatisticsRequest';
-import { CATEGORY_LABELS, cleanParams, langCode, pick } from './statsCommon';
+import { get_lab_signals_summary, get_lab_stats_doctor_options } from '../../../host/requests/LabStatisticsRequest';
+import { CATEGORY_LABELS, REVIEW_META, RULE_LABELS, STATUS_META, cleanParams, langCode, pick, ruleLabel } from './statsCommon';
 import StatsOverview from './StatsOverview';
 import StatsIndicators from './StatsIndicators';
 import StatsSignals from './StatsSignals';
 import './LabStatistics.css';
 
-const EMPTY = {
-    range: [null, null],
-    doctorId: null,
-    gender: null,
-    ageFrom: null,
-    ageTo: null,
-    category: null,
-    indicator: null,
-    onlyAbnormal: false,
+const NO_FILTERS = { doctorId: null, gender: null, ageFrom: null, ageTo: null, category: null, indicator: null, onlyAbnormal: false };
+const NO_SIGNAL_FILTERS = { status: null, review: null, rule: null, search: '' };
+const STATUS_ORDER = ['CRITICAL', 'CRITERIA_MET', 'SUSPECTED', 'MONITOR', 'INSUFFICIENT_DATA'];
+
+const PRESET_RANGE = {
+    '30d': () => [dayjs().subtract(30, 'day'), dayjs()],
+    '90d': () => [dayjs().subtract(3, 'month'), dayjs()],
+    year: () => [dayjs().startOf('year'), dayjs()],
+    all: () => null,
 };
 
 /**
- * Klinika laboratoriya statistikasi (admin/direktor).
- *
- * Ma'lumot manbai — `lab_analysis_values` (har bir ko'rsatkich alohida qator):
- * tahlillar soni va dinamikasi, ko'rsatkichlar bo'yicha taqsimot, me'yordan
- * chetlanishlar, shifokorlar kesimi va bemorlarning vaqt bo'yicha
- * o'zgarishlariga asoslangan "xavf signallari" (klinik qoidalar).
- * Barcha raqamlar faqat shu klinika ma'lumotidan.
+ * Laboratoriya statistikasi (admin/direktor): chapda bo'limlar va BARCHA
+ * filtrlar bitta ustunda (bir xil kenglikdagi maydonlar, har birida yorliq),
+ * o'ngda hisobot. Filtrlar darhol qo'llanadi; yosh maydonlari yozib
+ * bo'lingach (400 ms). Xavf signallari bo'limida chap ustun signal
+ * filtrlariga almashadi.
  */
 export default function LabStatistics() {
     const { t } = useTranslation();
@@ -39,27 +37,41 @@ export default function LabStatistics() {
     useDocumentTitle(t('lab_statistics', { defaultValue: 'Laboratoriya statistikasi' }));
     const { lab_values } = useStore();
 
-    const [draft, setDraft] = useState(EMPTY);
-    const [applied, setApplied] = useState(EMPTY);
+    const [section, setSection] = useState('overview');
+    const [preset, setPreset] = useState('all');
+    const [range, setRange] = useState(null);
+    const [filters, setFilters] = useState(NO_FILTERS);
+    const [age, setAge] = useState({ ageFrom: null, ageTo: null });
+    const [sig, setSig] = useState(NO_SIGNAL_FILTERS);
     const [doctors, setDoctors] = useState([]);
-    const [tab, setTab] = useState('overview');
+    const [sigSummary, setSigSummary] = useState(null);
+    const [signalsKey, setSignalsKey] = useState(0);
     const [reloadKey, setReloadKey] = useState(0);
 
     useEffect(() => {
         get_lab_stats_doctor_options().then((r) => setDoctors(r.data || [])).catch(() => setDoctors([]));
     }, []);
 
+    useEffect(() => {
+        get_lab_signals_summary().then((r) => setSigSummary(r.data)).catch(() => setSigSummary(null));
+    }, [reloadKey, signalsKey]);
+
+    useEffect(() => {
+        const id = setTimeout(() => setFilters((f) => ({ ...f, ...age })), 400);
+        return () => clearTimeout(id);
+    }, [age]);
+
     const params = useMemo(() => cleanParams({
-        from: applied.range?.[0] ? applied.range[0].format('YYYY-MM-DD') : null,
-        to: applied.range?.[1] ? applied.range[1].format('YYYY-MM-DD') : null,
-        doctorId: applied.doctorId,
-        gender: applied.gender,
-        ageFrom: applied.ageFrom,
-        ageTo: applied.ageTo,
-        category: applied.category,
-        indicator: applied.indicator,
-        onlyAbnormal: applied.onlyAbnormal ? true : null,
-    }), [applied]);
+        from: range?.[0] ? range[0].format('YYYY-MM-DD') : null,
+        to: range?.[1] ? range[1].format('YYYY-MM-DD') : null,
+        doctorId: filters.doctorId,
+        gender: filters.gender,
+        ageFrom: filters.ageFrom,
+        ageTo: filters.ageTo,
+        category: filters.category,
+        indicator: filters.indicator,
+        onlyAbnormal: filters.onlyAbnormal ? true : null,
+    }), [range, filters]);
 
     const categories = useMemo(() => {
         const set = new Set((lab_values ?? []).map((v) => v.category).filter(Boolean));
@@ -67,103 +79,39 @@ export default function LabStatistics() {
     }, [lab_values, lang]);
 
     const indicatorOptions = useMemo(() => (lab_values ?? [])
-        .filter((v) => !draft.category || v.category === draft.category)
+        .filter((v) => !filters.category || v.category === filters.category)
         .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
         .map((v) => ({ value: v.columnName, label: v[`name${t('data_lang')}`] || v.columnName })),
-    [lab_values, draft.category, t]);
+    [lab_values, filters.category, t]);
 
-    const set = (patch) => setDraft((d) => ({ ...d, ...patch }));
-    const apply = () => setApplied(draft);
-    const reset = () => { setDraft(EMPTY); setApplied(EMPTY); };
-    const activeCount = Object.keys(params).length;
+    const set = (patch) => setFilters((f) => ({ ...f, ...patch }));
+    const choosePreset = (p) => { setPreset(p); setRange(PRESET_RANGE[p]()); };
+    const chooseRange = (v) => {
+        const has = v && (v[0] || v[1]);
+        setRange(has ? v : null);
+        setPreset(has ? 'custom' : 'all');
+    };
+    const filterCount = Object.values({ ...filters, ageFrom: age.ageFrom, ageTo: age.ageTo }).filter((v) => v !== null && v !== false).length
+        + (range ? 1 : 0);
+    const clearAll = () => { setFilters(NO_FILTERS); setAge({ ageFrom: null, ageTo: null }); setRange(null); setPreset('all'); };
 
-    const presets = [
-        { label: t('stats_last_30', { defaultValue: 'Oxirgi 30 kun' }), value: [dayjs().subtract(30, 'day'), dayjs()] },
-        { label: t('stats_last_90', { defaultValue: 'Oxirgi 3 oy' }), value: [dayjs().subtract(3, 'month'), dayjs()] },
-        { label: t('stats_this_year', { defaultValue: 'Shu yil' }), value: [dayjs().startOf('year'), dayjs()] },
-        { label: t('stats_last_year', { defaultValue: "O'tgan yil" }), value: [dayjs().subtract(1, 'year').startOf('year'), dayjs().subtract(1, 'year').endOf('year')] },
+    const sigCounts = useMemo(() => Object.fromEntries((sigSummary?.byStatus || []).map((r) => [r.key, Number(r.n) || 0])), [sigSummary]);
+    const pendingSignals = (sigSummary?.byReview || []).find((x) => x.key === 'pending')?.n || 0;
+    const sigCount = Object.values(sig).filter((v) => v).length;
+
+    const all = t('stats_all', { defaultValue: 'Barchasi' });
+    const periodText = range
+        ? `${range[0] ? range[0].format('DD.MM.YYYY') : '…'} — ${range[1] ? range[1].format('DD.MM.YYYY') : '…'}`
+        : t('stats_all_time', { defaultValue: 'Butun davr' });
+
+    const sections = [
+        { key: 'overview', icon: <BarChartOutlined />, label: t('stats_tab_overview', { defaultValue: 'Umumiy' }) },
+        { key: 'indicators', icon: <ExperimentOutlined />, label: t('stats_tab_indicators', { defaultValue: "Ko'rsatkichlar" }) },
+        { key: 'signals', icon: <AlertOutlined />, label: t('stats_tab_signals', { defaultValue: 'Xavf signallari' }), badge: pendingSignals },
     ];
 
-    const filterBar = (
-        <div className="lst-filters">
-            <div className="lst-filter lst-filter--wide">
-                <label>{t('stats_period', { defaultValue: 'Davr (tahlil sanasi)' })}</label>
-                <DatePicker.RangePicker
-                    value={draft.range}
-                    onChange={(v) => set({ range: v || [null, null] })}
-                    format="DD.MM.YYYY"
-                    presets={presets}
-                    allowEmpty={[true, true]}
-                    style={{ width: '100%' }}
-                />
-            </div>
-            <div className="lst-filter">
-                <label>{t('doctor', { defaultValue: 'Shifokor' })}</label>
-                <Select
-                    allowClear showSearch optionFilterProp="label"
-                    value={draft.doctorId}
-                    onChange={(v) => set({ doctorId: v ?? null })}
-                    options={doctors.map((d) => ({ value: d.id, label: d.name }))}
-                    placeholder={t('stats_all', { defaultValue: 'Barchasi' })}
-                />
-            </div>
-            <div className="lst-filter">
-                <label>{t('gender', { defaultValue: 'Jinsi' })}</label>
-                <Select
-                    allowClear
-                    value={draft.gender}
-                    onChange={(v) => set({ gender: v ?? null })}
-                    options={[
-                        { value: 'male', label: t('male', { defaultValue: 'Erkak' }) },
-                        { value: 'female', label: t('female', { defaultValue: 'Ayol' }) },
-                        { value: 'unknown', label: t('stats_unknown', { defaultValue: "Noma'lum" }) },
-                    ]}
-                    placeholder={t('stats_all', { defaultValue: 'Barchasi' })}
-                />
-            </div>
-            <div className="lst-filter lst-filter--age">
-                <label>{t('stats_age', { defaultValue: 'Yoshi' })}</label>
-                <div className="lst-age">
-                    <InputNumber min={0} max={120} value={draft.ageFrom} onChange={(v) => set({ ageFrom: v })} placeholder={t('stats_from', { defaultValue: 'dan' })} />
-                    <span>—</span>
-                    <InputNumber min={0} max={120} value={draft.ageTo} onChange={(v) => set({ ageTo: v })} placeholder={t('stats_to', { defaultValue: 'gacha' })} />
-                </div>
-            </div>
-            <div className="lst-filter">
-                <label>{t('stats_category', { defaultValue: "Tahlil guruhi" })}</label>
-                <Select
-                    allowClear
-                    value={draft.category}
-                    onChange={(v) => set({ category: v ?? null, indicator: null })}
-                    options={categories}
-                    placeholder={t('stats_all', { defaultValue: 'Barchasi' })}
-                />
-            </div>
-            <div className="lst-filter lst-filter--wide">
-                <label>{t('stats_indicator', { defaultValue: "Ko'rsatkich" })}</label>
-                <Select
-                    allowClear showSearch optionFilterProp="label"
-                    value={draft.indicator}
-                    onChange={(v) => set({ indicator: v ?? null })}
-                    options={indicatorOptions}
-                    placeholder={t('stats_all', { defaultValue: 'Barchasi' })}
-                />
-            </div>
-            <div className="lst-filter lst-filter--switch">
-                <label>{t('stats_only_abnormal', { defaultValue: "Faqat me'yordan tashqari" })}</label>
-                <Switch checked={draft.onlyAbnormal} onChange={(v) => set({ onlyAbnormal: v })} />
-            </div>
-            <div className="lst-filter-actions">
-                <Button type="primary" onClick={apply}>{t('stats_apply', { defaultValue: "Qo'llash" })}</Button>
-                <Button onClick={reset} disabled={activeCount === 0 && JSON.stringify(draft) === JSON.stringify(EMPTY)}>
-                    {t('stats_reset', { defaultValue: 'Tozalash' })}{activeCount ? ` (${activeCount})` : ''}
-                </Button>
-            </div>
-        </div>
-    );
-
     return (
-        <div className="lst">
+        <div className="ls3">
             <div className="main_card">
                 <h1>
                     <span>{t('lab_statistics', { defaultValue: 'Laboratoriya statistikasi' })}</span>
@@ -171,35 +119,142 @@ export default function LabStatistics() {
                         {t('stats_refresh', { defaultValue: 'Yangilash' })}
                     </Button>
                 </h1>
-                <div className="main_card_content big_card_content">
-                    <p className="lst-lead">
-                        {t('stats_lead', {
-                            defaultValue: "Klinikangizda yuklangan laboratoriya tahlillari bo'yicha statistika: har bir ko'rsatkich " +
-                                "qiymatlari, me'yordan chetlanishlar va bemorlar tahlillaridagi o'zgarishlarga asoslangan xavf signallari.",
-                        })}
-                    </p>
-                    {tab !== 'signals' && filterBar}
-                    <Tabs
-                        activeKey={tab}
-                        onChange={setTab}
-                        items={[
-                            {
-                                key: 'overview',
-                                label: t('stats_tab_overview', { defaultValue: 'Umumiy' }),
-                                children: <StatsOverview params={params} reloadKey={reloadKey} lang={lang} />,
-                            },
-                            {
-                                key: 'indicators',
-                                label: t('stats_tab_indicators', { defaultValue: "Ko'rsatkichlar" }),
-                                children: <StatsIndicators params={params} reloadKey={reloadKey} lang={lang} />,
-                            },
-                            {
-                                key: 'signals',
-                                label: t('stats_tab_signals', { defaultValue: 'Xavf signallari' }),
-                                children: <StatsSignals reloadKey={reloadKey} lang={lang} />,
-                            },
-                        ]}
-                    />
+                <div className="main_card_content">
+                    <div className="ls3-layout">
+                        <aside className="ls3-side">
+                            <nav className="ls3-nav">
+                                {sections.map((s) => (
+                                    <button
+                                        key={s.key}
+                                        type="button"
+                                        className={`ls3-nav-item${section === s.key ? ' ls3-nav-item--active' : ''}`}
+                                        onClick={() => setSection(s.key)}
+                                    >
+                                        {s.icon}{s.label}
+                                        {s.badge ? <span className="ls3-nav-badge">{s.badge}</span> : null}
+                                    </button>
+                                ))}
+                            </nav>
+                            <Divider />
+
+                            {section !== 'signals' ? (
+                                <>
+                                    <div className="ls3-side-title">
+                                        {t('stats_filters', { defaultValue: 'Filtrlar' })}
+                                        {filterCount > 0 && <Button type="link" size="small" onClick={clearAll}>{t('stats_reset', { defaultValue: 'Tozalash' })} ({filterCount})</Button>}
+                                    </div>
+                                    <div className="ls3-side-fields">
+                                        <div className="ls3-field">
+                                            <label>{t('stats_period', { defaultValue: 'Davr (tahlil sanasi)' })}</label>
+                                            <div className="ls3-presets">
+                                                {[
+                                                    ['30d', t('stats_p30', { defaultValue: '30 kun' })],
+                                                    ['90d', t('stats_p90', { defaultValue: '3 oy' })],
+                                                    ['year', t('stats_this_year', { defaultValue: 'Shu yil' })],
+                                                    ['all', t('stats_all_short', { defaultValue: 'Hammasi' })],
+                                                ].map(([key, label]) => (
+                                                    <Button key={key} size="small" type={preset === key ? 'primary' : 'default'} onClick={() => choosePreset(key)}>{label}</Button>
+                                                ))}
+                                            </div>
+                                            <DatePicker.RangePicker
+                                                value={range}
+                                                onChange={chooseRange}
+                                                format="DD.MM.YYYY"
+                                                allowEmpty={[true, true]}
+                                                placeholder={[t('stats_from', { defaultValue: 'dan' }), t('stats_to', { defaultValue: 'gacha' })]}
+                                            />
+                                        </div>
+                                        <div className="ls3-field">
+                                            <label>{t('doctor', { defaultValue: 'Shifokor' })}</label>
+                                            <Select allowClear showSearch optionFilterProp="label" value={filters.doctorId}
+                                                onChange={(v) => set({ doctorId: v ?? null })}
+                                                options={doctors.map((d) => ({ value: d.id, label: d.name }))} placeholder={all} />
+                                        </div>
+                                        <div className="ls3-field">
+                                            <label>{t('gender', { defaultValue: 'Jinsi' })}</label>
+                                            <Select allowClear value={filters.gender} onChange={(v) => set({ gender: v ?? null })} placeholder={all}
+                                                options={[
+                                                    { value: 'male', label: t('male', { defaultValue: 'Erkak' }) },
+                                                    { value: 'female', label: t('female', { defaultValue: 'Ayol' }) },
+                                                    { value: 'unknown', label: t('stats_unknown', { defaultValue: "Noma'lum" }) },
+                                                ]} />
+                                        </div>
+                                        <div className="ls3-field">
+                                            <label>{t('stats_age', { defaultValue: 'Yoshi' })}</label>
+                                            <div className="ls3-range">
+                                                <InputNumber min={0} max={120} value={age.ageFrom} onChange={(v) => setAge((a) => ({ ...a, ageFrom: v }))} placeholder={t('stats_from', { defaultValue: 'dan' })} />
+                                                <span>—</span>
+                                                <InputNumber min={0} max={120} value={age.ageTo} onChange={(v) => setAge((a) => ({ ...a, ageTo: v }))} placeholder={t('stats_to', { defaultValue: 'gacha' })} />
+                                            </div>
+                                        </div>
+                                        <div className="ls3-field">
+                                            <label>{t('stats_category', { defaultValue: 'Tahlil guruhi' })}</label>
+                                            <Select allowClear value={filters.category} onChange={(v) => set({ category: v ?? null, indicator: null })}
+                                                options={categories} placeholder={all} />
+                                        </div>
+                                        <div className="ls3-field">
+                                            <label>{t('stats_indicator', { defaultValue: "Ko'rsatkich" })}</label>
+                                            <Select allowClear showSearch optionFilterProp="label" value={filters.indicator}
+                                                onChange={(v) => set({ indicator: v ?? null })} options={indicatorOptions} placeholder={all} />
+                                        </div>
+                                        <div className="ls3-field">
+                                            <Checkbox checked={filters.onlyAbnormal} onChange={(e) => set({ onlyAbnormal: e.target.checked })}>
+                                                {t('stats_only_abnormal', { defaultValue: "Faqat me'yordan tashqari" })}
+                                            </Checkbox>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="ls3-side-title">
+                                        {t('stats_filters', { defaultValue: 'Filtrlar' })}
+                                        {sigCount > 0 && <Button type="link" size="small" onClick={() => setSig(NO_SIGNAL_FILTERS)}>{t('stats_reset', { defaultValue: 'Tozalash' })} ({sigCount})</Button>}
+                                    </div>
+                                    <div className="ls3-side-fields">
+                                        <div className="ls3-field">
+                                            <label>{t('patient', { defaultValue: 'Bemor' })}</label>
+                                            <Input.Search allowClear placeholder={t('search_by_patient', { defaultValue: 'Bemor ismi' })}
+                                                onSearch={(v) => setSig((s) => ({ ...s, search: v }))} />
+                                        </div>
+                                        <div className="ls3-field">
+                                            <label>{t('stats_status', { defaultValue: 'Holat' })}</label>
+                                            <Select allowClear value={sig.status} onChange={(v) => setSig((s) => ({ ...s, status: v ?? null }))} placeholder={all}
+                                                options={STATUS_ORDER.map((s) => ({ value: s, label: `${pick(STATUS_META[s], lang)} (${sigCounts[s] || 0})` }))} />
+                                        </div>
+                                        <div className="ls3-field">
+                                            <label>{t('stats_review', { defaultValue: 'Shifokor qarori' })}</label>
+                                            <Select allowClear value={sig.review} onChange={(v) => setSig((s) => ({ ...s, review: v ?? null }))} placeholder={all}
+                                                options={Object.keys(REVIEW_META).map((k) => ({ value: k, label: pick(REVIEW_META[k], lang) }))} />
+                                        </div>
+                                        <div className="ls3-field">
+                                            <label>{t('stats_rule', { defaultValue: 'Qoida' })}</label>
+                                            <Select allowClear showSearch optionFilterProp="label" value={sig.rule}
+                                                onChange={(v) => setSig((s) => ({ ...s, rule: v ?? null }))} placeholder={all}
+                                                options={Object.keys(RULE_LABELS).map((k) => ({ value: k, label: `${k} — ${ruleLabel(k, lang)}` }))} />
+                                        </div>
+                                    </div>
+                                    <p className="ls3-side-note">
+                                        {t('stats_signal_note', { defaultValue: "Signal — tashxis emas: shifokor dalillarni ko'rib tasdiqlaydi yoki rad etadi." })}
+                                    </p>
+                                </>
+                            )}
+                        </aside>
+
+                        <main className="ls3-main">
+                            {section === 'overview' && <StatsOverview params={params} reloadKey={reloadKey} lang={lang} periodText={periodText} />}
+                            {section === 'indicators' && <StatsIndicators params={params} reloadKey={reloadKey} lang={lang} periodText={periodText} />}
+                            {section === 'signals' && (
+                                <StatsSignals
+                                    filters={sig}
+                                    setFilters={setSig}
+                                    summary={sigSummary}
+                                    reloadKey={reloadKey}
+                                    lang={lang}
+                                    onChanged={() => setSignalsKey((k) => k + 1)}
+                                />
+                            )}
+                        </main>
+                    </div>
                 </div>
             </div>
         </div>

@@ -253,31 +253,22 @@ klinika `users.clinic_id` dan, boshqa klinika ko'rinmaydi).
   qiladi). Lab tahlili 0/1 holatidagi bemor O'TKAZIB yuboriladi — retry
   paytida signallar va baholar o'chmasin. Bitta qoida xatosi qolganlarini
   to'xtatmaydi; xato bergan qoidaning eski signali saqlanadi.
-* Frontend — UCH ko'rinish yonma-yon, dizayn tanlovi uchun
-  (`pages/cabinet/statistics/`); faqat `/lab-statistics` menyuda, qolgan
-  ikkitasi manzil bilan ochiladi; tanlov hal bo'lgach qolganlari o'chiriladi:
-  - `/lab-statistics` — eski: `LabStatistics.js`, `Stats*.js`, `lst-*`
-    (yuqorida tablar, filtr paneli + «Qo'llash», doira diagrammalar, jadvallar).
-  - `/lab-statistics-new` — ixcham: `LabStatsPage.js` + `OverviewTab` /
-    `IndicatorsTab` + `IndicatorDrawer` / `SignalsTab`; bloklar `statsUi.js`
-    (`Kpi`, `Panel`, `BarList`, `StackBar`), uslub `LabStats.css` (`lsx-*`).
-    Filtrlar bitta qatorda, darhol qo'llanadi; chiziqli ro'yxatlar; signallar
-    kartochka.
-  - `/lab-statistics-new-1` — `v3/`: `LabStatsV3.js` (chapda bo'limlar +
-    BARCHA filtrlar bir xil kenglikda, yorliqli; signallar bo'limida signal
-    filtrlariga almashadi) + `V3Overview` (hero qator; BITTA ustunli grafik
-    — tahlillar, ichida chetlanishlisi qizil — va ostida davr jadvali;
-    guruhlar, bemorlar/tahlillar tarkibi, xodimlar — JADVALLAR, ulush
-    `PctBar` bilan) / `V3Indicators` (statistika jadvali: har ustun bitta
-    statistika — natijalar, bemorlar, me'yorda, ↑, ↓, ulush, o'rtacha,
-    mediana, min, max, P10–P90, baholanmagan; qator → v2 `IndicatorDrawer`) /
-    `V3Signals` (BEMOR bo'yicha guruhlangan); `v3Ui.js`, `LabStatsV3.css`
-    (`ls3-*`). Foydalanuvchi 2026-11-02 da SHU ko'rinishni tanladi.
-    `GetSummaryAsync.categories` shu uchun `high/low/normal/patients` qaytaradi.
-  Umumiy: `statsCommon.js` (konstantalar, `num`/`pct`), `signalParts.js`
-  (signal tafsiloti, qaror oynasi — bemor kartasi `PatientSignals.js` bilan
-  ham; uning `lst-*` uslublari `LabStatistics.css` da — yangi ko'rinishlar
-  uni shu sababli import qiladi).
+* Frontend: `pages/cabinet/statistics/` — `LabStatistics.js` (chapda
+  bo'limlar + BARCHA filtrlar bir xil kenglikda, yorliqli, darhol
+  qo'llanadi; signallar bo'limida signal filtrlariga almashadi) +
+  `StatsOverview` (hero qator; BITTA ustunli grafik — tahlillar, ichida
+  chetlanishlisi qizil — ostida davr jadvali; guruhlar, bemorlar/tahlillar
+  tarkibi, xodimlar — JADVALLAR, ulush `PctBar`) / `StatsIndicators`
+  (statistika jadvali: har ustun bitta statistika — natijalar, bemorlar,
+  me'yorda, ↑, ↓, ulush, o'rtacha, mediana, min, max, P10–P90,
+  baholanmagan; qator → `IndicatorDrawer`) / `StatsSignals` (BEMOR bo'yicha
+  guruhlangan). Bloklar `statsUi.js` (`Stat`, `Card`, `RankList`,
+  `PctBar`, `MiniTable`), uslub `LabStatistics.css` (`ls3-*`; Drawer
+  `body` ga chiziladi — `rootClassName="ls3"`). 2026-11-02 da uch variantdan
+  shu tanlandi, qolganlari o'chirildi (`/lab-statistics-new*` → redirect).
+  Umumiy: `statsCommon.js` (konstantalar, `num`/`pct`, chart.js ro'yxati),
+  `signalParts.js` + `.css` (`lst-*`: signal tafsiloti, qaror oynasi —
+  bemor kartasi `PatientSignals.js` bilan ham).
 
 **Vipiska** (`discharge_summaries`) — statsionardan chiqarish epikrizi
 («Выписка из истории болезни»).

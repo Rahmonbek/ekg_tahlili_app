@@ -1,0 +1,40 @@
+/* Xavf signali tafsiloti — statistika sahifasi va bemor kartasi uchun umumiy (`lst-*`) */
+
+.lst-expand {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.lst-rec,
+.lst-temporal,
+.lst-missing {
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.lst-missing { color: #92400e; }
+.lst-muted { color: #64748b; font-size: 13px; }
+
+.lst-signal-title {
+  font-weight: 600;
+  color: #0f172a;
+  margin-top: 4px;
+}
+
+.lst-signal-msg {
+  color: #475569;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.lst-sev {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}

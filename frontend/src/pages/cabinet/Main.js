@@ -43,8 +43,6 @@ import LabAnalyseView from './lab_analyse/LabAnalyseView'
 import DiagnoseView from './diagnoses/DiagnoseView'
 import Dashboard from './Dashboard'
 import LabStatistics from './statistics/LabStatistics'
-import LabStatsPage from './statistics/LabStatsPage'
-import LabStatsV3 from './statistics/v3/LabStatsV3'
 import ClinicActivationGate from '../../components/ClinicActivationGate'
 import VideoConference from './video_conference/VideoConference'
 import ConsultantsPage from './consultation/ConsultantsPage'
@@ -319,17 +317,9 @@ export default function Main() {
                                 <LabStatistics />
                             </ProtectedRoute>
                         } />
-                        {/* Yangi ixcham ko'rinish — eski sahifa bilan yonma-yon solishtirish uchun */}
-                        <Route path="/lab-statistics-new" element={
-                            <ProtectedRoute allowedRoles={[2, 3]} userRole={user.roleId}>
-                                <LabStatsPage />
-                            </ProtectedRoute>
-                        } />
-                        <Route path="/lab-statistics-new-1" element={
-                            <ProtectedRoute allowedRoles={[2, 3]} userRole={user.roleId}>
-                                <LabStatsV3 />
-                            </ProtectedRoute>
-                        } />
+                        {/* Dizayn tanlovi davridagi sinov manzillari — saqlangan havolalar uchun */}
+                        <Route path="/lab-statistics-new" element={<Navigate to="/lab-statistics" replace />} />
+                        <Route path="/lab-statistics-new-1" element={<Navigate to="/lab-statistics" replace />} />
 
                         {/* ── Online Konsultatsiya — Admin/Direktor ── */}
                         <Route path="/consultants" element={

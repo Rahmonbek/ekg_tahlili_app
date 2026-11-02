@@ -1,4 +1,3 @@
-import React from 'react';
 import {
     Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement,
     LineElement, ArcElement, Tooltip, Legend, Filler,
@@ -153,40 +152,3 @@ export function cleanParams(obj) {
     });
     return out;
 }
-
-export function KpiCard({ label, value, hint, accent, onClick, active }) {
-    return (
-        <button
-            type="button"
-            className={`lst-kpi ${onClick ? 'lst-kpi--clickable' : ''} ${active ? 'lst-kpi--active' : ''}`}
-            style={accent ? { borderTopColor: accent } : undefined}
-            onClick={onClick}
-            disabled={!onClick}
-        >
-            <div className="lst-kpi-label">{label}</div>
-            <div className="lst-kpi-value">{value}</div>
-            {hint ? <div className="lst-kpi-hint">{hint}</div> : null}
-        </button>
-    );
-}
-
-export function Panel({ title, extra, children, className = '' }) {
-    return (
-        <section className={`lst-panel ${className}`}>
-            {(title || extra) && (
-                <header className="lst-panel-head">
-                    <h3>{title}</h3>
-                    {extra}
-                </header>
-            )}
-            <div className="lst-panel-body">{children}</div>
-        </section>
-    );
-}
-
-/** Chart.js umumiy sozlamalari. */
-export const baseOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true } } },
-};

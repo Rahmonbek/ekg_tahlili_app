@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Input, Modal, Table } from 'antd';
 
 import { num, ruleLabel } from './statsCommon';
+import './signalParts.css';
 
 /**
  * Xavf signalining umumiy qismlari — klinika statistikasi sahifasi

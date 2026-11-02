@@ -6,7 +6,6 @@ import { AlertOutlined, CheckOutlined, CloseOutlined, DownOutlined, RedoOutlined
 import { get_patient_lab_signals, review_patient_lab_signal } from '../../../host/requests/LabStatisticsRequest';
 import { REVIEW_META, SEVERITY_META, STATUS_META, langCode, pick, ruleLabel } from './statsCommon';
 import { SignalDetails, SignalReviewModal } from './signalParts';
-import './LabStatistics.css';
 import './PatientSignals.css';
 
 /**
