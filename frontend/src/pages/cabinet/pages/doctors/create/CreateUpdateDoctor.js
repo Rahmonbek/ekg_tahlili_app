@@ -227,6 +227,49 @@ export default function CreateUpdateDoctor() {
                         </div>
                       </div>
                     </Col>
+                  {/* 1-qator: F.I.Sh; 2-qator: telefon, parol, jins; 3-qator: rol va mutaxassislik */}
+                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
+                    <Form.Item
+                      name="lastname"
+                      label={t('lastname')}
+                      normalize={(value) => value?.toUpperCase()}
+                      rules={[{ required: true, message: t('field_required') }]}
+                    >
+                      <Input
+                        className="login_input"
+                        placeholder={t('enter_lastname_staff')}
+                      />
+                    </Form.Item>
+                  </Col>
+
+                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
+                    <Form.Item
+                      name="firstname"
+                      label={t('firstname')}
+                      normalize={(value) => value?.toUpperCase()}
+                      rules={[{ required: true, message: t('field_required') }]}
+                    >
+                      <Input
+                        className="login_input"
+                        placeholder={t('enter_firstname_staff')}
+                      />
+                    </Form.Item>
+                  </Col>
+
+                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
+                    <Form.Item
+                      name="surename"
+                      label={t('surename')}
+                      normalize={(value) => value?.toUpperCase()}
+                      rules={[{ required: true, message: t('field_required') }]}
+                    >
+                      <Input
+                        className="login_input"
+                        placeholder={t('enter_surename_staff')}
+                      />
+                    </Form.Item>
+                  </Col>
+
                     <Col className="main_col" lg={8} xs={24} sm={24} md={24} >
                     <Form.Item
     name="phone"
@@ -270,48 +313,6 @@ export default function CreateUpdateDoctor() {
       <PasswordField className='login_input' placeholder={t("enter_new_password_staff")} autoComplete="new-password"/>
     </Form.Item>
                     </Col>
-                    <Col className="main_col" lg={8} xs={24} sm={24} md={24}></Col>
-                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
-                    <Form.Item
-                      name="lastname"
-                      label={t('lastname')}
-                      normalize={(value) => value?.toUpperCase()}
-                      rules={[{ required: true, message: t('field_required') }]}
-                    >
-                      <Input
-                        className="login_input"
-                        placeholder={t('enter_lastname_staff')}
-                      />
-                    </Form.Item>
-                  </Col>
-
-                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
-                    <Form.Item
-                      name="firstname"
-                      label={t('firstname')}
-                      normalize={(value) => value?.toUpperCase()}
-                      rules={[{ required: true, message: t('field_required') }]}
-                    >
-                      <Input
-                        className="login_input"
-                        placeholder={t('enter_firstname_staff')}
-                      />
-                    </Form.Item>
-                  </Col>
-
-                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
-                    <Form.Item
-                      name="surename"
-                      label={t('surename')}
-                      normalize={(value) => value?.toUpperCase()}
-                      rules={[{ required: true, message: t('field_required') }]}
-                    >
-                      <Input
-                        className="login_input"
-                        placeholder={t('enter_surename_staff')}
-                      />
-                    </Form.Item>
-                  </Col>
 
                   <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                     <Form.Item
@@ -332,10 +333,6 @@ export default function CreateUpdateDoctor() {
                     </Form.Item>
                   </Col>
 
-                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
-                    
-                  </Col>
-                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}></Col>
                      <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
                      <Form.Item
                       name="role"
@@ -394,15 +391,15 @@ export default function CreateUpdateDoctor() {
 
                     </Form.Item>
                     </Col>
-                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}></Col>
-                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}>
+                  {/* Saqlash — markazda. Ilgari bo'sh "to'ldiruvchi" ustunlar bilan
+                      markazlanardi va shu ustunlar "Jins" ni alohida qatorga surib qo'yardi */}
+                  <Col className="main_col" lg={{ span: 8, offset: 8 }} xs={24} sm={24} md={24}>
                     <div className="form_div">
                       <Button className="btn_form" loading={loading} htmlType="submit">
                         {t('saveDataStaff')}
                       </Button>
                     </div>
                   </Col>
-                  <Col className="main_col" lg={8} xs={24} sm={24} md={24}></Col>
                 </Row>
               </Form>
         </div>

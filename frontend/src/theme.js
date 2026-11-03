@@ -87,6 +87,11 @@ export const theme = {
         borderRadiusLG: 14,
         borderRadiusSM: 6,
 
+        // Select fokus halqasi Input/DatePicker (`activeShadow` 3 px) bilan bir
+        // xil qalinlikda (standart 2 px). Komponent darajasida berilganda
+        // antd uni olmaydi — u global alias token.
+        controlOutlineWidth: 3,
+
         controlHeight: 40,
         controlHeightLG: 46,
         controlHeightSM: 32,
@@ -154,7 +159,9 @@ export const theme = {
             optionSelectedFontWeight: 600,
             multipleItemBg: colors.primarySoft,
             multipleItemBorderColor: 'rgba(0, 179, 154, 0.28)',
-            multipleItemHeight: 26,
+            // `multipleItemHeight` berilmaydi: antd uni `controlHeight` dan
+            // hisoblaydi va bo'sh ko'p tanlovli select oddiy maydon bilan
+            // bir xil balandlikda qoladi (26 px da 34 px bo'lib qolardi)
         },
         Form: {
             labelColor: '#475569',

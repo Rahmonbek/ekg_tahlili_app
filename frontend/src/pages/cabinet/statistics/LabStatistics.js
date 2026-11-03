@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Checkbox, DatePicker, Divider, InputNumber, Select, Input, Space, message } from 'antd';
+import { Button, Checkbox, ConfigProvider, DatePicker, Divider, InputNumber, Select, Input, Space, message } from 'antd';
 import { AlertOutlined, BarChartOutlined, ExperimentOutlined, FilePdfOutlined, ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
@@ -12,6 +12,9 @@ import StatsOverview from './StatsOverview';
 import StatsIndicators from './StatsIndicators';
 import StatsSignals from './StatsSignals';
 import './LabStatistics.css';
+
+/** Chap paneldagi filtr maydonlari uchun ixcham mavzu (umumiy 40 px o'rniga). */
+const SIDE_THEME = { token: { controlHeight: 34, borderRadius: 8, fontSize: 13 } };
 
 const NO_FILTERS = { doctorId: null, gender: null, ageFrom: null, ageTo: null, category: null, indicator: null, onlyAbnormal: false };
 const NO_SIGNAL_FILTERS = { status: null, review: null, rule: null, search: '' };
@@ -140,6 +143,9 @@ export default function LabStatistics() {
                 <div className="main_card_content">
                     <div className="ls3-layout">
                         <aside className="ls3-side">
+                          {/* Filtrlar ixcham (34 px) — FAQAT shu panelda. Ilgari bu
+                              LabStatistics.css da ~20 ta `!important` bilan qilingan edi. */}
+                          <ConfigProvider theme={SIDE_THEME}>
                             <nav className="ls3-nav">
                                 {sections.map((s) => (
                                     <button
@@ -256,6 +262,7 @@ export default function LabStatistics() {
                                     </p>
                                 </>
                             )}
+                          </ConfigProvider>
                         </aside>
 
                         <main className="ls3-main">

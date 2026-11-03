@@ -1,5 +1,5 @@
 import { Button, Checkbox, Col, Form, Input, Row, Select, Table, Tooltip } from 'antd';
-import Cleave from 'cleave.js/react';
+import PhoneInput from '../../../components/shared/PhoneInput';
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { IoAlertCircleSharp } from 'react-icons/io5';
@@ -466,18 +466,9 @@ const getDistricts = async (id) => {
                     wrapperCol={{ span: 24 }}
                     rules={[{ required: true, message: t('field_required') }, { len: 19, message: t('phone_incomplete', { defaultValue: "Telefon raqamni to'liq kiriting" }) }]}
                   >
-                    <Cleave
-                     value={phoneValue}
-  onChange={(e) => setPhoneValue(e.target.value)}
-                      options={{
-                        prefix: '+998',
-                        delimiters: [' (', ') ', '-', '-'],
-                        blocks: [4, 2, 3, 2, 2],
-                        numericOnly: true,
-                      }}
-                      placeholder="+998 (__) ___-__-__"
-                      className="ant-input claveInput"
-                      style={{ width: '100%' }}
+                    <PhoneInput
+                        value={phoneValue}
+                        onChange={(e) => setPhoneValue(e.target.value)}
                     />
                   </Form.Item>
                 </Col>

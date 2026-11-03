@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Col, Form, Input, message, Modal, Row, Select, Steps } from 'antd';
 
-import Cleave from 'cleave.js/react';
+import PhoneInput from './shared/PhoneInput';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { send_doc_data } from '../host/requests/UserRequest';
@@ -186,18 +186,9 @@ export default function AdminModal() {
                       wrapperCol={{ span: 24 }}
                       rules={[{ required: true, message: t('field_required') }, { len: 19, message: t('phone_incomplete', { defaultValue: "Telefon raqamni to'liq kiriting" }) }]}
                     >
-                      <Cleave
-                        options={{
-                          prefix: '+998',
-                          delimiters: [' (', ') ', '-', '-'],
-                          blocks: [4, 2, 3, 2, 2],
-                          numericOnly: true,
-                        }}
-                        value={phoneValue}
-    onChange={(e) => setPhoneValue(e.target.value)}
-                        placeholder="+998 (__) ___-__-__"
-                        className="ant-input claveInput"
-                        style={{ width: '100%' }}
+                      <PhoneInput
+                          value={phoneValue}
+                          onChange={(e) => setPhoneValue(e.target.value)}
                       />
                     </Form.Item>
                   </Col>

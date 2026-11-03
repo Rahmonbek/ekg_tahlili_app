@@ -75,11 +75,13 @@ export default function PatientSearchSection({ form, onFinish, onReset, loading 
                 </Col>
 
                 <Col className="main_col" lg={6} xs={24} sm={24} md={12}>
-                    <div className="form_div">
+                    {/* Bo'sh yorliqli Form.Item — tugma maydonlar bilan aynan bir
+                        chiziqda (ilgari `form_div` bilan 9 px yuqorida turardi) */}
+                    <Form.Item label=" " colon={false} className="form_btn_item">
                         <Button className="btn_form" loading={loading} htmlType="submit">
                             {t('search_patcient')}
                         </Button>
-                    </div>
+                    </Form.Item>
                 </Col>
             </Row>
         </Form>

@@ -66,11 +66,25 @@
 .register_page .register_section_title{
   text-align: center;
 }
-/* WCAG 2.4.7 — Focus Visible: keyboard navigation uchun focus ring */
+/* WCAG 2.4.7 — Focus Visible: keyboard navigation uchun focus ring.
+   `border-radius` BERILMAYDI: ilgari bu yerda `4px` bor edi va fokus
+   tushgan har qanday element (input, tugma, chip) radiusini 10 px dan
+   4 px ga tushirardi — maydon bosilganda burchaklari "sakrab"
+   o'zgarardi. Zamonaviy brauzerlarda outline elementning o'z radiusiga
+   ergashadi.
+
+   Forma maydonlarida halqa kerak emas: ularning fokus belgisi —
+   firuza ramka + 3 px soya (`theme.js` `activeShadow`). Ikkalasi birga
+   bo'lsa maydon atrofida ikki qavat chiziq chiqardi. */
 *:focus-visible {
   outline: 2px solid var(--back_color);
   outline-offset: 2px;
-  border-radius: 4px;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
 }
 
 body {
@@ -95,7 +109,10 @@ body {
   border-radius: 20px;
   box-shadow: 0px 2px 10px 1px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 640px;
+  /* Ikki maydonli kirish formasi uchun 640 px juda keng edi — maydonlar
+     580 px ga cho'zilib, ko'z bir chetdan ikkinchisiga yugurardi.
+     Ro'yxatdan o'tish formasi o'zining 760 px qiymatini oladi. */
+  max-width: 460px;
 }
 
 .login_form_form {
@@ -141,6 +158,13 @@ body {
   justify-content: center;
   height: 100%;
   overflow: hidden;
+}
+
+/* Kartochka ustun chetiga yopishmasin (ilgari 640 px ustunda 640 px
+   kartochka — chap chetida 0 px edi). Faqat forma ustuniga: rasm
+   ustuniga tushsa rasm atrofida firuza ramka paydo bo'lardi. */
+.login_form_box {
+  padding: 24px;
 }
 
 .login_img img {
@@ -3795,6 +3819,15 @@ body.hide_recaptcha_badge .grecaptcha-badge {
   font-weight: 500;
 }
 
+/* Yorliq maydon USTIDA bo'lganda (`labelCol={{ span: 24 }}` — loyihadagi
+   deyarli barcha formalar) antd unga baribir maydon balandligini (40 px)
+   beradi: yorliq ostida 20 px bo'sh joy qolib, qatorlar orasi 106 px
+   bo'lardi. Yonma-yon yorliqli (haqiqiy horizontal) formalarga tegmaydi. */
+.ant-col-24.ant-form-item-label > label,
+.ant-form-vertical .ant-form-item-label > label {
+  height: auto;
+}
+
 /* Ikonkalar (prefix/suffix) — bir xil kulrang, bir xil o'lcham, matndan
    8 px uzoqlikda */
 .ant-input-affix-wrapper .ant-input-prefix,
@@ -3974,21 +4007,56 @@ textarea.ant-input {
    Ro'yxat sahifalarida ikki xil ko'rinish bor edi: EKG/Holter/SMAD/Lab
    da maydon va alohida tugma (orasida 8 px), Bemorlar/Kompleks AI/
    Konsultantlarda esa antd `Input.Search` — tugma maydonga yopishgan,
-   ichki burchaklari to'g'ri. Endi yozuvli tugmali `Input.Search` ham
-   birinchisi kabi chiziladi: ikkalasi alohida, ikkalasi 10 px radius. */
-.ant-input-search-with-button .ant-input-group > .ant-input-affix-wrapper,
-.ant-input-search-with-button .ant-input-group > .ant-input {
+   ichki burchaklari to'g'ri, fokus halqasi esa bir tomoni yumaloq,
+   bir tomoni to'g'ri chiqardi. Endi har qanday `Input.Search` (yozuvli
+   yoki faqat ikonkali tugma) birinchisi kabi chiziladi: ikkalasi
+   alohida, ikkalasi to'liq radiusda. */
+.ant-input-search .ant-input-group > .ant-input-affix-wrapper,
+.ant-input-search .ant-input-group > .ant-input {
   border-radius: 10px !important;
 }
 
-.ant-input-search-with-button .ant-input-group > .ant-input-group-addon {
+.ant-input-search .ant-input-group > .ant-input-group-addon {
   padding-left: 8px !important;
   background: transparent !important;
   border: 0 !important;
 }
 
-.ant-input-search-with-button .ant-input-group-addon .ant-input-search-button {
+.ant-input-search .ant-input-group-addon .ant-input-search-button {
   border-radius: 10px !important;
+}
+
+/* Yozuvli tugma ("Qidirish") — `.btn_form` bilan bir xil vazn va kenglik */
+.ant-input-search-with-button .ant-input-search-button {
   padding-inline: 18px;
   font-weight: 600;
+}
+
+/* Statistika chap panelidagi ixcham (8 px radiusli) maydonlar bilan mos */
+.ls3-side .ant-input-search .ant-input-group > .ant-input-affix-wrapper,
+.ls3-side .ant-input-search .ant-input-group > .ant-input,
+.ls3-side .ant-input-search .ant-input-group-addon .ant-input-search-button {
+  border-radius: 8px !important;
+}
+
+/* Forma qatoridagi tugma — bo'sh yorliqli `Form.Item` ichida (`label=" "`),
+   shunda yonidagi maydonlar bilan bir chiziqda turadi. `.btn_form` ning
+   o'z `margin-top` i bu yerda kerak emas. Tor ekranda ustunlar ustma-ust
+   tushadi va bo'sh yorliq faqat ortiqcha bo'shliq beradi. */
+.form_btn_item .btn_form {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 767px) {
+  .form_btn_item > .ant-row > .ant-form-item-label {
+    display: none;
+  }
+}
+
+/* Dinamika grafigi konteyneri — Chart.js `responsive` uchun shart */
+.lab-dynamics-canvas {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  height: 260px;
 }

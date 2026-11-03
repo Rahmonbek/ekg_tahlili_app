@@ -205,7 +205,11 @@ export default function LabDynamicsChart({ patcientId, showTitle = true }) {
                 <Select
                     value={selected}
                     onChange={setSelected}
-                    style={{ minWidth: 240 }}
+                    // Sarlavha yonida, o'ngda: umumiy `.ant-select { width: 100% }`
+                    // uni butun qatorga cho'zib yuborardi
+                    style={{ width: 300, maxWidth: '100%' }}
+                    showSearch
+                    optionFilterProp="label"
                     options={series.map((s) => ({
                         value: s.columnName,
                         label: `${s[`name${t('data_lang')}`] ?? s.nameUz} (${s.points.length})`,
@@ -214,6 +218,10 @@ export default function LabDynamicsChart({ patcientId, showTitle = true }) {
             </div>
 
             {chart && (
+                // Chart.js o'lchamni ota-elementdan oladi va u `position: relative`
+                // bo'lmasa konteyner torayganda (menyu ochilganda) KICHRAYMAYDI:
+                // grafik 73 px toshib, butun sahifa yonga suriladigan bo'lib qolardi
+                <div className="lab-dynamics-canvas">
                 <Line
                     data={chart}
                     options={{
@@ -252,6 +260,7 @@ export default function LabDynamicsChart({ patcientId, showTitle = true }) {
                     }}
                     height={260}
                 />
+                </div>
             )}
         </div>
     );

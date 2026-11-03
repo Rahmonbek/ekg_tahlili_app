@@ -400,34 +400,9 @@
   .ls3-rings { grid-template-columns: 1fr; }
 }
 
-/* ── Filtr maydonlari — FAQAT shu sahifada ixcham (umumiy App.css dagi
-   katta balandlik boshqa formalarda qoladi) ── */
-.ls3-side .ant-select .ant-select-selector,
-.ls3-side .ant-picker,
-.ls3-side .ant-input-number,
-.ls3-side .ant-input-affix-wrapper,
-.ls3-side .ant-input {
-  min-height: 34px !important;
-  height: 34px !important;
-  border-radius: 8px !important;
-  font-size: 13.5px !important;
-}
-.ls3-side .ant-select .ant-select-selector { padding: 0 10px !important; align-items: center; }
-.ls3-side .ant-select-single .ant-select-selector .ant-select-selection-item,
-.ls3-side .ant-select-single .ant-select-selector .ant-select-selection-placeholder,
-.ls3-side .ant-select-single .ant-select-selector .ant-select-selection-search-input {
-  line-height: 32px !important;
-  height: 32px !important;
-}
-.ls3-side .ant-picker { padding: 0 10px !important; }
-.ls3-side .ant-picker input { font-size: 13.5px !important; }
-.ls3-side .ant-input-number-input-wrap,
-.ls3-side .ant-input-number-input { height: 32px !important; }
-.ls3-side .ant-input-number-input { padding: 0 10px !important; font-size: 13.5px !important; }
-.ls3-side .ant-input-search .ant-input-group-addon .ant-btn { height: 34px !important; width: 36px; border-radius: 0 8px 8px 0 !important; }
-.ls3-side .ant-input-search .ant-input-affix-wrapper,
-.ls3-side .ant-input-search > .ant-input-group > .ant-input { border-radius: 8px 0 0 8px !important; }
-.ls3-side .ant-input-affix-wrapper > .ant-input { height: auto !important; min-height: 0 !important; }
+/* Filtr maydonlari — FAQAT shu sahifada ixcham (34 px): o'lcham ichki
+   `ConfigProvider` (LabStatistics.js `SIDE_THEME`) dan keladi, CSS bilan
+   majburlanmaydi. */
 .ls3-presets .ant-btn { height: 30px; font-size: 13px; border-radius: 8px; }
 
 /* Keng ko'rsatkichlar jadvali: sarlavhalar bir qatorda, qisqa (to'liq nomi — title) */

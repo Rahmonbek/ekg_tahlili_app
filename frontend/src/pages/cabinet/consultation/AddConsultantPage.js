@@ -5,7 +5,7 @@ import {
     Button, Table, Modal, Form, InputNumber, message, Typography, Select
 } from 'antd';
 import { ArrowLeftOutlined, SearchOutlined, UserAddOutlined } from '@ant-design/icons';
-import Cleave from 'cleave.js/react';
+import PhoneInput from '../../../components/shared/PhoneInput';
 import {
     searchDoctors,
     inviteDoctor,
@@ -195,17 +195,9 @@ export default function AddConsultantPage() {
                 </div>
                 <div className="consultation-body">
                     <div className="consultation-filter-grid consultation-filter-grid-consultants">
-                        <Cleave
-                            options={{
-                                prefix: '+998',
-                                delimiters: [' (', ') ', '-', '-'],
-                                blocks: [4, 2, 3, 2, 2],
-                                numericOnly: true,
-                            }}
+                        <PhoneInput
                             value={filters.phone}
                             onChange={(e) => updateFilter('phone', e.target.value)}
-                            placeholder="+998 (__) ___-__-__"
-                            className="ant-input claveInput"
                         />
                         <Select
                             allowClear

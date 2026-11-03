@@ -4,7 +4,7 @@ import { FaBars, FaCircleInfo, FaHandSparkles } from 'react-icons/fa6'
 import { MdOutlinePendingActions } from 'react-icons/md'
 import { useStore } from '../store/Store'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { deleteTokenAccess } from '../host/Host'
+import { deleteTokenAccess, LOGIN_PATH } from '../host/Host'
 import { useTranslation } from 'react-i18next'
 import maleStaff from '../images/avatars/male.jpg'
 import femaleStaff from '../images/avatars/female.jpg'
@@ -46,11 +46,15 @@ export default function Header() {
 
   const crumbs = buildCrumbs(location.pathname);
 
+  // To'liq qayta yuklash bilan kirish sahifasiga: ilgari `navigate("/")`
+  // edi va token o'chgach kabinet hali yuborayotgan so'rovlarni `Api.js`
+  // interceptori "sessiya tugadi" deb ushlab, o'zi chiqqan foydalanuvchiga
+  // "Sessiya muddati tugadi" xabarini ko'rsatardi.
   const handleExit = () => {
     deleteTokenAccess();
-    navigate("/");
     setuser_id(null);
     setuser(null);
+    window.location.replace(LOGIN_PATH);
   };
 
   const headerAvatar = user?.doctor?.avatar

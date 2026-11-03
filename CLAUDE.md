@@ -293,7 +293,8 @@ klinika `users.clinic_id` dan, boshqa klinika ko'rinmaydi).
   bir qatorda, to'liq nomi `title` da; qator → `IndicatorDrawer`) /
   `StatsSignals` (BEMOR bo'yicha guruhlangan). Bloklar `statsUi.js` (`Stat`,
   `Card`, `Ring`, `PctBar`), uslub `LabStatistics.css` (`ls3-*`; Drawer
-  `body` ga chiziladi — `rootClassName="ls3"`; filtr maydonlari 34 px va
+  `body` ga chiziladi — `rootClassName="ls3"`; filtr maydonlari 34 px
+  (ichki `ConfigProvider` `SIDE_THEME`, CSS `!important` emas) va
   jadval sarlavhalari katta harfsiz — FAQAT `.ls3` ichida, App.css
   o'zgarmagan). **PDF**: «PDF yuklab olish» → `GET api/lab-statistics/pdf`
   (shu filtrlar, interfeys tili) → `PdfReportService.GenerateLabStatisticsReport`
@@ -428,6 +429,25 @@ Istalgan API **401** qaytarsa `Api.js` interceptori tokenni o'chirib,
 `/login?session=expired` ga yo'naltiradi va login sahifasi sababini
 ko'rsatadi. Ochiq sahifalarda (login/register/reset) 401 yo'naltirilmaydi
 — u yerda 401 "parol noto'g'ri" degani.
+
+### Forma maydonlari (frontend, 2026-11-03)
+
+Yagona manba — `theme.js` (antd tokenlari) + `App.css` oxiridagi
+"FORMA MAYDONLARI" bo'limi. Barcha maydonlar: balandlik 40 px (≤768 px da
+42 px — `mobileTheme`, `index.js` media query; CSS da `--control-h`),
+radius 10 px, matn chap ramkadan 12 px, shrift Open Sans (`fontFamily`
+tokeni — busiz antd Segoe UI da chizardi). Yonidagi tugma (`.btn_form`,
+`Input.Search enterButton`) ham shu balandlik va radiusda.
+
+* Maydon ichiga `!important` YOZMANG — tokenni o'zgartiring. Ilgari ~40 ta
+  shunday qoida select qiymatini 19 px ichkariga surib, `.ant-select` ni
+  42 px, ramkasini 40 px qilib qo'ygan edi.
+* Ma'lumot kiritish formalarida bezak ikonkasi (`prefix`) qo'yilmaydi —
+  aralash bo'lsa matn har xil joydan boshlanardi. Ikonka faqat qidiruv
+  maydonida va login juftligida (telefon + parol).
+* Telefon — `components/shared/PhoneInput` (`.claveInput`, antd `Input` bilan
+  bir xil chizilgan); o'z `Cleave` ingizni yozmang.
+* Sahifaga xos ixcham maydon — ichki `ConfigProvider` (masalan `.ls3`).
 
 ### PDF hujjatlar uslubi (`PdfReportService*.cs`)
 

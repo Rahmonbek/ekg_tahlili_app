@@ -42,8 +42,9 @@
     justify-content: center;
     gap: 6px;
     min-width: 0;
-    height: 40px;
-    border-radius: 10px !important;
+    /* Balandlik va radius mavzudan (`theme.js`): qat'iy 40 px mobilda
+       maydonlardan (42 px) past, `size="small"` tugmalarni esa
+       kattalashtirib yuborardi */
     font-size: var(--small_size);
     font-weight: 600;
     box-shadow: none;
