@@ -1060,6 +1060,8 @@ async def retry_analyse(
     gender: Optional[str] = Form(None),
     lang: str = Form("uz"),
     age: Optional[int] = Form(None),
+    # Arxiv importining qayta urinishi — arzon (flex) tarifda
+    bulk: bool = Form(False),
 ):
     """Xatolik bilan tugagan tahlilni MAVJUD fayl(lar) bilan qayta ishga tushirish.
 
@@ -1114,7 +1116,7 @@ async def retry_analyse(
         ai_lang=(lang or 'uz')[:5],
     )
 
-    _start_lab_ai(id, uploads, age, gender, lang, extraction=extraction)
+    _start_lab_ai(id, uploads, age, gender, lang, bulk=bulk, extraction=extraction)
     logger.info("Laboratoriya: qayta tahlilga yuborildi: analyse_id=%d, fayllar=%d, o'qilgan qatorlar=%s",
                 id, len(uploads), "bor" if extraction else "yo'q")
 

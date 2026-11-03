@@ -152,6 +152,15 @@ def _tier_unavailable(exc: Exception) -> bool:
     return status == 400 and ("service_tier" in msg or "flex" in msg)
 
 
+def _sdk_has_cache_key(client) -> bool:
+    """O'rnatilgan `openai` paketi `prompt_cache_key` ni qo'llaydimi (eski serverlar)."""
+    import inspect
+    try:
+        return "prompt_cache_key" in inspect.signature(client.responses.create).parameters
+    except (TypeError, ValueError, AttributeError):
+        return False
+
+
 def create_response(client, *, module: str, analysis_id, step: str, bulk: bool = False, **params):
     """`client.responses.create` + xarajat logi (`ai_usage`) + ommaviy tarif.
 
@@ -165,6 +174,9 @@ def create_response(client, *, module: str, analysis_id, step: str, bulk: bool =
     # boshi keshdan olinadi (kalitsiz so'rovlar turli serverga tushib, kesh
     # ko'pincha ishlamasdi)
     params.setdefault("prompt_cache_key", f"nmed-{module}-{step}")
+    if not _sdk_has_cache_key(client):
+        # Eski `openai` paketi bu parametrni bilmaydi — so'rov sinmasin
+        params.pop("prompt_cache_key", None)
     if tier:
         try:
             resp = client.responses.create(service_tier=tier, **params)

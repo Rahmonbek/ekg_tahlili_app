@@ -9,6 +9,8 @@
      Fayllarda «Дата:» bo'lmasa papka nomidagi sana yuboriladi.
   3. Holat (`state.json`) har qadamdan keyin yoziladi — to'xtab qolsa
      qaytadan ishga tushirilganda davom etadi, takror yuklamaydi.
+  4. Tartib — tahlil sanasi bo'yicha ENG YANGISIDAN eskisiga (bemorlar
+     aralash); sanasiz tahlillar oxirida. Yuklanganlari o'tkazib yuboriladi.
 
 AI so'rovlari uchun API da UMUMIY chegara bor (daqiqasiga 10 ta, barcha
 foydalanuvchilar uchun) — `--rate` dan oshirmang. 429 javobida skript o'zi
@@ -18,7 +20,9 @@ turadi — tezlik serverning o'z imkoniyatiga moslashadi.
 Buyruqlar:
     run    — yuklash (birinchi marta `--limit 30` bilan sinab ko'ring)
     check  — yuborilgan tahlillar holatini yangilash va hisobot
-    retry  — AI xatosi (-1) bilan tugaganlarini qayta yuborish
+    retry  — AI xatosi (-1) bilan tugaganlarini qayta yuborish (bemor yoshi
+             va jinsi bilan). `--all-errors` — bazadagi shu klinikaning
+             BOSHQA xato tahlillari ham (import qilinmaganlari)
 
 Misol (serverda):
     venv/bin/python tools/lab_import/import_labs.py run --plan ~/import/plan.json \
@@ -205,6 +209,30 @@ def ai_failing(api, recent):
     return len(statuses) == GUARD_SAMPLE and all(s == -1 for s in statuses)
 
 
+def pending_uploads(plan, state):
+    """Yuklanmagan tahlillar — sanasi bo'yicha ENG YANGISIDAN, sanasizlar oxirida.
+
+    Ilgari bemor tartibida yuklanardi va statistikada oylar aralash to'lib
+    borardi; endi oxirgi oylar birinchi to'liq bo'ladi.
+    """
+    todo = [(p, i, u) for p in plan for i, u in enumerate(p["uploads"])
+            if f"{p['key']}#{i}" not in state["uploads"]]
+    todo.sort(key=lambda t: t[2].get("date") or "", reverse=True)
+    return todo
+
+
+def patient_meta(p, on_date):
+    """AI uchun yosh va jins (ma'lum bo'lsa)."""
+    data = {}
+    age = age_at(p["birthdate"], on_date)
+    if age is not None and 0 <= age <= 120:
+        data["age"] = str(age)
+    gender = {"male": "erkak", "female": "ayol"}.get(p.get("gender"))
+    if gender:
+        data["gender"] = gender
+    return data
+
+
 def cmd_run(a):
     api = Api(a.api, a.token_file)
     plan = json.load(open(a.plan, encoding="utf-8"))
@@ -213,62 +241,54 @@ def cmd_run(a):
     sent = 0
     last_post = 0.0
     recent = []  # (lab_id, yuborilgan vaqt) — AI holatini kuzatish uchun
-    for p in plan:
+    todo = pending_uploads(plan, state)
+    if todo:
+        log(f"yuklanmagan: {len(todo)} ta, {todo[0][2].get('date')} dan {todo[-1][2].get('date')} gacha")
+    for p, i, u in todo:
         if a.limit and sent >= a.limit:
             break
-        todo = [(i, u) for i, u in enumerate(p["uploads"]) if f"{p['key']}#{i}" not in state["uploads"]]
-        if not todo:
-            continue
         pid = state["patients"].get(p["key"])
         if not pid:
             pid, how = find_or_create_patient(api, p)
             state["patients"][p["key"]] = pid
             save_state(a.state, state)
             log(f"bemor {how}: {p['lastname']} {p['firstname']} {p['birthdate'][:4]} → id {pid}")
-        gender = {"male": "erkak", "female": "ayol"}.get(p.get("gender"))
-        for i, u in todo:
-            if a.limit and sent >= a.limit:
-                break
-            ukey = f"{p['key']}#{i}"
-            # Mazmun xotiraga o'qiladi: qayta urinishda fayl obyekti oxirigacha
-            # o'qilgan bo'lib, server "Yuklangan fayl bo'sh" derdi
-            files = []
-            for rel in u["files"]:
-                with open(os.path.join(a.root, rel), "rb") as fh:
-                    files.append(("file", (os.path.basename(rel), fh.read(), mimetypes.guess_type(rel)[0] or XLSX)))
-            # bulk — AI arzon tarifda (flex): arxiv shoshilinch emas
-            data = {"patcient_id": str(pid), "lang": a.lang, "bulk": "true"}
-            age = age_at(p["birthdate"], u.get("date"))
-            if age is not None and 0 <= age <= 120:
-                data["age"] = str(age)
-            if gender:
-                data["gender"] = gender
-            if u.get("date_from_folder") and u.get("date"):
-                data["analysis_date"] = u["date"]
-            wait_for_queue(a.max_queue)
-            wait = last_post + interval - time.time()
-            if wait > 0:
-                time.sleep(wait)
-            last_post = time.time()
-            r = api.call("POST", "lab-analyses/analyze", files=files, data=data)
-            if r.ok:
-                lab_id = r.json().get("lab_id")
-                state["uploads"][ukey] = {"lab_id": lab_id, "status": 0, "patient_id": pid}
-                log(f"  lab {lab_id}: {len(u['files'])} fayl, {u.get('date')}")
-                recent = (recent + [(lab_id, time.time())])[-60:]
-            elif r.status_code == 409:
-                state["uploads"][ukey] = {"duplicate": True, "patient_id": pid}
-                log(f"  takror — avval yuklangan: {u['files'][0]}")
-            else:
-                state["uploads"][ukey] = {"error": f"{r.status_code} {r.text[:300]}", "patient_id": pid}
-                log(f"  XATO {r.status_code}: {u['files'][0]} — {r.text[:200]}")
-            save_state(a.state, state)
-            sent += 1
-            if sent % GUARD_EVERY == 0 and ai_failing(api, recent):
-                log("TO'XTATILDI: oxirgi tahlillarning hammasi AI xatosi bilan tugadi.")
-                log("OpenAI balansini tekshiring. To'lovdan keyin: check → retry → run (joyidan davom etadi).")
-                summary(state)
-                sys.exit(2)
+        ukey = f"{p['key']}#{i}"
+        # Mazmun xotiraga o'qiladi: qayta urinishda fayl obyekti oxirigacha
+        # o'qilgan bo'lib, server "Yuklangan fayl bo'sh" derdi
+        files = []
+        for rel in u["files"]:
+            with open(os.path.join(a.root, rel), "rb") as fh:
+                files.append(("file", (os.path.basename(rel), fh.read(), mimetypes.guess_type(rel)[0] or XLSX)))
+        # bulk — AI arzon tarifda (flex): arxiv shoshilinch emas
+        data = {"patcient_id": str(pid), "lang": a.lang, "bulk": "true",
+                **patient_meta(p, u.get("date"))}
+        if u.get("date_from_folder") and u.get("date"):
+            data["analysis_date"] = u["date"]
+        wait_for_queue(a.max_queue)
+        wait = last_post + interval - time.time()
+        if wait > 0:
+            time.sleep(wait)
+        last_post = time.time()
+        r = api.call("POST", "lab-analyses/analyze", files=files, data=data)
+        if r.ok:
+            lab_id = r.json().get("lab_id")
+            state["uploads"][ukey] = {"lab_id": lab_id, "status": 0, "patient_id": pid}
+            log(f"  lab {lab_id}: {len(u['files'])} fayl, {u.get('date')}")
+            recent = (recent + [(lab_id, time.time())])[-60:]
+        elif r.status_code == 409:
+            state["uploads"][ukey] = {"duplicate": True, "patient_id": pid}
+            log(f"  takror — avval yuklangan: {u['files'][0]}")
+        else:
+            state["uploads"][ukey] = {"error": f"{r.status_code} {r.text[:300]}", "patient_id": pid}
+            log(f"  XATO {r.status_code}: {u['files'][0]} — {r.text[:200]}")
+        save_state(a.state, state)
+        sent += 1
+        if sent % GUARD_EVERY == 0 and ai_failing(api, recent):
+            log("TO'XTATILDI: oxirgi tahlillarning hammasi AI xatosi bilan tugadi.")
+            log("OpenAI balansini tekshiring. To'lovdan keyin: check → retry → run (joyidan davom etadi).")
+            summary(state)
+            sys.exit(2)
     log(f"yuborildi: {sent}")
     summary(state)
 
@@ -289,18 +309,62 @@ def cmd_check(a):
     summary(state)
 
 
+def db_errors(exclude_ids):
+    """Bazadagi xato (-1) lab tahlillari, import holatida yo'qlari — yosh/jins bilan."""
+    if server_queue() is None:
+        sys.exit("--all-errors faqat serverda (baza ochiladigan joyda) ishlaydi")
+    SessionLocal, text = _db_session
+    with SessionLocal() as db:
+        rows = db.execute(text(
+            "SELECT a.id, p.birthdate, p.gender, a.analysis_date FROM lab_analyses a "
+            "LEFT JOIN patients p ON p.id = a.patient_id WHERE a.status = -1 ORDER BY a.id DESC")).fetchall()
+    out = []
+    for lab_id, birth, gender, adate in rows:
+        if lab_id in exclude_ids:
+            continue
+        data = {}
+        if birth:
+            age = age_at(str(birth)[:10], str(adate)[:10] if adate else None)
+            if age is not None and 0 <= age <= 120:
+                data["age"] = str(age)
+        g = {True: "erkak", False: "ayol"}.get(gender)
+        if g:
+            data["gender"] = g
+        out.append((lab_id, data))
+    return out
+
+
 def cmd_retry(a):
     api = Api(a.api, a.token_file)
     state = load_state(a.state)
     interval = 60.0 / a.rate
+    plan = {}
+    if os.path.exists(a.plan):
+        for p in json.load(open(a.plan, encoding="utf-8")):
+            for i, u in enumerate(p["uploads"]):
+                plan[f"{p['key']}#{i}"] = (p, u)
+    jobs = []  # (lab_id, yosh/jins, holat yozuvi | None)
     for key, u in state["uploads"].items():
         if u.get("lab_id") and u.get("status") == -1:
-            r = api.call("POST", "lab-analyses/retry", data={"id": str(u["lab_id"]), "lang": a.lang})
-            log(f"retry lab {u['lab_id']}: {r.status_code}")
-            if r.ok:
-                u["status"] = 0
-            save_state(a.state, state)
-            time.sleep(interval)
+            # Yosh va jins ham yuboriladi — ilgari retry ularsiz ketardi va AI
+            # me'yorni jinsga qarab tanlay olmasdi
+            meta = {}
+            if key in plan:
+                meta = patient_meta(plan[key][0], plan[key][1].get("date"))
+            jobs.append((u["lab_id"], meta, u))
+    if a.all_errors:
+        known = {u.get("lab_id") for u in state["uploads"].values()}
+        jobs += [(lid, meta, None) for lid, meta in db_errors(known)]
+    log(f"qayta yuboriladi: {len(jobs)} ta")
+    for lab_id, meta, u in jobs:
+        wait_for_queue(a.max_queue)
+        r = api.call("POST", "lab-analyses/retry",
+                     data={"id": str(lab_id), "lang": a.lang, "bulk": "true", **meta})
+        log(f"retry lab {lab_id}: {r.status_code}{'' if r.ok else ' ' + r.text[:150]}")
+        if r.ok and u is not None:
+            u["status"] = 0
+        save_state(a.state, state)
+        time.sleep(interval)
     summary(state)
 
 
@@ -327,6 +391,8 @@ def main():
     ap.add_argument("--limit", type=int, default=0, help="shuncha tahlildan keyin to'xtash (sinov)")
     ap.add_argument("--max-queue", type=int, default=10,
                     help="serverda AI kutayotgan tahlillar shundan ko'p bo'lsa kutiladi (0 — o'chiq)")
+    ap.add_argument("--all-errors", action="store_true",
+                    help="retry: bazadagi import qilinmagan xato tahlillar ham")
     a = ap.parse_args()
     if a.command == "run" and not a.root:
         sys.exit("--root kerak")
