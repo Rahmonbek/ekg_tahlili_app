@@ -3,7 +3,7 @@ import SideBar from '../../components/SideBar'
 import { TourProvider } from '../../components/shared/TourProvider'
 import Header from '../../components/Header'
 import { useTranslation } from 'react-i18next'
-import { Route, Routes, Navigate } from 'react-router-dom'
+import { Route, Routes, Navigate, useParams } from 'react-router-dom'
 import ClinicInfo from './pages/ClinicInfo'
 import EcgAnalyzer from './ecg_analyse/EcgAnalyzer'
 import EcgAnalysesList from './ecg_analyse/EcgAnalysesList'
@@ -56,6 +56,15 @@ import DoctorClinicHistoryPage from './consultation/DoctorClinicHistoryPage'
 import DoctorConsultationsPage from './consultation/DoctorConsultationsPage'
 import ConsultationDetailDoctorPage from './consultation/ConsultationDetailDoctorPage'
 import TableScrollHint from '../../components/shared/TableScrollHint';
+import SaDashboard from './superadmin/SaDashboard'
+import SaClinics from './superadmin/SaClinics'
+import SaClinicDetail from './superadmin/SaClinicDetail'
+import SaUsers from './superadmin/SaUsers'
+import SaPatients from './superadmin/SaPatients'
+import SaAnalyses from './superadmin/SaAnalyses'
+import SaDictionaries from './superadmin/SaDictionaries'
+import SaAiUsage from './superadmin/SaAiUsage'
+import ImpersonationBanner from './superadmin/ImpersonationBanner'
 
 // ─── Rol asosida himoya ──────────────────────────────────────────────────────
 const ProtectedRoute = ({ allowedRoles, userRole, children }) => {
@@ -63,6 +72,15 @@ const ProtectedRoute = ({ allowedRoles, userRole, children }) => {
         return children
     }
     return <Navigate to="/" replace />
+}
+
+// ─── SuperAdmin: klinika tahlilini ko'rish sahifalari ─────────────────────────
+// Mavjud `/…/view/:id` sahifalari tahlilni foydalanuvchining KLINIKASI bilan
+// so'raydi; SuperAdminda klinika yo'q → 401 → sessiya o'chardi (bemor
+// kartasidagi qatorni bosganda). U o'z kabinetidagi tafsilotga yo'naltiriladi.
+const SaViewRedirect = ({ type }) => {
+    const { id } = useParams()
+    return <Navigate to={`/sa/analyses?open=${type}-${id}`} replace />
 }
 
 // ─── Shifoxona faollik gate: is_active=false bo'lsa blok xabari ko'rsatadi ────
@@ -119,11 +137,15 @@ export default function Main() {
                 {user != null ? <div className='content'>
                     {/* Gorizontal aylantiriladigan jadvallarga ishora (mobil) */}
                     <TableScrollHint />
+                    {/* SuperAdmin xodim sifatida kirgan bo'lsa — qaytish tugmasi */}
+                    <ImpersonationBanner />
 
                     <Routes>
                         {/* ── Bosh sahifa va Dashboard ───────────────────────── */}
                         <Route path="/" element={
-                            user.roleId === 2 || user.roleId === 3
+                            user.roleId === 1
+                                ? <SaDashboard />
+                                : user.roleId === 2 || user.roleId === 3
                                 ? <Dashboard />
                                 : <ClinicActivationGate isActive={clinicIsActive}>
                                     <EcgAnalysesList />
@@ -210,24 +232,32 @@ export default function Main() {
 
                         {/* ── Ko'rish sahifalari — shifoxona faol bo'lsa ochiladi ── */}
                         <Route path="/ecg-analyses/view/:id" element={
+                            user.roleId === 1 ? <SaViewRedirect type="ecg" /> : (
                             <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
                                 <EcgAnalyseView />
                             </ClinicGatedRoute>
+                            )
                         } />
                         <Route path="/holter-analyses/view/:id" element={
+                            user.roleId === 1 ? <SaViewRedirect type="holter" /> : (
                             <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
                                 <HolterAnalyseView />
                             </ClinicGatedRoute>
+                            )
                         } />
                         <Route path="/smad-analyses/view/:id" element={
+                            user.roleId === 1 ? <SaViewRedirect type="smad" /> : (
                             <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
                                 <SmadAnalyseView />
                             </ClinicGatedRoute>
+                            )
                         } />
                         <Route path="/lab-analyses/view/:id" element={
+                            user.roleId === 1 ? <SaViewRedirect type="lab" /> : (
                             <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
                                 <LabAnalyseView />
                             </ClinicGatedRoute>
+                            )
                         } />
                         <Route path="/patient-diagnoses/view/:id" element={
                             <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
@@ -247,9 +277,11 @@ export default function Main() {
                             </ClinicGatedRoute>
                         } />
                         <Route path="/parasitology-analyses/view/:id" element={
+                            user.roleId === 1 ? <SaViewRedirect type="parasitology" /> : (
                             <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
                                 <ParasitologyAnalyseView />
                             </ClinicGatedRoute>
+                            )
                         } />
 
                         {/* ── Bemorlar — shifoxona faol bo'lsa ochiladi ── */}
@@ -294,9 +326,11 @@ export default function Main() {
                             </ClinicGatedRoute>
                         } />
                         <Route path="/combined-analyses/view/:id" element={
+                            user.roleId === 1 ? <SaViewRedirect type="combined" /> : (
                             <ClinicGatedRoute allowedRoles={[]} userRole={user.roleId} clinicIsActive={clinicIsActive}>
                                 <CombinedAnalyseView />
                             </ClinicGatedRoute>
+                            )
                         } />
 
                         {/* ── Video Konferensiya — Admin/Direktor/Shifokor ── */}
@@ -389,6 +423,21 @@ export default function Main() {
                                 <SystemStatus />
                             </ProtectedRoute>
                         } />
+
+                        {/* ── SuperAdmin kabineti (tasks-superadmin.md) ── */}
+                        {[
+                            ['/sa/clinics', <SaClinics />],
+                            ['/sa/clinics/:id', <SaClinicDetail />],
+                            ['/sa/users', <SaUsers />],
+                            ['/sa/patients', <SaPatients />],
+                            ['/sa/analyses', <SaAnalyses />],
+                            ['/sa/dictionaries', <SaDictionaries />],
+                            ['/sa/ai-usage', <SaAiUsage />],
+                        ].map(([path, element]) => (
+                            <Route key={path} path={path} element={
+                                <ProtectedRoute allowedRoles={[1]} userRole={user.roleId}>{element}</ProtectedRoute>
+                            } />
+                        ))}
 
                         {/* Tizimga kirgan foydalanuvchi `/login` yoki `/register`
                             manziliga o'tsa 404 ko'rsatish noto'g'ri — u allaqachon

@@ -15,6 +15,7 @@ import { buildCrumbs } from '../tools/breadcrumbs'
 import VideoCallHeaderIndicator from './video/VideoCallHeaderIndicator'
 import { imgApi } from '../host/Host'
 import { useTour } from './shared/TourProvider';
+import { clearImpersonation } from '../pages/cabinet/superadmin/saCommon';
 import { Tooltip } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 
@@ -52,6 +53,8 @@ export default function Header() {
   // "Sessiya muddati tugadi" xabarini ko'rsatardi.
   const handleExit = () => {
     deleteTokenAccess();
+    // SuperAdmin xodim nomidan kirgan bo'lsa — saqlangan tokeni ham o'chadi
+    clearImpersonation();
     setuser_id(null);
     setuser(null);
     window.location.replace(LOGIN_PATH);

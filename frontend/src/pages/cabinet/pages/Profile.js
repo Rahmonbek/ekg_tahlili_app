@@ -79,14 +79,19 @@ export default function Profile() {
                                 <Descriptions.Item label={t('phone_number')}>
                                     {phone ? formatPhoneNumberForForm(phone) : '—'}
                                 </Descriptions.Item>
+                                {/* SuperAdminning klinikasi yo'q — "Faol emas" chalg'itardi */}
+                                {user?.roleId !== RoleConstants.SUPER_ADMIN && (
                                 <Descriptions.Item label={t('clinic', { defaultValue: 'Shifoxona' })}>
                                     {user?.clinic?.clinicName || '—'}
                                 </Descriptions.Item>
+                                )}
+                                {user?.roleId !== RoleConstants.SUPER_ADMIN && (
                                 <Descriptions.Item label={t('clinic_status', { defaultValue: 'Shifoxona holati' })}>
                                     {user?.clinic?.isActive
                                         ? <Tag color="success">{t('active', { defaultValue: 'Faol' })}</Tag>
                                         : <Tag color="warning">{t('not_active', { defaultValue: 'Faol emas' })}</Tag>}
                                 </Descriptions.Item>
+                                )}
                             </Descriptions>
                         </Card>
                     </Col>

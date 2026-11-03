@@ -5,12 +5,29 @@ import { MdOutlineMedicalInformation } from "react-icons/md";
 import { GiTestTubes } from "react-icons/gi";
 import { RiPulseLine } from 'react-icons/ri';
 import { GiMicroscope, GiBrain } from 'react-icons/gi';
-import { VideoCameraOutlined, TeamOutlined, MedicineBoxOutlined, SafetyCertificateOutlined, DashboardOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { VideoCameraOutlined, TeamOutlined, MedicineBoxOutlined, SafetyCertificateOutlined, DashboardOutlined, QuestionCircleOutlined, AppstoreOutlined, BankOutlined, UserOutlined, FileSearchOutlined, BookOutlined, RobotOutlined } from '@ant-design/icons';
+
+// Klinika ichidagi ish bandlari. SuperAdmin (1) ga ko'rsatilmaydi: uning
+// klinikasi yo'q, bu ro'yxatlar esa klinika bo'yicha filtrlanadi — u
+// platformani o'zining `/sa/*` sahifalaridan kuzatadi (tasks-superadmin.md).
+const CLINIC_ROLES = [2, 3, 4, 5];
+
+// SuperAdmin kabineti (rol 1)
+const SUPERADMIN_ROUTES = [
+    { path: '/', icon: <AppstoreOutlined />, title: 'sa_dashboard', tools: 'sa-dashboard', role_id: [1], unread_key: null, requires_active: false },
+    { path: '/sa/clinics', icon: <BankOutlined />, title: 'sa_clinics', tools: 'sa/clinics', role_id: [1], unread_key: null, requires_active: false },
+    { path: '/sa/users', icon: <UserOutlined />, title: 'sa_users', tools: 'sa/users', role_id: [1], unread_key: null, requires_active: false },
+    { path: '/sa/patients', icon: <FaPeopleGroup />, title: 'sa_patients', tools: 'sa/patients', role_id: [1], unread_key: null, requires_active: false },
+    { path: '/sa/analyses', icon: <FileSearchOutlined />, title: 'sa_analyses', tools: 'sa/analyses', role_id: [1], unread_key: null, requires_active: false },
+    { path: '/sa/dictionaries', icon: <BookOutlined />, title: 'sa_dictionaries', tools: 'sa/dictionaries', role_id: [1], unread_key: null, requires_active: false },
+    { path: '/sa/ai-usage', icon: <RobotOutlined />, title: 'sa_ai_usage', tools: 'sa/ai-usage', role_id: [1], unread_key: null, requires_active: false },
+];
 // Yon paneldagi nomlar ATAYLAB alohida kalitlarda (`nav_*`).
 // `analyse_ecg` kabi kalitlar sahifa sarlavhalarida, teglarda va jadval
 // ustunlarida ham ishlatiladi — ularni qisqartirish o'sha joylarni ham
 // o'zgartirib yuborardi (masalan bemor kartasidagi "EKG tahlillari" tegi).
 export const routers = [
+    ...SUPERADMIN_ROUTES,
     {
         path: '/doctor',
         icon: <FaUserDoctor />,
@@ -26,7 +43,7 @@ export const routers = [
         icon: <FaHeartbeat />,
         title: "nav_ecg",
         tools: "ecg-analyses",
-        role_id: [],
+        role_id: CLINIC_ROLES,
         unread_key: 'ecg_unread',
         requires_active: true
     },
@@ -35,7 +52,7 @@ export const routers = [
         icon: <RiPulseLine />,
         title: "nav_holter",
         tools: "holter-analyses",
-        role_id: [],
+        role_id: CLINIC_ROLES,
         unread_key: 'holter_unread',
         requires_active: true
     },
@@ -44,7 +61,7 @@ export const routers = [
         icon: <FaChartLine />,
         title: "nav_smad",
         tools: "smad-analyses",
-        role_id: [],
+        role_id: CLINIC_ROLES,
         unread_key: 'smad_unread',
         requires_active: true
     },
@@ -53,7 +70,7 @@ export const routers = [
         icon: <GiTestTubes />,
         title: "nav_lab",
         tools: "lab-analyses",
-        role_id: [],
+        role_id: CLINIC_ROLES,
         unread_key: 'lab_unread',
         requires_active: true
     },
@@ -83,7 +100,7 @@ export const routers = [
         icon: <GiBrain />,
         title: "nav_combined",
         tools: "combined-analyses",
-        role_id: [],
+        role_id: CLINIC_ROLES,
         unread_key: null,
         requires_active: true
     },
@@ -94,7 +111,7 @@ export const routers = [
         icon: <FaPeopleGroup />,
         title: "patcients",
         tools: "patcients",
-        role_id: [],
+        role_id: CLINIC_ROLES,
         unread_key: null,
         requires_active: true
     },

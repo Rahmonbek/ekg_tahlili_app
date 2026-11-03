@@ -44,10 +44,6 @@ public class SystemStatusController : ControllerBase
     [HttpGet("status")]
     public async Task<IActionResult> GetStatus()
     {
-        var clinicId = await _currentUser.GetClinicIdAsync();
-        if (clinicId == null)
-            return Unauthorized(new { message = "Klinika aniqlanmadi" });
-
         // ── 1. Baza ────────────────────────────────────────────────────
         bool dbOk;
         try
@@ -85,7 +81,9 @@ public class SystemStatusController : ControllerBase
             catch { /* format kutilganidek emas — e'tiborsiz */ }
         }
 
-        // ── 3. Oxirgi 24 soatdagi tahlil holati (shu klinika bo'yicha) ──
+        // ── 3. Oxirgi 24 soatdagi tahlil holati (BUTUN platforma bo'yicha) ──
+        // Endpoint faqat SuperAdmin uchun, uning klinikasi yo'q: ilgari bu yerda
+        // `clinicId` talab qilinardi va SuperAdmin 401 olib tizimdan chiqib ketardi.
         var since = DateTime.UtcNow.AddHours(-24);
 
         async Task<(int total, int failed, int pending)> CountAsync<T>(IQueryable<T> q,
@@ -98,25 +96,25 @@ public class SystemStatusController : ControllerBase
         }
 
         var ecg = await CountAsync(
-            _context.ECGAnalyse.Where(x => x.ClinicId == clinicId),
+            _context.ECGAnalyse.AsQueryable(),
             q => q.Where(x => x.CreatedAt >= since),
             q => q.Where(x => x.Status == -1),
             q => q.Where(x => x.Status == 0 || x.Status == 1));
 
         var lab = await CountAsync(
-            _context.LabAnalyse.Where(x => x.ClinicId == clinicId),
+            _context.LabAnalyse.AsQueryable(),
             q => q.Where(x => x.CreatedAt >= since),
             q => q.Where(x => x.Status == -1),
             q => q.Where(x => x.Status == 0 || x.Status == 1));
 
         var holter = await CountAsync(
-            _context.HolterAnalyses.Where(x => x.ClinicId == clinicId),
+            _context.HolterAnalyses.AsQueryable(),
             q => q.Where(x => x.CreatedAt >= since),
             q => q.Where(x => x.Status == -1),
             q => q.Where(x => x.Status == 0 || x.Status == 1));
 
         var smad = await CountAsync(
-            _context.SmadAnalyses.Where(x => x.ClinicId == clinicId),
+            _context.SmadAnalyses.AsQueryable(),
             q => q.Where(x => x.CreatedAt >= since),
             q => q.Where(x => x.Status == -1),
             q => q.Where(x => x.Status == 0 || x.Status == 1));

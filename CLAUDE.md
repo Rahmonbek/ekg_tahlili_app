@@ -332,6 +332,28 @@ klinika `users.clinic_id` dan, boshqa klinika ko'rinmaydi).
   `PdfReportService.Discharge.cs` (shapkada faqat klinika, hujjat raqami
   = ИБ raqami, ixtiyoriy «bemor uchun tavsiyalar» sahifasi).
 
+**SuperAdmin kabineti** (rol 1, `tasks-superadmin.md`) — butun platformani
+kuzatish va boshqarish: panel, klinikalar, xodimlar, bemorlar, barcha 6 turdagi
+tahlillar, spravochniklar + lab katalogi, AI xarajati (`ai_usage`), audit, tizim holati.
+
+* **Login**: migratsiya `20261106000000_SeedSuperAdmin` — `998900000000` /
+  `1q2w3e` (idempotent; production'da ham yaratiladi — parolni almashtiring).
+* SuperAdminning klinikasi YO'Q (`clinic_id = NULL`), mavjud klinika endpointlari
+  esa `GetClinicIdAsync` talab qiladi (yo'q bo'lsa 401 → sessiya o'chadi). Shuning
+  uchun alohida, klinika filtrsiz API: `SuperAdminController` (`api/superadmin/*`,
+  `PolicySuperAdmin`) + `SuperAdminService`. Klinikaga bog'liq menyu bandlari
+  (`routes.js` `CLINIC_ROLES`) superadmindan yashirilgan; `/…/view/:id` manzillari
+  superadmin uchun `/sa/analyses?open=tur-id` ga yo'naltiriladi (`Main.js`
+  `SaViewRedirect`). Yangi klinika sahifasini superadminga ochsangiz — shu xavfni
+  tekshiring.
+* O'chirish qoidasi: tahlili bor klinika/xodim/bemor o'chirilmaydi (409 —
+  faolsizlantiring/bloklang). EKG/Holter/SMAD/Lab — yumshoq o'chirish va tiklash;
+  kompleks va parazitologiya — butunlay.
+* **Xodim sifatida kirish** (`users/{id}/impersonate`, audit `IMPERSONATE`):
+  superadmin tokeni `sessionStorage` `NMED_sa_return` da, sariq banner orqali qaytiladi.
+* Frontend: `pages/cabinet/superadmin/` (`sa-*` uslub, `SuperAdmin.css`; halqalar
+  `statistics/statsUi.Ring` dan), so'rovlar `host/requests/SuperAdminRequest.js`.
+
 ---
 
 ## Arxitektura Hujjatlari
@@ -565,7 +587,7 @@ frontend/src/
 
 | Rol | ID | Tahlil va bemor RO'YXATLARIDA ko'radi |
 |-----|----|--------|
-| SuperAdmin | 1 | Tizim darajasi, statistika |
+| SuperAdmin | 1 | Butun platforma — o'z kabineti `/sa/*` (klinika ro'yxatlari yashirilgan) |
 | Admin | 2 | Klinikasining barcha tahlillari va ularning bemorlari |
 | Direktor | 3 | Admin bilan bir xil |
 | Shifokor | 4 | O'zi yuklagan **YOKI** o'ziga biriktirilgan tahlillar + ularning bemorlari, `is_viewed` badge |

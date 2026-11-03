@@ -1,0 +1,234 @@
+/* SuperAdmin kabineti (`sa-*`). Sarlavha va kartochka ramkasi platformadagi
+   `main_card` bilan bir xil; ichidagi KPI/halqa bloklari laboratoriya
+   statistikasidagi `ls3-*` komponentlaridan (Ring, PctBar) — ularning CSS
+   o'zgaruvchilari shu yerda `.sa` ildizida beriladi. */
+
+.sa {
+  --ls3-ink: #0f172a;
+  --ls3-text: #334155;
+  --ls3-muted: #64748b;
+  --ls3-faint: #94a3b8;
+  --ls3-line: #e2e8f0;
+  --ls3-bg: #f6f8fb;
+  --ls3-card: #ffffff;
+  --ls3-accent: #0f766e;
+  --ls3-accent-soft: #ccfbf1;
+  --ls3-high: #dc2626;
+  --ls3-low: #d97706;
+  --ls3-blue: #2563eb;
+  --sa-primary: #00B39A;
+  --sa-primary-soft: #E6F7F4;
+  --sa-ink: #0f172a;
+  --sa-text: #334155;
+  --sa-muted: #64748b;
+  --sa-line: #e2e8f0;
+  --sa-bg: #f6f8fb;
+  color: var(--sa-text);
+  font-size: 14px;
+}
+
+.sa-muted { color: var(--sa-muted); }
+.sa-num { font-variant-numeric: tabular-nums; }
+.sa-danger { color: #dc2626; font-weight: 600; }
+
+/* ── Sahifa sarlavhasi (main_card h1 ichida) ── */
+.sa .main_card h1 { gap: 12px; flex-wrap: wrap; }
+.sa-head-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.sa-head-sub { font-size: 13px; font-weight: 400; color: var(--sa-muted); margin-left: 8px; }
+
+/* ── Filtr qatori ── */
+.sa-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: end;
+}
+.sa-filter { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.sa-filter label { font-size: 13px; color: var(--sa-muted); font-weight: 600; }
+.sa-filter .ant-select, .sa-filter .ant-picker { width: 100%; }
+
+/* ── KPI kartochkalari ── */
+.sa-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.sa-kpis--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.sa-kpi {
+  background: #fff;
+  border: 1px solid var(--sa-line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  min-width: 0;
+  transition: box-shadow .15s, border-color .15s;
+}
+.sa-kpi--link { cursor: pointer; }
+.sa-kpi--link:hover { border-color: var(--sa-primary); box-shadow: 0 4px 14px rgba(0, 179, 154, .12); }
+.sa-kpi-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  background: var(--sa-primary-soft);
+  color: var(--sa-primary);
+}
+.sa-kpi-body { min-width: 0; }
+.sa-kpi-label { font-size: 13px; color: var(--sa-muted); margin-bottom: 2px; }
+.sa-kpi-value { font-size: 26px; font-weight: 700; line-height: 1.15; color: var(--sa-ink); font-variant-numeric: tabular-nums; }
+.sa-kpi-sub { font-size: 12.5px; color: var(--sa-muted); margin-top: 3px; }
+.sa-kpi-sub b { color: var(--sa-text); }
+.sa-kpi--danger .sa-kpi-icon { background: #fee2e2; color: #dc2626; }
+.sa-kpi--warn .sa-kpi-icon { background: #fef3c7; color: #d97706; }
+.sa-kpi--blue .sa-kpi-icon { background: #dbeafe; color: #2563eb; }
+.sa-kpi--violet .sa-kpi-icon { background: #ede9fe; color: #7c3aed; }
+
+/* ── Panel (ichki kartochka) ── */
+.sa-grid { display: grid; gap: 16px; margin-bottom: 16px; }
+.sa-grid--2 { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+.sa-grid--halves { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sa-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.sa-panel {
+  background: #fff;
+  border: 1px solid var(--sa-line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  min-width: 0;
+}
+.sa-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.sa-panel-head h3 { font-size: 15px; font-weight: 700; color: var(--sa-ink); margin: 0; }
+.sa-panel-head a, .sa-panel-head .ant-btn-link { font-size: 13px; }
+.sa-chart { height: 280px; position: relative; }
+.sa-chart--sm { height: 220px; }
+
+/* Turlar bo'yicha qatorlar */
+.sa-type-rows { display: flex; flex-direction: column; gap: 10px; }
+.sa-type-row { display: grid; grid-template-columns: 110px minmax(0, 1fr) 64px; gap: 10px; align-items: center; }
+.sa-type-name { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--sa-ink); font-size: 13.5px; }
+.sa-type-name i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.sa-type-bar { height: 8px; background: #eef2f7; border-radius: 6px; overflow: hidden; }
+.sa-type-bar span { display: block; height: 100%; border-radius: 6px; }
+.sa-type-val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.sa-type-meta { grid-column: 2 / 4; font-size: 12px; color: var(--sa-muted); margin-top: -6px; }
+
+/* Sodda ro'yxat (oxirgi xatolar, yangi klinikalar) */
+.sa-list { list-style: none; margin: 0; padding: 0; }
+.sa-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid #f1f5f9;
+  min-width: 0;
+}
+.sa-list li:last-child { border-bottom: 0; }
+.sa-list-main { min-width: 0; }
+.sa-list-title { font-weight: 600; color: var(--sa-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sa-list-sub { font-size: 12.5px; color: var(--sa-muted); }
+.sa-empty { color: var(--sa-muted); padding: 18px 0; text-align: center; }
+
+/* Tizim holati belgisi */
+.sa-health { display: flex; gap: 8px; flex-wrap: wrap; }
+.sa-health-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: var(--sa-text);
+  font-weight: 600;
+}
+.sa-health-item i { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; }
+.sa-health-item--ok i { background: #16a34a; }
+.sa-health-item--down i { background: #dc2626; }
+
+/* ── Jadval ── */
+.sa .ant-table-wrapper .ant-table-thead > tr > th { font-weight: 600; color: var(--sa-muted); font-size: 13px; white-space: nowrap; }
+.sa .ant-table-tbody > tr.sa-row-click { cursor: pointer; }
+.sa-cell-main { font-weight: 600; color: var(--sa-ink); }
+.sa-cell-sub { font-size: 12.5px; color: var(--sa-muted); }
+.sa-actions { display: flex; gap: 4px; justify-content: flex-end; flex-wrap: nowrap; }
+
+/* ── Tafsilot sahifasi ── */
+.sa-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px 20px;
+}
+.sa-info-item label { display: block; font-size: 12.5px; color: var(--sa-muted); margin-bottom: 2px; }
+.sa-info-item div { font-weight: 600; color: var(--sa-ink); word-break: break-word; }
+
+/* Tahlil tafsiloti oynasi */
+.sa-drawer-meta { margin-bottom: 16px; }
+.sa-json {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  max-height: 360px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Spravochnik tablari */
+.sa-tabs .ant-tabs-nav { margin-bottom: 14px; }
+
+/* ── Impersonatsiya banneri ── */
+.sa-impersonation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+  border-radius: 10px;
+  padding: 8px 14px;
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1200px) {
+  .sa-grid--2, .sa-grid--3 { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 1100px) {
+  .sa-kpis--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 768px) {
+  .sa-grid--halves { grid-template-columns: minmax(0, 1fr); }
+  .sa-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .sa-kpi { padding: 12px; gap: 10px; }
+  .sa-kpi-icon { width: 34px; height: 34px; font-size: 15px; }
+  .sa-kpi-value { font-size: 21px; }
+  .sa-chart { height: 230px; }
+  .sa-filters { grid-template-columns: minmax(0, 1fr); }
+  .sa-type-row { grid-template-columns: 90px minmax(0, 1fr) 48px; }
+  .sa .ls3-ring--split { flex-direction: column; gap: 14px; }
+}
+@media (max-width: 420px) {
+  /* Telefon: 2 ustun saqlanadi, ikonka yashiriladi — raqam o'qilsin, sahifa cho'zilmasin */
+  .sa-kpi-icon { display: none; }
+  .sa-kpi-value { font-size: 20px; }
+  .sa-kpi-sub { font-size: 12px; }
+}

@@ -27,6 +27,16 @@ export const BREADCRUMB_CONFIG = {
   '/parasitology-analyses': { labelKey: 'parasitology_analyse', parent: '/' },
   '/parasitology-analyzer': { labelKey: 'new_parasitology_analyse', parent: '/parasitology-analyses' },
   '/parasitology-analyses/view': { labelKey: 'view_analyse',    parent: '/parasitology-analyses' },
+  // SuperAdmin kabineti
+  '/sa/clinics':            { labelKey: 'sa_clinics',         parent: '/' },
+  '/sa/clinics/view':       { labelKey: 'sa_clinic',          parent: '/sa/clinics' },
+  '/sa/users':              { labelKey: 'sa_users',           parent: '/' },
+  '/sa/patients':           { labelKey: 'sa_patients',        parent: '/' },
+  '/sa/analyses':           { labelKey: 'sa_analyses',        parent: '/' },
+  '/sa/dictionaries':       { labelKey: 'sa_dictionaries',    parent: '/' },
+  '/sa/ai-usage':           { labelKey: 'sa_ai_usage',        parent: '/' },
+  '/audit-logs':            { labelKey: 'audit_log',          parent: '/' },
+  '/system-status':         { labelKey: 'system_status',      parent: '/' },
 };
 
 /**
@@ -38,7 +48,8 @@ export function buildCrumbs(pathname) {
   // Dinamik ID larni olib tashlash (masalan, /ecg-analyses/view/123 -> /ecg-analyses/view)
   const normalizedPath = pathname
     .replace(/\/doctor\/create\/\d+$/, '/doctor/create')
-    .replace(/\/view\/\d+$/, '/view');
+    .replace(/\/view\/\d+$/, '/view')
+    .replace(/^\/sa\/clinics\/\d+$/, '/sa/clinics/view');
   
   const crumbs = [];
   let current = normalizedPath;

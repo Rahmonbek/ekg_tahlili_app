@@ -59,6 +59,8 @@ export default function SideBar() {
 
         // Root va dashboard sahifalar
         if (path === '/' || path === '/cabinet' || path === '/dashboard') {
+            // SuperAdmin uchun bosh sahifa — uning boshqaruv paneli
+            if (user?.roleId === 1) return item.tools === 'sa-dashboard';
             // Admin/Direktor uchun Dashboard ko'rsatiladi — hech qanday item highlighted bo'lmasin
             if (user && (user.roleId === 2 || user.roleId === 3)) return false;
             // Boshqa rollar uchun ecg-analyses highlighted

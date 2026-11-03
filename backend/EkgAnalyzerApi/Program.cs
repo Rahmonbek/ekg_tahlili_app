@@ -60,6 +60,7 @@ builder.Services.AddScoped<PythonApiProxyService>();
 builder.Services.AddScoped<AuditLogService>();
 builder.Services.AddScoped<ParasitologyAnalyseService>();
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<SuperAdminService>();   // SuperAdmin kabineti (tasks-superadmin.md)
 builder.Services.AddSingleton<IFileStorage, FileStorageService>();
 builder.Services.AddScoped<DocumentVerificationService>();
 builder.Services.AddScoped<PdfReportService>();     // PDF hisobot generatsiyasi
