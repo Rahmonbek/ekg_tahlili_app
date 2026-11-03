@@ -236,7 +236,8 @@ def cmd_run(a):
             for rel in u["files"]:
                 with open(os.path.join(a.root, rel), "rb") as fh:
                     files.append(("file", (os.path.basename(rel), fh.read(), mimetypes.guess_type(rel)[0] or XLSX)))
-            data = {"patcient_id": str(pid), "lang": a.lang}
+            # bulk — AI arzon tarifda (flex): arxiv shoshilinch emas
+            data = {"patcient_id": str(pid), "lang": a.lang, "bulk": "true"}
             age = age_at(p["birthdate"], u.get("date"))
             if age is not None and 0 <= age <= 120:
                 data["age"] = str(age)

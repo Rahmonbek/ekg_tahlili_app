@@ -130,7 +130,7 @@ def translate(ai_answer_data, target_lang: str) -> dict | None:
         return None
 
     client = OpenAI(api_key=OPENAI_API_KEY)
-    response = client.responses.create(
+    response = ai_config.create_response(client, module="translate", analysis_id=None, step="translate",
         # Model va fikrlash chuqurligi bitta joyda (A-11)
         **ai_config.translation_request(),
         input=[{

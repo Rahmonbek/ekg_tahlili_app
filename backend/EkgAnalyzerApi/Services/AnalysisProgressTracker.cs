@@ -219,6 +219,9 @@ public class AnalysisProgressTracker : BackgroundService
     {
         2 => "done",
         -1 => "error",
+        // 3 = fayl tahlil turiga mos emas — foydalanuvchi faylni almashtirishi
+        // kerak; ilgari null qaytib, ko'rsatkich abadiy "davom etmoqda" turardi
+        3 => "error",
         0 or 1 => "loading",
         _ => null
     };

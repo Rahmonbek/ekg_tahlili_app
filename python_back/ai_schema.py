@@ -325,7 +325,12 @@ LAB_DATE_PROPERTY = {
 }
 
 
-def response_format(kind: str, lab_columns: list[str] | None = None) -> dict:
+#: Laboratoriya javobidagi hujjat turi — alohida tasniflash so'rovi o'rniga
+LAB_DOCUMENT_KINDS = ["laboratoriya", "ekg", "holter", "smad", "boshqa", "aniqlanmadi"]
+
+
+def response_format(kind: str, lab_columns: list[str] | None = None,
+                    document_kind: bool = False) -> dict:
     """`client.responses.create(text=...)` uchun format tavsifi.
 
     `kind` — "ecg", "holter", "smad", "combined" yoki "lab". Laboratoriya
@@ -341,6 +346,13 @@ def response_format(kind: str, lab_columns: list[str] | None = None) -> dict:
         # emas, shu sana bilan ishlaydi (`lab_dates`)
         schema["properties"]["analysis_date"] = LAB_DATE_PROPERTY
         schema["required"].append("analysis_date")
+        if document_kind:
+            schema["properties"]["document_kind"] = {
+                "type": "string",
+                "enum": LAB_DOCUMENT_KINDS,
+                "description": "Fayl turi: laboratoriya natijasi bo'lmasa — qaysi hujjatligi.",
+            }
+            schema["required"].append("document_kind")
     else:
         schema = SCHEMAS[kind]
     return {

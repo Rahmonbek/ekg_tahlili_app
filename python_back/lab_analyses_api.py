@@ -38,7 +38,9 @@ import lab_units
 import lab_catalog
 import excel_to_text
 import lab_dates
+import lab_split
 from document_classifier import (
+    DocumentMismatch,
     classify_document,
     STATUS_DONE,
     STATUS_ERROR,
@@ -102,40 +104,48 @@ def openai_upload_file(api_key: str, file_bytes: bytes, filename: str = "lab.png
         raise RuntimeError(f"OpenAI file upload failed: {e}")
 
 def compose_prompt_for_openai(age, gender, lang, indicators: str) -> str:
-    """Laboratoriya prompti.
+    """Laboratoriya prompti (statik qism + bemor ma'lumoti va til)."""
+    return lab_prompt_static(indicators) + lab_prompt_tail(age, gender, lang)
 
-    `indicators` — `lab_catalog.prompt_lines(db)`: ko'rsatkichlar ro'yxati
-    `lab_value_types` katalogidan (ilgari bu yerda 137 qator qo'lda yozilgan
-    edi va har yangi ko'rsatkichda kodni o'zgartirish kerak edi).
-    """
-    prompt_header = ""
+
+def lab_prompt_tail(age, gender, lang) -> str:
+    """Promptning o'zgaruvchan qismi: bemor ma'lumotlari va javob tili."""
     language = (
     "O'ZBEK" if lang == 'uz'
     else "RUS" if lang == 'ru'
     else "INGLIZ" if lang == 'en'
     else "O'ZBEK"
     )
-    # Bemor ma'lumotlari
+    tail = ""
     if age is not None or gender is not None:
-        prompt_header += "Bemor ma'lumotlari:"
+        tail += "\nBemor ma'lumotlari:"
         if age is not None:
-            prompt_header += f"\n - Yoshi {age}"
+            tail += f"\n - Yoshi {age}"
         if gender is not None:
-            prompt_header += f"\n - Jinsi {gender}"
+            tail += f"\n - Jinsi {gender}"
+    return tail + f"\nJavob tili: {language}."
 
-    
-        
-    
-    
-    
-    prompt_header += f"""
+
+def lab_prompt_static(indicators: str) -> str:
+    """Promptning O'ZGARMAS qismi — so'rovda `instructions` bo'lib boradi.
+
+    `indicators` — `lab_catalog.prompt_lines(db)`: ko'rsatkichlar ro'yxati
+    `lab_value_types` katalogidan (ilgari bu yerda 137 qator qo'lda yozilgan
+    edi va har yangi ko'rsatkichda kodni o'zgartirish kerak edi).
+
+    Bemor ma'lumoti va til bu yerda YO'Q (2026-11-03): OpenAI takrorlanuvchi
+    `instructions` ni keshlaydi va ~90% arzon hisoblaydi (o'lchov: 4512/4527
+    token keshdan). Foydalanuvchi xabari ichidagi matn esa gpt-5.6-terra da
+    keshlanmadi.
+    """
+    prompt_header = f"""
     Sizga laboratoriya natijasi fayli (yoki Excel jadvalining matnli
     ko'rinishi) va bemor ma'lumotlari berildi. 
     
 ❗️JAVOB QOIDALARI:
 - Javob FAQAT quyida berilgan JSON formatida bo'lsin
 - JSON dan tashqarida hech qanday izoh, sharh yoki qo'shimcha matn YOZILMASIN
-- Javobni {language} tilida taqdim et
+- Javobni oxirida ko'rsatilgan tilda taqdim et
 - Laboratoriya natijasini tahlil qiling va quyidagi bo'limlarni to'ldiring:
 - Laboratoriya faylidagi quyidagi parametrlardan qaysi birlarini qiymatini aniqlash mumkin bo'lsa, ularni aniqlang va qiymatlarini yozing. Parametrlar:
 {indicators}
@@ -216,7 +226,7 @@ yozishning hojati yo'q. Har bir maydonga nima yozilishi:
 
 - **final_summary** — tibbiy asoslangan yakuniy xulosa.
 
-❗️Matnli maydonlar {language} tilida bo'lsin
+❗️Matnli maydonlar oxirida ko'rsatilgan tilda bo'lsin
     """
     return prompt_header
 
@@ -241,6 +251,8 @@ def _sync_lab_openai(
     lang: str,
     indicators: str,
     columns: list[str],
+    analysis_id: int | None = None,
+    bulk: bool = False,
 ) -> dict:
     """OpenAI ga sinxron so'rov — asyncio.to_thread() orqali chaqiriladi.
 
@@ -250,7 +262,8 @@ def _sync_lab_openai(
     """
     client = OpenAI(api_key=OPENAI_API_KEY)
 
-    prompt = compose_prompt_for_openai(age, gender, lang, indicators)
+    # Statik qism — `instructions` (keshlanadi); bemor, til, fayllar — xabarda
+    prompt = lab_prompt_tail(age, gender, lang).lstrip()
     if len(files) > 1:
         prompt += _multi_file_note(len(files))
 
@@ -287,16 +300,21 @@ def _sync_lab_openai(
             })
 
         # 2. AI tahlil
-        resp = client.responses.create(
+        resp = ai_config.create_response(
+            client, module="lab", analysis_id=analysis_id, step="legacy", bulk=bulk,
             # Model va fikrlash chuqurligi bitta joyda (A-11). Token byudjeti
             # laboratoriya uchun kengroq — ko'p faylli javob kesilmasin (L-05)
             **ai_config.holter_smad_lab_request(
-                max_output_tokens=ai_config.LAB_MAX_OUTPUT_TOKENS),
+                max_output_tokens=ai_config.LAB_MAX_OUTPUT_TOKENS,
+                reasoning={"effort": ai_config.LAB_REASONING_EFFORT}),
+            instructions=lab_prompt_static(indicators),
             input=[{"role": "user", "content": content_parts}],
             # Qat'iy JSON sxema (A-7). Ko'rsatkichlar massiv sifatida
             # qaytadi va `column_name` `enum` bilan cheklangan — model
-            # mavjud bo'lmagan ustun nomini o'ylab topa olmaydi.
-            text=ai_schema.response_format("lab", lab_columns=columns),
+            # mavjud bo'lmagan ustun nomini o'ylab topa olmaydi. Tasniflash
+            # o'chiq bo'lsa hujjat turi ham shu javobda (`document_kind`)
+            text=ai_schema.response_format("lab", lab_columns=columns,
+                                           document_kind=not ai_config.LAB_CLASSIFY),
         )
     finally:
         # Bemor fayllari provayderda qolmasin — xato bo'lsa ham (L-14)
@@ -463,7 +481,9 @@ async def _lab_ai_background(
     files: list[tuple[bytes, str]],
     age: int,
     gender: str,
-    lang: str
+    lang: str,
+    bulk: bool = False,
+    extraction: dict | None = None,
 ) -> None:
     """Browser yopilsa ham davom etadigan AI tahlil — mustaqil DB sessiyasi.
 
@@ -477,53 +497,100 @@ async def _lab_ai_background(
         clear_lab_values(db, analyse_id)
         db.commit()
 
-        # Har bir fayl laboratoriya tahliliga mos kelishi asosiy tahlildan
-        # oldin (parallel) tekshiriladi. BIRORTASI mos kelmasa qimmat tahlil
-        # yuborilmaydi: begona hujjat xulosani buzadi.
-        mismatches = await asyncio.gather(*(
-            asyncio.to_thread(classify_document, content, fname, "laboratoriya")
-            for content, fname in files
-        ))
-        for index, mismatch in enumerate(mismatches):
-            if not mismatch:
-                continue
-            answer = mismatch.to_ai_answer(lang)
-            if len(files) > 1:
-                # Qaysi fayl mos kelmagani — banner buni ko'rsatadi
-                data = json.loads(answer)
-                data["fayl_raqami"] = index + 1
-                data["fayllar_soni"] = len(files)
-                answer = json.dumps(data, ensure_ascii=False)
-            update_lab_analyse(
-                session=db,
-                analyse_id=analyse_id,
-                status=STATUS_FILE_MISMATCH,
-                ai_answer_data=answer,
-            )
-            logger.info(
-                "Lab: %d/%d-fayl turi mos emas (aniqlangan=%s), tahlil to'xtatildi: analyse_id=%d",
-                index + 1, len(files), mismatch.detected, analyse_id,
-            )
-            return
-
-        # Ko'rsatkichlar ro'yxati va AI sxemasidagi `enum` — katalogdan
-        indicators = lab_catalog.prompt_lines(db)
         columns = lab_catalog.columns(db)
-        parsed = await asyncio.to_thread(
-            _sync_lab_openai, files, age, gender, lang, indicators, columns
-        )
+        parsed = None
+        digital_measurements = None
 
-        # Sxema bo'yicha `digital_measurements` — massiv (A-7). Qolgan
-        # kod (bazaga yozish, frontend, PDF) lug'at kutadi, shuning
-        # uchun shu yerda o'giriladi. Eski, sxemasiz javoblar lug'at
-        # bo'lib kelishi mumkin — ular ham qo'llab-quvvatlanadi.
-        digital_measurements = _measurements_to_dict(
-            parsed.get("digital_measurements") if isinstance(parsed, dict) else None,
-            set(columns),
-        )
-        # Fayldagi birlik (mg/dL, g/dL, …) me'yor birligiga keltiriladi —
-        # aks holda solishtirish, PDF va dinamika noto'g'ri bo'ladi
-        digital_measurements = lab_units.harmonize_all(db, digital_measurements)
+        # ── Ikki bosqichli yo'l (arzonroq): o'qish → bog'lash → xulosa ──
+        if ai_config.LAB_PIPELINE == "split":
+            try:
+                if extraction is None:
+                    extraction = await asyncio.to_thread(
+                        lab_split.extract, files, gender, analysis_id=analyse_id, bulk=bulk)
+                kind = extraction.get("document_kind")
+                if kind != "laboratoriya" and not any(lab_split._usable(r) for r in extraction.get("rows", [])):
+                    # Hujjat turi o'qish bosqichida aniqlanadi — alohida tasniflash so'rovi yo'q
+                    detected = kind if kind in ("ekg", "holter", "smad", "boshqa") else "aniqlanmadi"
+                    mismatch = DocumentMismatch(expected="laboratoriya", detected=detected,
+                                                confidence=0.9, note="")
+                    update_lab_analyse(session=db, analyse_id=analyse_id,
+                                       status=STATUS_FILE_MISMATCH, ai_answer_data=mismatch.to_ai_answer(lang))
+                    logger.info("Lab: fayl turi mos emas (aniqlangan=%s): analyse_id=%d", detected, analyse_id)
+                    return
+                items, stats = await asyncio.to_thread(
+                    lab_split.map_rows, extraction["rows"], analysis_id=analyse_id, bulk=bulk)
+                digital_measurements = lab_units.harmonize_all(
+                    db, _measurements_to_dict(items, set(columns)))
+                parsed = await asyncio.to_thread(
+                    lab_split.conclude, digital_measurements, age, gender, lang,
+                    analysis_id=analyse_id, bulk=bulk)
+                parsed["analysis_date"] = extraction.get("analysis_date")
+                logger.info("Lab (ikki bosqich): analyse_id=%d, qatorlar=%d, bog'landi=%d, yangi nom=%d",
+                            analyse_id, stats["rows"], stats["mapped"], stats["new_names"])
+            except lab_split.NeedLegacy as why:
+                logger.info("Lab: ikki bosqichli yo'l ishonchsiz (%s) — eski yo'l: analyse_id=%d", why, analyse_id)
+                parsed, digital_measurements = None, None
+
+        # ── Bitta so'rovli yo'l (standart; `split` ning zaxirasi) ──
+        if parsed is None:
+            # `AI_LAB_CLASSIFY=true` bo'lsa har bir fayl asosiy tahlildan oldin
+            # (parallel) tekshiriladi. Standart holatda hujjat turi asosiy
+            # javobning o'zida (`document_kind`) — alohida so'rov pul turardi.
+            # `split` dan qaytilganda fayl allaqachon laboratoriya deb o'qilgan.
+            classify = ai_config.LAB_CLASSIFY and extraction is None
+            mismatches = await asyncio.gather(*(
+                asyncio.to_thread(classify_document, content, fname, "laboratoriya")
+                for content, fname in files
+            )) if classify else []
+            for index, mismatch in enumerate(mismatches):
+                if not mismatch:
+                    continue
+                answer = mismatch.to_ai_answer(lang)
+                if len(files) > 1:
+                    # Qaysi fayl mos kelmagani — banner buni ko'rsatadi
+                    data = json.loads(answer)
+                    data["fayl_raqami"] = index + 1
+                    data["fayllar_soni"] = len(files)
+                    answer = json.dumps(data, ensure_ascii=False)
+                update_lab_analyse(
+                    session=db,
+                    analyse_id=analyse_id,
+                    status=STATUS_FILE_MISMATCH,
+                    ai_answer_data=answer,
+                )
+                logger.info(
+                    "Lab: %d/%d-fayl turi mos emas (aniqlangan=%s), tahlil to'xtatildi: analyse_id=%d",
+                    index + 1, len(files), mismatch.detected, analyse_id,
+                )
+                return
+
+            # Ko'rsatkichlar ro'yxati va AI sxemasidagi `enum` — katalogdan
+            indicators = lab_catalog.prompt_lines(db)
+            parsed = await asyncio.to_thread(
+                _sync_lab_openai, files, age, gender, lang, indicators, columns, analyse_id, bulk
+            )
+            kind = parsed.get("document_kind") if isinstance(parsed, dict) else None
+            if (kind and kind != "laboratoriya" and extraction is None
+                    and not (parsed.get("digital_measurements") or [])):
+                detected = kind if kind in ("ekg", "holter", "smad", "boshqa") else "aniqlanmadi"
+                mismatch = DocumentMismatch(expected="laboratoriya", detected=detected,
+                                            confidence=0.9, note="")
+                update_lab_analyse(session=db, analyse_id=analyse_id,
+                                   status=STATUS_FILE_MISMATCH, ai_answer_data=mismatch.to_ai_answer(lang))
+                logger.info("Lab: fayl turi mos emas (aniqlangan=%s): analyse_id=%d", detected, analyse_id)
+                return
+
+            # Sxema bo'yicha `digital_measurements` — massiv (A-7). Qolgan
+            # kod (bazaga yozish, frontend, PDF) lug'at kutadi, shuning
+            # uchun shu yerda o'giriladi. Eski, sxemasiz javoblar lug'at
+            # bo'lib kelishi mumkin — ular ham qo'llab-quvvatlanadi.
+            digital_measurements = _measurements_to_dict(
+                parsed.get("digital_measurements") if isinstance(parsed, dict) else None,
+                set(columns),
+            )
+            # Fayldagi birlik (mg/dL, g/dL, …) me'yor birligiga keltiriladi —
+            # aks holda solishtirish, PDF va dinamika noto'g'ri bo'ladi
+            digital_measurements = lab_units.harmonize_all(db, digital_measurements)
         automatic_analysis_text = parsed.get("automatic_analysis", "") if isinstance(parsed, dict) else ""
         final_summary = parsed.get("final_summary", "") if isinstance(parsed, dict) else ""
         try:
@@ -582,13 +649,20 @@ async def _lab_ai_background(
         logger.error("Lab AI fon xatolik analyse_id=%d [%s]: %s",
                      analyse_id, ai_errors.classify(exc), ai_errors.log_message(exc))
         try:
+            # Xom istisno matni EMAS — turkumlangan, tarjima qilingan xabar.
+            # Xom matn faqat yuqoridagi logger.error() ga tushadi.
+            answer = ai_errors.to_ai_answer(exc, lang)
+            if extraction is not None:
+                # Fayl allaqachon o'qilgan (xato keyingi bosqichda) — «qayta
+                # urinish» faylni qayta o'qitmaydi, shu qatorlardan davom etadi
+                data = json.loads(answer)
+                data["_extraction"] = extraction
+                answer = json.dumps(data, ensure_ascii=False)
             update_lab_analyse(
                 session=db,
                 analyse_id=analyse_id,
                 status=STATUS_ERROR,
-                # Xom istisno matni EMAS — turkumlangan, tarjima qilingan xabar.
-                # Xom matn faqat yuqoridagi logger.error() ga tushadi.
-                ai_answer_data=ai_errors.to_ai_answer(exc, lang),
+                ai_answer_data=answer,
             )
         except Exception:
             logger.exception("Lab AI: xatolik holatini yozib bo'lmadi analyse_id=%d", analyse_id)
@@ -758,10 +832,11 @@ def _lock_patient_uploads(db: Session, patcient_id: int) -> None:
     )
 
 
-def _start_lab_ai(analyse_id: int, uploads: list[_LabUpload], age: int, gender: str, lang: str) -> None:
+def _start_lab_ai(analyse_id: int, uploads: list[_LabUpload], age: int, gender: str, lang: str,
+                  bulk: bool = False, extraction: dict | None = None) -> None:
     """Fon rejimida AI tahlilni ishga tushiradi (browser yopilsa ham davom etadi)."""
     task = asyncio.create_task(_lab_ai_background(
-        analyse_id, [(u.content, u.fname) for u in uploads], age, gender, lang
+        analyse_id, [(u.content, u.fname) for u in uploads], age, gender, lang, bulk, extraction
     ))
     _bg_tasks.add(task)
     task.add_done_callback(_bg_tasks.discard)
@@ -791,6 +866,8 @@ async def analyze(
     # mijozlar uchun (faqat birinchi fayl).
     original_filename: str | None = Form(None),
     original_filenames: list[str] | None = Form(None),
+    # Ommaviy yuklash (arxiv importi): AI arzon tarifda (flex), natija sekinroq
+    bulk: bool = Form(False),
 ):
     if not OPENAI_API_KEY:
         raise HTTPException(status_code=400, detail="OPENAI_API_KEY mavjud emas")
@@ -877,7 +954,7 @@ async def analyze(
         for c_id in lab_category_id:
             await create_lab_analyse_category(session=db, lab_analyse_id=lab_analyse.id, category_id=c_id)
 
-    _start_lab_ai(lab_analyse.id, uploads, age, gender, lang)
+    _start_lab_ai(lab_analyse.id, uploads, age, gender, lang, bulk=bulk)
     logger.info("Lab: tahlil yaratildi: analyse_id=%d, fayllar=%d", lab_analyse.id, len(saved))
 
     # Darhol javob qaytarish — frontend formani tozalaydi, list sahifasidan natija ko'rinadi
@@ -961,6 +1038,20 @@ async def replace_file(
     })
 
 
+def _stored_extraction(analyse) -> dict | None:
+    """Xato bilan tugagan tahlilning saqlangan o'qish natijasi (bo'lsa)."""
+    if analyse.status != STATUS_ERROR or not analyse.ai_answer_data:
+        return None
+    data = analyse.ai_answer_data
+    if isinstance(data, str):
+        try:
+            data = json.loads(data)
+        except ValueError:
+            return None
+    ex = data.get("_extraction") if isinstance(data, dict) else None
+    return ex if isinstance(ex, dict) and isinstance(ex.get("rows"), list) else None
+
+
 @router.post("/retry")
 async def retry_analyse(
     db: Session = Depends(get_db),
@@ -1010,6 +1101,9 @@ async def retry_analyse(
         raise HTTPException(status_code=404, detail="Tahlil topilmadi")
     _ensure_not_running(db, analyse, lang)
 
+    # Xato o'qishdan KEYINGI bosqichda bo'lgan bo'lsa — fayl qayta o'qilmaydi
+    extraction = _stored_extraction(analyse)
+
     # Yozuvni qayta tahlilga tayyorlash: eski natija/xatolik matni va uning
     # tarjima keshi tozalanadi; retry UI tilida yuboriladi (L-13)
     update_lab_analyse(
@@ -1020,7 +1114,8 @@ async def retry_analyse(
         ai_lang=(lang or 'uz')[:5],
     )
 
-    _start_lab_ai(id, uploads, age, gender, lang)
-    logger.info("Laboratoriya: qayta tahlilga yuborildi: analyse_id=%d, fayllar=%d", id, len(uploads))
+    _start_lab_ai(id, uploads, age, gender, lang, extraction=extraction)
+    logger.info("Laboratoriya: qayta tahlilga yuborildi: analyse_id=%d, fayllar=%d, o'qilgan qatorlar=%s",
+                id, len(uploads), "bor" if extraction else "yo'q")
 
     return JSONResponse(content={"lab_id": id, "status": "processing"})

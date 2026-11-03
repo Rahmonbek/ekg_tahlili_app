@@ -109,6 +109,79 @@ HOLTER_SMAD_LAB_MODEL: str = os.getenv("AI_HOLTER_SMAD_LAB_MODEL", "gpt-5.6-terr
 LAB_MAX_OUTPUT_TOKENS: int = int(os.getenv("AI_LAB_MAX_OUTPUT_TOKENS", "16000"))
 
 
+# ─── Laboratoriya: xarajatni kamaytirish (2026-11-03) ──────────────────────
+#: `single` (standart) — bitta so'rov: katalog bilan statik prompt BOSHIDA
+#: (keshlanadi, ~90% arzon), bemor ma'lumoti oxirida; hujjat turi shu
+#: javobning o'zida (`document_kind`) — alohida tasniflash so'rovi yo'q.
+#: `split` — ikki bosqich: 1) O'QISH (fayldagi nomlar bilan, katalogsiz; kod
+#: nomni `lab_value_aliases` orqali bog'laydi), 2) XULOSA faqat qiymatlardan.
+#: Shubhali natijada (`lab_split.NeedLegacy`) avtomatik `single` ga o'tiladi.
+#: 2026-11-03 o'lchovi (4 ta klinika fayli, natijalar bir xil): eski yo'lga
+#: nisbatan `single` ≈ −37%, `split` ≈ −18% — asosiy narx chiqish tokenlari,
+#: `split` esa katalogda yo'q qatorlarni ham ko'chiradi. `legacy` = `single`.
+LAB_PIPELINE: str = os.getenv("AI_LAB_PIPELINE", "single").strip().lower()
+#: Laboratoriya tahlilining fikrlash chuqurligi (boshqa modullar
+#: `REASONING_EFFORT` da). "medium" da 4 ta faylda qiymatlar "high" bilan bir xil
+LAB_REASONING_EFFORT: str = os.getenv("AI_LAB_REASONING_EFFORT", "medium")
+#: true — har fayl oldin alohida so'rovda tasniflanadi (eski xatti-harakat)
+LAB_CLASSIFY: bool = os.getenv("AI_LAB_CLASSIFY", "false").strip().lower() in ("1", "true", "yes")
+#: O'qish — ko'chirish vazifasi, chuqur fikrlash kerak emas
+LAB_EXTRACT_MODEL: str = os.getenv("AI_LAB_EXTRACT_MODEL", HOLTER_SMAD_LAB_MODEL)
+LAB_EXTRACT_EFFORT: str = os.getenv("AI_LAB_EXTRACT_EFFORT", "low")
+LAB_EXTRACT_MAX_OUTPUT_TOKENS: int = int(os.getenv("AI_LAB_EXTRACT_MAX_OUTPUT_TOKENS", "16000"))
+#: Xulosa — tibbiy mulohaza; kirish kichik (faqat qiymatlar ro'yxati)
+LAB_CONCLUDE_MODEL: str = os.getenv("AI_LAB_CONCLUDE_MODEL", HOLTER_SMAD_LAB_MODEL)
+LAB_CONCLUDE_EFFORT: str = os.getenv("AI_LAB_CONCLUDE_EFFORT", "medium")
+LAB_CONCLUDE_MAX_OUTPUT_TOKENS: int = int(os.getenv("AI_LAB_CONCLUDE_MAX_OUTPUT_TOKENS", "8000"))
+#: Noma'lum ko'rsatkich nomini katalogga bog'lash — kam uchraydi, arzon model
+LAB_ALIAS_MODEL: str = os.getenv("AI_LAB_ALIAS_MODEL", "gpt-5-mini")
+LAB_ALIAS_EFFORT: str = os.getenv("AI_LAB_ALIAS_EFFORT", "low")
+
+#: Ommaviy (shoshilinch bo'lmagan) yuklash — masalan arxiv importi — uchun
+#: OpenAI tarifi. `flex` ~50% arzon, javob sekinroq. Bo'sh — o'chiq. Model
+#: qo'llamasa yoki resurs band bo'lsa so'rov oddiy tarifda qayta yuboriladi.
+BULK_SERVICE_TIER: str = os.getenv("AI_BULK_SERVICE_TIER", "flex").strip()
+
+
+def _tier_unavailable(exc: Exception) -> bool:
+    """Tarif (flex) tufayli rad etildimi — oddiy tarifda qayta urinish kerak."""
+    status = getattr(exc, "status_code", None)
+    msg = str(exc).lower()
+    if status == 429:
+        return True
+    return status == 400 and ("service_tier" in msg or "flex" in msg)
+
+
+def create_response(client, *, module: str, analysis_id, step: str, bulk: bool = False, **params):
+    """`client.responses.create` + xarajat logi (`ai_usage`) + ommaviy tarif.
+
+    `bulk=True` bo'lsa `BULK_SERVICE_TIER` (flex) bilan yuboriladi; tarif rad
+    etilsa (model qo'llamaydi, resurs band) oddiy tarifda qaytariladi.
+    """
+    import logging
+    import ai_usage
+    tier = BULK_SERVICE_TIER if bulk and BULK_SERVICE_TIER else None
+    # Bir xil bosqich so'rovlari bitta kesh serveriga tushsin — statik prompt
+    # boshi keshdan olinadi (kalitsiz so'rovlar turli serverga tushib, kesh
+    # ko'pincha ishlamasdi)
+    params.setdefault("prompt_cache_key", f"nmed-{module}-{step}")
+    if tier:
+        try:
+            resp = client.responses.create(service_tier=tier, **params)
+        except Exception as exc:  # noqa: BLE001 — faqat tarif xatosi qayta uriniladi
+            if not _tier_unavailable(exc):
+                raise
+            logging.getLogger(__name__).info(
+                "AI: '%s' tarifi rad etildi (%s) — oddiy tarifda qayta yuborilmoqda",
+                tier, type(exc).__name__)
+            tier = None
+            resp = client.responses.create(**params)
+    else:
+        resp = client.responses.create(**params)
+    ai_usage.record(module, analysis_id, step, params.get("model"), resp, tier)
+    return resp
+
+
 def holter_smad_lab_request(**overrides) -> dict:
     """Holter, SMAD va laboratoriya tahlili uchun so'rov parametrlari.
 

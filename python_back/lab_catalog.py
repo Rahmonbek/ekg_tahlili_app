@@ -45,13 +45,17 @@ class LabType:
     value_kind: str
     sort_order: int
     ai_hint: str | None
+    # Fayldagi nomni katalogga bog'lash uchun (`lab_aliases`) — testlarda ixtiyoriy
+    name_ru: str | None = None
+    name_en: str | None = None
+    category: str | None = None
 
 
 def _load(db) -> dict[str, LabType]:
     rows = db.execute(text(
         "SELECT id, column_name, name_uz, measure, normal_min_male, normal_max_male, "
         "normal_min_female, normal_max_female, COALESCE(value_kind, 'numeric'), "
-        "COALESCE(sort_order, 0), ai_hint "
+        "COALESCE(sort_order, 0), ai_hint, name_ru, name_en, category "
         "FROM lab_value_types WHERE column_name IS NOT NULL ORDER BY sort_order, id"
     )).fetchall()
     out: dict[str, LabType] = {}
@@ -60,6 +64,7 @@ def _load(db) -> dict[str, LabType]:
             id=r[0], column_name=r[1], name_uz=r[2], measure=r[3],
             min_male=r[4], max_male=r[5], min_female=r[6], max_female=r[7],
             value_kind=r[8], sort_order=r[9], ai_hint=r[10],
+            name_ru=r[11], name_en=r[12], category=r[13],
         )
     return out
 

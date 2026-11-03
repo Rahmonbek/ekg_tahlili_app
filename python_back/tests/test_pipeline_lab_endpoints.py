@@ -110,7 +110,7 @@ def _patch_retry(monkeypatch, lab, tmp_path):
     monkeypatch.setattr(api, "get_lab_analysis_file_links", lambda db, a: ["x"])
     monkeypatch.setattr(api.storage, "resolve_existing", lambda link: f)
     monkeypatch.setattr(api, "update_lab_analyse", lambda **kw: calls["update"].append(kw))
-    monkeypatch.setattr(api, "_start_lab_ai", lambda *a: calls["start"].append(a))
+    monkeypatch.setattr(api, "_start_lab_ai", lambda *a, **k: calls["start"].append(a + tuple(k.values())))
     return calls
 
 
@@ -269,7 +269,7 @@ def _patch_analyze(monkeypatch):
     monkeypatch.setattr(api, "create_lab_analyse", fake_create)
     monkeypatch.setattr(api, "set_lab_analysis_files",
                         lambda db, i, saved, commit=True: events.append(("files", commit)))
-    monkeypatch.setattr(api, "_start_lab_ai", lambda *a: events.append(("start",)))
+    monkeypatch.setattr(api, "_start_lab_ai", lambda *a, **k: events.append(("start",)))
     return events
 
 

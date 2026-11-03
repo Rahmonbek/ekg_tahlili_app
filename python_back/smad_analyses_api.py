@@ -184,7 +184,7 @@ def _sync_smad_openai(content: bytes, fname: str, age: int, gender: str, lang: s
 
         # `text` orqali JSON Schema beriladi — model maydonlarni tashlab
         # keta olmaydi va javobni ``` ichiga o'rab yubormaydi (T-031, T-032)
-        resp = client.responses.create(
+        resp = ai_config.create_response(client, module="smad", analysis_id=None, step="analyze",
             # Model va fikrlash chuqurligi bitta joyda (A-11)
             **ai_config.holter_smad_lab_request(),
             input=[{

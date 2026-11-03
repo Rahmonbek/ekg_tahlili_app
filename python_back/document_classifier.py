@@ -215,7 +215,8 @@ def classify_document(
             file_part = {"type": "input_image" if is_image else "input_file", "file_id": uploaded.id}
 
         try:
-            resp = client.responses.create(
+            resp = ai_config.create_response(
+                client, module=expected, analysis_id=None, step="classify",
                 model=CLASSIFIER_MODEL,
                 input=[{
                     "role": "user",

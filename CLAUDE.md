@@ -201,6 +201,35 @@ tayanadi — `unit_mismatch = true` qatorlarni chiqarib tashlang.
   bo'lsa. Asl yozuv `text` da ("Отрицательный(-)") — ekran va PDF da shu.
   Qon guruhi 1..4, rezus 1/0 (`value_kind = code`, baholanmaydi).
 
+**Laboratoriya — AI xarajati** (2026-11-03, migratsiya `20261105000000_AiUsageAndLabAliases`).
+Asosiy narx — CHIQISH tokenlari; kirish (137 qatorli katalog) keshlansa
+deyarli bepul. O'lchov (4 ta klinika fayli, qiymatlar aynan bir xil):
+eski yo'lga nisbatan standart yo'l ≈ −40%, ikki bosqichli ≈ −18%.
+
+* **Standart (`AI_LAB_PIPELINE=single`)** — bitta so'rov: statik prompt
+  (`lab_prompt_static`, katalog bilan) `instructions` da — gpt-5.6-terra
+  faqat SHUNI keshlaydi (foydalanuvchi xabaridagi matn keshlanmadi), bemor
+  va til xabarda (`lab_prompt_tail`). `prompt_cache_key` =
+  `nmed-{module}-{step}` (`ai_config.create_response`). Fikrlash
+  `AI_LAB_REASONING_EFFORT` (medium; boshqa modullar `REASONING_EFFORT`).
+  Hujjat turi javobning o'zida (`document_kind`) — alohida tasniflash yo'q
+  (`AI_LAB_CLASSIFY=true` eski xatti-harakat).
+* **`split`** (`lab_split.py`): o'qish (fayldagi nomlar, guruhlangan,
+  katalogsiz) → `lab_aliases` (nom → katalog, `lab_value_aliases`; noma'lumi
+  gpt-5-mini da bir marta bog'lanib o'rganiladi) → xulosa faqat qiymatlardan.
+  Foiz/mutlaq juftligi (`neutrophils`/`_abs`) birlik va `#`/`%` bo'yicha kodda.
+  Bitta kalitga ikki xil qiymat yoki nomlar aniqlanmasa → `NeedLegacy` →
+  bitta so'rovli yo'l. O'qishni gpt-5-mini ga o'tkazmang: sinovda me'yorni
+  tushirdi va qatorni ikkiladi.
+* `ai_usage` — har bir AI chaqiruvi (barcha modullar): tokenlar, kesh,
+  narx (`AI_PRICES` JSON berilsa). Xato yozuv tahlilni to'xtatmaydi.
+* `bulk=true` forma maydoni (arxiv importi, `import_labs.py`) → `service_tier`
+  flex (~50% arzon, sekin); rad etilsa oddiy tarifda qayta yuboriladi.
+* Xato bilan tugagan `split` tahlilida o'qilgan qatorlar `_extraction`
+  sifatida saqlanadi — `retry` faylni qayta o'qitmaydi.
+* Testlar haqiqiy OpenAI ga murojaat qilmaydi (`tests/conftest.py`
+  `_no_real_ai`).
+
 **Laboratoriya — Excel (.xlsx)** (`python_back/excel_to_text.py`): model
 xlsx ni o'qiy olmaydi, shuning uchun jadval lokal matnga o'giriladi va AI ga
 `input_text` bo'lib boradi (klassifikator ham). Klinika shabloni uchun:

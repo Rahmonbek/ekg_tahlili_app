@@ -1302,7 +1302,7 @@ def _sync_ecg_process_and_ai(
         # lekin AYNI model (sol). Holter/SMAD/Lab dan farqli (ular terra).
         _req = ai_config.ecg_image_request() if is_image else ai_config.diagnosis_request(model=ai_config.ECG_IMAGE_MODEL)
         try:
-            resp = client.responses.create(
+            resp = ai_config.create_response(client, module="ecg", analysis_id=None, step="analyze",
                 # Model va fikrlash chuqurligi bitta joyda (A-11)
                 **_req,
                 input=[{
@@ -1879,7 +1879,7 @@ async def analyze_retry(
         # (detail + kattaroq token byudjeti), PDF uchun esa oddiy so'rov,
         # lekin AYNI model (sol). Holter/SMAD/Lab dan farqli (ular terra).
         _req = ai_config.ecg_image_request() if is_image else ai_config.diagnosis_request(model=ai_config.ECG_IMAGE_MODEL)
-        resp = client.responses.create(
+        resp = ai_config.create_response(client, module="ecg", analysis_id=None, step="analyze",
             # Model va fikrlash chuqurligi bitta joyda (A-11)
             **_req,
             input=[{

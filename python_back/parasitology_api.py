@@ -42,7 +42,7 @@ def _analyze_image_direct(
                 purpose="vision"
             )
 
-        response = client.responses.create(
+        response = ai_config.create_response(client, module="parasitology", analysis_id=None, step="analyze",
             # Model va fikrlash chuqurligi bitta joyda (A-11)
             **ai_config.diagnosis_request(),
             input=[

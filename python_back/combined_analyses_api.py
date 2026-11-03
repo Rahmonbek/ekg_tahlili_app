@@ -377,7 +377,7 @@ def _sync_openai(patient: dict, entries: list[dict], images, lang: str) -> tuple
                 "detail": ai_config.ECG_IMAGE_DETAIL,
             })
 
-        resp = client.responses.create(
+        resp = ai_config.create_response(client, module="combined", analysis_id=None, step="analyze",
             **ai_config.combined_request(),
             input=[{"role": "user", "content": content}],
             text=ai_schema.response_format("combined"),
