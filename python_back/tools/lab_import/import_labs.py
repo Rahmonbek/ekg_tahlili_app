@@ -9,8 +9,9 @@
      Fayllarda «Дата:» bo'lmasa papka nomidagi sana yuboriladi.
   3. Holat (`state.json`) har qadamdan keyin yoziladi — to'xtab qolsa
      qaytadan ishga tushirilganda davom etadi, takror yuklamaydi.
-  4. Tartib — tahlil sanasi bo'yicha ENG YANGISIDAN eskisiga (bemorlar
-     aralash); sanasiz tahlillar oxirida. Yuklanganlari o'tkazib yuboriladi.
+  4. Tartib (`--order`): `patients` (standart) — arxivda eng ko'p tahlili bor
+     bemorlar birinchi, har bemor ichida eng yangi sanadan; `date` — barcha
+     bemorlar aralash, eng yangi sanadan. Yuklanganlari o'tkazib yuboriladi.
 
 AI so'rovlari uchun API da UMUMIY chegara bor (daqiqasiga 10 ta, barcha
 foydalanuvchilar uchun) — `--rate` dan oshirmang. 429 javobida skript o'zi
@@ -209,15 +210,21 @@ def ai_failing(api, recent):
     return len(statuses) == GUARD_SAMPLE and all(s == -1 for s in statuses)
 
 
-def pending_uploads(plan, state):
-    """Yuklanmagan tahlillar — sanasi bo'yicha ENG YANGISIDAN, sanasizlar oxirida.
+def pending_uploads(plan, state, order="patients"):
+    """Yuklanmagan tahlillar tartibi.
 
-    Ilgari bemor tartibida yuklanardi va statistikada oylar aralash to'lib
-    borardi; endi oxirgi oylar birinchi to'liq bo'ladi.
+    `patients` — arxivda ENG KO'P tahlili bor bemorlar birinchi (dinamika va
+    klinik qoidalar uchun bir bemorning ko'p tahlili kerak), har bemor ichida
+    sanasi bo'yicha eng yangisidan. `date` — barcha bemorlar aralash, sana
+    bo'yicha eng yangisidan. Ikkalasida ham sanasizlar oxirida, yuklanganlari
+    o'tkazib yuboriladi.
     """
     todo = [(p, i, u) for p in plan for i, u in enumerate(p["uploads"])
             if f"{p['key']}#{i}" not in state["uploads"]]
     todo.sort(key=lambda t: t[2].get("date") or "", reverse=True)
+    if order == "patients":
+        # sort barqaror: bemor ichida sana tartibi saqlanadi
+        todo.sort(key=lambda t: (-len(t[0]["uploads"]), t[0]["key"]))
     return todo
 
 
@@ -241,9 +248,14 @@ def cmd_run(a):
     sent = 0
     last_post = 0.0
     recent = []  # (lab_id, yuborilgan vaqt) — AI holatini kuzatish uchun
-    todo = pending_uploads(plan, state)
+    todo = pending_uploads(plan, state, a.order)
     if todo:
-        log(f"yuklanmagan: {len(todo)} ta, {todo[0][2].get('date')} dan {todo[-1][2].get('date')} gacha")
+        if a.order == "patients":
+            n = len({p["key"] for p, _, _ in todo})
+            log(f"yuklanmagan: {len(todo)} ta, {n} bemor; birinchi bemorda "
+                f"{len(todo[0][0]['uploads'])} ta tahlil, oxirgisida {len(todo[-1][0]['uploads'])} ta")
+        else:
+            log(f"yuklanmagan: {len(todo)} ta, {todo[0][2].get('date')} dan {todo[-1][2].get('date')} gacha")
     for p, i, u in todo:
         if a.limit and sent >= a.limit:
             break
@@ -393,6 +405,8 @@ def main():
                     help="serverda AI kutayotgan tahlillar shundan ko'p bo'lsa kutiladi (0 — o'chiq)")
     ap.add_argument("--all-errors", action="store_true",
                     help="retry: bazadagi import qilinmagan xato tahlillar ham")
+    ap.add_argument("--order", choices=["patients", "date"], default="patients",
+                    help="run: patients — eng ko'p tahlilli bemorlar birinchi; date — sana bo'yicha")
     a = ap.parse_args()
     if a.command == "run" and not a.root:
         sys.exit("--root kerak")
