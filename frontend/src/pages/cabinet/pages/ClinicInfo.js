@@ -449,7 +449,7 @@ export default function ClinicInfo() {
                 label={t('clinic_name')}
                 rules={[{ required: true, message: t('not_empty') }]}
               >
-                <Input prefix={<FaBuilding />} placeholder={t('enter_clinic_name')} />
+                <Input placeholder={t('enter_clinic_name')} />
               </Form.Item>
 
               <footer className="stg-card-foot">
@@ -488,7 +488,6 @@ export default function ClinicInfo() {
                             {(props) => (
                               <Input
                                 {...props}
-                                prefix={<PhoneOutlined />}
                                 placeholder="+998 (__) ___-__-__"
                               />
                             )}
@@ -548,7 +547,7 @@ export default function ClinicInfo() {
                   />
                 </Form.Item>
                 <Form.Item className="stg-span" name="address" label={t('address')} rules={[{ required: true, message: t('field_required') }]}>
-                  <Input prefix={<FaLocationDot />} placeholder={t('enter_address')} />
+                  <Input placeholder={t('enter_address')} />
                 </Form.Item>
               </div>
 
@@ -556,21 +555,21 @@ export default function ClinicInfo() {
               <div className="stg-grid">
                 <Form.Item name="inn" label={t('inn')} rules={[{ required: true, message: t('field_required', { defaultValue: 'Maydonni to\'ldiring' }) }, { validator: (_, v) => (!v || String(v).replace(/\D/g, '').length === 9) ? Promise.resolve() : Promise.reject(new Error(t('digits_required', { defaultValue: '{{count}} ta raqam bo\'lishi kerak', count: 9 }))) }]}>
                   <InputMask mask="999999999" maskChar={null}>
-                    {(props) => <Input {...props} prefix={<AiOutlineFieldNumber />} placeholder={t('enter_inn')} />}
+                    {(props) => <Input {...props} placeholder={t('enter_inn')} />}
                   </InputMask>
                 </Form.Item>
                 <Form.Item name="mfo" label={t('mfo')} rules={[{ required: true, message: t('field_required', { defaultValue: 'Maydonni to\'ldiring' }) }, { validator: (_, v) => (!v || String(v).replace(/\D/g, '').length === 5) ? Promise.resolve() : Promise.reject(new Error(t('digits_required', { defaultValue: '{{count}} ta raqam bo\'lishi kerak', count: 5 }))) }]}>
                   <InputMask mask="99999" maskChar={null}>
-                    {(props) => <Input {...props} prefix={<AiOutlineFieldNumber />} placeholder={t('enter_mfo')} />}
+                    {(props) => <Input {...props} placeholder={t('enter_mfo')} />}
                   </InputMask>
                 </Form.Item>
                 <Form.Item className="stg-span" name="bankAccount" label={t('bank_account')} rules={[{ required: true, message: t('field_required', { defaultValue: 'Maydonni to\'ldiring' }) }, { validator: (_, v) => (!v || String(v).replace(/\D/g, '').length === 20) ? Promise.resolve() : Promise.reject(new Error(t('digits_required', { defaultValue: '{{count}} ta raqam bo\'lishi kerak', count: 20 }))) }]}>
                   <InputMask mask="9999 9999 9999 9999 9999" maskChar={null}>
-                    {(props) => <Input {...props} prefix={<AiOutlineFieldNumber />} placeholder={t('enter_bank_account')} />}
+                    {(props) => <Input {...props} placeholder={t('enter_bank_account')} />}
                   </InputMask>
                 </Form.Item>
                 <Form.Item className="stg-span" name="bankName" label={t('bankName')} rules={[{ required: true, message: t('field_required') }]}>
-                  <Input prefix={<BsBank2 />} placeholder={t('enter_bankName')} />
+                  <Input placeholder={t('enter_bankName')} />
                 </Form.Item>
               </div>
 

@@ -6,7 +6,7 @@ import { send_clinic_info, send_clinic_detail } from '../host/requests/ClinicReq
 import { get_region_data, get_districts_data } from '../host/requests/RegionRequest'
 import { get_user_data } from '../host/requests/UserRequest'
 import { dangerAlert, successAlert } from '../tools/Alerts'
-import { FaBuilding, FaLocationDot } from 'react-icons/fa6'
+import { FaBuilding } from 'react-icons/fa6'
 
 const { Option } = Select
 
@@ -131,7 +131,6 @@ export default function ClinicSetupModal() {
                     rules={[{ required: true, message: t('not_empty') }]}
                 >
                     <Input
-                        prefix={<FaBuilding color="#00B39A" />}
                         className="login_input"
                         placeholder={t('clinic_name_label')}
                     />
@@ -185,7 +184,6 @@ export default function ClinicSetupModal() {
                     rules={[{ required: true, message: t('not_empty') }]}
                 >
                     <Input
-                        prefix={<FaLocationDot color="#00B39A" />}
                         className="login_input"
                         placeholder={t('clinic_address_label')}
                     />

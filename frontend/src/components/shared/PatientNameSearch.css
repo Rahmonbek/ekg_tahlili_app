@@ -32,10 +32,10 @@
   margin-bottom: 8px;
 }
 
-/* Tugma maydon bilan bir qatorda (yorliq balandligicha pastroqda) */
-.pns-btn {
-  margin-top: 30px;
-  height: 40px;
+/* Tugma maydon bilan bir qatorda: bo'sh yorliqli Form.Item ichida */
+.pns-btn-item {
+  flex: 0 0 auto;
+  margin-bottom: 8px;
 }
 
 .pns-results {
@@ -168,9 +168,16 @@
     gap: 0;
   }
 
-  .pns-btn {
-    margin-top: 0;
+  /* Ustma-ust joylashuvda bo'sh yorliq kerak emas */
+  .pns-btn-item {
     margin-bottom: 12px;
+  }
+
+  .pns-btn-item .ant-form-item-label {
+    display: none;
+  }
+
+  .pns-btn {
     width: 100%;
   }
 

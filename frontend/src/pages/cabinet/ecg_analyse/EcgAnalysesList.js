@@ -589,7 +589,7 @@ export default function EcgAnalysesList() {
                                     ) : null
                             }
                                                     >
-                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
+                            <Col xs={24} sm={12} lg={7} xxl={6}>
                                 <div className="filter_item" data-tour="analysis-date">
                                     <label className="filter_label">{t("date_filter")}</label>
                                     <DatePicker.RangePicker
@@ -610,7 +610,7 @@ export default function EcgAnalysesList() {
                                     />
                                 </div>
                             </Col>
-                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
+                            <Col xs={24} sm={12} lg={5} xxl={4}>
                                 <div className="filter_item" data-tour="analysis-status">
                                     <label className="filter_label">{t('processing_status')}</label>
                                     <Select
@@ -634,7 +634,7 @@ export default function EcgAnalysesList() {
                                     </Select>
                                 </div>
                             </Col>
-                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
+                            <Col xs={24} sm={12} lg={5} xxl={4}>
                                 <div className="filter_item" data-tour="analysis-ai-filter">
                                     <label className="filter_label">{t('filter_by_ai', { defaultValue: 'AI bo\'yicha' })}</label>
                                     <Select
@@ -657,7 +657,7 @@ export default function EcgAnalysesList() {
                                     </Select>
                                 </div>
                             </Col>
-                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
+                            <Col xs={24} sm={12} lg={5} xxl={4}>
                                 <div className="filter_item">
                                     <label className="filter_label">{t('diagnosis_written', { defaultValue: 'Tashxis holati' })}</label>
                                     <Select

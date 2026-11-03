@@ -1,12 +1,9 @@
 import React from 'react';
 import { Button, Col, Form, Input, Row, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { FaAddressCard } from 'react-icons/fa6';
-import { IoPerson } from 'react-icons/io5';
-import { AiFillHome } from 'react-icons/ai';
-import Cleave from 'cleave.js/react';
 import i18n from '../../locale/i18next';
 import DateField from './DateField';
+import PhoneInput from './PhoneInput';
 import { latinNameRule, latinTextRule, normalizeLatinName, normalizeLatinText } from '../../tools/latinInput';
 
 /**
@@ -87,7 +84,6 @@ export default function PatientInfoForm({
                             rules={[{ required: true, whitespace: true, message: t('field_required') }, latinNameRule(t)]}
                         >
                             <Input
-                                prefix={<IoPerson />}
                                 className="login_input"
                                 placeholder={t('enter_lastname')}
                                 maxLength={60}
@@ -103,7 +99,6 @@ export default function PatientInfoForm({
                             rules={[{ required: true, whitespace: true, message: t('field_required') }, latinNameRule(t)]}
                         >
                             <Input
-                                prefix={<IoPerson />}
                                 className="login_input"
                                 placeholder={t('enter_firstname')}
                                 maxLength={60}
@@ -119,7 +114,6 @@ export default function PatientInfoForm({
                             rules={[latinNameRule(t)]}
                         >
                             <Input
-                                prefix={<IoPerson />}
                                 className="login_input"
                                 placeholder={t('enter_surename')}
                                 maxLength={60}
@@ -160,7 +154,6 @@ export default function PatientInfoForm({
                                 rules={[latinTextRule(t)]}
                             >
                                 <Input
-                                    prefix={<FaAddressCard />}
                                     className="login_input"
                                     placeholder={t('enter_passport_seria')}
                                     maxLength={24}
@@ -184,18 +177,11 @@ export default function PatientInfoForm({
                                 },
                             }]}
                         >
-                            <Cleave
+                            {/* Umumiy telefon maydoni: bo'sh holatda "+998 (" ko'rinmaydi
+                                (ajratgichlar yozilgan sari chiqadi) */}
+                            <PhoneInput
                                 value={phoneValue}
                                 onChange={(e) => setPhoneValue(e.target.value)}
-                                options={{
-                                    prefix: '+998',
-                                    delimiters: [' (', ') ', '-', '-'],
-                                    blocks: [4, 2, 3, 2, 2],
-                                    numericOnly: true,
-                                }}
-                                placeholder="+998 (__) ___-__-__"
-                                className="ant-input claveInput"
-                                style={{ width: '100%' }}
                             />
                         </Form.Item>
                     </Col>
@@ -246,7 +232,6 @@ export default function PatientInfoForm({
                             rules={[latinTextRule(t)]}
                         >
                             <Input
-                                prefix={<AiFillHome />}
                                 className="login_input"
                                 placeholder={t('enter_addres')}
                                 maxLength={250}

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Button, Col, Form, Input, Row } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { FaAddressCard } from 'react-icons/fa6';
 import DateField from './DateField';
 
 /**
@@ -54,7 +53,6 @@ export default function PatientSearchSection({ form, onFinish, onReset, loading 
                         }}
                     >
                         <Input
-                            prefix={<FaAddressCard />}
                             className="login_input"
                             placeholder={t('enter_passport_seria')}
                             maxLength={24}

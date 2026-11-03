@@ -161,9 +161,15 @@
   padding-left: 44px;
 }
 
-/* Umumiy `main_col` paddinglari qadam ichida ortiqcha */
+/* Ustunlar orasi 12 px, chetki ustunlar esa yuqoridagi qidiruv maydoni
+   bilan bir chiziqda. Ilgari faqat `padding-left: 0` edi: o'ng tomonda
+   8 px qolib, forma qidiruv maydonidan torroq va ustunlar notekis edi. */
 .anz-step-body .main_col {
-  padding-left: 0;
+  padding-inline: 6px;
+}
+
+.anz-step-body .ant-row:has(> .main_col) {
+  margin-inline: -6px;
 }
 
 /* ── Bemor ────────────────────────────────────────────────────── */

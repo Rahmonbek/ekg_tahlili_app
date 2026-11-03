@@ -3,7 +3,6 @@ import { InboxOutlined, ReloadOutlined } from '@ant-design/icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IoAlertCircleSharp } from 'react-icons/io5';
-import { MdLanguage } from 'react-icons/md';
 import { MoonLoader } from 'react-spinners';
 
 import { usePatientNameSearch } from '../../../hooks/usePatientNameSearch';
@@ -230,7 +229,6 @@ export default function ParasitologyAnalyzer() {
                                         <Select
                                             style={{ width: '100%' }}
                                             value={state.lang}
-                                            prefix={<MdLanguage />}
                                             defaultValue={state.lang}
                                             onChange={(value) => dispatch({ type: 'SET_FIELD', field: 'lang', value })}
                                             options={[

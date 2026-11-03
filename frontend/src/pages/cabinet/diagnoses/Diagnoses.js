@@ -2,13 +2,12 @@ import { Button, Checkbox, Col, Form, Input, Row, Select, Table, Tooltip } from 
 import Cleave from 'cleave.js/react';
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next';
-import { FaAddressCard, FaFemale, FaMale } from 'react-icons/fa';
-import { IoAlertCircleSharp, IoPerson } from 'react-icons/io5';
+import { IoAlertCircleSharp } from 'react-icons/io5';
 import InputMask from 'react-input-mask';
 import { get_patcient_by_passport, save_patcient_data } from '../../../host/requests/PatcientRequest';
 import {  formatDate, formatPhoneNumber, formatPhoneNumberForForm } from '../../../tools/formatters';
 
-import { FaDownload, FaUserDoctor } from 'react-icons/fa6';
+import { FaDownload } from 'react-icons/fa6';
 import DownloadReportButton from '../../../components/DownloadReportButton';
 import { diagnoseFileSave } from '../../../host/EkgService';
 import { successAlert, warningAlert } from '../../../tools/Alerts';
@@ -16,9 +15,7 @@ import { get_doctor_by_clinic_id } from '../../../host/requests/DoctorRequest';
 
 import { useStore } from '../../../store/Store';
 import { get_med_diagnoses_by_patcient_id } from '../../../host/requests/DiagnoseRequest';
-import { LiaDownloadSolid } from 'react-icons/lia';
 import { buildFileUrl } from '../../../host/Host';
-import { AiFillHome } from 'react-icons/ai';
 import i18n from '../../../locale/i18next';
 import { get_districts_data, get_region_data } from '../../../host/requests/RegionRequest';
 import DateField from '../../../components/shared/DateField';
@@ -354,7 +351,6 @@ const getDistricts = async (id) => {
                   {(props) => (
                     <Input
                       {...props}
-                      prefix={<FaAddressCard />}
                       className="login_input"
                       placeholder={t('enter_passport_seria')}
                     />
@@ -410,7 +406,6 @@ const getDistricts = async (id) => {
                     rules={[{ required: true, message: t('field_required') }]}
                   >
                     <Input
-                      prefix={<IoPerson />}
                       className="login_input"
                       placeholder={t('enter_lastname')}
                     />
@@ -425,7 +420,6 @@ const getDistricts = async (id) => {
                     rules={[{ required: true, message: t('field_required') }]}
                   >
                     <Input
-                      prefix={<IoPerson />}
                       className="login_input"
                       placeholder={t('enter_firstname')}
                     />
@@ -440,7 +434,6 @@ const getDistricts = async (id) => {
                     rules={[{ required: true, message: t('field_required') }]}
                   >
                     <Input
-                      prefix={<IoPerson />}
                       className="login_input"
                       placeholder={t('enter_surename')}
                     />
@@ -457,7 +450,6 @@ const getDistricts = async (id) => {
                       style={{ width: '100%' }}
                       value={gender}
                       placeholder={t('enter_gender')}
-                      prefix={gender?<FaMale />:<FaFemale />}
                       onChange={(value) => setGender(value)}
                       options={[
                         { value: true, label: <> {t('male')}</> },
@@ -547,7 +539,6 @@ onChange={(value) => {
   rules={[{ required: true, message: t('field_required') }]}
 >
   <Input
-    prefix={<AiFillHome />}
     className="login_input"
     placeholder={t('enter_addres')}
   />
@@ -626,7 +617,6 @@ rules={[{ required: true, message: t('field_required') }]}
                  onChange={(val)=>{setselected_doctor(val)}}
                                         style={{ width: '100%' }}
                                        
-                                        prefix={<FaUserDoctor />}
                                         placeholder={t('owner_diagnosis')}
                                          options={doctors.map(role => ({
                     value: role.id,

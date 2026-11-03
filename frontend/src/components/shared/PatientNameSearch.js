@@ -58,9 +58,13 @@ export default function PatientNameSearch({ form, search }) {
                             autoComplete="off"
                         />
                     </Form.Item>
-                    <Button type="primary" htmlType="submit" loading={loading} icon={<SearchOutlined />} className="pns-btn">
-                        {t('search_patcient', { defaultValue: 'Qidirish' })}
-                    </Button>
+                    {/* Bo'sh yorliqli Form.Item — tugma maydon bilan aynan bir
+                        chiziqda turadi (yorliq balandligi qo'lda berilmaydi) */}
+                    <Form.Item label=" " colon={false} className="pns-btn-item">
+                        <Button type="primary" htmlType="submit" loading={loading} icon={<SearchOutlined />} className="pns-btn">
+                            {t('search_patcient', { defaultValue: 'Qidirish' })}
+                        </Button>
+                    </Form.Item>
                 </div>
             </Form>
 

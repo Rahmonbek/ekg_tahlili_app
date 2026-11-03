@@ -245,7 +245,7 @@ export default function ParasitologyAnalysesList() {
                     {/* Toolbar */}
                     <div style={{ padding: '0 0 20px 0' }} className="filter_form_box">
                         <Row gutter={[12, 12]} align="bottom">
-                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
+                            <Col xs={24} sm={12} lg={5} xxl={4}>
                                 <div className="filter_item">
                                     <label className="filter_label">{t('search_by_label')}</label>
                                     <Input
@@ -265,7 +265,7 @@ export default function ParasitologyAnalysesList() {
                                     />
                                 </div>
                             </Col>
-                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
+                            <Col xs={24} sm={12} lg={7} xxl={6}>
                                 <div className="filter_item">
                                     <label className="filter_label">{t("date_filter")}</label>
                                     <DatePicker.RangePicker
@@ -286,7 +286,7 @@ export default function ParasitologyAnalysesList() {
                                     />
                                 </div>
                             </Col>
-                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
+                            <Col xs={24} sm={12} lg={5} xxl={4}>
                                 <div className="filter_item">
                                     <label className="filter_label">{t('filter_by_status')}</label>
                                     <Select
@@ -310,7 +310,7 @@ export default function ParasitologyAnalysesList() {
                                     </Select>
                                 </div>
                             </Col>
-                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
+                            <Col xs={24} sm={12} lg={5} xxl={4}>
                                 <div className="filter_item">
                                     <label className="filter_label">{t('para_filter_jiddiylik', { defaultValue: 'AI natija' })}</label>
                                     <Select
@@ -333,7 +333,7 @@ export default function ParasitologyAnalysesList() {
                                     </Select>
                                 </div>
                             </Col>
-                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
+                            <Col xs={24} sm={12} lg={5} xxl={4}>
                                 <div className="filter_item">
                                     <label className="filter_label">{t('diagnosis_status', { defaultValue: 'Tashxis holati' })}</label>
                                     <Select
@@ -355,8 +355,8 @@ export default function ParasitologyAnalysesList() {
                                     </Select>
                                 </div>
                             </Col>
-                            <Col xs={24} sm={24} md={12} lg={8} xl={4}>
-                                <button onClick={handleSearch} className="btn_form" style={{ width: '100%', margin: 0, height: '48px' }}>
+                            <Col xs={24} sm={12} lg={5} xxl={4}>
+                                <button onClick={handleSearch} className="btn_form" style={{ width: '100%', margin: 0, height: 'var(--control-h)', minHeight: 'var(--control-h)' }}>
                                     {t('search')}
                                 </button>
                             </Col>

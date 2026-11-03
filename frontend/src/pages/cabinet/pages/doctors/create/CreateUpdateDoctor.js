@@ -2,13 +2,10 @@ import { Button, Col, Form, Input, message, Row, Tooltip, Upload, Avatar } from 
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { Modal, Select } from 'antd';
-import { FaFemale, FaMale } from 'react-icons/fa';
-import { IoAlertCircleSharp, IoPerson } from 'react-icons/io5';
+import { IoAlertCircleSharp } from 'react-icons/io5';
 import { useStore } from '../../../../../store/Store';
 import { change_doctor_data, get_doctor_by_id, get_params_for_add_staff } from '../../../../../host/requests/DoctorRequest';
-import { FaUserDoctor } from 'react-icons/fa6';
 import { checkphone } from '../../../../../host/requests/AuthRequest';
-import { IoMdLock } from 'react-icons/io';
 import { formatPhoneNumber, formatPhoneNumberForForm } from '../../../../../tools/formatters';
 import { useNavigate, useParams } from 'react-router-dom';
 import PhoneInput from '../../../../../components/shared/PhoneInput';
@@ -282,7 +279,6 @@ export default function CreateUpdateDoctor() {
                       rules={[{ required: true, message: t('field_required') }]}
                     >
                       <Input
-                        prefix={<IoPerson />}
                         className="login_input"
                         placeholder={t('enter_lastname_staff')}
                       />
@@ -297,7 +293,6 @@ export default function CreateUpdateDoctor() {
                       rules={[{ required: true, message: t('field_required') }]}
                     >
                       <Input
-                        prefix={<IoPerson />}
                         className="login_input"
                         placeholder={t('enter_firstname_staff')}
                       />
@@ -312,7 +307,6 @@ export default function CreateUpdateDoctor() {
                       rules={[{ required: true, message: t('field_required') }]}
                     >
                       <Input
-                        prefix={<IoPerson />}
                         className="login_input"
                         placeholder={t('enter_surename_staff')}
                       />
@@ -328,7 +322,6 @@ export default function CreateUpdateDoctor() {
                       <Select
                         style={{ width: '100%' }}
                         value={gender}
-                        prefix={gender?<FaMale />:<FaFemale />}
                         onChange={(value) => setGender(value)}
                         placeholder={t('enter_gender_staff')}
                         options={[
@@ -351,7 +344,6 @@ export default function CreateUpdateDoctor() {
                     >
                       <Select
                         style={{ width: '100%' }}
-                        prefix={<FaUserDoctor />}
                         onChange={changeRole}
                         placeholder={t('enter_role_staff')}
                         // Ro'yxat formadan tashqariga chiqib ketmasin
@@ -382,7 +374,6 @@ export default function CreateUpdateDoctor() {
                         mode="multiple"
                         showSearch
                         optionFilterProp="label"
-                        prefix={<FaUserDoctor />}
                         placeholder={t('enter_position_staff')}
                         // Ko'p tanlovli ro'yxat pastga ochilib "Saqlash"
                         // tugmasini to'liq to'sib qo'yardi: foydalanuvchi

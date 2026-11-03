@@ -34,6 +34,16 @@
   --sidebar_width: 260px;
   --sidebar_closed_width: 82px;
   --card_radius: 12px;
+
+  /* Forma maydoni va uning yonidagi tugma balandligi — antd
+     `controlHeight` bilan BIR XIL (theme.js: 40, ≤768 px da 42) */
+  --control-h: 40px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --control-h: 42px;
+  }
 }
 
 * {
@@ -667,98 +677,33 @@ body {
        ularni noto'g'ri o'lchamga keltirardi;
      • `!important` kaskadni o'ldirib, har qanday moslashtirishni imkonsiz qilardi.
 
-   Endi qoida faqat matn kiritish maydonlariga va aniq belgilangan klasslarga
-   qo'llanadi. Umumiy o'lcham/radius esa `theme.js` dagi antd tokenlari orqali
-   beriladi. */
-.login_input,
-.form_input,
-input[type="text"],
-input[type="password"],
-input[type="email"],
-input[type="tel"],
-input[type="number"],
-input[type="search"],
-input[type="date"],
-.ant-select-selection-item {
-  font-size: var(--small_size);
-  color: var(--text_color);
-}
-
-.ant-input-affix-wrapper {
-  padding: 0px !important;
-  padding-right: 15px !important;
-  /* 10px — `theme.js` dagi `borderRadius` bilan bir xil. Ilgari 12px edi
-     va ikonkali maydonlar oddiy maydonlardan boshqacha ko'rinardi. */
-  border-radius: 10px !important;
-}
-
-.ant-input-prefix,
-.ant-select-prefix {
-  display: flex !important;
-  padding-left: 10px !important;
-  font-size: var(--large_size) !important;
-  margin-right: 0px !important;
-  margin-inline-end: 0px !important;
-  color: var(--text_second_color) !important;
-}
-
-/* Select balandligi input (controlHeight: 40) bilan bir xil bo'lishi kerak,
-   aks holda filtr qatorlarida maydonlar tekislanmaydi */
-.ant-select-selector {
-  height: 40px !important;
-  border-radius: 10px !important;
-  padding-left: 0px !important;
-}
-
-/* Required field indicator — WCAG: foydalanuvchi qaysi maydon majburiyligini bilishi kerak */
-.ant-form-item-required::before {
-  color: #ff4d4f !important;
-}
-
-/* Faqat forma label'lari — ilgari yalang'och `label` selektori barcha
-   checkbox/radio/upload label'lariga ham 10px padding berib buzardi */
-.ant-form-item-label > label {
-  padding-left: 10px;
-  font-size: var(--small_size);
-  font-weight: 500;
-  height: max-content !important;
-  color: var(--text_second_color);
-}
+   Forma maydonlarining yagona uslubi endi `theme.js` (antd tokenlari) va
+   shu faylning oxiridagi "FORMA MAYDONLARI" bo'limida. */
 label {
   font-size: var(--small_size);
   font-weight: 500;
   color: var(--text_second_color);
 }
 
-.ant-col:has(.ant-form-item-required) {
-  padding-bottom: 5px !important;
-}
-
-.ant-input-suffix {
-  font-size: var(--medium_size) !important;
-}
-
-.ant-input-outlined:focus,
-.ant-input-outlined:focus-within {
-  border-color: var(--back_color) !important;
-}
-
 .btn_form {
   width: 100%;
   background: linear-gradient(var(--back_color), var(--back_hover_color));
   color: white !important;
-  /* 44px — mobil touch-target talabi (WCAG 2.5.8) bilan mos */
-  min-height: 44px;
+  /* Yonidagi maydon bilan bir xil balandlik va radius: qidiruv inputi
+     10 px, tugma 12 px bo'lib, yonma-yon turganda burchaklar mos
+     kelmasdi. Mobilda `--control-h` 44 px (touch-target). */
+  min-height: var(--control-h);
   height: auto !important;
   font-size: var(--small_size);
   border: none !important;
-  border-radius: 12px !important;
+  border-radius: 10px !important;
   margin-top: 20px !important;
   font-weight: 600;
-  padding: 10px;
+  padding: 8px 16px;
   display: flex;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
 }
 
 .main_card_btn {
@@ -952,7 +897,7 @@ select:-webkit-autofill,
   width: 100% !important;
   height: 100% !important;
   background-color: rgba(255, 255, 255, 0.234);
-  border-radius: 12px !important;
+  border-radius: inherit !important;
   backdrop-filter: blur(5px);
 }
 
@@ -1441,8 +1386,10 @@ select:-webkit-autofill,
   transform: scale(1.08);
 }
 
+/* Faqat yonlama bo'shliq: vertikal ritmni `Form.Item` (20 px) beradi.
+   Ilgari 8 px har tomondan + 20 px = qatorlar orasi 36 px edi. */
 .main_col {
-  padding: var(--main_mini_padding);
+  padding: 0 var(--main_mini_padding);
 }
 
 .doctor-avatar-upload {
@@ -1514,83 +1461,6 @@ select:-webkit-autofill,
   padding-left: 5px !important;
 }
 
-/* Telefon raqam maydoni (Cleave.js).
-   Ilgari bu yerda faqat ramka va burchak radiusi bor edi — balandlik,
-   ichki bo'shliq va shrift o'lchami berilmagandi. Natijada telefon maydoni
-   21 px, yonidagi antd maydoni esa 42 px bo'lib, forma qiyshiq ko'rinardi.
-   Bu login, ro'yxatdan o'tish, bemor formasi va konsultant qo'shish
-   sahifalarining HAMMASIDA takrorlanardi. */
-.claveInput {
-  width: 100%;
-  height: 40px;
-  padding: 4px 11px;
-  border: 1px solid #E2E8F0;
-  border-radius: 10px;
-  outline: none;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--text_color);
-  background: #fff;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.claveInput::placeholder {
-  color: #bfbfbf;
-}
-
-.claveInput:hover {
-  border-color: #00B39A;
-}
-
-.claveInput:focus {
-  border-color: #00B39A;
-  box-shadow: 0 0 0 2px rgba(0, 179, 154, 0.12);
-}
-
-/* Barcha forma maydonlari bir xil balandlikda (antd `controlHeight: 40`).
-   Ilgari ular aralash edi: oddiy input 40 px, ikonkali (affix) maydon
-   44 px, telefon maydoni esa 21 px — forma qiyshiq ko'rinardi. */
-.ant-form-item .ant-input-affix-wrapper {
-  height: 40px;
-  box-sizing: border-box;
-  border-radius: 10px;
-  padding-block: 0;
-  display: inline-flex;
-  align-items: center;
-}
-
-.ant-form-item .ant-input-affix-wrapper > .ant-input {
-  height: auto;
-}
-
-/* Ikonkali maydonlarda matn va placeholder joylashuvi.
-   `.ant-input-affix-wrapper` ga `padding: 0 !important` qo'yilgani uchun
-   ichki inputda chap bo'shliq umuman yo'q edi: chapda ikonka bo'lmasa
-   (masalan "Guvohnoma" maydoni) matn ramkaga yopishib qolardi, oddiy
-   maydonlarda esa 11 px bo'shliq bor edi. */
-.ant-input-affix-wrapper > input.ant-input,
-.ant-input-affix-wrapper > textarea.ant-input {
-  padding-left: 11px;
-}
-
-/* Ikonka bilan qiymat orasidagi bo'shliq.
-
-   Ilgari bu yerda `padding-left: 0` turardi va izohda "bo'shliqni
-   ikonkaning o'zi beradi" deb yozilgandi. Bu noto'g'ri edi: yuqoridagi
-   `.ant-input-prefix` qoidasi ikonkaga faqat `padding-left: 10px`
-   beradi — ya'ni bo'shliq ikonkaning **chapida**, o'ngida esa yo'q.
-   Natijada qiymat ikonkaga yopishib turardi (o'lchandi: 0 px):
-
-       [👤]TESTBEMOROV        ← edi
-       [👤] TESTBEMOROV       ← bo'ldi
-
-   Bu butun platformadagi ikonkali maydonlarga tegishli edi — bemor
-   formasi, qidiruv, tashkilot rekvizitlari, xodim tahrirlash. */
-.ant-input-affix-wrapper > .ant-input-prefix + input.ant-input,
-.ant-input-affix-wrapper > .ant-input-prefix + textarea.ant-input {
-  padding-left: 8px;
-}
-
 .closed_menu {
   width: var(--sidebar_closed_width);
 }
@@ -1623,22 +1493,16 @@ select:-webkit-autofill,
   margin-top: 0px !important;
 }
 
-.input_date,
-.file_input {
-  padding: 10px;
-  border: 1px solid #d9d9d9;
-  width: 100%;
-  border-radius: 12px;
-}
-
 .hidden_box {
   max-height: 0px;
   overflow: hidden;
   transition: 0.5s;
 }
 
+/* `100vh` emas: telefonda bir ustunli bemor formasi (11 maydon) ekrandan
+   uzun bo'lib, pastki maydonlar kesilib ko'rinmay qolardi */
 .showed_box {
-  max-height: 100vh !important;
+  max-height: 3000px !important;
 }
 
 .alert_icon {
@@ -1841,42 +1705,6 @@ select:-webkit-autofill,
 }
 
 
-.ant-select-selection-wrap {
-  padding-left:10px !important;
-}
-.ant-select-multiple .ant-select-selection-wrap {
-  min-height: 40px !important;
-}
-
-.ant-select-multiple .ant-select-selection-placeholder {
-  padding-left: 10px !important;
-  font-size: var(--small_size) !important;
-}
-
-input::placeholder,
-.ant-select-selection-placeholder {
-  font-size: var(--small_size) !important;
-  font-family: 'Open Sans', sans-serif !important;
-}
-
-/* Ko'p tanlovli select teglari — brend firuza "chip" ko'rinishida */
-.ant-select-multiple .ant-select-selection-overflow .ant-select-selection-item {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 2px;
-  height: 28px;
-  padding: 0 6px 0 11px !important;
-  background-color: #E6F7F4;
-  border: 1px solid rgba(0, 179, 154, 0.28);
-  border-radius: 8px;
-  color: var(--back_color);
-  font-weight: 600;
-  padding:5px 0px !important;
-  font-size: var(--small_size);
-  line-height: 1;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
-}
-
 /* ─────────── Profil: parol almashtirish ─────────── */
 .pwd-change-hint {
   font-size: var(--small_size);
@@ -1926,76 +1754,6 @@ input::placeholder,
 .pwd-change .reset-modal-back {
   margin-top: 12px;
 }
-.ant-select-multiple .ant-select-selection-overflow .ant-select-selection-item:hover {
-  background-color: #d7f2ec;
-  border-color: rgba(0, 179, 154, 0.5);
-}
-
-.ant-select-multiple .ant-select-selection-item-content {
-  color: var(--back_color);
-  margin-inline-end: 2px;
-}
-
-/* Select oldidagi ikonka (prefix) — brend rangida, teglar bilan hamohang */
-.ant-select-multiple .ant-select-prefix svg,
-.ant-select-multiple .ant-select-prefix .anticon {
-  color: var(--back_color);
-}
-
-.ant-select .ant-select-selection-wrap {
-  padding-left: 8px !important;
-  padding-right: 10px !important;
-}
-
-.ant-select-multiple .ant-select-selector {
-  height: auto !important;
-  min-height: 40px !important;
-}
-
-.ant-select input,
-.ant-select-selection-item {
-  padding: 0 !important;
-  height: 100% !important;
-}
-
-.ant-select-single {
-  height: 40px !important;
-}
-
-.ant-select-multiple .ant-select-prefix {
-  padding-left: 0px !important;
-}
-
-/* Teg o'chirish (X) — odatda muted firuza, hoverda qizil doira */
-.ant-select-multiple .ant-select-selection-item-remove {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  margin-left: 4px !important;
-  transition: background-color 0.15s ease;
-}
-
-.ant-select-multiple .anticon-close {
-  color: rgba(0, 179, 154, 0.6);
-  font-size: 11px;
-  transition: color 0.15s ease;
-}
-
-.ant-select-multiple .ant-select-selection-item-remove:hover {
-  background-color: rgba(220, 38, 38, 0.12);
-}
-
-.ant-select-multiple .ant-select-selection-item-remove:hover .anticon-close {
-  color: #DC2626;
-}
-
-.ant-form-item-has-error .claveInput {
-  border: 1px solid #ff4d4f !important;
-}
-
 .big_loader {
   position: fixed;
   top: 0px;
@@ -2309,33 +2067,9 @@ input::placeholder,
   display: flex !important;
 }
 
-.ant-select {
-  width: 100%;
-}
-
-.ant-picker {
-  height: 40px !important;
-  border-radius: 10px !important;
-  width: 100%;
-}
-
-.ant-input-affix-wrapper input {
-  height: 40px !important;
-}
-.ant-select{height:42px  !important;}
-
-.ant-select-selection-search input {
-  height: 100%;
-}
-
 .filter_item {
   display: flex;
   flex-direction: column;
-}
-
-.filter_form_box input,
-.filter_form_box .ant-select-selection-item {
-  padding: 5px 10px !important;
 }
 
 .filter_form_box .btn_form {
@@ -2346,10 +2080,6 @@ input::placeholder,
   margin-bottom: 30px !important;
 }
 
-.filter_form_box .filter_label {
-  margin-bottom: 5px !important;
-  display: block;
-}
 
 th,
 td {
@@ -2363,9 +2093,7 @@ td {
 .ant-upload input {
   display: none !important;
 }
-.ant-select-selection-item {
-  padding:3px 10px !important;}
-  .ant-select-selection-overflow{position: relative; top:-2px; display: flex !important; overflow: hidden !important; flex-wrap: nowrap !important;}
+
 .sidebar_menu_item {
   position: relative;
 }
@@ -2439,10 +2167,6 @@ td {
     margin-left: var(--main_padding);
   }
 
-  .ant-form-item-label>label {
-    font-size: var(--small_size) !important;
-  }
-
   .ekg_div_box {
     width: 100% !important;
     display: flex !important;
@@ -2454,39 +2178,9 @@ td {
     height: 13vw !important;
   }
 
-  /* 16px — iOS Safari kichikroq shriftli inputga fokus tushganda
-     sahifani avtomatik kattalashtirib yuborishining oldini oladi */
-  .ant-input-affix-wrapper>input.ant-input {
-    font-size: var(--center_size) !important;
-  }
-
   .create_doctor_box {
     padding: var(--big_main_padding_for_media) !important;
   }
-}
-
-/* ─── Radio.Group — brand rang (teal) ─── */
-.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
-  background: linear-gradient(var(--back_color), var(--back_hover_color)) !important;
-  border-color: var(--back_hover_color) !important;
-  color: white !important;
-}
-
-.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before {
-  background-color: var(--back_hover_color) !important;
-}
-
-.ant-radio-button-wrapper:hover {
-  color: var(--back_color) !important;
-}
-
-/* ─── Upload.Dragger — brand rang ─── */
-.ant-upload-drag:hover {
-  border-color: var(--back_color) !important;
-}
-
-.ant-upload-drag-icon .anticon {
-  color: var(--back_color) !important;
 }
 
 /* ─── Jadval — ko'rilmagan qator sariq fon OLIB TASHLANDI (foydalanuvchi so'rovi) ─── */
@@ -2531,10 +2225,6 @@ td {
 
 .quick_action_icon {
   font-size: var(--large_size);
-}
-
-.ant-select-selection-search-input {
-  border-radius: 0px !important;
 }
 
 @media (max-width: 760px) {
@@ -2603,10 +2293,6 @@ td {
     padding: 0px 15px 0px 30px !important;
   }
 
-  .ant-input-affix-wrapper>input.ant-input {
-    font-size: var(--medium_size) !important;
-  }
-
   .main_card_content {
     padding: var(--big_main_padding);
   }
@@ -2614,11 +2300,6 @@ td {
   .input_img_box {
     width: 40vw !important;
     height: 40vw !important;
-  }
-
-  .ant-form-item-label>label {
-    font-size: var(--medium_size) !important;
-    margin-top: var(--main_padding) !important;
   }
 
   .doctors_table {
@@ -2629,10 +2310,6 @@ td {
 
   .ant-modal-content {
     padding: 35px 14px 10px 14px !important;
-  }
-
-  .ant-col:has(.ant-form-item-required) {
-    padding-bottom: 2px !important;
   }
 
   .ant-modal-root .ant-modal-wrap {
@@ -3130,15 +2807,11 @@ td {
   }
 
   .main_col {
-    padding: 6px 4px;
+    padding: 0 4px;
   }
 
   .btn_form {
     font-size: 0.8125rem;
-  }
-
-  .ant-form-item-label>label {
-    font-size: 0.8125rem !important;
   }
 }
 
@@ -3223,11 +2896,10 @@ td {
     gap: 10px;
   }
 
-  /* Barmoq bilan bosish uchun minimal maydon */
-  .btn_form,
-  .ant-btn {
-    min-height: 44px;
-  }
+  /* Tugma balandligi bu yerda majburlanmaydi: antd tugmalari
+     `theme.mobileTheme` dan (42 px), `.btn_form` esa `--control-h` dan.
+     Ilgari `.ant-btn { min-height: 44px }` kichik (`size="small"`)
+     tugmalarni ham 44 px ga cho'zib, maydonlardan baland qilardi. */
 }
 
 @media (max-width: 576px) {
@@ -3368,27 +3040,9 @@ td {
         flex: 0 0 100% !important;
     }
 
-    /* Barmoq bilan bosiladigan elementlar kamida 44 px balandlikda.
-       Oddiy `input` va telefon maydoni ham shu ro'yxatda — aks holda
-       mobilda ikonkali maydon 44 px, oddiysi 40 px bo'lib, forma
-       notekis ko'rinardi. */
-    .ant-btn,
-    .btn_form,
-    .ant-select-selector,
-    .ant-picker,
-    .ant-input-affix-wrapper,
-    .ant-form-item .ant-input-affix-wrapper,
-    .ant-form-item .ant-input,
-    .claveInput {
-        min-height: 44px;
-    }
-
-    .ant-form-item .ant-input-affix-wrapper {
-        height: 44px;
-    }
-
-    /* Faqat ikonkali tugmalar ham 44×44 dan kichik bo'lmasin */
-    .ant-btn-icon-only,
+    /* Barmoq bilan bosiladigan elementlar 44 px — antd boshqaruvlari
+       `theme.mobileTheme` orqali, o'zimizniki `--control-h` orqali.
+       Jadval ichidagi kichik tugmalar ham 44×44 dan kichik bo'lmasin. */
     .table_view_btn {
         min-width: 44px;
         min-height: 44px;
@@ -3478,53 +3132,25 @@ td {
 .filter_actions .btn_form {
     flex: 1;
     margin: 0;
-    height: 48px;
+    height: var(--control-h);
+    min-height: var(--control-h);
     white-space: nowrap;
 }
 
 .filter_actions .ant-btn {
-    height: 48px;
+    height: var(--control-h);
     white-space: nowrap;
 }
 
-/* Filtr paneli sarlavhalari — yig'ilgan qismda ham bir xil ko'rinish */
+/* Filtr paneli sarlavhalari — forma yorlig'i (`Form` tokenlari) bilan
+   bir xil: 13 px, 500, #475569, ostida 6 px */
 .filter_form_box .filter_label {
     display: block;
     margin-bottom: 6px;
-    font-size: 12px;
-    color: #64748b;
-}
-
-/* Birinchi qatordagi qidiruv maydoni filtr ichidagi input/select'lar bilan
-   bir xil balandlikda (ilgari 48px — filtrlardan balandroq edi). */
-.filter_form_box .filter_item > .ant-input,
-.filter_form_box .filter_item > .ant-input-affix-wrapper {
-    height: 40px;
-}
-
-/* ── Telefon maydonidagi ikonka ──────────────────────────────────────────
-   Kirish sahifasida parol maydonida qulf ikonkasi bor edi, telefonda esa
-   yo'q — ikkita maydon bir-biriga o'xshamasdi. */
-.phone_input_wrap {
-    position: relative;
-    display: block;
-    width: 100%;
-}
-
-.phone_input_icon {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: rgba(0, 0, 0, 0.45);
     font-size: 13px;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-}
-
-.claveInput.has_icon {
-    padding-left: 34px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: #475569;
 }
 
 /* ── Auth sahifalaridagi til almashtirgich ───────────────────────────────
@@ -3704,12 +3330,12 @@ td {
   margin-top: 0;
   /* Filtr input/select'lari bilan bir xil balandlik. `.btn_form` da
      `height: auto !important` va `min-height: 44px` bor — ularni bekor qilamiz. */
-  height: 40px !important;
-  min-height: 40px !important;
+  height: var(--control-h) !important;
+  min-height: var(--control-h) !important;
 }
 
 .filter_toolbar_btn {
-  height: 40px;
+  height: var(--control-h);
 }
 
 /* Eksport — o'ng chekkada: u ro'yxatni toraytirmaydi, chiqaradi */
@@ -4128,4 +3754,241 @@ body.hide_recaptcha_badge .grecaptcha-badge {
 .ant-table-wrapper .ant-table-body::-webkit-scrollbar-thumb:hover,
 .ant-table-wrapper .ant-table-content::-webkit-scrollbar-thumb:hover {
   background: #00b39a;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   FORMA MAYDONLARI — butun platforma uchun yagona uslub
+   ══════════════════════════════════════════════════════════════════
+
+   O'lcham, ramka, rang, fokus halqasi va ichki bo'shliq `theme.js`
+   dagi antd tokenlaridan keladi. Bu yerda faqat tokenlar bilan
+   berilmaydigan narsalar.
+
+   Ilgari shu faylda ~40 ta tarqoq `!important` qoida bor edi va ular
+   bir-birini bekor qilardi: select ramkasining chap bo'shlig'i 0 ga
+   tushirilib, keyin ichki o'ramga 8 px, qiymatga yana 10 px berilardi —
+   tanlangan qiymat chap devordan 19 px ichkarida, yozilayotgan qidiruv
+   matni esa 9 px da turardi. Input 12 px da edi. `.ant-select` 42 px,
+   ichidagi ramka 40 px — pastda 2 px bo'sh chiziq. Endi barcha maydonlarda
+   matn 12 px dan boshlanadi va balandlik `--control-h`.
+
+   Qoidalar:
+   • maydon ichiga `!important` yozmang — tokenni o'zgartiring;
+   • sahifaga xos ixcham maydon kerak bo'lsa (masalan `.ls3`), uni shu
+     sahifa klassi ostida yozing. */
+
+/* Kenglik: forma va filtrlarda maydon ustunni to'liq egallaydi */
+.ant-select,
+.ant-picker,
+.ant-input-number {
+  width: 100%;
+}
+
+/* ...lekin jadval sahifalagichidagi "10 / sahifa" tanlagichi o'z o'lchamida */
+.ant-pagination .ant-select {
+  width: auto;
+}
+
+/* Yorliq: rangi/o'lchami `Form` tokenlarida. Yorliq maydon ramkasi bilan
+   bir chiziqdan boshlanadi (ilgari 10 px ichkarida edi). */
+.ant-form-item-label > label {
+  font-weight: 500;
+}
+
+/* Ikonkalar (prefix/suffix) — bir xil kulrang, bir xil o'lcham, matndan
+   8 px uzoqlikda */
+.ant-input-affix-wrapper .ant-input-prefix,
+.ant-select .ant-select-prefix {
+  color: #94A3B8;
+  font-size: 15px;
+  margin-inline-end: 8px;
+}
+
+.ant-input-affix-wrapper .ant-input-suffix {
+  color: #94A3B8;
+}
+
+.ant-input-affix-wrapper-focused .ant-input-prefix,
+.ant-select-focused .ant-select-prefix {
+  color: var(--back_color);
+}
+
+/* Ko'p qatorli matn: o'qilishi oson qator oralig'i */
+textarea.ant-input {
+  line-height: 1.55;
+  padding-block: 8px;
+}
+
+/* Ko'p tanlovli select "chip"lari */
+.ant-select-multiple .ant-select-selection-item {
+  border-radius: 6px;
+  color: var(--back_hover_color);
+  font-weight: 500;
+}
+
+.ant-select-multiple .ant-select-selection-item-remove {
+  color: rgba(0, 133, 116, 0.55);
+}
+
+.ant-select-multiple .ant-select-selection-item-remove:hover {
+  color: #DC2626;
+}
+
+/* Checkbox / radio matni — global `label` qoidasi (500, ko'k-kulrang)
+   ularga ham tushardi va oddiy matndan ajralib turardi */
+.ant-checkbox-wrapper,
+.ant-radio-wrapper {
+  font-weight: 400;
+  color: #1E293B;
+}
+
+/* Fayl yuklash maydoni (Dragger) */
+.ant-upload-wrapper .ant-upload-drag {
+  border-radius: 12px;
+  border-color: #CBD5E1;
+  background: #F8FAFC;
+}
+
+.ant-upload-wrapper .ant-upload-drag:not(.ant-upload-disabled):hover {
+  border-color: var(--back_color);
+  background: #F0FBF9;
+}
+
+/* ── Telefon raqam maydoni (Cleave.js, `PhoneInput`) ───────────────
+   antd komponenti emas, shuning uchun tokenlar unga tushmaydi — antd
+   `Input` bilan piksel-piksel bir xil qilib yozilgan. */
+.claveInput {
+  width: 100%;
+  height: var(--control-h);
+  padding: 0 11px;
+  border: 1px solid #D5DDE6;
+  border-radius: 10px;
+  outline: none;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1E293B;
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.claveInput::placeholder {
+  color: #94A3B8;
+}
+
+.claveInput:hover {
+  border-color: var(--back_color);
+}
+
+.claveInput:focus {
+  border-color: var(--back_color);
+  box-shadow: 0 0 0 3px rgba(0, 179, 154, 0.14);
+}
+
+.claveInput:disabled {
+  background: #F8FAFC;
+  color: #94A3B8;
+  cursor: not-allowed;
+}
+
+.ant-form-item-has-error .claveInput {
+  border-color: #DC2626;
+}
+
+.ant-form-item-has-error .claveInput:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.phone_input_wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+/* antd prefix ikonkasi bilan bir xil joyda: 12 px, kulrang */
+.phone_input_icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94A3B8;
+  font-size: 14px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+.claveInput.has_icon {
+  padding-left: 35px;
+}
+
+.phone_input_wrap:focus-within .phone_input_icon {
+  color: var(--back_color);
+}
+
+@media (max-width: 768px) {
+  /* iOS 16 px dan kichik shriftda maydonga fokus tushganda kattalashtiradi */
+  .claveInput {
+    font-size: 16px;
+  }
+}
+
+/* ── Tug'ma fayl tanlagich (`<input type="file">`) ─────────────────
+   Faqat qolgan joylarda (Diagnoses). Tugmasi brend uslubida. */
+.file_input {
+  width: 100%;
+  min-height: var(--control-h);
+  padding: 4px;
+  border: 1px dashed #CBD5E1;
+  border-radius: 10px;
+  background: #F8FAFC;
+  font-size: 14px;
+  color: #64748B;
+  cursor: pointer;
+}
+
+.file_input::file-selector-button {
+  height: calc(var(--control-h) - 10px);
+  margin-right: 12px;
+  padding: 0 14px;
+  border: 1px solid #D5DDE6;
+  border-radius: 8px;
+  background: #fff;
+  color: #1E293B;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.file_input:hover::file-selector-button {
+  border-color: var(--back_color);
+  color: var(--back_color);
+}
+
+/* "Filtrlarni tozalash" — filtr maydonlari bilan bir qatorda, bir xil balandlikda */
+.filter_clear_btn {
+  height: var(--control-h);
+}
+
+/* ── Qidiruv maydoni + "Qidirish" tugmasi ───────────────────────────
+   Ro'yxat sahifalarida ikki xil ko'rinish bor edi: EKG/Holter/SMAD/Lab
+   da maydon va alohida tugma (orasida 8 px), Bemorlar/Kompleks AI/
+   Konsultantlarda esa antd `Input.Search` — tugma maydonga yopishgan,
+   ichki burchaklari to'g'ri. Endi yozuvli tugmali `Input.Search` ham
+   birinchisi kabi chiziladi: ikkalasi alohida, ikkalasi 10 px radius. */
+.ant-input-search-with-button .ant-input-group > .ant-input-affix-wrapper,
+.ant-input-search-with-button .ant-input-group > .ant-input {
+  border-radius: 10px !important;
+}
+
+.ant-input-search-with-button .ant-input-group > .ant-input-group-addon {
+  padding-left: 8px !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.ant-input-search-with-button .ant-input-group-addon .ant-input-search-button {
+  border-radius: 10px !important;
+  padding-inline: 18px;
+  font-weight: 600;
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Badge, Button, Col, Row } from 'antd'
+import { Badge, Button, Row } from 'antd'
 import { FilterOutlined, UpOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 
@@ -63,6 +63,14 @@ export default function FilterPanel({ primary, secondary, children, activeCount 
                     </Button>
                 </Badge>
 
+                {/* "Filtrlar" yonida: ilgari filtrlar qatorining oxirida edi va
+                    to'rtta filtrdan keyin alohida qatorga tushib qolardi */}
+                {activeCount > 0 && onClear ? (
+                    <Button type="text" onClick={onClear} className="filter_clear_btn">
+                        {t('clear_filters', { defaultValue: 'Filtrlarni tozalash' })}
+                    </Button>
+                ) : null}
+
                 {secondary ? (
                     <div className="filter_toolbar_actions">
                         {secondary}
@@ -73,14 +81,6 @@ export default function FilterPanel({ primary, secondary, children, activeCount 
             {open ? (
                 <Row gutter={[12, 12]} align="bottom" style={{ marginTop: 12 }}>
                     {children}
-
-                    {activeCount > 0 && onClear ? (
-                        <Col xs={24} sm={12} md={8} lg={6} xl={4}>
-                            <Button type="text" onClick={onClear} style={{ height: 48 }}>
-                                {t('clear_filters', { defaultValue: 'Filtrlarni tozalash' })}
-                            </Button>
-                        </Col>
-                    ) : null}
                 </Row>
             ) : null}
         </div>

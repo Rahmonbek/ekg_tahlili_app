@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Col, Form, Input, message, Modal, Row, Select, Steps } from 'antd';
-import { IoPerson } from 'react-icons/io5';
 
-import { FaFemale, FaMale } from 'react-icons/fa';
 import Cleave from 'cleave.js/react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -128,7 +126,7 @@ export default function AdminModal() {
             normalize={(v) => v?.toUpperCase()}
             rules={[{ required: true }]}
           >
-            <Input prefix={<IoPerson />} 
+            <Input 
             className="login_input"
             placeholder={t('enter_your_lastname')}/>
           </Form.Item>
@@ -142,7 +140,7 @@ export default function AdminModal() {
             normalize={(v) => v?.toUpperCase()}
             rules={[{ required: true }]}
           >
-            <Input prefix={<IoPerson />}   className="login_input"
+            <Input   className="login_input"
                       placeholder={t('enter_your_firstname')}/>
           </Form.Item>
         </Col>
@@ -155,7 +153,7 @@ export default function AdminModal() {
             normalize={(v) => v?.toUpperCase()}
             rules={[{ required: true }]}
           >
-            <Input prefix={<IoPerson />} 
+            <Input 
                 className="login_input"
                 placeholder={t('enter_your_surename')}/>
           </Form.Item>
@@ -172,7 +170,6 @@ export default function AdminModal() {
                     className="modal_select"
                       style={{ width: '100%' }}
                       value={gender}
-                      prefix={gender?<FaMale />:<FaFemale />}
                       onChange={(value) => setGender(value)}
                       options={[
                         { value: true, label: <> {t('male')}</> },

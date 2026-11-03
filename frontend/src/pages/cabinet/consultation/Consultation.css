@@ -150,19 +150,6 @@
     margin-bottom: 18px;
 }
 
-.consultation-page .ant-input,
-.consultation-page .ant-select-selector,
-.consultation-page .ant-picker {
-   
-    border-radius: 12px !important;
-    font-size: var(--small_size);
-}
-
-.consultation-page .ant-select-selector {
-    display: flex;
-    align-items: center;
-}
-
 .consultation-page .ant-table {
     border-radius: 12px;
     overflow: hidden;

@@ -9,7 +9,21 @@ import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 import { App as AntdApp, ConfigProvider } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { getAntdLocale, applyDayjsLocale } from './locale/antdLocale';
-import { theme as nmedTheme } from './theme';
+import { theme as nmedTheme, mobileTheme } from './theme';
+
+/** `theme.mobileTheme` shu kenglikdan boshlab qo'llanadi (App.css `--control-h` bilan bir xil). */
+const TOUCH_QUERY = '(max-width: 768px)';
+
+function useMediaQuery(query) {
+    const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
+    useEffect(() => {
+        const mql = window.matchMedia(query);
+        const onChange = (e) => setMatches(e.matches);
+        mql.addEventListener('change', onChange);
+        return () => mql.removeEventListener('change', onChange);
+    }, [query]);
+    return matches;
+}
 
 // reCAPTCHA site key — muhitga qarab sozlanadi.
 // Ilgari kodga qotirib yozilgan edi va dev/staging/prod uchun almashtirib
@@ -23,6 +37,7 @@ const RECAPTCHA_SITE_KEY = process.env.REACT_APP_RECAPTCHA_SITE_KEY || '';
 function LocalizedProviders({ children }) {
     const { i18n } = useTranslation();
     const [language, setLanguage] = useState(i18n.language);
+    const isTouch = useMediaQuery(TOUCH_QUERY);
 
     useEffect(() => {
         const onChange = (lng) => {
@@ -35,7 +50,7 @@ function LocalizedProviders({ children }) {
     }, [i18n]);
 
     return (
-        <ConfigProvider locale={getAntdLocale(language)} theme={nmedTheme}>
+        <ConfigProvider locale={getAntdLocale(language)} theme={isTouch ? mobileTheme : nmedTheme}>
             {/* antd `App` — `message`/`notification`/`modal` ni React konteksti
                 bilan bog'laydi. Statik chaqiruvlar mavzuni va locale ni ko'rmasdi. */}
             <AntdApp>{children}</AntdApp>

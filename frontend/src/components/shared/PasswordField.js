@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Input, Progress } from 'antd';
-import { LockOutlined, CheckCircleFilled, CloseCircleOutlined } from '@ant-design/icons';
+import { CheckCircleFilled, CloseCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -84,7 +84,6 @@ export default function PasswordField({ value, onChange, showRequirements = true
     return (
         <div>
             <Input.Password
-                prefix={<LockOutlined />}
                 value={value}
                 onChange={onChange}
                 {...rest}
